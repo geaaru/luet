@@ -17,6 +17,7 @@ require (
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/docker/go-units v0.4.0
 	github.com/ecooper/qlearning v0.0.0-20160612200101-3075011a69fd
+	github.com/fsouza/go-dockerclient v1.6.4
 	github.com/genuinetools/img v0.5.11
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-containerregistry v0.2.1
