@@ -26,6 +26,7 @@ import (
 	bus "github.com/mudler/luet/pkg/bus"
 	fileHelper "github.com/mudler/luet/pkg/helpers/file"
 
+	docker "github.com/fsouza/go-dockerclient"
 	capi "github.com/mudler/docker-companion/api"
 
 	"github.com/mudler/luet/pkg/helpers"
@@ -55,6 +56,24 @@ func (*SimpleDocker) BuildImage(opts Options) error {
 	}
 
 	Info(":whale: Building image " + name + " done")
+
+	if os.Getenv("DOCKER_SQUASH") == "true" {
+		Info(":whale: Squashing image " + name)
+		var client *docker.Client
+
+		Spinner(22)
+		defer SpinnerStop()
+		client, err = docker.NewClientFromEnv()
+		if err != nil {
+			return errors.Wrap(err, "could not connect to the Docker daemon")
+		}
+		err = capi.Squash(client, name, name)
+		if err != nil {
+			return errors.Wrap(err, "Failed squashing image")
+		}
+
+		Info(":whale: Squashing image " + name + " done")
+	}
 
 	bus.Manager.Publish(bus.EventImagePostBuild, opts)
 
