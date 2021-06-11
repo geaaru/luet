@@ -22,6 +22,7 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/ecooper/qlearning v0.0.0-20160612200101-3075011a69fd
 	github.com/fatih/color v1.12.0 // indirect
+	github.com/fsouza/go-dockerclient v1.6.4
 	github.com/genuinetools/img v0.5.11
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-sql-driver/mysql v1.6.0 // indirect

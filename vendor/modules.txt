@@ -214,6 +214,7 @@ github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
 # github.com/fsouza/go-dockerclient v1.6.4
+## explicit
 github.com/fsouza/go-dockerclient
 # github.com/genuinetools/img v0.5.11
 ## explicit
