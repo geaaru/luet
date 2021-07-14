@@ -63,7 +63,10 @@ func version() string {
 	return fmt.Sprintf("%s-g%s %s", LuetCLIVersion, BuildCommit, BuildTime)
 }
 
-var noBannerCommands = []string{"search", "exec", "tree", "database", "box", "cleanup"}
+var noBannerCommands = []string{
+	"search", "exec", "tree", "database", "box", "cleanup",
+	"repo", "config",
+}
 
 func displayVersionBanner() {
 	display := true
