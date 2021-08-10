@@ -15,6 +15,8 @@
 package cmd
 
 import (
+	"strings"
+
 	installer "github.com/mudler/luet/pkg/installer"
 	"github.com/mudler/luet/pkg/solver"
 
@@ -72,6 +74,7 @@ To force install a package:
 		concurrent, _ := cmd.Flags().GetBool("solver-concurrent")
 		yes := LuetCfg.Viper.GetBool("yes")
 		downloadOnly, _ := cmd.Flags().GetBool("download-only")
+		finalizerEnvs, _ := cmd.Flags().GetStringArray("finalizer-env")
 
 		util.SetSystemConfig()
 		util.SetSolverConfig()
@@ -87,6 +90,19 @@ To force install a package:
 
 		// Load config protect configs
 		installer.LoadConfigProtectConfs(LuetCfg)
+
+		// Load finalizer runtime environments
+		if len(finalizerEnvs) > 0 {
+			for _, v := range finalizerEnvs {
+				idx := strings.Index(v, "=")
+				if idx < 0 {
+					Fatal("Found invalid runtime finalizer environment: " + v)
+				}
+
+				LuetCfg.SetFinalizerEnv(v[0:idx], v[idx+1:])
+			}
+
+		}
 
 		inst := installer.NewLuetInstaller(installer.LuetInstallerOptions{
 			Concurrency:                 LuetCfg.GetGeneral().Concurrency,
@@ -123,6 +139,8 @@ func init() {
 	installCmd.Flags().Bool("solver-concurrent", false, "Use concurrent solver (experimental)")
 	installCmd.Flags().BoolP("yes", "y", false, "Don't ask questions")
 	installCmd.Flags().Bool("download-only", false, "Download only")
+	installCmd.Flags().StringArray("finalizer-env", []string{},
+		"Set finalizer environment in the format key=value.")
 
 	RootCmd.AddCommand(installCmd)
 }
