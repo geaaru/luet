@@ -41,14 +41,9 @@ var Verbose bool
 var LockedCommands = []string{"install", "uninstall", "upgrade"}
 
 const (
-	LuetCLIVersion = "0.17.7"
-	LuetEnvPrefix  = "LUET"
-	license        = `
-	Luet Copyright (C) 2019-2021 Ettore Di Giacinto
-	This program comes with ABSOLUTELY NO WARRANTY.
-	This is free software, and you are welcome to redistribute it
-	under certain conditions.
-	`
+	LuetCLIVersion  = "0.17.9"
+	LuetEnvPrefix   = "LUET"
+	LuetForkVersion = "geaaru"
 )
 
 // Build time and commit information.
@@ -60,7 +55,7 @@ var (
 )
 
 func version() string {
-	return fmt.Sprintf("%s-g%s %s", LuetCLIVersion, BuildCommit, BuildTime)
+	return fmt.Sprintf("%s-%s-g%s %s", LuetCLIVersion, LuetForkVersion, BuildCommit, BuildTime)
 }
 
 var noBannerCommands = []string{
@@ -79,7 +74,6 @@ func displayVersionBanner() {
 	}
 	if display {
 		Info("Luet version", version())
-		Info(license)
 	}
 }
 
