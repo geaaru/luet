@@ -30,7 +30,6 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/go-containerregistry v0.2.1
 	github.com/google/renameio v1.0.0
 	github.com/google/uuid v1.3.0 // indirect
@@ -63,12 +62,10 @@ require (
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/otiai10/copy v1.2.1-0.20200916181228-26f84a0b1578
-	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/errors v0.9.1
 	github.com/schollz/progressbar/v3 v3.7.1
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0
 	github.com/theupdateframework/notary v0.7.0
@@ -79,7 +76,6 @@ require (
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	google.golang.org/grpc v1.40.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
-	gopkg.in/ini.v1 v1.63.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.3.4
 

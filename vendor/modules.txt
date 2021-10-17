@@ -268,8 +268,6 @@ github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/golang/snappy v0.0.3
 github.com/golang/snappy
-# github.com/google/go-cmp v0.5.6
-## explicit
 # github.com/google/go-containerregistry v0.2.1
 ## explicit
 github.com/google/go-containerregistry/pkg/authn
@@ -588,7 +586,6 @@ github.com/opentracing/opentracing-go/log
 ## explicit
 github.com/otiai10/copy
 # github.com/pelletier/go-toml v1.9.4
-## explicit
 github.com/pelletier/go-toml
 # github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 ## explicit
@@ -624,7 +621,6 @@ github.com/sirupsen/logrus
 github.com/spf13/afero
 github.com/spf13/afero/mem
 # github.com/spf13/cast v1.4.1
-## explicit
 github.com/spf13/cast
 # github.com/spf13/cobra v1.2.1
 ## explicit
@@ -859,7 +855,6 @@ google.golang.org/protobuf/types/known/timestamppb
 # gopkg.in/inf.v0 v0.9.1
 gopkg.in/inf.v0
 # gopkg.in/ini.v1 v1.63.2
-## explicit
 gopkg.in/ini.v1
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 gopkg.in/tomb.v1
