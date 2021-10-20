@@ -212,7 +212,6 @@ github.com/ecooper/qlearning
 ## explicit
 github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.5.1
-## explicit
 github.com/fsnotify/fsnotify
 # github.com/fsouza/go-dockerclient v1.6.4
 ## explicit
@@ -404,7 +403,6 @@ github.com/mitchellh/hashstructure
 ## explicit
 github.com/mitchellh/hashstructure/v2
 # github.com/mitchellh/mapstructure v1.4.2
-## explicit
 github.com/mitchellh/mapstructure
 # github.com/mitchellh/reflectwalk v1.0.2
 github.com/mitchellh/reflectwalk

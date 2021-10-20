@@ -22,7 +22,6 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/ecooper/qlearning v0.0.0-20160612200101-3075011a69fd
 	github.com/fatih/color v1.12.0 // indirect
-	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/fsouza/go-dockerclient v1.6.4
 	github.com/geaaru/tar-formers v0.2.0
 	github.com/genuinetools/img v0.5.11
@@ -50,7 +49,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.8 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.1
-	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/moby/buildkit v0.7.2
 	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/mudler/cobra-extensions v0.0.0-20200612154940-31a47105fe3d
