@@ -21,6 +21,8 @@ import (
 	. "github.com/mudler/luet/cmd"
 	config "github.com/mudler/luet/pkg/config"
 
+	tarf "github.com/geaaru/tar-formers/pkg/executor"
+	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -28,5 +30,13 @@ import (
 func TestSolver(t *testing.T) {
 	RegisterFailHandler(Fail)
 	LoadConfig(config.LuetCfg)
+
+	cfg := tarf_specs.NewConfig(config.LuetCfg.Viper)
+	cfg.GetGeneral().Debug = config.LuetCfg.GetGeneral().Debug
+	cfg.GetLogging().Level = config.LuetCfg.GetLogging().Level
+
+	tf := tarf.NewTarFormers(cfg)
+	tarf.SetDefaultTarFormers(tf)
+
 	RunSpecs(t, "Helpers Suite")
 }

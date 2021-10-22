@@ -36,6 +36,8 @@ import (
 	"strings"
 	"sync"
 
+	tarf "github.com/geaaru/tar-formers/pkg/executor"
+	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
 	bus "github.com/mudler/luet/pkg/bus"
 	backend "github.com/mudler/luet/pkg/compiler/backend"
 	compression "github.com/mudler/luet/pkg/compiler/types/compression"
@@ -364,65 +366,78 @@ func hashFileContent(path string) (string, error) {
 	return base64.URLEncoding.EncodeToString(h.Sum(nil)), nil
 }
 
-func tarModifierWrapperFunc(dst, path string, header *tar.Header, content io.Reader) (*tar.Header, []byte, error) {
+func tarModifierWrapperFunc(path, dst string, header *tar.Header, content io.Reader,
+	opts *tarf.TarFileOperation, t *tarf.TarFormers) error {
+
 	// If the destination path already exists I rename target file name with postfix.
 	var destPath string
 
-	// Read data. TODO: We need change archive callback to permit to return a Reader
 	buffer := bytes.Buffer{}
 	if content != nil {
 		if _, err := buffer.ReadFrom(content); err != nil {
-			return nil, nil, err
+			return err
 		}
 	}
 	tarHash := hashContent(buffer.Bytes())
 
-	// If file is not present on archive but is defined on mods
-	// I receive the callback. Prevent nil exception.
-	if header != nil {
-		switch header.Typeflag {
-		case tar.TypeReg:
-			destPath = filepath.Join(dst, path)
-		default:
-			// Nothing to do. I return original reader
-			return header, buffer.Bytes(), nil
+	switch header.Typeflag {
+	case tar.TypeReg:
+		destPath = filepath.Join(dst, path)
+	default:
+
+		// Nothing to do. I return original reader
+		return nil
+	}
+
+	// Always skip the write for tarformers because the io.Reader is been
+	// already consumed.
+	opts.Skip = true
+
+	existingHash := ""
+	setfileprops := false
+	f, err := os.Lstat(destPath)
+	if err == nil {
+		Debug("File exists already, computing hash for", destPath)
+		hash, herr := hashFileContent(destPath)
+		if herr == nil {
+			existingHash = hash
 		}
+	} else {
+		setfileprops = true
+	}
 
-		existingHash := ""
-		f, err := os.Lstat(destPath)
-		if err == nil {
-			Debug("File exists already, computing hash for", destPath)
-			hash, herr := hashFileContent(destPath)
-			if herr == nil {
-				existingHash = hash
+	Debug("Existing file hash: ", existingHash, "Tar file hashsum: ", tarHash)
+	// We want to protect file only if the hash of the files are differing OR the file size are
+	differs := (existingHash != "" && existingHash != tarHash) || (err != nil && f != nil && header.Size != f.Size())
+
+	// Check if exists
+	if fileHelper.Exists(destPath) && differs {
+		for i := 1; i < 1000; i++ {
+			name := filepath.Join(filepath.Join(filepath.Dir(path),
+				fmt.Sprintf("._cfg%04d_%s", i, filepath.Base(path))))
+
+			if fileHelper.Exists(name) {
+				continue
 			}
-		}
 
-		Debug("Existing file hash: ", existingHash, "Tar file hashsum: ", tarHash)
-		// We want to protect file only if the hash of the files are differing OR the file size are
-		differs := (existingHash != "" && existingHash != tarHash) || (err != nil && f != nil && header.Size != f.Size())
-		// Check if exists
-		if fileHelper.Exists(destPath) && differs {
-			for i := 1; i < 1000; i++ {
-				name := filepath.Join(filepath.Join(filepath.Dir(path),
-					fmt.Sprintf("._cfg%04d_%s", i, filepath.Base(path))))
-
-				if fileHelper.Exists(name) {
-					continue
-				}
-				Info(fmt.Sprintf("Found protected file %s. Creating %s.", destPath,
-					filepath.Join(dst, name)))
-				return &tar.Header{
-					Mode:       header.Mode,
-					Typeflag:   header.Typeflag,
-					PAXRecords: header.PAXRecords,
-					Name:       name,
-				}, buffer.Bytes(), nil
-			}
+			Info(fmt.Sprintf("Found protected file %s. Creating %s.", destPath,
+				filepath.Join(dst, name)))
+			path = name
+			break
 		}
 	}
 
-	return header, buffer.Bytes(), nil
+	info := header.FileInfo()
+	// Write the file
+	err = t.CreateFile(dst, path, info.Mode(), bytes.NewReader(buffer.Bytes()), header)
+	if err != nil {
+		return err
+	}
+	if setfileprops {
+		meta := tarf_specs.NewFileMeta(header)
+		return t.SetFileProps(filepath.Join(dst, path), &meta, false)
+	}
+	return nil
 }
 
 func (a *PackageArtifact) GetProtectFiles() []string {
@@ -444,8 +459,7 @@ func (a *PackageArtifact) GetProtectFiles() []string {
 		cp := NewConfigProtect(annotationDir)
 		cp.Map(a.Files)
 
-		// NOTE: for unpack we need files path without initial /
-		ans = cp.GetProtectFiles(false)
+		ans = cp.GetProtectFiles(true)
 	}
 
 	return ans
@@ -459,8 +473,6 @@ func (a *PackageArtifact) Unpack(dst string, keepPerms bool) error {
 
 	// Create
 	protectedFiles := a.GetProtectFiles()
-
-	tarModifier := helpers.NewTarModifierWrapper(dst, tarModifierWrapperFunc)
 
 	switch a.CompressionType {
 	case compression.Zstandard:
@@ -492,7 +504,7 @@ func (a *PackageArtifact) Unpack(dst string, keepPerms bool) error {
 		}
 
 		err = helpers.UntarProtect(a.Path+".uncompressed", dst,
-			LuetCfg.GetGeneral().SameOwner, protectedFiles, tarModifier)
+			LuetCfg.GetGeneral().SameOwner, protectedFiles, tarModifierWrapperFunc)
 		if err != nil {
 			return err
 		}
@@ -525,7 +537,7 @@ func (a *PackageArtifact) Unpack(dst string, keepPerms bool) error {
 		}
 
 		err = helpers.UntarProtect(a.Path+".uncompressed", dst,
-			LuetCfg.GetGeneral().SameOwner, protectedFiles, tarModifier)
+			LuetCfg.GetGeneral().SameOwner, protectedFiles, tarModifierWrapperFunc)
 		if err != nil {
 			return err
 		}
@@ -533,7 +545,7 @@ func (a *PackageArtifact) Unpack(dst string, keepPerms bool) error {
 	// Defaults to tar only (covers when "none" is supplied)
 	default:
 		return helpers.UntarProtect(a.Path, dst, LuetCfg.GetGeneral().SameOwner,
-			protectedFiles, tarModifier)
+			protectedFiles, tarModifierWrapperFunc)
 	}
 	return errors.New("Compression type must be supplied")
 }

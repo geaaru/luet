@@ -25,9 +25,10 @@ import (
 	"os"
 	"path/filepath"
 
+	tarf "github.com/geaaru/tar-formers/pkg/executor"
+	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
 	fileHelper "github.com/mudler/luet/pkg/helpers/file"
 
-	"github.com/docker/docker/pkg/archive"
 	. "github.com/mudler/luet/pkg/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -51,15 +52,15 @@ func prepareUntarSourceDirectory(numberOfFiles int, targetPath string, makeLinks
 	return totalSize, nil
 }
 
-func tarModifierWrapperFunc(dst, path string, header *tar.Header, content io.Reader) (*tar.Header, []byte, error) {
+func tarModifierWrapperFunc(path, dir string, header *tar.Header,
+	content io.Reader, opts *tarf.TarFileOperation, t *tarf.TarFormers) error {
+
 	// If the destination path already exists I rename target file name with postfix.
 	var basePath string
-
-	// Read data. TODO: We need change archive callback to permit to return a Reader
 	buffer := bytes.Buffer{}
 	if content != nil {
 		if _, err := buffer.ReadFrom(content); err != nil {
-			return nil, nil, err
+			return err
 		}
 	}
 
@@ -70,25 +71,26 @@ func tarModifierWrapperFunc(dst, path string, header *tar.Header, content io.Rea
 			basePath = filepath.Base(path)
 		default:
 			// Nothing to do. I return original reader
-			return header, buffer.Bytes(), nil
+			return nil
 		}
 
 		if basePath == "file-0" {
-			name := filepath.Join(filepath.Join(filepath.Dir(path), fmt.Sprintf("._cfg%04d_%s", 1, basePath)))
-			return &tar.Header{
-				Mode:       header.Mode,
-				Typeflag:   header.Typeflag,
-				PAXRecords: header.PAXRecords,
-				Name:       name,
-			}, buffer.Bytes(), nil
-		} else if basePath == "file-1" {
-			return header, []byte("newcontent"), nil
+			path = filepath.Join(filepath.Join(filepath.Dir(path), fmt.Sprintf("._cfg%04d_%s", 1, basePath)))
 		}
 
 		// else file not present
 	}
 
-	return header, buffer.Bytes(), nil
+	info := header.FileInfo()
+	opts.Skip = true
+	// Write the file
+	err := t.CreateFile(dir, path, info.Mode(), bytes.NewReader(buffer.Bytes()), header)
+	if err != nil {
+		return err
+	}
+	meta := tarf_specs.NewFileMeta(header)
+	err = t.SetFileProps(filepath.Join(dir, path), &meta, false)
+	return nil
 }
 
 var _ = Describe("Helpers Archive", func() {
@@ -105,29 +107,23 @@ var _ = Describe("Helpers Archive", func() {
 
 			targetDir, err := ioutil.TempDir("", "archive-target")
 			Expect(err).ToNot(HaveOccurred())
-			//	defer os.RemoveAll(targetDir)
+			defer os.RemoveAll(targetDir)
 
-			sourceArchive, err := archive.TarWithOptions(archiveSourceDir, &archive.TarOptions{})
+			tarballDir, err := ioutil.TempDir("", "tarball")
 			Expect(err).ToNot(HaveOccurred())
-			defer sourceArchive.Close()
+			defer os.RemoveAll(tarballDir)
 
-			tarModifier := NewTarModifierWrapper(targetDir, tarModifierWrapperFunc)
-			mods := make(map[string]archive.TarModifierFunc)
-			mods["file-0"] = tarModifier.GetModifier()
-			mods["file-1"] = tarModifier.GetModifier()
-			mods["file-9999"] = tarModifier.GetModifier()
+			tarballFile := filepath.Join(tarballDir, "test.tar")
 
-			replacerArchive := archive.ReplaceFileTarWrapper(sourceArchive, mods)
-			//replacerArchive := archive.ReplaceFileTarWrapper(sourceArchive, mods)
-			opts := &archive.TarOptions{
-				// NOTE: NoLchown boolean is used for chmod of the symlink
-				// Probably it's needed set this always to true.
-				NoLchown:        true,
-				ExcludePatterns: []string{"dev/"}, // prevent 'operation not permitted'
-				ContinueOnError: true,
-			}
+			err = Tar(archiveSourceDir, tarballFile)
+			Expect(err).ToNot(HaveOccurred())
 
-			err = archive.Untar(replacerArchive, targetDir, opts)
+			err = UntarProtect(tarballFile, targetDir, true,
+				[]string{
+					"/file-0",
+					"/file-1",
+					"/file-9999",
+				}, tarModifierWrapperFunc)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(fileHelper.Exists(filepath.Join(targetDir, "._cfg0001_file-0"))).Should(Equal(true))
