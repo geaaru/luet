@@ -27,6 +27,8 @@ import (
 	bus "github.com/mudler/luet/pkg/bus"
 	fileHelper "github.com/mudler/luet/pkg/helpers/file"
 
+	tarf "github.com/geaaru/tar-formers/pkg/executor"
+	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
 	extensions "github.com/mudler/cobra-extensions"
 	config "github.com/mudler/luet/pkg/config"
 	helpers "github.com/mudler/luet/pkg/helpers"
@@ -192,6 +194,15 @@ func LoadConfig(c *config.LuetConfig) error {
 		return err
 	}
 
+	// Initialize default tarformers instance
+	// to use the config object used by the library.
+	cfg := tarf_specs.NewConfig(c.Viper)
+	cfg.GetGeneral().Debug = c.GetGeneral().Debug
+	cfg.GetLogging().Level = c.GetLogging().Level
+
+	t := tarf.NewTarFormers(cfg)
+	tarf.SetDefaultTarFormers(t)
+
 	return nil
 }
 
@@ -300,4 +311,5 @@ func initConfig() {
 	replacer := strings.NewReplacer(".", "__")
 	viper.SetEnvKeyReplacer(replacer)
 	viper.SetTypeByDefaultValue(true)
+
 }
