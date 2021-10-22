@@ -32,9 +32,9 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func (t *TarFormers) CreateFile(dir string, mode os.FileMode, reader *tar.Reader, header *tar.Header) error {
+func (t *TarFormers) CreateFile(dir, name string, mode os.FileMode, reader io.Reader, header *tar.Header) error {
 
-	file := t.Task.GetRename("/" + header.Name)
+	file := t.Task.GetRename("/" + name)
 	file = filepath.Join(dir, file)
 
 	err := t.CreateDir(filepath.Dir(file), mode|os.ModeDir|100)
@@ -83,21 +83,72 @@ func (t *TarFormers) ExistFile(path string) (bool, error) {
 	return true, nil
 }
 
-func (t *TarFormers) SetFileProps(path string, header *tar.Header) error {
+func (t *TarFormers) SetFileProps(path string, meta *specs.FileMeta, link bool) error {
 	if t.Task.SameOwner {
-		if err := os.Chown(path, header.Uid, header.Gid); err != nil {
-			return errors.New(
-				fmt.Sprintf("For path %s error on chown: %s",
-					path, err.Error()))
+		if link {
+			if err := os.Lchown(path, meta.Uid, meta.Gid); err != nil {
+				return errors.New(
+					fmt.Sprintf("For path %s error on chown: %s",
+						path, err.Error()))
+			}
+		} else {
+			if err := os.Chown(path, meta.Uid, meta.Gid); err != nil {
+				return errors.New(
+					fmt.Sprintf("For path %s error on chown: %s",
+						path, err.Error()))
+			}
 		}
 	}
 
 	// maintaining access and modification time in best effort fashion
 	if t.Task.SameChtimes {
-		err := os.Chtimes(path, header.AccessTime, header.ModTime)
+		err := os.Chtimes(path, meta.AccessTime, meta.ModTime)
 		if err != nil {
 			t.Logger.Warning(
-				"[%s] Error on chtimes: %s", path, err.Error())
+				fmt.Sprintf("[%s] Error on chtimes: %s", path, err.Error()))
+		}
+	}
+
+	if len(meta.Xattrs) > 0 {
+		for key, value := range meta.Xattrs {
+			err := t.SetXattrAttr(path, key, value, 0)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(meta.PAXRecords) > 0 {
+		// NOTE: using PAX extend header like xattr. To verify.
+		for key, value := range meta.PAXRecords {
+			err := t.SetXattrAttr(path, key, value, 0)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (t *TarFormers) SetXattrAttr(path, k, v string, flag int) error {
+	t.Logger.Debug(
+		fmt.Sprintf("[%s] Setting xattr %s with value %s.",
+			path, k, string(v)))
+
+	if err := unix.Lsetxattr(path, k, []byte(v), 0); err != nil {
+		if err == syscall.ENOTSUP || err == syscall.EPERM {
+			// We ignore errors here because not all graphdrivers support
+			// xattrs *cough* old versions of AUFS *cough*. However only
+			// ENOTSUP should be emitted in that case, otherwise we still
+			// bail.
+			// EPERM occurs if modifying xattrs is not allowed. This can
+			// happen when running in userns with restrictions (ChromeOS).
+			t.Logger.Warning(
+				"[%s] Ignoring xattr %s not supported by the underlying filesystem: %s",
+				path, k, err.Error())
+		} else {
+			return err
 		}
 	}
 

@@ -25,19 +25,47 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	log "github.com/geaaru/tar-formers/pkg/logger"
 	specs "github.com/geaaru/tar-formers/pkg/specs"
 )
 
+// Mutex must be global to ensure mutual exclusion
+// between different TarFormers running.
+var mutex sync.Mutex
+
+// Default Tarformers Robot instance
+var optimusPrime *TarFormers = nil
+
+type TarFileOperation struct {
+	Rename  bool
+	NewName string
+	Skip    bool
+}
+
+// Function handler to
+type TarFileHandlerFunc func(path, dst string,
+	header *tar.Header, content io.Reader,
+	opts *TarFileOperation, t *TarFormers) error
+
 type TarFormers struct {
 	Config *specs.Config `yaml:"config" json:"config"`
 	Logger *log.Logger   `yaml:"-" json:"-"`
 
-	reader io.Reader `yaml:"-" json:"-"`
+	reader      io.Reader          `yaml:"-" json:"-"`
+	fileHandler TarFileHandlerFunc `yaml:"-" json:"-"`
 
 	Task      *specs.SpecFile `yaml:"task,omitempty" json:"task,omitempty"`
 	ExportDir string          `yaml:"export_dir,omitempty" json:"export_dir,omitempty"`
+}
+
+func SetDefaultTarFormers(t *TarFormers) {
+	optimusPrime = t
+}
+
+func GetOptimusPrime() *TarFormers {
+	return optimusPrime
 }
 
 func NewTarFormers(config *specs.Config) *TarFormers {
@@ -61,6 +89,18 @@ func NewTarFormers(config *specs.Config) *TarFormers {
 
 func (t *TarFormers) SetReader(reader io.Reader) {
 	t.reader = reader
+}
+
+func (t *TarFormers) HasFileHandler() bool {
+	if t.fileHandler != nil {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (t *TarFormers) SetFileHandler(f TarFileHandlerFunc) {
+	t.fileHandler = f
 }
 
 func (t *TarFormers) RunTask(task *specs.SpecFile, dir string) error {
@@ -97,6 +137,8 @@ func (t *TarFormers) HandleTarFlow(tarReader *tar.Reader, dir string) error {
 		dir = dir + "/"
 	}
 
+	t.Task.Prepare()
+
 	for {
 		header, err := tarReader.Next()
 
@@ -111,15 +153,48 @@ func (t *TarFormers) HandleTarFlow(tarReader *tar.Reader, dir string) error {
 		}
 
 		absPath := "/" + header.Name
+		targetPath := filepath.Join(dir, header.Name)
+		name := header.Name
+
+		// Call file handler also for file that could be skipped and permit
+		// to notify this to users.
+		if t.HasFileHandler() && t.Task.IsFileTriggered(absPath) {
+			opts := TarFileOperation{
+				Rename:  false,
+				NewName: "",
+				Skip:    false,
+			}
+
+			err := t.fileHandler(absPath, dir, header, tarReader, &opts, t)
+			if err != nil {
+				return err
+			}
+
+			if opts.Skip {
+				t.Logger.Debug(fmt.Sprintf("File %s skipped.", header.Name))
+				continue
+			}
+
+			if opts.Rename {
+				name = opts.NewName
+				if strings.HasPrefix(name, "/") {
+					absPath = name
+				} else {
+					absPath = "/" + name
+				}
+
+				targetPath = filepath.Join(dir, name)
+			}
+		}
+
 		if t.Task.IsPath2Skip(absPath) {
-			t.Logger.Debug(fmt.Sprintf("File %s skipped.", header.Name))
+			t.Logger.Debug(fmt.Sprintf("File %s skipped.", name))
 			continue
 		}
 
 		t.Logger.Debug(fmt.Sprintf("Parsing file %s [%s - %d, %s - %d] (%s).",
-			header.Name, header.Uname, header.Uid, header.Gname, header.Gid, header.Linkname))
+			name, header.Uname, header.Uid, header.Gname, header.Gid, header.Linkname))
 
-		targetPath := filepath.Join(dir, header.Name)
 		info := header.FileInfo()
 
 		switch header.Typeflag {
@@ -131,31 +206,33 @@ func (t *TarFormers) HandleTarFlow(tarReader *tar.Reader, dir string) error {
 						targetPath, err.Error()))
 			}
 		case tar.TypeReg, tar.TypeRegA:
-			err := t.CreateFile(dir, info.Mode(), tarReader, header)
+			err := t.CreateFile(dir, name, info.Mode(), tarReader, header)
 			if err != nil {
 				return err
 			}
 		case tar.TypeLink:
 			t.Logger.Debug(fmt.Sprintf("Path %s is a hardlink to %s.",
-				header.Name, header.Linkname))
+				name, header.Linkname))
 			links = append(links,
 				specs.Link{
 					Path:     targetPath,
 					Linkname: filepath.Join(dir, header.Linkname),
-					Name:     header.Name,
+					Name:     name,
 					Mode:     info.Mode(),
 					TypeFlag: header.Typeflag,
+					Meta:     specs.NewFileMeta(header),
 				})
 		case tar.TypeSymlink:
 			t.Logger.Debug(fmt.Sprintf("Path %s is a symlink to %s.",
-				header.Name, header.Linkname))
+				name, header.Linkname))
 			links = append(links,
 				specs.Link{
 					Path:     targetPath,
 					Linkname: header.Linkname,
-					Name:     header.Name,
+					Name:     name,
 					Mode:     info.Mode(),
 					TypeFlag: header.Typeflag,
+					Meta:     specs.NewFileMeta(header),
 				})
 		case tar.TypeChar, tar.TypeBlock:
 			err := t.CreateBlockCharFifo(targetPath, info.Mode(), header)
@@ -168,7 +245,8 @@ func (t *TarFormers) HandleTarFlow(tarReader *tar.Reader, dir string) error {
 		// Set this an option
 		switch header.Typeflag {
 		case tar.TypeDir, tar.TypeReg, tar.TypeRegA, tar.TypeBlock, tar.TypeFifo:
-			err := t.SetFileProps(targetPath, header)
+			meta := specs.NewFileMeta(header)
+			err := t.SetFileProps(targetPath, &meta, false)
 			if err != nil {
 				return err
 			}
@@ -181,6 +259,12 @@ func (t *TarFormers) HandleTarFlow(tarReader *tar.Reader, dir string) error {
 		//links = t.GetOrderedLinks(links)
 		for i := range links {
 			err := t.CreateLink(links[i])
+			if err != nil {
+				return err
+			}
+
+			// TODO: check if call setProps to links files too.
+			err = t.SetFileProps(links[i].Path, &links[i].Meta, true)
 			if err != nil {
 				return err
 			}

@@ -20,14 +20,23 @@ package specs
 
 import (
 	"os"
+	"time"
 )
 
 type SpecFile struct {
 	File string `yaml:"-" json:"-"`
 
-	// Define the list of prefixes of the path to
+	// Define the list of prefixes of the path to extract
 	MatchPrefix []string `yaml:"match_prefix,omitempty" json:"match_prefix,omitempty"`
+	// Define the list of files to ignore/skip.
+
 	IgnoreFiles []string `yaml:"ignore_files,omitempty" json:"ignore_files,omitempty"`
+
+	// If the user handler is set. Permit to define the list of the file where
+	// is called the user handler function. If this list is empty it calls
+	// the callback every times (and TriggeredMatchesPrefix)
+	TriggeredFiles         []string `yaml:"triggered_files,omitempty" json:"triggered_files,omitempty"`
+	TriggeredMatchesPrefix []string `yaml:"triggered_matches_prefix,omitempty json:"triggered_matches_prefix,omitempty"`
 
 	Rename []RenameRule `yaml:"rename,omitempty" json:"rename,omitempty"`
 
@@ -40,6 +49,9 @@ type SpecFile struct {
 	SameChtimes      bool `yaml:"same_chtimes,omitempty" json:"same_chtimes,omitempty"`
 	MapEntities      bool `yaml:"map_entities,omitempty" json:"map_entities,omitempty"`
 	BrokenLinksFatal bool `yaml:"broken_links_fatal,omitempty" json:"broken_links_fatal,omitempty"`
+	EnableMutex      bool `yaml:"enable_mutex,omitempty" json:"enable_mutex,omitempty"`
+
+	mapModifier map[string]bool `yaml:"-" json:"-"`
 }
 
 type RenameRule struct {
@@ -47,13 +59,25 @@ type RenameRule struct {
 	Dest   string `yaml:"dest" json:"dest"`
 }
 
+type FileMeta struct {
+	Uid   int    // User ID of owner
+	Gid   int    // Group ID of owner
+	Uname string // User name of owner
+	Gname string // Group name of owner
+
+	ModTime    time.Time // Modification time
+	AccessTime time.Time // Access time
+	ChangeTime time.Time // Change time
+
+	Xattrs     map[string]string // extend attributes
+	PAXRecords map[string]string // PAX extend headers records
+}
+
 type Link struct {
-	// Contains the path of the link to create (header.Name)
-	Name string
-	// Contains the path of the path linked to this link (header.Linkname)
-	Linkname string
-	// Contains the target path merged to the destination path that must be creatd.
-	Path     string
+	Name     string // Contains the path of the link to create (header.Name)
+	Linkname string // Contains the path of the path linked to this link (header.Linkname)
+	Path     string // Contains the target path merged to the destination path that must be creatd.
 	TypeFlag byte
 	Mode     os.FileMode
+	Meta     FileMeta
 }

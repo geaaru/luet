@@ -23,6 +23,12 @@ import (
 )
 
 func (t *TarFormers) CreateDir(dir string, mode os.FileMode) error {
+
+	if t.Task.EnableMutex {
+		mutex.Lock()
+		defer mutex.Unlock()
+	}
+
 	if _, err := os.Stat(dir); err != nil {
 		if os.IsNotExist(err) {
 			return os.MkdirAll(dir, mode)
