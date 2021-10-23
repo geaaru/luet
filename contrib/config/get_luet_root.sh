@@ -38,8 +38,8 @@ system:
   tmpdir_base: "/var/tmp/luet"
 EOF
 
-./luet install -y repository/luet repository/mocaccino-repository-index
-./luet install -y system/luet-extensions
+luet install -y repository/luet repository/mocaccino-repository-index
+luet install -y system/luet-extensions
 
-rm -rf luet
+#rm -rf luet
 
