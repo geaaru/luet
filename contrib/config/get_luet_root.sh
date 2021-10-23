@@ -14,6 +14,7 @@ LUET_DATABASE_ENGINE=${LUET_DATABASE_ENGINE:-boltdb}
 LUET_CONFIG_PROTECT=${LUET_CONFIG_PROTECT:-1}
 
 GITHUB_USER="${GITHUB_USER:-geaaru}"
+GITHUB_BRANCH="${GITHUB_BRANCH:-master}"
 
 curl -L https://github.com/${GITHUB_USER}/luet/releases/download/${LUET_VERSION}/luet-${LUET_VERSION}-linux-amd64 --output /usr/bin/luet
 chmod +x /usr/bin/luet
@@ -24,7 +25,7 @@ mkdir -p /var/tmp/luet || true
 
 if [ "${LUET_CONFIG_PROTECT}" = "1" ] ; then
   mkdir -p /etc/luet/config.protect.d || true
-  curl -L https://raw.githubusercontent.com/${GITHUB_USER}/luet/master/contrib/config/config.protect.d/01_etc.yml.example --output /etc/luet/config.protect.d/01_etc.yml
+  curl -L https://raw.githubusercontent.com/${GITHUB_USER}/luet/${GITHUB_BRANCH}/contrib/config/config.protect.d/01_etc.yml.example --output /etc/luet/config.protect.d/01_etc.yml
 fi
 curl -L https://raw.githubusercontent.com/mocaccinoOS/repository-index/master/packages/mocaccino-repository-index.yml --output /etc/luet/repos.conf.d/mocaccino-repository-index.yml
 
