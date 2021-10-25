@@ -145,8 +145,8 @@ func (t *TarFormers) SetXattrAttr(path, k, v string, flag int) error {
 			// EPERM occurs if modifying xattrs is not allowed. This can
 			// happen when running in userns with restrictions (ChromeOS).
 			t.Logger.Warning(
-				"[%s] Ignoring xattr %s not supported by the underlying filesystem: %s",
-				path, k, err.Error())
+				fmt.Sprintf("[%s] Ignoring xattr %s not supported by the underlying filesystem: %s",
+					path, k, err.Error()))
 		} else {
 			return err
 		}
