@@ -743,9 +743,16 @@ func (l *LuetInstaller) computeInstall(o Option, syncedRepos Repositories, cp pk
 func (l *LuetInstaller) getFinalizers(allRepos pkg.PackageDatabase, solution solver.PackagesAssertions, toInstall map[string]ArtifactMatch, nodeps bool) ([]pkg.Package, error) {
 	var toFinalize []pkg.Package
 	if !nodeps {
+
+		Info("Resolve finalizers...")
+
 		// TODO: Lower those errors as warning
 		for _, w := range toInstall {
 			// Finalizers needs to run in order and in sequence.
+
+			// Set this log to INFO until we refactor this step. Just inform the user
+			// that it doing something.
+			Info(fmt.Sprintf("[%s]: order deps for get finalizer.", w.Package.GetPackageName()))
 			ordered, err := solution.Order(allRepos, w.Package.GetFingerPrint())
 			if err != nil {
 				return toFinalize, errors.Wrap(err, "While order a solution for "+w.Package.HumanReadableString())

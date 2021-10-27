@@ -62,7 +62,7 @@ func (f *LuetFinalizer) RunInstall(s *System) error {
 			b := box.NewBox(cmd, toRun, []string{}, LuetCfg.GetFinalizerEnvs(), s.Target, false, true, true)
 			err := b.Run()
 			if err != nil {
-				return errors.Wrap(err, "Failed running command ")
+				return errors.Wrap(err, "Failed running command: ")
 			}
 		}
 	}
