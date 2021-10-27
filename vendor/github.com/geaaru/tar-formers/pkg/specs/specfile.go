@@ -20,6 +20,7 @@ package specs
 
 import (
 	"archive/tar"
+	"io/fs"
 	"io/ioutil"
 	"strings"
 
@@ -148,6 +149,11 @@ func NewFileMeta(header *tar.Header) FileMeta {
 		ans.ChangeTime = header.ChangeTime
 		ans.Xattrs = header.Xattrs
 		ans.PAXRecords = header.PAXRecords
+		ans.FileInfo = header.FileInfo()
 	}
 	return ans
+}
+
+func (m *FileMeta) GetFileMode() fs.FileMode {
+	return m.FileInfo.Mode()
 }

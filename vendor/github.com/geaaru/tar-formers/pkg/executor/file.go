@@ -97,6 +97,14 @@ func (t *TarFormers) SetFileProps(path string, meta *specs.FileMeta, link bool) 
 					fmt.Sprintf("For path %s error on chown: %s",
 						path, err.Error()))
 			}
+
+			// NOTE: it seems that pass mode to OpenFile doesn't
+			// set suid bits. I call chmod after chown.
+			if err := os.Chmod(path, meta.GetFileMode()); err != nil {
+				return errors.New(
+					fmt.Sprintf("For path %s error on chmod: %s",
+						path, err.Error()))
+			}
 		}
 	}
 

@@ -19,6 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package specs
 
 import (
+	"io/fs"
 	"os"
 	"time"
 )
@@ -64,6 +65,8 @@ type FileMeta struct {
 	Gid   int    // Group ID of owner
 	Uname string // User name of owner
 	Gname string // Group name of owner
+
+	FileInfo fs.FileInfo // Permission and mode bits
 
 	ModTime    time.Time // Modification time
 	AccessTime time.Time // Access time
