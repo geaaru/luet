@@ -883,7 +883,8 @@ func (l *LuetInstaller) install(o Option, syncedRepos Repositories, toInstall ma
 		}
 		bus.Manager.Publish(bus.EventPackageInstall, c)
 	}
-	Info(fmt.Sprintf("Packages added in local db in %d µs.",
+	Info(fmt.Sprintf("%d packages added/updated in local db in %d µs.",
+		len(toInstall),
 		time.Now().Sub(start).Nanoseconds()/1e3))
 
 	if !o.RunFinalizers {
@@ -1029,7 +1030,7 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 	if !config.LuetCfg.ConfigProtectSkip {
 
 		if p.HasAnnotation(string(pkg.ConfigProtectAnnnotation)) {
-			dir, ok := p.GetAnnotations()[string(pkg.ConfigProtectAnnnotation)]
+			dir, ok := p.GetAnnotations()[string(pkg.ConfigProtectAnnnotation)].(string)
 			if ok {
 				annotationDir = dir
 			}

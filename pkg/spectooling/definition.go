@@ -31,7 +31,7 @@ type DefaultPackageSanitized struct {
 	PackageConflicts []*DefaultPackageSanitized `json:"conflicts,omitempty" yaml:"conflicts,omitempty"`
 	Provides         []*DefaultPackageSanitized `json:"provides,omitempty" yaml:"provides,omitempty"`
 
-	Annotations map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+	Annotations map[string]interface{} `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 
 	// Path is set only internally when tree is loaded from disk
 	Path string `json:"path,omitempty" yaml:"path,omitempty"`

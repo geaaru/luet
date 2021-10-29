@@ -100,8 +100,8 @@ type Package interface {
 	HasLabel(string) bool
 	MatchLabel(*regexp.Regexp) bool
 
-	AddAnnotation(string, string)
-	GetAnnotations() map[string]string
+	AddAnnotation(string, interface{})
+	GetAnnotations() map[string]interface{}
 	HasAnnotation(string) bool
 	MatchAnnotation(*regexp.Regexp) bool
 
@@ -276,7 +276,7 @@ type DefaultPackage struct {
 	Hidden           bool              `json:"hidden,omitempty"`   // Affects YAML field names too.
 
 	// Annotations are used for core features/options
-	Annotations map[string]string `json:"annotations,omitempty"` // Affects YAML field names too
+	Annotations map[string]interface{} `json:"annotations,omitempty"` // Affects YAML field names too
 
 	// Path is set only internally when tree is loaded from disk
 	Path string `json:"path,omitempty"`
@@ -397,11 +397,11 @@ func (p DefaultPackage) IsCollection() bool {
 }
 
 func (p *DefaultPackage) HasAnnotation(label string) bool {
-	return match.MapHasKey(&p.Annotations, label)
+	return match.MapIHasKey(&p.Annotations, label)
 }
 
 func (p *DefaultPackage) MatchAnnotation(r *regexp.Regexp) bool {
-	return match.MapMatchRegex(&p.Annotations, r)
+	return match.MapIMatchRegex(&p.Annotations, r)
 }
 
 // AddUse adds a use to a package
@@ -492,16 +492,16 @@ func (p *DefaultPackage) AddLabel(k, v string) {
 	}
 	p.Labels[k] = v
 }
-func (p *DefaultPackage) AddAnnotation(k, v string) {
+func (p *DefaultPackage) AddAnnotation(k string, v interface{}) {
 	if p.Annotations == nil {
-		p.Annotations = make(map[string]string, 0)
+		p.Annotations = make(map[string]interface{}, 0)
 	}
 	p.Annotations[k] = v
 }
 func (p *DefaultPackage) GetLabels() map[string]string {
 	return p.Labels
 }
-func (p *DefaultPackage) GetAnnotations() map[string]string {
+func (p *DefaultPackage) GetAnnotations() map[string]interface{} {
 	return p.Annotations
 }
 func (p *DefaultPackage) GetProvides() []*DefaultPackage {

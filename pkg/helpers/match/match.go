@@ -1,4 +1,4 @@
-// Copyright © 2019-2020 Ettore Di Giacinto <mudler@gentoo.org>
+// Copyright © 2019-2021 Ettore Di Giacinto <mudler@gentoo.org>
 //                       Daniele Rondina <geaaru@sabayonlinux.org>
 //
 // This program is free software; you can redistribute it and/or modify
@@ -29,6 +29,21 @@ func ReverseAny(s interface{}) {
 	}
 }
 
+func MapIMatchRegex(m *map[string]interface{}, r *regexp.Regexp) bool {
+	ans := false
+
+	if m != nil {
+		for k, _ := range *m {
+			if r.MatchString(k) {
+				ans = true
+				break
+			}
+		}
+	}
+
+	return ans
+}
+
 func MapMatchRegex(m *map[string]string, r *regexp.Regexp) bool {
 	ans := false
 
@@ -41,6 +56,19 @@ func MapMatchRegex(m *map[string]string, r *regexp.Regexp) bool {
 		}
 	}
 
+	return ans
+}
+
+func MapIHasKey(m *map[string]interface{}, label string) bool {
+	ans := false
+	if m != nil {
+		for k, _ := range *m {
+			if k == label {
+				ans = true
+				break
+			}
+		}
+	}
 	return ans
 }
 

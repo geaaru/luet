@@ -454,7 +454,7 @@ func (a *PackageArtifact) GetProtectFiles() []string {
 		// a.CompileSpec could be nil when artifact.Unpack is used for tree tarball
 		if a.CompileSpec != nil &&
 			a.CompileSpec.GetPackage().HasAnnotation(string(pkg.ConfigProtectAnnnotation)) {
-			dir, ok := a.CompileSpec.GetPackage().GetAnnotations()[string(pkg.ConfigProtectAnnnotation)]
+			dir, ok := a.CompileSpec.GetPackage().GetAnnotations()[string(pkg.ConfigProtectAnnnotation)].(string)
 			if ok {
 				annotationDir = dir
 			}
