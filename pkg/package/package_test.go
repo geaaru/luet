@@ -119,7 +119,7 @@ var _ = Describe("Package", func() {
 				_, err = definitions.CreatePackage(p)
 				Expect(err).ToNot(HaveOccurred())
 			}
-			re := regexp.MustCompile("project[0-9][=].*")
+			re := regexp.MustCompile("project[0-9]")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(re).ToNot(BeNil())
 			Expect(a.HasAnnotation("label2")).To(Equal(true))
