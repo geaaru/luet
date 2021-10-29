@@ -23,6 +23,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/mudler/luet/pkg/bus"
 	artifact "github.com/mudler/luet/pkg/compiler/types/artifact"
@@ -33,6 +34,7 @@ import (
 	. "github.com/mudler/luet/pkg/logger"
 	pkg "github.com/mudler/luet/pkg/package"
 	"github.com/mudler/luet/pkg/solver"
+	"github.com/mudler/luet/pkg/tree"
 
 	. "github.com/logrusorgru/aurora"
 	"github.com/pkg/errors"
@@ -750,6 +752,11 @@ func (l *LuetInstaller) getFinalizers(allRepos pkg.PackageDatabase, solution sol
 		for _, w := range toInstall {
 			// Finalizers needs to run in order and in sequence.
 
+			if !fileHelper.Exists(w.Package.Rel(tree.FinalizerFile)) {
+				Debug(fmt.Sprintf("[%s]: No finalizer present.", w.Package.GetPackageName()))
+				continue
+			}
+
 			// Set this log to INFO until we refactor this step. Just inform the user
 			// that it doing something.
 			Info(fmt.Sprintf("[%s]: order deps for get finalizer.", w.Package.GetPackageName()))
@@ -867,6 +874,7 @@ func (l *LuetInstaller) install(o Option, syncedRepos Repositories, toInstall ma
 	close(all)
 	wg.Wait()
 
+	start := time.Now()
 	for _, c := range toInstall {
 		// Annotate to the system that the package was installed
 		_, err := s.Database.CreatePackage(c.Package)
@@ -875,6 +883,8 @@ func (l *LuetInstaller) install(o Option, syncedRepos Repositories, toInstall ma
 		}
 		bus.Manager.Publish(bus.EventPackageInstall, c)
 	}
+	Info(fmt.Sprintf("Packages added in local db in %d µs.",
+		time.Now().Sub(start).Nanoseconds()/1e3))
 
 	if !o.RunFinalizers {
 		return nil
