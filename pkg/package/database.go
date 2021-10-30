@@ -25,6 +25,8 @@ type PackageDatabase interface {
 
 	Create(string, []byte) (string, error)
 	Retrieve(ID string) ([]byte, error)
+
+	Close() error
 }
 
 type PackageSet interface {

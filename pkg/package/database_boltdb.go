@@ -37,6 +37,8 @@ type BoltDatabase struct {
 	sync.Mutex
 	Path             string
 	ProvidesDatabase map[string]map[string]Package
+
+	DB *storm.DB
 }
 
 func NewBoltDatabase(path string) PackageDatabase {
@@ -55,12 +57,38 @@ func (db *BoltDatabase) Copy() (PackageDatabase, error) {
 	return copy(db)
 }
 
-func (db *BoltDatabase) Get(s string) (string, error) {
+func (db *BoltDatabase) Close() error {
+	db.Lock()
+	defer db.Unlock()
+	if db.DB != nil {
+		db.DB.Close()
+		db.DB = nil
+	}
+	return nil
+}
+
+func (db *BoltDatabase) open() (*storm.DB, error) {
+	db.Lock()
+	defer db.Unlock()
+
+	if db.DB != nil {
+		return db.DB, nil
+	}
+
 	bolt, err := storm.Open(db.Path, storm.BoltOptions(0600, &bbolt.Options{Timeout: 30 * time.Second}))
+	if err != nil {
+		return nil, err
+	}
+
+	db.DB = bolt
+	return db.DB, nil
+}
+
+func (db *BoltDatabase) Get(s string) (string, error) {
+	bolt, err := db.open()
 	if err != nil {
 		return "", err
 	}
-	defer bolt.Close()
 	var str string
 	bolt.Get("solver", s, &str)
 
@@ -68,11 +96,10 @@ func (db *BoltDatabase) Get(s string) (string, error) {
 }
 
 func (db *BoltDatabase) Set(k, v string) error {
-	bolt, err := storm.Open(db.Path, storm.BoltOptions(0600, &bbolt.Options{Timeout: 30 * time.Second}))
+	bolt, err := db.open()
 	if err != nil {
 		return err
 	}
-	defer bolt.Close()
 	return bolt.Set("solver", k, v)
 }
 func (db *BoltDatabase) Create(id string, v []byte) (string, error) {
@@ -112,11 +139,10 @@ func (db *BoltDatabase) FindPackage(tofind Package) (Package, error) {
 	}
 
 	p := &DefaultPackage{}
-	bolt, err := storm.Open(db.Path, storm.BoltOptions(0600, &bbolt.Options{Timeout: 30 * time.Second}))
+	bolt, err := db.open()
 	if err != nil {
 		return nil, err
 	}
-	defer bolt.Close()
 
 	err = bolt.Select(q.Eq("Name", tofind.GetName()), q.Eq("Category", tofind.GetCategory()), q.Eq("Version", tofind.GetVersion())).Limit(1).First(p)
 	if err != nil {
@@ -142,11 +168,10 @@ func (db *BoltDatabase) UpdatePackage(p Package) error {
 
 func (db *BoltDatabase) GetPackage(ID string) (Package, error) {
 	p := &DefaultPackage{}
-	bolt, err := storm.Open(db.Path, storm.BoltOptions(0600, &bbolt.Options{Timeout: 30 * time.Second}))
+	bolt, err := db.open()
 	if err != nil {
 		return nil, err
 	}
-	defer bolt.Close()
 	iid, err := strconv.Atoi(ID)
 	if err != nil {
 		return nil, err
@@ -159,11 +184,10 @@ func (db *BoltDatabase) GetPackage(ID string) (Package, error) {
 
 func (db *BoltDatabase) GetPackages() []string {
 	ids := []string{}
-	bolt, err := storm.Open(db.Path, storm.BoltOptions(0600, &bbolt.Options{Timeout: 30 * time.Second}))
+	bolt, err := db.open()
 	if err != nil {
 		return []string{}
 	}
-	defer bolt.Close()
 	// Fetching records one by one (useful when the bucket contains a lot of records)
 	query := bolt.Select()
 
@@ -176,11 +200,10 @@ func (db *BoltDatabase) GetPackages() []string {
 }
 
 func (db *BoltDatabase) GetAllPackages(packages chan Package) error {
-	bolt, err := storm.Open(db.Path, storm.BoltOptions(0600, &bbolt.Options{Timeout: 30 * time.Second}))
+	bolt, err := db.open()
 	if err != nil {
 		return err
 	}
-	defer bolt.Close()
 	var packs []DefaultPackage
 	err = bolt.All(&packs)
 	if err != nil {
@@ -197,11 +220,10 @@ func (db *BoltDatabase) GetAllPackages(packages chan Package) error {
 // Encode encodes the package to string.
 // It returns an ID which can be used to retrieve the package later on.
 func (db *BoltDatabase) CreatePackage(p Package) (string, error) {
-	bolt, err := storm.Open(db.Path, storm.BoltOptions(0600, &bbolt.Options{Timeout: 30 * time.Second}))
+	bolt, err := db.open()
 	if err != nil {
 		return "", errors.Wrap(err, "Error opening boltdb "+db.Path)
 	}
-	defer bolt.Close()
 
 	dp, ok := p.(*DefaultPackage)
 	if !ok {
@@ -265,17 +287,17 @@ func (db *BoltDatabase) getProvide(p Package) (Package, error) {
 }
 
 func (db *BoltDatabase) Clean() error {
+	db.Close()
 	db.Lock()
 	defer db.Unlock()
 	return os.RemoveAll(db.Path)
 }
 
 func (db *BoltDatabase) GetPackageFiles(p Package) ([]string, error) {
-	bolt, err := storm.Open(db.Path, storm.BoltOptions(0600, &bbolt.Options{Timeout: 30 * time.Second}))
+	bolt, err := db.open()
 	if err != nil {
 		return []string{}, errors.Wrap(err, "Error opening boltdb "+db.Path)
 	}
-	defer bolt.Close()
 
 	files := bolt.From("files")
 	var pf PackageFile
@@ -286,21 +308,19 @@ func (db *BoltDatabase) GetPackageFiles(p Package) ([]string, error) {
 	return pf.Files, nil
 }
 func (db *BoltDatabase) SetPackageFiles(p *PackageFile) error {
-	bolt, err := storm.Open(db.Path, storm.BoltOptions(0600, &bbolt.Options{Timeout: 30 * time.Second}))
+	bolt, err := db.open()
 	if err != nil {
 		return errors.Wrap(err, "Error opening boltdb "+db.Path)
 	}
-	defer bolt.Close()
 
 	files := bolt.From("files")
 	return files.Save(p)
 }
 func (db *BoltDatabase) RemovePackageFiles(p Package) error {
-	bolt, err := storm.Open(db.Path, storm.BoltOptions(0600, &bbolt.Options{Timeout: 30 * time.Second}))
+	bolt, err := db.open()
 	if err != nil {
 		return errors.Wrap(err, "Error opening boltdb "+db.Path)
 	}
-	defer bolt.Close()
 
 	files := bolt.From("files")
 	var pf PackageFile
@@ -312,11 +332,10 @@ func (db *BoltDatabase) RemovePackageFiles(p Package) error {
 }
 
 func (db *BoltDatabase) RemovePackage(p Package) error {
-	bolt, err := storm.Open(db.Path, storm.BoltOptions(0600, &bbolt.Options{Timeout: 30 * time.Second}))
+	bolt, err := db.open()
 	if err != nil {
 		return errors.Wrap(err, "Error opening boltdb "+db.Path)
 	}
-	defer bolt.Close()
 	var found DefaultPackage
 	err = bolt.Select(q.Eq("Name", p.GetName()), q.Eq("Category", p.GetCategory()), q.Eq("Version", p.GetVersion())).Limit(1).Delete(&found)
 	if err != nil {
@@ -328,11 +347,10 @@ func (db *BoltDatabase) RemovePackage(p Package) error {
 func (db *BoltDatabase) World() Packages {
 	var packs []DefaultPackage
 
-	bolt, err := storm.Open(db.Path, storm.BoltOptions(0600, &bbolt.Options{Timeout: 30 * time.Second}))
+	bolt, err := db.open()
 	if err != nil {
 		return Packages([]Package{})
 	}
-	defer bolt.Close()
 	err = bolt.All(&packs)
 	if err != nil {
 		return Packages([]Package{})

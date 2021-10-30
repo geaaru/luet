@@ -158,6 +158,13 @@ To build a package, from a tree definition:
 		if err != nil {
 			Warning("failed on cleanup tmpdir:", err.Error())
 		}
+
+		systemDB := config.LuetCfg.GetSystemDB()
+		err = systemDB.Close()
+		if err != nil {
+			Warning("failed on close database:", err.Error())
+		}
+
 	},
 	SilenceErrors: true,
 }

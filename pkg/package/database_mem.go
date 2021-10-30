@@ -61,6 +61,10 @@ func NewInMemoryDatabase(singleton bool) PackageDatabase {
 	return DBInMemoryInstance
 }
 
+func (db *InMemoryDatabase) Close() error {
+	return nil
+}
+
 func (db *InMemoryDatabase) Get(s string) (string, error) {
 	db.Lock()
 	defer db.Unlock()
