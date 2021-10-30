@@ -874,7 +874,10 @@ func (l *LuetInstaller) install(o Option, syncedRepos Repositories, toInstall ma
 	close(all)
 	wg.Wait()
 
+	Info(fmt.Sprintf("Updating local db with the %d installed packages.",
+		len(toInstall)))
 	start := time.Now()
+
 	for _, c := range toInstall {
 		// Annotate to the system that the package was installed
 		_, err := s.Database.CreatePackage(c.Package)
