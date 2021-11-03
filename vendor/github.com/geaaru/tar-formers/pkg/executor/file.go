@@ -37,7 +37,7 @@ func (t *TarFormers) CreateFile(dir, name string, mode os.FileMode, reader io.Re
 	file := t.Task.GetRename("/" + name)
 	file = filepath.Join(dir, file)
 
-	err := t.CreateDir(filepath.Dir(file), mode|os.ModeDir|100)
+	_, err := t.CreateDir(filepath.Dir(file), mode|os.ModeDir|100)
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func (t *TarFormers) SetXattrAttr(path, k, v string, flag int) error {
 }
 
 func (t *TarFormers) CreateBlockCharFifo(file string, mode os.FileMode, header *tar.Header) error {
-	err := t.CreateDir(filepath.Dir(file), mode|os.ModeDir|100)
+	_, err := t.CreateDir(filepath.Dir(file), mode|os.ModeDir|100)
 	if err != nil {
 		return err
 	}

@@ -114,7 +114,7 @@ func (t *TarFormers) RunTask(task *specs.SpecFile, dir string) error {
 
 	t.Task = task
 
-	err := t.CreateDir(dir, 0755)
+	_, err := t.CreateDir(dir, 0755)
 	if err != nil {
 		return err
 	}
@@ -141,6 +141,7 @@ func (t *TarFormers) HandleTarFlow(tarReader *tar.Reader, dir string) error {
 
 	for {
 		header, err := tarReader.Next()
+		newDir := false
 
 		if err == io.EOF {
 			err = nil
@@ -192,21 +193,21 @@ func (t *TarFormers) HandleTarFlow(tarReader *tar.Reader, dir string) error {
 			continue
 		}
 
-		t.Logger.Debug(fmt.Sprintf("Parsing file %s [%s - %d, %s - %d] (%s).",
-			name, header.Uname, header.Uid, header.Gname, header.Gid, header.Linkname))
-
 		info := header.FileInfo()
+
+		t.Logger.Debug(fmt.Sprintf("Parsing file %s [%s - %d, %s - %d] %s (%s).",
+			name, header.Uname, header.Uid, header.Gname, header.Gid, info.Mode(), header.Linkname))
 
 		switch header.Typeflag {
 		case tar.TypeDir:
-			err := t.CreateDir(targetPath, info.Mode())
+			newDir, err = t.CreateDir(targetPath, info.Mode())
 			if err != nil {
 				return errors.New(
 					fmt.Sprintf("Error on create directory %s: %s",
 						targetPath, err.Error()))
 			}
 		case tar.TypeReg, tar.TypeRegA:
-			err := t.CreateFile(dir, name, info.Mode(), tarReader, header)
+			err = t.CreateFile(dir, name, info.Mode(), tarReader, header)
 			if err != nil {
 				return err
 			}
@@ -246,9 +247,11 @@ func (t *TarFormers) HandleTarFlow(tarReader *tar.Reader, dir string) error {
 		switch header.Typeflag {
 		case tar.TypeDir, tar.TypeReg, tar.TypeRegA, tar.TypeBlock, tar.TypeFifo:
 			meta := specs.NewFileMeta(header)
-			err := t.SetFileProps(targetPath, &meta, false)
-			if err != nil {
-				return err
+			if header.Typeflag != tar.TypeDir || newDir || (!newDir && t.Task.OverwritePerms2Dir()) {
+				err := t.SetFileProps(targetPath, &meta, false)
+				if err != nil {
+					return err
+				}
 			}
 		}
 

@@ -42,6 +42,7 @@ func NewSpecFile() *SpecFile {
 		MapEntities:      false,
 		BrokenLinksFatal: false,
 		EnableMutex:      false,
+		OverwritePerms:   false,
 
 		mapModifier: make(map[string]bool, 0),
 	}
@@ -65,6 +66,10 @@ func NewSpecFileFromFile(file string) (*SpecFile, error) {
 	}
 
 	return NewSpecFileFromYaml(data, file)
+}
+
+func (s *SpecFile) OverwritePerms2Dir() bool {
+	return s.OverwritePerms
 }
 
 func (s *SpecFile) IsFileTriggered(path string) bool {

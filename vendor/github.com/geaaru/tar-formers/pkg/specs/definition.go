@@ -51,6 +51,7 @@ type SpecFile struct {
 	MapEntities      bool `yaml:"map_entities,omitempty" json:"map_entities,omitempty"`
 	BrokenLinksFatal bool `yaml:"broken_links_fatal,omitempty" json:"broken_links_fatal,omitempty"`
 	EnableMutex      bool `yaml:"enable_mutex,omitempty" json:"enable_mutex,omitempty"`
+	OverwritePerms   bool `yaml:"overwrite_perms,omitempty" json:"overwrite_perms,omitempty"`
 
 	mapModifier map[string]bool `yaml:"-" json:"-"`
 }

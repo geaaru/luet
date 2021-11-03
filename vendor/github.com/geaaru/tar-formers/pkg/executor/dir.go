@@ -22,8 +22,7 @@ import (
 	"os"
 )
 
-func (t *TarFormers) CreateDir(dir string, mode os.FileMode) error {
-
+func (t *TarFormers) CreateDir(dir string, mode os.FileMode) (bool, error) {
 	if t.Task.EnableMutex {
 		mutex.Lock()
 		defer mutex.Unlock()
@@ -31,11 +30,12 @@ func (t *TarFormers) CreateDir(dir string, mode os.FileMode) error {
 
 	if _, err := os.Stat(dir); err != nil {
 		if os.IsNotExist(err) {
-			return os.MkdirAll(dir, mode)
+
+			return true, os.MkdirAll(dir, mode)
 		} else {
-			return err
+			return false, err
 		}
 	}
 
-	return nil
+	return false, nil
 }
