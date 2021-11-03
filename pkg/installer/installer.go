@@ -28,7 +28,6 @@ import (
 	"github.com/mudler/luet/pkg/bus"
 	artifact "github.com/mudler/luet/pkg/compiler/types/artifact"
 	"github.com/mudler/luet/pkg/config"
-	"github.com/mudler/luet/pkg/helpers"
 	fileHelper "github.com/mudler/luet/pkg/helpers/file"
 	"github.com/mudler/luet/pkg/helpers/match"
 	. "github.com/mudler/luet/pkg/logger"
@@ -798,7 +797,8 @@ func (l *LuetInstaller) checkFileconflicts(toInstall map[string]ArtifactMatch, c
 	Info("Checking for file conflicts..")
 	defer s.Clean() // Release memory
 
-	filesToInstall := []string{}
+	start := time.Now()
+	filesToInstall := make(map[string]string, 0)
 	for _, m := range toInstall {
 		a, err := l.downloadPackage(m)
 		if err != nil && !l.Options.Force {
@@ -810,11 +810,14 @@ func (l *LuetInstaller) checkFileconflicts(toInstall map[string]ArtifactMatch, c
 		}
 
 		for _, f := range files {
-			if helpers.Contains(filesToInstall, f) {
+			if pkg, ok := filesToInstall[f]; ok {
 				return fmt.Errorf(
-					"file conflict between packages to be installed",
+					"file %s conflict between package %s and %s",
+					f, pkg, a.CompileSpec.Package.HumanReadableString(),
 				)
 			}
+			filesToInstall[f] = a.CompileSpec.Package.HumanReadableString()
+
 			if checkSystem {
 				exists, p, err := s.ExistsPackageFile(f)
 				if err != nil {
@@ -830,8 +833,11 @@ func (l *LuetInstaller) checkFileconflicts(toInstall map[string]ArtifactMatch, c
 				}
 			}
 		}
-		filesToInstall = append(filesToInstall, files...)
 	}
+
+
+	Info(fmt.Sprintf("Check for file conflicts completed in %d µs.",
+		time.Now().Sub(start).Nanoseconds()/1e3))
 
 	return nil
 }
