@@ -3,7 +3,21 @@
 export LUET_NOLOCK=true
 
 oneTimeSetUp() {
-export tmpdir="$(mktemp -d)"
+  export tmpdir="$(mktemp -d)"
+  cat <<EOF > $tmpdir/luet-build.yaml
+general:
+  debug: true
+logging:
+  enable_emoji: false
+  color: false
+system:
+  rootfs: $tmpdir/testrootfs
+  database_path: "/"
+  database_engine: "memory"
+config_from_host: true
+repos_confdir:
+  - "$tmpdir/etc/luet/repos.conf.d"
+EOF
 }
 
 oneTimeTearDown() {
@@ -12,7 +26,9 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/fileconflicts_upgrade" --destination $tmpdir/testbuild --compression gzip --all
+    luet build --config $tmpdir/luet-build.yaml \
+      --tree "$ROOT_DIR/tests/fixtures/fileconflicts_upgrade" \
+      --destination $tmpdir/testbuild --compression gzip --all
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create packages' "[ -e '$tmpdir/testbuild/conflict-test1-1.0.package.tar.gz' ]"
@@ -21,7 +37,8 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/fileconflicts_upgrade" \
+    luet create-repo --config $tmpdir/luet-build.yaml \
+    --tree "$ROOT_DIR/tests/fixtures/fileconflicts_upgrade" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -39,11 +56,16 @@ testConfig() {
     cat <<EOF > $tmpdir/luet.yaml
 general:
   debug: true
+logging:
+  enable_emoji: false
+  color: false
 system:
   rootfs: $tmpdir/testrootfs
   database_path: "/"
   database_engine: "boltdb"
 config_from_host: true
+repos_confdir:
+  - "$tmpdir/etc/luet/repos.conf.d"
 repositories:
    - name: "main"
      type: "disk"
@@ -69,7 +91,7 @@ testUpgrade() {
     installst=$?
     assertEquals 'install test succeeded' "$installst" "1"
     assertContains 'does find conflicts' "$out" \
-      "file conflict found file test1 conflict between package"
+      "Error: file conflict found: file test1 conflict between package"
 
     luet upgrade -y --config $tmpdir/luet.yaml --force
     #luet install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null

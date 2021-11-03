@@ -118,7 +118,7 @@ var _ = Describe("Helpers Archive", func() {
 			err = Tar(archiveSourceDir, tarballFile)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = UntarProtect(tarballFile, targetDir, true,
+			err = UntarProtect(tarballFile, targetDir, true, true,
 				[]string{
 					"/file-0",
 					"/file-1",
