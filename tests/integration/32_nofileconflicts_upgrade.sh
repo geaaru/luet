@@ -66,7 +66,8 @@ testUpgrade() {
     out=$(luet upgrade -y --config $tmpdir/luet.yaml)
     installst=$?
     assertEquals 'install test succeeded' "$installst" "0"
-    assertNotContains 'does find conflicts' "$out" "Error: file conflict found: file conflict between packages to be installed"
+    assertNotContains 'does find conflicts' "$out" \
+      "Error: file conflict found: found file test1 conflict between package"
 
     installed=$(luet --config $tmpdir/luet.yaml search --installed)
     assertContains 'does upgrade' "$installed" "test1/noconflict-1.1"
