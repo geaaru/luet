@@ -509,7 +509,9 @@ func (a *PackageArtifact) Unpack(dst string, keepPerms bool) error {
 		}
 
 		err = helpers.UntarProtect(a.Path+".uncompressed", dst,
-			LuetCfg.GetGeneral().SameOwner, protectedFiles, tarModifierWrapperFunc)
+			LuetCfg.GetGeneral().SameOwner,
+			LuetCfg.GetGeneral().OverwriteDirPerms,
+			protectedFiles, tarModifierWrapperFunc)
 		if err != nil {
 			return err
 		}
@@ -542,14 +544,18 @@ func (a *PackageArtifact) Unpack(dst string, keepPerms bool) error {
 		}
 
 		err = helpers.UntarProtect(a.Path+".uncompressed", dst,
-			LuetCfg.GetGeneral().SameOwner, protectedFiles, tarModifierWrapperFunc)
+			LuetCfg.GetGeneral().SameOwner,
+			LuetCfg.GetGeneral().OverwriteDirPerms,
+			protectedFiles, tarModifierWrapperFunc)
 		if err != nil {
 			return err
 		}
 		return nil
 	// Defaults to tar only (covers when "none" is supplied)
 	default:
-		return helpers.UntarProtect(a.Path, dst, LuetCfg.GetGeneral().SameOwner,
+		return helpers.UntarProtect(a.Path, dst,
+			LuetCfg.GetGeneral().SameOwner,
+			LuetCfg.GetGeneral().OverwriteDirPerms,
 			protectedFiles, tarModifierWrapperFunc)
 	}
 	return errors.New("Compression type must be supplied")
@@ -700,7 +706,7 @@ func ExtractArtifactFromDelta(src, dst string, layers []ArtifactLayer, concurren
 			return nil, errors.Wrap(err, "Error met while creating tempdir for rootfs")
 		}
 		defer os.RemoveAll(rootfs) // clean up
-		err = helpers.Untar(src, rootfs, keepPerms)
+		err = helpers.Untar(src, rootfs, keepPerms, LuetCfg.GetGeneral().OverwriteDirPerms)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error met while unpacking rootfs")
 		}

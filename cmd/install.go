@@ -1,4 +1,5 @@
-// Copyright © 2019 Ettore Di Giacinto <mudler@gentoo.org>
+// Copyright © 2019-2021 Ettore Di Giacinto <mudler@gentoo.org>
+//                       Daniele Rondina <geaaru@sabayonlinux.org>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -54,6 +55,8 @@ To force install a package:
 		LuetCfg.Viper.BindPFlag("nodeps", cmd.Flags().Lookup("nodeps"))
 		LuetCfg.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
 		LuetCfg.Viper.BindPFlag("yes", cmd.Flags().Lookup("yes"))
+		LuetCfg.Viper.BindPFlag("general.overwrite_dir_perms",
+			cmd.Flags().Lookup("Overwrite exiting directories permissions."))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		var toInstall pkg.Packages
@@ -131,6 +134,8 @@ func init() {
 	installCmd.Flags().Bool("download-only", false, "Download only")
 	installCmd.Flags().StringArray("finalizer-env", []string{},
 		"Set finalizer environment in the format key=value.")
+	installCmd.Flags().Bool("overwrite-existing-dir-perms", false,
+		"Overwrite exiting directories permissions.")
 
 	RootCmd.AddCommand(installCmd)
 }

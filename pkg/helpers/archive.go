@@ -50,7 +50,7 @@ func Tar(src, dest string) error {
 	return err
 }
 
-func UntarProtect(src, dst string, sameOwner bool, protectedFiles []string, modifier tarf.TarFileHandlerFunc) error {
+func UntarProtect(src, dst string, sameOwner, overwriteDirPerms bool, protectedFiles []string, modifier tarf.TarFileHandlerFunc) error {
 	in, err := os.Open(src)
 	if err != nil {
 		return err
@@ -60,6 +60,7 @@ func UntarProtect(src, dst string, sameOwner bool, protectedFiles []string, modi
 	spec := tarf_specs.NewSpecFile()
 	spec.SameOwner = sameOwner
 	spec.EnableMutex = true
+	spec.OverwritePerms = overwriteDirPerms
 	spec.IgnoreFiles = []string{
 		// prevent 'operation not permitted'
 		"/dev",
@@ -78,6 +79,6 @@ func UntarProtect(src, dst string, sameOwner bool, protectedFiles []string, modi
 }
 
 // Untar just a wrapper around the docker functions
-func Untar(src, dest string, sameOwner bool) error {
-	return UntarProtect(src, dest, sameOwner, []string{}, nil)
+func Untar(src, dest string, sameOwner, overwriteDirPerms bool) error {
+	return UntarProtect(src, dest, sameOwner, overwriteDirPerms, []string{}, nil)
 }

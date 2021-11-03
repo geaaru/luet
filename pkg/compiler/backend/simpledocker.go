@@ -252,7 +252,7 @@ func (b *SimpleDocker) ExtractRootfs(opts Options, keepPerms bool) error {
 	// }
 	// defer os.RemoveAll(archive) // clean up
 
-	err = helpers.Untar(src, rootfs, keepPerms)
+	err = helpers.Untar(src, rootfs, keepPerms, true)
 	if err != nil {
 		return errors.Wrap(err, "Error met while unpacking rootfs")
 	}

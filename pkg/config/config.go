@@ -63,6 +63,8 @@ type LuetGeneralConfig struct {
 	SpinnerMs       int  `yaml:"spinner_ms,omitempty" mapstructure:"spinner_ms"`
 	SpinnerCharset  int  `yaml:"spinner_charset,omitempty" mapstructure:"spinner_charset"`
 	FatalWarns      bool `yaml:"fatal_warnings,omitempty" mapstructure:"fatal_warnings"`
+
+	OverwriteDirPerms bool `yaml:"overwrite_dir_perms,omitempty" mapstructure:"overwrite_dir_perms,omitempty"`
 }
 
 type LuetSolverOptions struct {
@@ -268,6 +270,7 @@ func GenDefault(viper *v.Viper) {
 	viper.SetDefault("general.spinner_ms", 100)
 	viper.SetDefault("general.spinner_charset", 22)
 	viper.SetDefault("general.fatal_warnings", false)
+	viper.SetDefault("general.overwrite_dir_perms", false)
 
 	u, err := user.Current()
 	// os/user doesn't work in from scratch environments
