@@ -212,7 +212,7 @@ func LoadConfig(c *config.LuetConfig) error {
 		cfg.GetLogging().Level = "warning"
 	}
 
-	t := tarf.NewTarFormers(cfg)
+	t := tarf.NewTarFormersWithLog(cfg, true)
 	tarf.SetDefaultTarFormers(t)
 
 	return nil
