@@ -76,6 +76,7 @@ To force install a package:
 		downloadOnly, _ := cmd.Flags().GetBool("download-only")
 		finalizerEnvs, _ := cmd.Flags().GetStringArray("finalizer-env")
 		relax, _ := cmd.Flags().GetBool("relax")
+		skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
 
 		util.SetSystemConfig()
 		util.SetSolverConfig()
@@ -104,6 +105,7 @@ To force install a package:
 			DownloadOnly:                downloadOnly,
 			Ask:                         !yes,
 			Relaxed:                     relax,
+			SkipFinalizers:              skipFinalizers,
 		})
 		inst.Repositories(repos)
 
@@ -136,6 +138,8 @@ func init() {
 		"Set finalizer environment in the format key=value.")
 	installCmd.Flags().Bool("overwrite-existing-dir-perms", false,
 		"Overwrite exiting directories permissions.")
+	installCmd.Flags().Bool("skip-finalizers", false,
+		"Skip the execution of the finalizers.")
 
 	RootCmd.AddCommand(installCmd)
 }

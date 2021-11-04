@@ -1,4 +1,5 @@
-// Copyright © 2019 Ettore Di Giacinto <mudler@gentoo.org>
+// Copyright © 2019-2021 Ettore Di Giacinto <mudler@gentoo.org>
+//                       Daniele Rondina <geaaru@sabayonlinux.org>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -55,6 +56,7 @@ var upgradeCmd = &cobra.Command{
 		sync, _ := cmd.Flags().GetBool("sync")
 		yes := LuetCfg.Viper.GetBool("yes")
 		downloadOnly, _ := cmd.Flags().GetBool("download-only")
+		skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
 
 		util.SetSystemConfig()
 		opts := util.SetSolverConfig()
@@ -78,6 +80,7 @@ var upgradeCmd = &cobra.Command{
 			PreserveSystemEssentialData: true,
 			Ask:                         !yes,
 			DownloadOnly:                downloadOnly,
+			SkipFinalizers:              skipFinalizers,
 		})
 		inst.Repositories(repos)
 
@@ -106,6 +109,8 @@ func init() {
 	upgradeCmd.Flags().Bool("solver-concurrent", false, "Use concurrent solver (experimental)")
 	upgradeCmd.Flags().BoolP("yes", "y", false, "Don't ask questions")
 	upgradeCmd.Flags().Bool("download-only", false, "Download only")
+	upgradeCmd.Flags().Bool("skip-finalizers", false,
+		"Skip the execution of the finalizers.")
 
 	RootCmd.AddCommand(upgradeCmd)
 }

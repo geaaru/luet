@@ -52,6 +52,7 @@ type LuetInstallerOptions struct {
 	Ask                                                            bool
 	DownloadOnly                                                   bool
 	Relaxed                                                        bool
+	SkipFinalizers                                                 bool
 }
 
 type LuetInstaller struct {
@@ -527,7 +528,7 @@ func (l *LuetInstaller) Install(cp pkg.Packages, s *System) error {
 		Force:              l.Options.Force,
 		OnlyDeps:           l.Options.OnlyDeps,
 		CheckFileConflicts: true,
-		RunFinalizers:      true,
+		RunFinalizers:      !l.Options.SkipFinalizers,
 	}
 	match, packages, assertions, allRepos, err := l.computeInstall(o, syncedRepos, cp, s)
 	if err != nil {
@@ -743,6 +744,7 @@ func (l *LuetInstaller) computeInstall(o Option, syncedRepos Repositories, cp pk
 
 func (l *LuetInstaller) getFinalizers(allRepos pkg.PackageDatabase, solution solver.PackagesAssertions, toInstall map[string]ArtifactMatch, nodeps bool) ([]pkg.Package, error) {
 	var toFinalize []pkg.Package
+
 	if !nodeps {
 
 		Info("Resolve finalizers...")
@@ -835,7 +837,6 @@ func (l *LuetInstaller) checkFileconflicts(toInstall map[string]ArtifactMatch, c
 		}
 	}
 
-
 	Info(fmt.Sprintf("Check for file conflicts completed in %d µs.",
 		time.Now().Sub(start).Nanoseconds()/1e3))
 
@@ -897,6 +898,7 @@ func (l *LuetInstaller) install(o Option, syncedRepos Repositories, toInstall ma
 		time.Now().Sub(start).Nanoseconds()/1e3))
 
 	if !o.RunFinalizers {
+		Info("Finalize phase skipped.")
 		return nil
 	}
 
