@@ -801,15 +801,22 @@ func (l *LuetInstaller) checkFileconflicts(toInstall map[string]ArtifactMatch, c
 
 	start := time.Now()
 	filesToInstall := make(map[string]string, 0)
+
 	for _, m := range toInstall {
-		a, err := l.downloadPackage(m)
+		a := m.Artifact
+		files, err := m.Artifact.FileList()
 		if err != nil && !l.Options.Force {
-			return errors.Wrap(err, "Failed downloading package")
+			return errors.Wrapf(err, "Could not get filelist for %s",
+				a.CompileSpec.Package.HumanReadableString())
 		}
-		files, err := a.FileList()
-		if err != nil && !l.Options.Force {
-			return errors.Wrapf(err, "Could not get filelist for %s", a.CompileSpec.Package.HumanReadableString())
-		}
+
+		// NOTE: Instead of load in memory the list
+		//       of the files of every installed package
+		//       and to generate the system cache
+		//       I do it only if it's needed. This means
+		//       if the target file is already present on target rootfs.
+		//       The packages not yet installed are
+		//       checked by the filesToInstall map.
 
 		for _, f := range files {
 			if pkg, ok := filesToInstall[f]; ok {
@@ -818,20 +825,25 @@ func (l *LuetInstaller) checkFileconflicts(toInstall map[string]ArtifactMatch, c
 					f, pkg, a.CompileSpec.Package.HumanReadableString(),
 				)
 			}
+
 			filesToInstall[f] = a.CompileSpec.Package.HumanReadableString()
 
 			if checkSystem {
-				exists, p, err := s.ExistsPackageFile(f)
-				if err != nil {
-					return errors.Wrap(err, "failed checking into system db")
-				}
-				if exists {
-					return fmt.Errorf(
-						"file conflict between '%s' and '%s' ( file: %s )",
-						p.HumanReadableString(),
-						m.Package.HumanReadableString(),
-						f,
-					)
+				tFile := filepath.Join(s.Target, f)
+				// Check if the file is present on the target path.
+				if fileHelper.Exists(tFile) {
+					exists, p, err := s.ExistsPackageFile(f)
+					if err != nil {
+						return errors.Wrap(err, "failed checking into system db")
+					}
+					if exists {
+						return fmt.Errorf(
+							"file conflict between '%s' and '%s' ( file: %s )",
+							p.HumanReadableString(),
+							m.Package.HumanReadableString(),
+							f,
+						)
+					}
 				}
 			}
 		}
