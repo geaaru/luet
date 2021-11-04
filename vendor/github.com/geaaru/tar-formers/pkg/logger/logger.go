@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sync"
 
 	specs "github.com/geaaru/tar-formers/pkg/specs"
 
@@ -41,6 +42,7 @@ type Logger struct {
 }
 
 var defaultLogger *Logger = nil
+var defaultLogMutex sync.Mutex
 
 func NewLogger(config *specs.Config) *Logger {
 	return &Logger{
@@ -55,6 +57,10 @@ func (l *Logger) GetAurora() aurora.Aurora {
 }
 
 func (l *Logger) SetAsDefault() {
+	// Avoid race condition
+	defaultLogMutex.Lock()
+	defer defaultLogMutex.Unlock()
+
 	defaultLogger = l
 }
 

@@ -69,6 +69,10 @@ func GetOptimusPrime() *TarFormers {
 }
 
 func NewTarFormers(config *specs.Config) *TarFormers {
+	return NewTarFormersWithLog(config, false)
+}
+
+func NewTarFormersWithLog(config *specs.Config, defLog bool) *TarFormers {
 	ans := &TarFormers{
 		Config:    config,
 		Logger:    log.NewLogger(config),
@@ -83,7 +87,10 @@ func NewTarFormers(config *specs.Config) *TarFormers {
 			ans.Logger.Fatal("Error on initialize logfile")
 		}
 	}
-	ans.Logger.SetAsDefault()
+
+	if defLog {
+		ans.Logger.SetAsDefault()
+	}
 	return ans
 }
 

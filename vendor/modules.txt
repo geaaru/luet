@@ -216,7 +216,7 @@ github.com/fsnotify/fsnotify
 # github.com/fsouza/go-dockerclient v1.6.4
 ## explicit
 github.com/fsouza/go-dockerclient
-# github.com/geaaru/tar-formers v0.3.3
+# github.com/geaaru/tar-formers v0.3.4
 ## explicit
 github.com/geaaru/tar-formers/pkg/executor
 github.com/geaaru/tar-formers/pkg/logger

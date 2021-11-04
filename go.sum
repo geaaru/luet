@@ -373,6 +373,8 @@ github.com/geaaru/tar-formers v0.3.2 h1:RlczLeO+0qdYuwzeL0b5p3P7f7slWX07VAzL52fy
 github.com/geaaru/tar-formers v0.3.2/go.mod h1:+zwtgS7jkG1OhvIlCRnX4XnMJKxgAfU9bcNPB67FKwE=
 github.com/geaaru/tar-formers v0.3.3 h1:Jl/4NOI38Zh7YRnLyvvaReobVkKuoyFFRaphDgyAQyE=
 github.com/geaaru/tar-formers v0.3.3/go.mod h1:+zwtgS7jkG1OhvIlCRnX4XnMJKxgAfU9bcNPB67FKwE=
+github.com/geaaru/tar-formers v0.3.4 h1:ZgfepuyeDyOIhY71hwFnV8CgosvzB6VZRrlCIcW0OJU=
+github.com/geaaru/tar-formers v0.3.4/go.mod h1:+zwtgS7jkG1OhvIlCRnX4XnMJKxgAfU9bcNPB67FKwE=
 github.com/genuinetools/img v0.5.11 h1:qIP3nVgRYbXmtSNMjmcdx+TBzWjZS03AdqTNBf6QtGY=
 github.com/genuinetools/img v0.5.11/go.mod h1:m58lsi0AC97XSTXBTKpqZE1zCZpMCg9nLjikvgLCo0A=
 github.com/genuinetools/pkg v0.0.0-20180910213200-1c141f661797/go.mod h1:XTcrCYlXPxnxL2UpnwuRn7tcaTn9HAhxFoFJucootk8=
