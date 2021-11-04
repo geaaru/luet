@@ -87,7 +87,7 @@ var _ = Describe("Installer", func() {
 			a, err := c.Compile(false, spec)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fileHelper.Exists(a.Path)).To(BeTrue())
-			Expect(helpers.Untar(a.Path, tmpdir, false, true, true)).ToNot(HaveOccurred())
+			Expect(helpers.Untar(a.Path, tmpdir, false, true)).ToNot(HaveOccurred())
 
 			Expect(fileHelper.Exists(spec.Rel("test5"))).To(BeTrue())
 			Expect(fileHelper.Exists(spec.Rel("test6"))).To(BeTrue())
