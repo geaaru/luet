@@ -43,7 +43,7 @@ var Verbose bool
 var LockedCommands = []string{"install", "uninstall", "upgrade"}
 
 const (
-	LuetCLIVersion  = "0.18.2"
+	LuetCLIVersion  = "0.18.3"
 	LuetEnvPrefix   = "LUET"
 	LuetForkVersion = "geaaru"
 )
