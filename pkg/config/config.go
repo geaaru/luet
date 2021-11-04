@@ -48,6 +48,8 @@ type LuetLoggingConfig struct {
 
 	// Log level
 	Level string `mapstructure:"level"`
+	// Enable extra debug logging
+	Paranoid bool `mapstructure:"paranoid"`
 
 	// Enable emoji
 	EnableEmoji bool `mapstructure:"enable_emoji"`
@@ -263,6 +265,7 @@ func GenDefault(viper *v.Viper) {
 	viper.SetDefault("logging.json_format", false)
 	viper.SetDefault("logging.enable_emoji", true)
 	viper.SetDefault("logging.color", true)
+	viper.SetDefault("logging.paranoid", false)
 
 	viper.SetDefault("general.concurrency", runtime.NumCPU())
 	viper.SetDefault("general.debug", false)

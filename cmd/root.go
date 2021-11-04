@@ -204,8 +204,13 @@ func LoadConfig(c *config.LuetConfig) error {
 	// Initialize default tarformers instance
 	// to use the config object used by the library.
 	cfg := tarf_specs.NewConfig(c.Viper)
-	cfg.GetGeneral().Debug = c.GetGeneral().Debug
-	cfg.GetLogging().Level = c.GetLogging().Level
+	if c.GetLogging().Paranoid {
+		cfg.GetGeneral().Debug = true
+		cfg.GetLogging().Level = c.GetLogging().Level
+	} else {
+		cfg.GetGeneral().Debug = false
+		cfg.GetLogging().Level = "warning"
+	}
 
 	t := tarf.NewTarFormers(cfg)
 	tarf.SetDefaultTarFormers(t)
