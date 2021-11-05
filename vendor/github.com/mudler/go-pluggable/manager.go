@@ -50,11 +50,15 @@ func (m *Manager) Register() *Manager {
 // Publish is a wrapper around NewEvent and the Manager internal Bus publishing system
 // It accepts optionally a list of functions that are called with the plugin result (only once)
 func (m *Manager) Publish(event EventType, obj interface{}) (*Manager, error) {
-	ev, err := NewEvent(event, obj)
-	if err == nil && ev != nil {
-		m.Bus.Emit(string(ev.Name), ev)
+	if len(m.Plugins) > 0 {
+		ev, err := NewEvent(event, obj)
+		if err == nil && ev != nil {
+			m.Bus.Emit(string(ev.Name), ev)
+		}
+		return m, err
 	}
-	return m, err
+
+	return m, nil
 }
 
 // Response binds a set of listeners to an event type. The listeners are called for each result from
