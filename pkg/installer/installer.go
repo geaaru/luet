@@ -288,7 +288,7 @@ func (l *LuetInstaller) swap(o Option, syncedRepos Repositories, toRemove pkg.Pa
 		return nil
 	}
 
-	ops := l.getOpsWithOptions(toRemove, match, Option{
+	opsUninstall, opsInstall := l.getOpsWithOptions(toRemove, match, Option{
 		Force:              o.Force,
 		NoDeps:             false,
 		OnlyDeps:           o.OnlyDeps,
@@ -296,7 +296,12 @@ func (l *LuetInstaller) swap(o Option, syncedRepos Repositories, toRemove pkg.Pa
 		CheckFileConflicts: false,
 	}, o, syncedRepos, packages, assertions, allRepos)
 
-	err = l.runOps(ops, s)
+	err = l.runOps(opsUninstall, s)
+	if err != nil {
+		return errors.Wrap(err, "failed running installer options")
+	}
+
+	err = l.runOps(opsInstall, s)
 	if err != nil {
 		return errors.Wrap(err, "failed running installer options")
 	}
@@ -410,26 +415,29 @@ func (l *LuetInstaller) installerOpWorker(i int, wg *sync.WaitGroup, c <-chan in
 // checks wheter we can uninstall and install in place and compose installer worker ops
 func (l *LuetInstaller) getOpsWithOptions(
 	toUninstall pkg.Packages, installMatch map[string]ArtifactMatch, installOpt, uninstallOpt Option,
-	syncedRepos Repositories, toInstall pkg.Packages, solution solver.PackagesAssertions, allRepos pkg.PackageDatabase) []installerOp {
-	resOps := []installerOp{}
+	syncedRepos Repositories, toInstall pkg.Packages, solution solver.PackagesAssertions,
+	allRepos pkg.PackageDatabase) ([]installerOp, []installerOp) {
+
+	uninstallOps := []installerOp{}
+	installOps := []installerOp{}
+
 	for _, match := range installMatch {
 		if pack, err := toUninstall.Find(match.Package.GetPackageName()); err == nil {
-			resOps = append(resOps, installerOp{
+			uninstallOps = append(uninstallOps, installerOp{
 				Uninstall: operation{Package: pack, Option: uninstallOpt},
+			})
+			installOps = append(installOps, installerOp{
 				Install: installOperation{
-					operation: operation{
-						Package: match.Package,
-						Option:  installOpt,
-					},
+					operation:   operation{Package: match.Package, Option: installOpt},
 					Matches:     installMatch,
-					Packages:    toInstall,
 					Reposiories: syncedRepos,
+					Packages:    toInstall,
 					Assertions:  solution,
 					Database:    allRepos,
 				},
 			})
 		} else {
-			resOps = append(resOps, installerOp{
+			installOps = append(installOps, installerOp{
 				Install: installOperation{
 					operation:   operation{Package: match.Package, Option: installOpt},
 					Matches:     installMatch,
@@ -452,12 +460,12 @@ func (l *LuetInstaller) getOpsWithOptions(
 
 		}
 		if !found {
-			resOps = append(resOps, installerOp{
+			uninstallOps = append(uninstallOps, installerOp{
 				Uninstall: operation{Package: p, Option: uninstallOpt},
 			})
 		}
 	}
-	return resOps
+	return uninstallOps, installOps
 }
 
 func (l *LuetInstaller) checkAndUpgrade(r Repositories, s *System) error {
