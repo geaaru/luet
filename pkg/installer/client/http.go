@@ -16,6 +16,7 @@
 package client
 
 import (
+	"crypto/tls"
 	"fmt"
 	"math"
 	"net/http"
@@ -54,15 +55,26 @@ func NewGrabClient() *grab.Client {
 		}
 	}
 
-	return &grab.Client{
+	transport := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+	}
+
+	insecure := os.Getenv("INSECURE")
+	if insecure == "1" {
+		transport.TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+	}
+
+	ans := &grab.Client{
 		UserAgent: "grab",
 		HTTPClient: &http.Client{
-			Timeout: time.Duration(httpTimeout) * time.Second,
-			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
-			},
+			Timeout:   time.Duration(httpTimeout) * time.Second,
+			Transport: transport,
 		},
 	}
+
+	return ans
 }
 
 func (c *HttpClient) PrepareReq(dst, url string) (*grab.Request, error) {
