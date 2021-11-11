@@ -64,10 +64,11 @@ func (t *TarFormers) CreateFile(dir, name string, mode os.FileMode, reader io.Re
 	t.Logger.Debug(fmt.Sprintf(
 		"Created file %s (size %d).", file, nb))
 
-	// TODO: check if it's needed f.Sync()
-	//if err := f.Sync(); err != nil {
-	//	return err
-	//}
+	// Ensure flushing of the file to disk. It seems that
+	// some file is missing else.
+	if err := f.Sync(); err != nil {
+		return err
+	}
 
 	return nil
 }
