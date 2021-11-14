@@ -356,6 +356,7 @@ func (db *InMemoryDatabase) FindPackageVersions(p Package) (Packages, error) {
 		w := i.(*DefaultPackage)
 		versionsInWorld = append(versionsInWorld, w)
 	}
+
 	return Packages(versionsInWorld), nil
 }
 
@@ -455,6 +456,8 @@ func (db *InMemoryDatabase) RemovePackageFiles(p Package) error {
 func (db *InMemoryDatabase) RemovePackage(p Package) error {
 	db.Lock()
 	defer db.Unlock()
+
+	delete(db.CacheNoVersion[p.GetPackageName()], p.GetVersion())
 
 	delete(db.Database, p.GetFingerPrint())
 	return nil
