@@ -237,7 +237,7 @@ func (db *InMemoryDatabase) populateCaches(p Package) {
 	if !ok {
 		db.CacheNoVersion[p.GetPackageName()] = make(map[string]interface{})
 	}
-	db.CacheNoVersion[p.GetPackageName()][p.GetVersion()] = nil
+	db.CacheNoVersion[p.GetPackageName()][p.GetVersion()] = pd
 
 	db.Unlock()
 
@@ -346,17 +346,14 @@ func (db *InMemoryDatabase) FindPackageVersions(p Package) (Packages, error) {
 		p = provided
 	}
 	db.Lock()
+	defer db.Unlock()
 	versions, ok := db.CacheNoVersion[p.GetPackageName()]
-	db.Unlock()
 	if !ok {
 		return nil, errors.New("No versions found for package")
 	}
 	var versionsInWorld []Package
-	for ve, _ := range versions {
-		w, err := db.FindPackage(&DefaultPackage{Name: p.GetName(), Category: p.GetCategory(), Version: ve})
-		if err != nil {
-			return nil, errors.Wrap(err, "Cache mismatch - this shouldn't happen")
-		}
+	for _, i := range versions {
+		w := i.(*DefaultPackage)
 		versionsInWorld = append(versionsInWorld, w)
 	}
 	return Packages(versionsInWorld), nil
