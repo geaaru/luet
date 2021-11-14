@@ -32,7 +32,6 @@ import (
 	. "github.com/mudler/luet/pkg/config"
 	. "github.com/mudler/luet/pkg/logger"
 	pkg "github.com/mudler/luet/pkg/package"
-	"github.com/mudler/luet/pkg/solver"
 	tree "github.com/mudler/luet/pkg/tree"
 
 	"github.com/spf13/cobra"
@@ -152,8 +151,6 @@ Build packages specifying multiple definition trees:
 
 		Debug("Solver", opts.CompactString())
 
-		opts.Options = solver.Options{Type: solver.SingleCoreSimple, Concurrency: concurrency}
-
 		luetCompiler := compiler.NewLuetCompiler(compilerBackend, generalRecipe.GetDatabase(),
 			options.NoDeps(nodeps),
 			options.WithBackendType(backendType),
@@ -163,7 +160,6 @@ Build packages specifying multiple definition trees:
 			options.WithPushRepository(imageRepository),
 			options.Rebuild(rebuild),
 			options.WithTemplateFolder(util.TemplateFolders(fromRepo, treePaths)),
-			options.WithSolverOptions(*opts),
 			options.Wait(wait),
 			options.OnlyTarget(onlyTarget),
 			options.PullFirst(pull),

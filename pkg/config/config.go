@@ -23,12 +23,10 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"time"
 
 	fileHelper "github.com/mudler/luet/pkg/helpers/file"
 	pkg "github.com/mudler/luet/pkg/package"
-	solver "github.com/mudler/luet/pkg/solver"
 
 	"github.com/pkg/errors"
 	v "github.com/spf13/viper"
@@ -36,7 +34,6 @@ import (
 )
 
 var LuetCfg = NewLuetConfig(v.GetViper())
-var AvailableResolvers = strings.Join([]string{solver.QLearningResolverType}, " ")
 
 type LuetLoggingConfig struct {
 	// Path of the logfile
@@ -70,39 +67,17 @@ type LuetGeneralConfig struct {
 }
 
 type LuetSolverOptions struct {
-	solver.Options `yaml:"options,omitempty"`
-	Type           string            `yaml:"type,omitempty" mapstructure:"type"`
-	LearnRate      float32           `yaml:"rate,omitempty" mapstructure:"rate"`
-	Discount       float32           `yaml:"discount,omitempty" mapstructure:"discount"`
-	MaxAttempts    int               `yaml:"max_attempts,omitempty" mapstructure:"max_attempts"`
-	Implementation solver.SolverType `yaml:"implementation,omitempty" mapstructure:"implementation"`
-}
-
-func (opts LuetSolverOptions) ResolverIsSet() bool {
-	switch opts.Type {
-	case solver.QLearningResolverType:
-		return true
-	default:
-		return false
-	}
-}
-
-func (opts LuetSolverOptions) Resolver() solver.PackageResolver {
-	switch opts.Type {
-	case solver.QLearningResolverType:
-		if opts.LearnRate != 0.0 {
-			return solver.NewQLearningResolver(opts.LearnRate, opts.Discount, opts.MaxAttempts, 999999)
-
-		}
-		return solver.SimpleQLearningSolver()
-	}
-
-	return &solver.Explainer{}
+	Type           string  `yaml:"type,omitempty" mapstructure:"type"`
+	LearnRate      float32 `yaml:"rate,omitempty" mapstructure:"rate"`
+	Discount       float32 `yaml:"discount,omitempty" mapstructure:"discount"`
+	MaxAttempts    int     `yaml:"max_attempts,omitempty" mapstructure:"max_attempts"`
+	Implementation string  `yaml:"implementation,omitempty" mapstructure:"implementation"`
 }
 
 func (opts *LuetSolverOptions) CompactString() string {
-	return fmt.Sprintf("type: %s rate: %f, discount: %f, attempts: %d, initialobserved: %d",
-		opts.Type, opts.LearnRate, opts.Discount, opts.MaxAttempts, 999999)
+	return fmt.Sprintf(
+		"rate: %f, discount: %f, attempts: %d, initialobserved: %d, implementation: %s",
+		opts.LearnRate, opts.Discount, opts.MaxAttempts, 999999, opts.Implementation)
 }
 
 type LuetSystemConfig struct {

@@ -61,8 +61,6 @@ var upgradeCmd = &cobra.Command{
 		util.SetSystemConfig()
 		opts := util.SetSolverConfig()
 
-		LuetCfg.GetSolverOptions().Implementation = solver.SingleCoreSimple
-
 		Debug("Solver", opts.CompactString())
 
 		// Load config protect configs
@@ -96,7 +94,7 @@ func init() {
 	upgradeCmd.Flags().String("system-target", "", "System rootpath")
 	upgradeCmd.Flags().String("system-engine", "", "System DB engine")
 
-	upgradeCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+AvailableResolvers+" )")
+	upgradeCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
 	upgradeCmd.Flags().Float32("solver-rate", 0.7, "Solver learning rate")
 	upgradeCmd.Flags().Float32("solver-discount", 1.0, "Solver discount rate")
 	upgradeCmd.Flags().Int("solver-attempts", 9000, "Solver maximum attempts")

@@ -80,8 +80,31 @@ func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg
 	// First match packages against repositories by priority
 	allRepos := pkg.NewInMemoryDatabase(false)
 	syncedRepos.SyncDatabase(allRepos)
+	start := time.Now()
+	fmt.Println("IMPLEMENTATION = ",
+		l.Options.SolverOptions.Implementation,
+		l.Options.SolverUpgrade)
+
+	defcopy := pkg.NewInMemoryDatabase(false)
+	err = allRepos.Clone(defcopy)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	icopy := pkg.NewInMemoryDatabase(false)
+	err = s.Database.Clone(icopy)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	opts := solver.DecodeImplementation(l.Options.SolverOptions.Implementation)
 	// compute a "big" world
-	solv := solver.NewResolver(solver.Options{Type: l.Options.SolverOptions.Implementation, Concurrency: l.Options.Concurrency}, s.Database, allRepos, pkg.NewInMemoryDatabase(false), l.Options.SolverOptions.Resolver())
+	solv := solver.NewResolver(
+		opts,
+		icopy, defcopy,
+		pkg.NewInMemoryDatabase(false),
+		opts.Resolver(),
+	)
 	var solution solver.PackagesAssertions
 
 	if l.Options.SolverUpgrade {
@@ -90,7 +113,14 @@ func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg
 			return uninstall, toInstall, errors.Wrap(err, "Failed solving solution for upgrade")
 		}
 	} else {
+
+		Info(fmt.Sprintf("solv.Upgrade - BEFORE UPGRADE %v in %d µs.",
+			l.Options.FullUninstall,
+			time.Now().Sub(start).Nanoseconds()/1e3))
+
 		uninstall, solution, err = solv.Upgrade(l.Options.FullUninstall, true)
+		Info(fmt.Sprintf("solv.Upgrade completed in %d µs.",
+			time.Now().Sub(start).Nanoseconds()/1e3))
 		if err != nil {
 			return uninstall, toInstall, errors.Wrap(err, "Failed solving solution for upgrade")
 		}
@@ -98,7 +128,7 @@ func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg
 
 	for _, assertion := range solution {
 		// Be sure to filter from solutions packages already installed in the system
-		if _, err := s.Database.FindPackage(assertion.Package); err != nil && assertion.Value {
+		if _, err := icopy.FindPackage(assertion.Package); err != nil && assertion.Value {
 			toInstall = append(toInstall, assertion.Package)
 		}
 	}
@@ -122,6 +152,9 @@ func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg
 			}
 		}
 	}
+
+	Info(fmt.Sprintf("INSTALLER - computeUpgrade in %d µs.",
+		time.Now().Sub(start).Nanoseconds()/1e3))
 
 	return uninstall, toInstall, nil
 }
@@ -470,7 +503,10 @@ func (l *LuetInstaller) getOpsWithOptions(
 
 func (l *LuetInstaller) checkAndUpgrade(r Repositories, s *System) error {
 	Spinner(32)
+	start := time.Now()
 	uninstall, toInstall, err := l.computeUpgrade(r, s)
+	Info(fmt.Sprintf("Compute upgrade completed in %d µs.",
+		time.Now().Sub(start).Nanoseconds()/1e3))
 	if err != nil {
 		return errors.Wrap(err, "failed computing upgrade")
 	}
@@ -548,8 +584,9 @@ func (l *LuetInstaller) Install(cp pkg.Packages, s *System) error {
 		Info("No packages to install")
 		return nil
 	}
+	opts := solver.DecodeImplementation(l.Options.SolverOptions.Implementation)
 	// Resolvers might decide to remove some packages from being installed
-	if !l.Options.SolverOptions.ResolverIsSet() {
+	if !opts.ResolverIsSet() {
 		for _, p := range cp {
 			found := false
 			vers, _ := s.Database.FindPackageVersions(p) // If was installed, it is found, as it was filtered
@@ -694,7 +731,12 @@ func (l *LuetInstaller) computeInstall(o Option, syncedRepos Repositories, cp pk
 	var err error
 
 	if !o.NoDeps {
-		solv := solver.NewResolver(solver.Options{Type: l.Options.SolverOptions.Implementation, Concurrency: l.Options.Concurrency}, s.Database, allRepos, pkg.NewInMemoryDatabase(false), l.Options.SolverOptions.Resolver())
+		opts := solver.DecodeImplementation(l.Options.SolverOptions.Implementation)
+		solv := solver.NewResolver(opts,
+			s.Database, allRepos,
+			pkg.NewInMemoryDatabase(false),
+			opts.Resolver(),
+		)
 
 		if l.Options.Relaxed {
 			solution, err = solv.RelaxedInstall(p)
@@ -1165,7 +1207,12 @@ func (l *LuetInstaller) computeUninstall(o Option, s *System, packs ...pkg.Packa
 	}
 
 	if !o.NoDeps {
-		solv := solver.NewResolver(solver.Options{Type: l.Options.SolverOptions.Implementation, Concurrency: l.Options.Concurrency}, installedtmp, installedtmp, pkg.NewInMemoryDatabase(false), l.Options.SolverOptions.Resolver())
+		opts := solver.DecodeImplementation(l.Options.SolverOptions.Implementation)
+		solv := solver.NewResolver(
+			opts, installedtmp, installedtmp,
+			pkg.NewInMemoryDatabase(false),
+			opts.Resolver(),
+		)
 		var solution pkg.Packages
 		var err error
 		if o.FullCleanUninstall {
@@ -1236,10 +1283,10 @@ func (l *LuetInstaller) Uninstall(s *System, packs ...pkg.Package) error {
 	}
 
 	if l.Options.Ask {
-		Info(":recycle: Packages that are going to be removed from the system:\n   ", Yellow(packsToList(toUninstall)).BgBlack().String())
+		Info(":recycle: Packages that are going to be removed from the system:\n   ",
+			Yellow(packsToList(toUninstall)).BgBlack().String())
 		if Ask() {
 			l.Options.Ask = false // Don't prompt anymore
-			return uninstall()
 		} else {
 			return errors.New("Aborted by user")
 		}

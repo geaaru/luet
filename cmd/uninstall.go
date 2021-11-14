@@ -62,8 +62,6 @@ var uninstallCmd = &cobra.Command{
 
 		LuetCfg.ConfigProtectSkip = !keepProtected
 
-		LuetCfg.GetSolverOptions().Implementation = solver.SingleCoreSimple
-
 		Debug("Solver", LuetCfg.GetSolverOptions().CompactString())
 
 		// Load config protect configs
@@ -95,7 +93,7 @@ func init() {
 	uninstallCmd.Flags().String("system-target", "", "System rootpath")
 	uninstallCmd.Flags().String("system-engine", "", "System DB engine")
 
-	uninstallCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+AvailableResolvers+" )")
+	uninstallCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
 	uninstallCmd.Flags().Float32("solver-rate", 0.7, "Solver learning rate")
 	uninstallCmd.Flags().Float32("solver-discount", 1.0, "Solver discount rate")
 	uninstallCmd.Flags().Int("solver-attempts", 9000, "Solver maximum attempts")

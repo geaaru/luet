@@ -38,6 +38,7 @@ func BindSolverFlags(cmd *cobra.Command) {
 	LuetCfg.Viper.BindPFlag("solver.discount", cmd.Flags().Lookup("solver-discount"))
 	LuetCfg.Viper.BindPFlag("solver.rate", cmd.Flags().Lookup("solver-rate"))
 	LuetCfg.Viper.BindPFlag("solver.max_attempts", cmd.Flags().Lookup("solver-attempts"))
+	LuetCfg.Viper.BindPFlag("solver.implementation", cmd.Flags().Lookup("solver-implementation"))
 }
 
 func BindValuesFlags(cmd *cobra.Command) {
@@ -63,17 +64,20 @@ func SetSolverConfig() (c *config.LuetSolverOptions) {
 	discount := LuetCfg.Viper.GetFloat64("solver.discount")
 	rate := LuetCfg.Viper.GetFloat64("solver.rate")
 	attempts := LuetCfg.Viper.GetInt("solver.max_attempts")
+	implementation := LuetCfg.Viper.GetString("solver.implementation")
 
 	LuetCfg.GetSolverOptions().Type = stype
 	LuetCfg.GetSolverOptions().LearnRate = float32(rate)
 	LuetCfg.GetSolverOptions().Discount = float32(discount)
 	LuetCfg.GetSolverOptions().MaxAttempts = attempts
+	LuetCfg.GetSolverOptions().Implementation = implementation
 
 	return &config.LuetSolverOptions{
-		Type:        stype,
-		LearnRate:   float32(rate),
-		Discount:    float32(discount),
-		MaxAttempts: attempts,
+		Type:           stype,
+		LearnRate:      float32(rate),
+		Discount:       float32(discount),
+		MaxAttempts:    attempts,
+		Implementation: implementation,
 	}
 }
 

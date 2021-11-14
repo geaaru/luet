@@ -26,6 +26,7 @@ import (
 	installer "github.com/mudler/luet/pkg/installer"
 	. "github.com/mudler/luet/pkg/logger"
 	pkg "github.com/mudler/luet/pkg/package"
+	"github.com/mudler/luet/pkg/solver"
 	"github.com/spf13/cobra"
 )
 
@@ -387,7 +388,7 @@ func init() {
 	searchCmd.Flags().String("system-engine", "", "System DB engine")
 
 	searchCmd.Flags().Bool("installed", false, "Search between system packages")
-	searchCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+AvailableResolvers+" )")
+	searchCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
 	searchCmd.Flags().StringP("output", "o", "terminal", "Output format ( Defaults: terminal, available: json,yaml )")
 	searchCmd.Flags().Float32("solver-rate", 0.7, "Solver learning rate")
 	searchCmd.Flags().Float32("solver-discount", 1.0, "Solver discount rate")

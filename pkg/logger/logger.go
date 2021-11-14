@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"strings"
 
-	"sync"
 	. "github.com/mudler/luet/pkg/config"
+	"sync"
 
 	"github.com/briandowns/spinner"
 	"github.com/kyokomi/emoji"
@@ -22,6 +22,7 @@ var s *spinner.Spinner = nil
 var z *zap.Logger = nil
 var aurora Aurora = nil
 var spinnerLock = sync.Mutex{}
+
 func NewSpinner() {
 	if s == nil {
 		s = spinner.New(
@@ -101,7 +102,6 @@ func Spinner(i int) {
 	}
 
 	if s != nil && !s.Active() {
-		//	s.UpdateCharSet(spinner.CharSets[i])
 		s.Start() // Start the spinner
 	}
 }
@@ -181,6 +181,15 @@ func level2AtomicLevel(level string) zap.AtomicLevel {
 func Msg(level string, withoutColor, ln bool, msg ...interface{}) {
 	var message string
 	var confLevel, msgLevel int
+	//spinnerToStart := false
+
+	/*
+		if s != nil && !s.Active() {
+			// Stop spinner
+			spinnerToStart = true
+			SpinnerStop()
+		}
+	*/
 
 	if LuetCfg.GetGeneral().Debug {
 		confLevel = 3
@@ -230,6 +239,11 @@ func Msg(level string, withoutColor, ln bool, msg ...interface{}) {
 		fmt.Print(levelMsg)
 	}
 
+	/*
+		if spinnerToStart {
+			s.Restart()
+		}
+	*/
 }
 
 func Warning(mess ...interface{}) {

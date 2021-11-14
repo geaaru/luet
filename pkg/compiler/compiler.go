@@ -694,7 +694,15 @@ func (cs *LuetCompiler) FromDatabase(db pkg.PackageDatabase, minimum bool, dst s
 }
 
 func (cs *LuetCompiler) ComputeDepTree(p *compilerspec.LuetCompilationSpec) (solver.PackagesAssertions, error) {
-	s := solver.NewResolver(cs.Options.SolverOptions.Options, pkg.NewInMemoryDatabase(false), cs.Database, pkg.NewInMemoryDatabase(false), cs.Options.SolverOptions.Resolver())
+	opts := solver.DecodeImplementation(cs.Options.SolverOptions.Implementation)
+
+	s := solver.NewResolver(
+		opts,
+		pkg.NewInMemoryDatabase(false),
+		cs.Database,
+		pkg.NewInMemoryDatabase(false),
+		opts.Resolver(),
+	)
 
 	solution, err := s.Install(pkg.Packages{p.GetPackage()})
 	if err != nil {
