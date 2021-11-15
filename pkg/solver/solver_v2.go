@@ -433,44 +433,6 @@ func (s *SolverV2) computeUpgradeNew(ppsToUpgrade, ppsToNotUpgrade []pkg.Package
 	resp.ToInstall = &toInstall
 }
 
-func (s *SolverV2) computeUpgrade(ppsToUpgrade,
-	ppsToNotUpgrade []pkg.Package) func(defDB pkg.PackageDatabase,
-	installDB pkg.PackageDatabase, resp *UpgradeResponse) {
-
-	return func(defDB pkg.PackageDatabase, installDB pkg.PackageDatabase, resp *UpgradeResponse) {
-		toUninstall := pkg.Packages{}
-		toInstall := pkg.Packages{}
-
-		start := time.Now()
-		for _, p := range installDB.World() {
-			packages, err := defDB.FindPackageVersions(p)
-
-			if err == nil && len(packages) != 0 {
-				best := packages.Best(nil)
-
-				// This make sure that we don't try to upgrade something that was specified
-				// specifically to not be marked for upgrade
-				// At the same time, makes sure that if we mark a package to look for upgrades
-				// it doesn't have to be in the blacklist (the packages to NOT upgrade)
-				if !best.Matches(p) &&
-					((len(ppsToUpgrade) == 0 && len(ppsToNotUpgrade) == 0) ||
-						(inPackage(ppsToUpgrade, p) && !inPackage(ppsToNotUpgrade, p)) ||
-						(len(ppsToUpgrade) == 0 && !inPackage(ppsToNotUpgrade, p))) {
-					toUninstall = append(toUninstall, p)
-					toInstall = append(toInstall, best)
-				}
-			}
-		}
-
-		Debug(fmt.Sprintf("computeUpgrade.for in %d µs: - %d %d",
-			time.Now().Sub(start).Nanoseconds()/1e3, len(toUninstall), len(toInstall)))
-
-		resp.ToUninstall = &toUninstall
-		resp.ToInstall = &toInstall
-		resp.PacksToUpgrade = &ppsToNotUpgrade
-	}
-}
-
 func (s *SolverV2) upgrade(psToUpgrade, psToNotUpgrade pkg.Packages,
 	checkconflicts, full bool) (pkg.Packages, PackagesAssertions, error) {
 
@@ -548,50 +510,50 @@ func (s *SolverV2) upgrade(psToUpgrade, psToNotUpgrade pkg.Packages,
 	// TODO: Check why check again the upgrade and if it's needed.
 	//       Temporary i disable it.
 
-	/*
-		wantedSystem := assertions.ToDB()
+	wantedSystem := assertions.ToDB()
 
-		fmt.Println(fmt.Sprintf("SOLVER - upgrade - AFTER assertions.ToDB - in %d µs.",
-			time.Now().Sub(start).Nanoseconds()/1e3))
+	solvInstall := NewSolverV2(Options{Type: s.GetType()},
+		wantedSystem, s.DefinitionDatabase,
+		pkg.NewInMemoryDatabase(false), s.Resolver)
 
-		var fn func(defDb pkg.PackageDatabase, installDb pkg.PackageDatabase, resp *UpgradeResponse)
-		fn = s.computeUpgrade(pkg.Packages{}, pkg.Packages{}, NewUpgradeResponse())
+	Debug(fmt.Sprintf("upgrade - AFTER assertions.ToDB - in %d µs.",
+		time.Now().Sub(start).Nanoseconds()/1e3))
 
-		if len(psToNotUpgrade) > 0 {
-			// If we have packages in input,
-			// compute what we are looking to upgrade.
-			// those are assertions minus packsToUpgrade
+	resp = NewUpgradeResponse()
+	if len(psToNotUpgrade) > 0 {
+		// If we have packages in input,
+		// compute what we are looking to upgrade.
+		// those are assertions minus packsToUpgrade
 
-			var selectedPackages []pkg.Package
+		var selectedPackages []pkg.Package
 
-			for _, p := range assertions {
-				if p.Value && !inPackage(psToUpgrade, p.Package) {
-					selectedPackages = append(selectedPackages, p.Package)
-				}
+		for _, p := range assertions {
+			if p.Value && !inPackage(psToUpgrade, p.Package) {
+				selectedPackages = append(selectedPackages, p.Package)
 			}
-			fn = s.computeUpgrade(selectedPackages, psToNotUpgrade, NewUpgradeResponse())
 		}
+		solvInstall.computeUpgradeNew(selectedPackages, psToNotUpgrade, resp)
+	} else {
+		solvInstall.computeUpgradeNew(pkg.Packages{}, pkg.Packages{}, resp)
+	}
 
-		fmt.Println(fmt.Sprintf("SOLVER - fn.computeUpdate UPGRADE - in %d µs.",
+	toInstall = *resp.ToInstall
+
+	if len(toInstall) > 0 {
+
+		_, ass, err := solvInstall.upgrade(
+			psToUpgrade, psToNotUpgrade, checkconflicts, full,
+		)
+
+		Debug(fmt.Sprintf("fn.upgrade - solvInstall.upgrade in %d µs.",
 			time.Now().Sub(start).Nanoseconds()/1e3))
 
-		resp = NewUpgradeResponse()
-		fn(s.DefinitionDatabase, wantedSystem, resp)
-		toInstall = *resp.ToInstall
-		if len(toInstall) > 0 {
-			_, toInstall, ass := s.upgrade(
-				psToUpgrade, psToNotUpgrade, fn, defDB, wantedSystem, checkconflicts, full,
-			)
+		return toUninstall, ass, err
+	}
 
-			fmt.Println(fmt.Sprintf("SOLVER - fn.upgrade - UPGRADE - in %d µs.",
-				time.Now().Sub(start).Nanoseconds()/1e3))
+	Debug(fmt.Sprintf("fn.upgrade - completed in %d µs.",
+		time.Now().Sub(start).Nanoseconds()/1e3))
 
-			return toUninstall, toInstall, ass
-		}
-		fmt.Println(fmt.Sprintf("SOLVER - fn.upgrade - END- in %d µs.",
-			time.Now().Sub(start).Nanoseconds()/1e3))
-
-	*/
 	return toUninstall, assertions, err
 }
 

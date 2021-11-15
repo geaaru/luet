@@ -81,9 +81,8 @@ func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg
 	allRepos := pkg.NewInMemoryDatabase(false)
 	syncedRepos.SyncDatabase(allRepos)
 	start := time.Now()
-	fmt.Println("IMPLEMENTATION = ",
-		l.Options.SolverOptions.Implementation,
-		l.Options.SolverUpgrade)
+
+	Info("Using solver implementation = ", l.Options.SolverOptions.Implementation)
 
 	defcopy := pkg.NewInMemoryDatabase(false)
 	err = allRepos.Clone(defcopy)
@@ -154,7 +153,8 @@ func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg
 	}
 
 	Info(fmt.Sprintf("INSTALLER - computeUpgrade in %d µs.",
-		time.Now().Sub(start).Nanoseconds()/1e3))
+		time.Now().Sub(start).Nanoseconds()/1e3),
+		len(uninstall), len(toInstall))
 
 	return uninstall, toInstall, nil
 }
@@ -266,6 +266,7 @@ func (l *LuetInstaller) computeSwap(o Option, syncedRepos Repositories, toRemove
 		Error("Failed computing uninstall for ", packsToList(toRemove))
 		return nil, nil, nil, nil, errors.Wrap(err, "computing uninstall "+packsToList(toRemove))
 	}
+
 	for _, p := range packs {
 		err = systemAfterChanges.Database.RemovePackage(p)
 		if err != nil {
@@ -277,6 +278,7 @@ func (l *LuetInstaller) computeSwap(o Option, syncedRepos Repositories, toRemove
 	for _, p := range toInstall {
 		assertions = append(assertions, solver.PackageAssert{Package: p.(*pkg.DefaultPackage), Value: true})
 	}
+
 	return match, packages, assertions, allRepos, err
 }
 
@@ -303,7 +305,6 @@ func (l *LuetInstaller) swap(o Option, syncedRepos Repositories, toRemove pkg.Pa
 			return errors.New("Aborted by user")
 		}
 	}
-
 	// First match packages against repositories by priority
 	if err := l.download(syncedRepos, match); err != nil {
 		return errors.Wrap(err, "Pre-downloading packages")
@@ -708,7 +709,7 @@ func (l *LuetInstaller) computeInstall(o Option, syncedRepos Repositories, cp pk
 		vers, _ := s.Database.FindPackageVersions(pi)
 
 		if len(vers) >= 1 {
-			//	Warning("Filtering out package " + pi.HumanReadableString() + ", it has other versions already installed. Uninstall one of them first ")
+			Warning("Filtering out package " + pi.HumanReadableString() + ", it has other versions already installed. Uninstall one of them first ")
 			continue
 			//return errors.New("Package " + pi.GetFingerPrint() + " has other versions already installed. Uninstall one of them first: " + strings.Join(vers, " "))
 
@@ -743,6 +744,7 @@ func (l *LuetInstaller) computeInstall(o Option, syncedRepos Repositories, cp pk
 		} else {
 			solution, err = solv.Install(p)
 		}
+
 		/// TODO: PackageAssertions needs to be a map[fingerprint]pack so lookup is in O(1)
 		if err != nil && !o.Force {
 			return toInstall, p, solution, allRepos, errors.Wrap(err, "Failed solving solution for package")
