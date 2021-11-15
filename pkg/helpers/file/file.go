@@ -70,16 +70,15 @@ func OrderFiles(target string, files []string) ([]string, []string, []string) {
 
 	for _, f := range files {
 		completePath := filepath.Join(target, f)
-		fi, err := os.Lstat(completePath)
+		fi, err := os.Stat(completePath)
 		if err != nil {
 			notPresent = append(notPresent, f)
 			continue
 		}
-		m := fi.Mode()
 
-		if m.IsDir() {
+		if fi.IsDir() {
 			dirs = append(dirs, f)
-		} else if !m.IsDir() {
+		} else {
 			newFiles = append(newFiles, f)
 		}
 	}
