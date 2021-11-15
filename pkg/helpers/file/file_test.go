@@ -73,9 +73,13 @@ var _ = Describe("Helpers", func() {
 			err = ioutil.WriteFile(filepath.Join(testDir, "baz2", "foo"), []byte("test\n"), 0644)
 			Expect(err).ToNot(HaveOccurred())
 
-			ordered, notExisting := fileHelper.OrderFiles(testDir, []string{"bar", "baz", "bar/foo", "baz2", "foo", "baz2/foo", "notexisting"})
+			ordered, dirs, notExisting := fileHelper.OrderFiles(testDir,
+				[]string{
+					"bar", "baz", "bar/foo", "baz2", "foo", "baz2/foo", "notexisting",
+				})
 
-			Expect(ordered).To(Equal([]string{"baz", "bar/foo", "foo", "baz2/foo", "bar", "baz2"}))
+			Expect(ordered).To(Equal([]string{"baz", "bar/foo", "foo", "baz2/foo"}))
+			Expect(dirs).To(Equal([]string{"bar", "baz2"}))
 			Expect(notExisting).To(Equal([]string{"notexisting"}))
 		})
 
@@ -97,8 +101,10 @@ var _ = Describe("Helpers", func() {
 			err = os.MkdirAll(filepath.Join(testDir, "foo", "baz", "fa"), os.ModePerm)
 			Expect(err).ToNot(HaveOccurred())
 
-			ordered, _ := fileHelper.OrderFiles(testDir, []string{"foo", "foo/bar", "bar", "foo/baz/fa", "foo/baz"})
-			Expect(ordered).To(Equal([]string{"foo/baz/fa", "foo/bar", "foo/baz", "foo", "bar"}))
+			ordered, dirs, _ := fileHelper.OrderFiles(testDir,
+				[]string{"foo", "foo/bar", "bar", "foo/baz/fa", "foo/baz"})
+			Expect(ordered).To(Equal([]string{}))
+			Expect(dirs).To(Equal([]string{"foo/baz/fa", "foo/bar", "foo/baz", "foo", "bar"}))
 		})
 	})
 })

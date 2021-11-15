@@ -63,42 +63,36 @@ func Move(src, dst string) error {
 	return t.CloseAtomicallyReplace()
 }
 
-func OrderFiles(target string, files []string) ([]string, []string) {
-
+func OrderFiles(target string, files []string) ([]string, []string, []string) {
 	var newFiles []string
 	var notPresent []string
+	dirs := []string{}
 
 	for _, f := range files {
-		target := filepath.Join(target, f)
-		fi, err := os.Lstat(target)
+		completePath := filepath.Join(target, f)
+		fi, err := os.Lstat(completePath)
 		if err != nil {
 			notPresent = append(notPresent, f)
 			continue
 		}
-		if m := fi.Mode(); !m.IsDir() {
+		m := fi.Mode()
+
+		if m.IsDir() {
+			dirs = append(dirs, f)
+		} else if !m.IsDir() {
 			newFiles = append(newFiles, f)
 		}
 	}
 
-	dirs := []string{}
-
-	for _, f := range files {
-		target := filepath.Join(target, f)
-		fi, err := os.Lstat(target)
-		if err != nil {
-			continue
-		}
-		if m := fi.Mode(); m.IsDir() {
-			dirs = append(dirs, f)
-		}
-	}
-
-	// Compare how many sub paths there are, and push at the end the ones that have less subpaths
+	// Compare how many sub paths there are, and push at the end the ones
+	// that have less subpaths
 	sort.Slice(dirs, func(i, j int) bool {
-		return len(strings.Split(dirs[i], string(os.PathSeparator))) > len(strings.Split(dirs[j], string(os.PathSeparator)))
+		return len(strings.Split(dirs[i],
+			string(os.PathSeparator))) > len(strings.Split(dirs[j],
+			string(os.PathSeparator)))
 	})
 
-	return append(newFiles, dirs...), notPresent
+	return newFiles, dirs, notPresent
 }
 
 func ListDir(dir string) ([]string, error) {
