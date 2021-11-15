@@ -112,13 +112,14 @@ func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg
 		}
 	} else {
 
-		Info(fmt.Sprintf("solv.Upgrade - BEFORE UPGRADE %v in %d µs.",
+		Debug(fmt.Sprintf("solv.Upgrade - BEFORE UPGRADE %v in %d µs.",
 			l.Options.FullUninstall,
 			time.Now().Sub(start).Nanoseconds()/1e3))
 
 		uninstall, solution, err = solv.Upgrade(l.Options.FullUninstall, true)
-		Info(fmt.Sprintf("solv.Upgrade completed in %d µs.",
+		Debug(fmt.Sprintf("solv.Upgrade completed in %d µs.",
 			time.Now().Sub(start).Nanoseconds()/1e3))
+
 		if err != nil {
 			return uninstall, toInstall, errors.Wrap(err, "Failed solving solution for upgrade")
 		}
@@ -151,7 +152,7 @@ func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg
 		}
 	}
 
-	Info(fmt.Sprintf("INSTALLER - computeUpgrade in %d µs.",
+	Debug(fmt.Sprintf("Installer - computeUpgrade in %d µs.",
 		time.Now().Sub(start).Nanoseconds()/1e3),
 		len(uninstall), len(toInstall))
 
