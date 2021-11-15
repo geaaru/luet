@@ -36,6 +36,10 @@ type Solver struct {
 	Resolver PackageResolver
 }
 
+func (s *Solver) GetType() SolverType {
+	return SingleCoreSimple
+}
+
 // SetDefinitionDatabase is a setter for the definition Database
 func (s *Solver) SetDefinitionDatabase(db pkg.PackageDatabase) {
 	s.DefinitionDatabase = db
@@ -440,8 +444,8 @@ func (s *Solver) UpgradeUniverse(dropremoved bool) (pkg.Packages, PackagesAssert
 }
 
 // Compute upgrade between packages if specified, or all if none is specified
-func (s *Solver) computeUpgrade(ppsToUpgrade, ppsToNotUpgrade []pkg.Package, resp *UpgradeResponse) func(defDB pkg.PackageDatabase, installDB pkg.PackageDatabase, resp *UpgradeResponse) {
-	return func(defDB pkg.PackageDatabase, installDB pkg.PackageDatabase, resp *UpgradeResponse) {
+func (s *Solver) computeUpgrade(ppsToUpgrade, ppsToNotUpgrade []pkg.Package) func(defDB pkg.PackageDatabase, installDB pkg.PackageDatabase) (pkg.Packages, pkg.Packages, pkg.PackageDatabase, []pkg.Package) {
+	return func(defDB pkg.PackageDatabase, installDB pkg.PackageDatabase) (pkg.Packages, pkg.Packages, pkg.PackageDatabase, []pkg.Package) {
 		toUninstall := pkg.Packages{}
 		toInstall := pkg.Packages{}
 
@@ -468,30 +472,14 @@ func (s *Solver) computeUpgrade(ppsToUpgrade, ppsToNotUpgrade []pkg.Package, res
 				}
 			}
 		}
-
-		resp.ToUninstall = &toUninstall
-		resp.ToInstall = &toInstall
-		resp.InstalledCopy = &installedcopy
-		resp.PacksToUpgrade = &ppsToNotUpgrade
+		return toUninstall, toInstall, installedcopy, ppsToUpgrade
 	}
 }
 
-func (s *Solver) upgrade(psToUpgrade, psToNotUpgrade pkg.Packages,
-	fn func(defDB pkg.PackageDatabase, installDB pkg.PackageDatabase, resp *UpgradeResponse),
-	defDB pkg.PackageDatabase,
-	installDB pkg.PackageDatabase,
-	checkconflicts, full bool) (pkg.Packages, PackagesAssertions, error) {
+func (s *Solver) upgrade(psToUpgrade, psToNotUpgrade pkg.Packages, fn func(defDB pkg.PackageDatabase, installDB pkg.PackageDatabase) (pkg.Packages, pkg.Packages, pkg.PackageDatabase, []pkg.Package), defDB pkg.PackageDatabase, installDB pkg.PackageDatabase, checkconflicts, full bool) (pkg.Packages, PackagesAssertions, error) {
 
-	resp := NewUpgradeResponse()
-	fn(defDB, installDB, resp)
-
-	toUninstall := *resp.ToUninstall
-	toInstall := *resp.ToInstall
-	installedcopy := *resp.InstalledCopy
-	packsToUpgrade := *resp.PacksToUpgrade
-
-	s2 := NewSolver(Options{Type: s.GetType()},
-		installedcopy, defDB, pkg.NewInMemoryDatabase(false))
+	toUninstall, toInstall, installedcopy, packsToUpgrade := fn(defDB, installDB)
+	s2 := NewSolver(Options{Type: SingleCoreSimple}, installedcopy, defDB, pkg.NewInMemoryDatabase(false))
 	s2.SetResolver(s.Resolver)
 	if !full {
 		ass := PackagesAssertions{}
@@ -499,13 +487,11 @@ func (s *Solver) upgrade(psToUpgrade, psToNotUpgrade pkg.Packages,
 			ass = append(ass, PackageAssert{Package: i.(*pkg.DefaultPackage), Value: true})
 		}
 	}
-
 	// Then try to uninstall the versions in the system, and store that tree
 	r, err := s.Uninstall(checkconflicts, false, toUninstall.Unique()...)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Could not compute upgrade - couldn't uninstall candidates ")
 	}
-
 	for _, z := range r {
 		err = installedcopy.RemovePackage(z)
 		if err != nil {
@@ -520,13 +506,11 @@ func (s *Solver) upgrade(psToUpgrade, psToNotUpgrade pkg.Packages,
 		}
 		return toUninstall, ass, nil
 	}
-
 	assertions, err := s2.RelaxedInstall(toInstall.Unique())
 
 	wantedSystem := assertions.ToDB()
 
-	fn = s.computeUpgrade(pkg.Packages{}, pkg.Packages{}, NewUpgradeResponse())
-
+	fn = s.computeUpgrade(pkg.Packages{}, pkg.Packages{})
 	if len(packsToUpgrade) > 0 {
 		// If we have packages in input,
 		// compute what we are looking to upgrade.
@@ -539,20 +523,14 @@ func (s *Solver) upgrade(psToUpgrade, psToNotUpgrade pkg.Packages,
 				selectedPackages = append(selectedPackages, p.Package)
 			}
 		}
-		fn = s.computeUpgrade(selectedPackages, psToNotUpgrade, NewUpgradeResponse())
+		fn = s.computeUpgrade(selectedPackages, psToNotUpgrade)
 	}
 
-	resp = NewUpgradeResponse()
-	fn(defDB, wantedSystem, resp)
-	toInstall = *resp.ToInstall
+	_, toInstall, _, _ = fn(defDB, wantedSystem)
 	if len(toInstall) > 0 {
-		_, toInstall, ass := s.upgrade(
-			psToUpgrade, psToNotUpgrade, fn, defDB, wantedSystem, checkconflicts, full,
-		)
-
+		_, toInstall, ass := s.upgrade(psToUpgrade, psToNotUpgrade, fn, defDB, wantedSystem, checkconflicts, full)
 		return toUninstall, toInstall, ass
 	}
-
 	return toUninstall, assertions, err
 }
 
@@ -563,18 +541,12 @@ func (s *Solver) Upgrade(checkconflicts, full bool) (pkg.Packages, PackagesAsser
 	if err != nil {
 		return nil, nil, err
 	}
-	return s.upgrade(pkg.Packages{},
-		pkg.Packages{},
-		s.computeUpgrade(pkg.Packages{},
-			pkg.Packages{}, NewUpgradeResponse()), s.DefinitionDatabase,
-		installedcopy, checkconflicts, full,
-	)
+	return s.upgrade(pkg.Packages{}, pkg.Packages{}, s.computeUpgrade(pkg.Packages{}, pkg.Packages{}), s.DefinitionDatabase, installedcopy, checkconflicts, full)
 }
 
 // Uninstall takes a candidate package and return a list of packages that would be removed
 // in order to purge the candidate. Returns error if unsat.
 func (s *Solver) Uninstall(checkconflicts, full bool, packs ...pkg.Package) (pkg.Packages, error) {
-
 	if len(packs) == 0 {
 		return pkg.Packages{}, nil
 	}
@@ -635,11 +607,7 @@ func (s *Solver) Uninstall(checkconflicts, full bool, packs ...pkg.Package) (pkg
 		}
 	}
 
-	s2 := NewSolver(Options{Type: s.GetType()},
-		pkg.NewInMemoryDatabase(false),
-		s.InstalledDatabase,
-		pkg.NewInMemoryDatabase(false),
-	)
+	s2 := NewSolver(Options{Type: SingleCoreSimple}, pkg.NewInMemoryDatabase(false), s.InstalledDatabase, pkg.NewInMemoryDatabase(false))
 	s2.SetResolver(s.Resolver)
 
 	// Get the requirements to install the candidate
@@ -647,7 +615,6 @@ func (s *Solver) Uninstall(checkconflicts, full bool, packs ...pkg.Package) (pkg
 	if err != nil {
 		return nil, err
 	}
-
 	for _, a := range asserts {
 		if a.Value {
 			if !checkconflicts {
@@ -752,10 +719,6 @@ func (s *Solver) Solve() (PackagesAssertions, error) {
 	return DecodeModel(model, s.SolverDatabase)
 }
 
-func (s *Solver) GetType() SolverType {
-	return SingleCoreSimple
-}
-
 // Install given a list of packages, returns package assertions to indicate the packages that must be installed in the system in order
 // to statisfy all the constraints
 func (s *Solver) RelaxedInstall(c pkg.Packages) (PackagesAssertions, error) {
@@ -765,7 +728,6 @@ func (s *Solver) RelaxedInstall(c pkg.Packages) (PackagesAssertions, error) {
 		return nil, errors.Wrap(err, "Packages not found in definition db")
 	}
 
-	// TODO: copy take time
 	s.Wanted = coll
 
 	if s.noRulesWorld() {
@@ -779,11 +741,11 @@ func (s *Solver) RelaxedInstall(c pkg.Packages) (PackagesAssertions, error) {
 		}
 		return ass, nil
 	}
-
 	assertions, err := s.Solve()
 	if err != nil {
 		return nil, err
 	}
+
 	return assertions, nil
 }
 
@@ -820,14 +782,12 @@ func (s *Solver) Install(c pkg.Packages) (PackagesAssertions, error) {
 		return assertions, nil
 	}
 
-	resp := NewUpgradeResponse()
-	s.computeUpgrade(toUpgrade, toNotUpgrade, resp)(s.DefinitionDatabase, systemAfterInstall, resp)
-	if len(*resp.ToUninstall) > 0 {
+	toUninstall, _, _, _ := s.computeUpgrade(toUpgrade, toNotUpgrade)(s.DefinitionDatabase, systemAfterInstall)
+	if len(toUninstall) > 0 {
 		// do partial upgrade based on input.
 		// IF there is no version specified in the input, or >=0 is specified,
 		// then compute upgrade for those
-		_, newassertions, err := s.upgrade(toUpgrade, toNotUpgrade,
-			s.computeUpgrade(toUpgrade, toNotUpgrade, resp), s.DefinitionDatabase, systemAfterInstall, false, false)
+		_, newassertions, err := s.upgrade(toUpgrade, toNotUpgrade, s.computeUpgrade(toUpgrade, toNotUpgrade), s.DefinitionDatabase, systemAfterInstall, false, false)
 		if err != nil {
 			// TODO: Emit warning.
 			// We were not able to compute upgrades (maybe for some pinned packages, or a conflict)
