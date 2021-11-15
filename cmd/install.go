@@ -16,14 +16,13 @@
 package cmd
 
 import (
-	installer "github.com/mudler/luet/pkg/installer"
-	"github.com/mudler/luet/pkg/solver"
-
 	helpers "github.com/mudler/luet/cmd/helpers"
 	"github.com/mudler/luet/cmd/util"
 	. "github.com/mudler/luet/pkg/config"
+	installer "github.com/mudler/luet/pkg/installer"
 	. "github.com/mudler/luet/pkg/logger"
 	pkg "github.com/mudler/luet/pkg/package"
+	"github.com/mudler/luet/pkg/solver"
 
 	"github.com/spf13/cobra"
 )
@@ -81,8 +80,6 @@ To force install a package:
 		util.SetSystemConfig()
 		util.SetSolverConfig()
 
-		LuetCfg.GetSolverOptions().Implementation = solver.SingleCoreSimple
-
 		Debug("Solver", LuetCfg.GetSolverOptions().CompactString())
 		repos := installer.SystemRepositories(LuetCfg)
 
@@ -122,7 +119,7 @@ func init() {
 	installCmd.Flags().String("system-target", "", "System rootpath")
 	installCmd.Flags().String("system-engine", "", "System DB engine")
 
-	installCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+AvailableResolvers+" )")
+	installCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
 	installCmd.Flags().Float32("solver-rate", 0.7, "Solver learning rate")
 	installCmd.Flags().Float32("solver-discount", 1.0, "Solver discount rate")
 	installCmd.Flags().Int("solver-attempts", 9000, "Solver maximum attempts")

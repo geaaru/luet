@@ -30,7 +30,6 @@ import (
 	. "github.com/mudler/luet/pkg/config"
 	. "github.com/mudler/luet/pkg/logger"
 	pkg "github.com/mudler/luet/pkg/package"
-	"github.com/mudler/luet/pkg/solver"
 	tree "github.com/mudler/luet/pkg/tree"
 
 	"github.com/spf13/cobra"
@@ -79,7 +78,6 @@ func NewTreeImageCommand() *cobra.Command {
 			compilerBackend := backend.NewSimpleDockerBackend()
 
 			opts := *LuetCfg.GetSolverOptions()
-			opts.Options = solver.Options{Type: solver.SingleCoreSimple, Concurrency: 1}
 			luetCompiler := compiler.NewLuetCompiler(
 				compilerBackend,
 				reciper.GetDatabase(),

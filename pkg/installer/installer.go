@@ -29,7 +29,6 @@ import (
 	artifact "github.com/mudler/luet/pkg/compiler/types/artifact"
 	"github.com/mudler/luet/pkg/config"
 	fileHelper "github.com/mudler/luet/pkg/helpers/file"
-	"github.com/mudler/luet/pkg/helpers/match"
 	. "github.com/mudler/luet/pkg/logger"
 	pkg "github.com/mudler/luet/pkg/package"
 	"github.com/mudler/luet/pkg/solver"
@@ -80,8 +79,30 @@ func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg
 	// First match packages against repositories by priority
 	allRepos := pkg.NewInMemoryDatabase(false)
 	syncedRepos.SyncDatabase(allRepos)
+	start := time.Now()
+
+	Info("Using solver implementation = ", l.Options.SolverOptions.Implementation)
+
+	defcopy := pkg.NewInMemoryDatabase(false)
+	err = allRepos.Clone(defcopy)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	icopy := pkg.NewInMemoryDatabase(false)
+	err = s.Database.Clone(icopy)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	opts := solver.DecodeImplementation(l.Options.SolverOptions.Implementation)
 	// compute a "big" world
-	solv := solver.NewResolver(solver.Options{Type: l.Options.SolverOptions.Implementation, Concurrency: l.Options.Concurrency}, s.Database, allRepos, pkg.NewInMemoryDatabase(false), l.Options.SolverOptions.Resolver())
+	solv := solver.NewResolver(
+		opts,
+		icopy, defcopy,
+		pkg.NewInMemoryDatabase(false),
+		opts.Resolver(),
+	)
 	var solution solver.PackagesAssertions
 
 	if l.Options.SolverUpgrade {
@@ -90,7 +111,15 @@ func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg
 			return uninstall, toInstall, errors.Wrap(err, "Failed solving solution for upgrade")
 		}
 	} else {
+
+		Debug(fmt.Sprintf("solv.Upgrade - BEFORE UPGRADE %v in %d µs.",
+			l.Options.FullUninstall,
+			time.Now().Sub(start).Nanoseconds()/1e3))
+
 		uninstall, solution, err = solv.Upgrade(l.Options.FullUninstall, true)
+		Debug(fmt.Sprintf("solv.Upgrade completed in %d µs.",
+			time.Now().Sub(start).Nanoseconds()/1e3))
+
 		if err != nil {
 			return uninstall, toInstall, errors.Wrap(err, "Failed solving solution for upgrade")
 		}
@@ -98,7 +127,7 @@ func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg
 
 	for _, assertion := range solution {
 		// Be sure to filter from solutions packages already installed in the system
-		if _, err := s.Database.FindPackage(assertion.Package); err != nil && assertion.Value {
+		if _, err := icopy.FindPackage(assertion.Package); err != nil && assertion.Value {
 			toInstall = append(toInstall, assertion.Package)
 		}
 	}
@@ -122,6 +151,10 @@ func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg
 			}
 		}
 	}
+
+	Debug(fmt.Sprintf("Installer - computeUpgrade in %d µs.",
+		time.Now().Sub(start).Nanoseconds()/1e3),
+		len(uninstall), len(toInstall))
 
 	return uninstall, toInstall, nil
 }
@@ -233,6 +266,7 @@ func (l *LuetInstaller) computeSwap(o Option, syncedRepos Repositories, toRemove
 		Error("Failed computing uninstall for ", packsToList(toRemove))
 		return nil, nil, nil, nil, errors.Wrap(err, "computing uninstall "+packsToList(toRemove))
 	}
+
 	for _, p := range packs {
 		err = systemAfterChanges.Database.RemovePackage(p)
 		if err != nil {
@@ -244,6 +278,7 @@ func (l *LuetInstaller) computeSwap(o Option, syncedRepos Repositories, toRemove
 	for _, p := range toInstall {
 		assertions = append(assertions, solver.PackageAssert{Package: p.(*pkg.DefaultPackage), Value: true})
 	}
+
 	return match, packages, assertions, allRepos, err
 }
 
@@ -270,7 +305,6 @@ func (l *LuetInstaller) swap(o Option, syncedRepos Repositories, toRemove pkg.Pa
 			return errors.New("Aborted by user")
 		}
 	}
-
 	// First match packages against repositories by priority
 	if err := l.download(syncedRepos, match); err != nil {
 		return errors.Wrap(err, "Pre-downloading packages")
@@ -470,7 +504,10 @@ func (l *LuetInstaller) getOpsWithOptions(
 
 func (l *LuetInstaller) checkAndUpgrade(r Repositories, s *System) error {
 	Spinner(32)
+	start := time.Now()
 	uninstall, toInstall, err := l.computeUpgrade(r, s)
+	Info(fmt.Sprintf("Compute upgrade completed in %d µs.",
+		time.Now().Sub(start).Nanoseconds()/1e3))
 	if err != nil {
 		return errors.Wrap(err, "failed computing upgrade")
 	}
@@ -548,8 +585,9 @@ func (l *LuetInstaller) Install(cp pkg.Packages, s *System) error {
 		Info("No packages to install")
 		return nil
 	}
+	opts := solver.DecodeImplementation(l.Options.SolverOptions.Implementation)
 	// Resolvers might decide to remove some packages from being installed
-	if !l.Options.SolverOptions.ResolverIsSet() {
+	if !opts.ResolverIsSet() {
 		for _, p := range cp {
 			found := false
 			vers, _ := s.Database.FindPackageVersions(p) // If was installed, it is found, as it was filtered
@@ -671,7 +709,7 @@ func (l *LuetInstaller) computeInstall(o Option, syncedRepos Repositories, cp pk
 		vers, _ := s.Database.FindPackageVersions(pi)
 
 		if len(vers) >= 1 {
-			//	Warning("Filtering out package " + pi.HumanReadableString() + ", it has other versions already installed. Uninstall one of them first ")
+			Warning("Filtering out package " + pi.HumanReadableString() + ", it has other versions already installed. Uninstall one of them first ")
 			continue
 			//return errors.New("Package " + pi.GetFingerPrint() + " has other versions already installed. Uninstall one of them first: " + strings.Join(vers, " "))
 
@@ -694,13 +732,19 @@ func (l *LuetInstaller) computeInstall(o Option, syncedRepos Repositories, cp pk
 	var err error
 
 	if !o.NoDeps {
-		solv := solver.NewResolver(solver.Options{Type: l.Options.SolverOptions.Implementation, Concurrency: l.Options.Concurrency}, s.Database, allRepos, pkg.NewInMemoryDatabase(false), l.Options.SolverOptions.Resolver())
+		opts := solver.DecodeImplementation(l.Options.SolverOptions.Implementation)
+		solv := solver.NewResolver(opts,
+			s.Database, allRepos,
+			pkg.NewInMemoryDatabase(false),
+			opts.Resolver(),
+		)
 
 		if l.Options.Relaxed {
 			solution, err = solv.RelaxedInstall(p)
 		} else {
 			solution, err = solv.Install(p)
 		}
+
 		/// TODO: PackageAssertions needs to be a map[fingerprint]pack so lookup is in O(1)
 		if err != nil && !o.Force {
 			return toInstall, p, solution, allRepos, errors.Wrap(err, "Failed solving solution for package")
@@ -1004,51 +1048,6 @@ func (l *LuetInstaller) installerWorker(i int, wg *sync.WaitGroup, c <-chan Arti
 	return nil
 }
 
-func checkAndPrunePath(path string) {
-	// check if now the target path is empty
-	targetPath := filepath.Dir(path)
-
-	fi, err := os.Lstat(targetPath)
-	if err != nil {
-		//	Warning("Dir not found (it was before?) ", err.Error())
-		return
-	}
-
-	switch mode := fi.Mode(); {
-	case mode.IsDir():
-		files, err := ioutil.ReadDir(targetPath)
-		if err != nil {
-			Warning("Failed reading folder", targetPath, err.Error())
-		}
-		if len(files) != 0 {
-			Debug("Preserving not-empty folder", targetPath)
-			return
-		}
-	}
-	if err = os.Remove(targetPath); err != nil {
-		Warning("Failed removing file (maybe not present in the system target anymore ?)", targetPath, err.Error())
-	}
-}
-
-// We will try to cleanup every path from the file, if the folders left behind are empty
-func pruneEmptyFilePath(path string) {
-	checkAndPrunePath(path)
-
-	// A path is for e.g. /usr/bin/bar
-	// we want to create an array as "/usr", "/usr/bin", "/usr/bin/bar"
-	paths := strings.Split(path, string(os.PathSeparator))
-	currentPath := filepath.Join(string(os.PathSeparator), paths[0])
-	allPaths := []string{currentPath}
-	for _, p := range paths[1:] {
-		currentPath = filepath.Join(currentPath, p)
-		allPaths = append(allPaths, currentPath)
-	}
-	match.ReverseAny(allPaths)
-	for _, p := range allPaths {
-		checkAndPrunePath(p)
-	}
-}
-
 func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 	var cp *config.ConfigProtect
 	annotationDir := ""
@@ -1071,7 +1070,12 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 		cp.Map(files)
 	}
 
-	toRemove, notPresent := fileHelper.OrderFiles(s.Target, files)
+	toRemove, dirs2Remove, notPresent := fileHelper.OrderFiles(s.Target, files)
+
+	mapDirs := make(map[string]int, 0)
+	for _, d := range dirs2Remove {
+		mapDirs[d] = 1
+	}
 
 	// Remove from target
 	for _, f := range toRemove {
@@ -1086,13 +1090,14 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 		if l.Options.PreserveSystemEssentialData &&
 			strings.HasPrefix(f, config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath()) ||
 			strings.HasPrefix(f, config.LuetCfg.GetSystem().GetSystemRepoDatabaseDirPath()) {
-			Warning("Preserve ", f, " which is required by luet ( you have to delete it manually if you really need to)")
+			Warning("Preserve ", f,
+				" which is required by luet ( you have to delete it manually if you really need to)")
 			continue
 		}
 
 		fi, err := os.Lstat(target)
 		if err != nil {
-			Warning("File not found (it was before?) ", err.Error())
+			Warning("File not found (it was before?)", err.Error())
 			continue
 		}
 		switch mode := fi.Mode(); {
@@ -1102,7 +1107,7 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 				Warning("Failed reading folder", target, err.Error())
 			}
 			if len(files) != 0 {
-				Debug("Preserving not-empty folder", target)
+				Info("DROPPED = Preserving not-empty folder", target)
 				continue
 			}
 		}
@@ -1111,7 +1116,17 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 			Warning("Failed removing file (maybe not present in the system target anymore ?)", target, err.Error())
 		}
 
-		pruneEmptyFilePath(target)
+		// Add subpaths of the file to ensure that all dirs
+		// are injected for the prune phase. (NOTE: i'm not sure about this)
+		dirname := filepath.Dir(target)
+		words := strings.Split(dirname, string(os.PathSeparator))
+
+		for i := len(words); i > 1; i-- {
+			cpath := strings.Join(words[0:i], string(os.PathSeparator))
+			if _, ok := mapDirs[cpath]; !ok {
+				mapDirs[cpath] = 1
+			}
+		}
 	}
 
 	for _, f := range notPresent {
@@ -1125,8 +1140,48 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 		if err = os.Remove(target); err != nil {
 			Debug("Failed removing file (not present in the system target)", target, err.Error())
 		}
+	}
 
-		pruneEmptyFilePath(target)
+	// Sorting the dirs from the mapDirs keys
+	dirs2Remove = []string{}
+	for k, _ := range mapDirs {
+		dirs2Remove = append(dirs2Remove, k)
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(dirs2Remove)))
+
+	Debug("Directories tagged for the check and remove", len(dirs2Remove))
+
+	// Check if directories could be removed.
+	for _, f := range dirs2Remove {
+		target := filepath.Join(s.Target, f)
+
+		if l.Options.PreserveSystemEssentialData &&
+			strings.HasPrefix(f, config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath()) ||
+			strings.HasPrefix(f, config.LuetCfg.GetSystem().GetSystemRepoDatabaseDirPath()) {
+			Warning("Preserve ", f,
+				" which is required by luet ( you have to delete it manually if you really need to)")
+			continue
+		}
+
+		if !config.LuetCfg.ConfigProtectSkip && cp.Protected(f) {
+			Debug("Preserving protected file:", f)
+			continue
+		}
+
+		files, err := ioutil.ReadDir(target)
+		if err != nil {
+			Warning("Failed reading folder", target, err.Error())
+		}
+		Debug("Removing dir", target, "if empty: files ", len(files), ".")
+
+		if len(files) != 0 {
+			Debug("Preserving not-empty folder", target)
+			continue
+		}
+
+		if err = os.Remove(target); err != nil {
+			Debug("Failed removing file (not present in the system target)", target, err.Error())
+		}
 	}
 
 	err = s.Database.RemovePackageFiles(p)
@@ -1165,7 +1220,12 @@ func (l *LuetInstaller) computeUninstall(o Option, s *System, packs ...pkg.Packa
 	}
 
 	if !o.NoDeps {
-		solv := solver.NewResolver(solver.Options{Type: l.Options.SolverOptions.Implementation, Concurrency: l.Options.Concurrency}, installedtmp, installedtmp, pkg.NewInMemoryDatabase(false), l.Options.SolverOptions.Resolver())
+		opts := solver.DecodeImplementation(l.Options.SolverOptions.Implementation)
+		solv := solver.NewResolver(
+			opts, installedtmp, installedtmp,
+			pkg.NewInMemoryDatabase(false),
+			opts.Resolver(),
+		)
 		var solution pkg.Packages
 		var err error
 		if o.FullCleanUninstall {
@@ -1236,10 +1296,10 @@ func (l *LuetInstaller) Uninstall(s *System, packs ...pkg.Package) error {
 	}
 
 	if l.Options.Ask {
-		Info(":recycle: Packages that are going to be removed from the system:\n   ", Yellow(packsToList(toUninstall)).BgBlack().String())
+		Info(":recycle: Packages that are going to be removed from the system:\n   ",
+			Yellow(packsToList(toUninstall)).BgBlack().String())
 		if Ask() {
 			l.Options.Ask = false // Don't prompt anymore
-			return uninstall()
 		} else {
 			return errors.New("Aborted by user")
 		}

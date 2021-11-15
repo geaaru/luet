@@ -84,7 +84,7 @@ var replaceCmd = &cobra.Command{
 			repos = append(repos, r)
 		}
 
-		LuetCfg.GetSolverOptions().Implementation = solver.SingleCoreSimple
+		LuetCfg.GetSolverOptions().Implementation = solver.SolverV2ResolverType
 
 		Debug("Solver", LuetCfg.GetSolverOptions().CompactString())
 
@@ -117,7 +117,7 @@ func init() {
 	replaceCmd.Flags().String("system-target", "", "System rootpath")
 	replaceCmd.Flags().String("system-engine", "", "System DB engine")
 
-	replaceCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+AvailableResolvers+" )")
+	replaceCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
 	replaceCmd.Flags().Float32("solver-rate", 0.7, "Solver learning rate")
 	replaceCmd.Flags().Float32("solver-discount", 1.0, "Solver discount rate")
 	replaceCmd.Flags().Int("solver-attempts", 9000, "Solver maximum attempts")

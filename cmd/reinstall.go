@@ -15,14 +15,13 @@
 package cmd
 
 import (
-	installer "github.com/mudler/luet/pkg/installer"
-	"github.com/mudler/luet/pkg/solver"
-
 	helpers "github.com/mudler/luet/cmd/helpers"
 	"github.com/mudler/luet/cmd/util"
 	. "github.com/mudler/luet/pkg/config"
+	installer "github.com/mudler/luet/pkg/installer"
 	. "github.com/mudler/luet/pkg/logger"
 	pkg "github.com/mudler/luet/pkg/package"
+	"github.com/mudler/luet/pkg/solver"
 
 	"github.com/spf13/cobra"
 )
@@ -76,8 +75,6 @@ var reinstallCmd = &cobra.Command{
 
 		util.SetSolverConfig()
 
-		LuetCfg.GetSolverOptions().Implementation = solver.SingleCoreSimple
-
 		Debug("Solver", LuetCfg.GetSolverOptions().CompactString())
 
 		// Load config protect configs
@@ -109,7 +106,7 @@ func init() {
 	reinstallCmd.Flags().String("system-target", "", "System rootpath")
 	reinstallCmd.Flags().String("system-engine", "", "System DB engine")
 
-	reinstallCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+AvailableResolvers+" )")
+	reinstallCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
 	reinstallCmd.Flags().Float32("solver-rate", 0.7, "Solver learning rate")
 	reinstallCmd.Flags().Float32("solver-discount", 1.0, "Solver discount rate")
 	reinstallCmd.Flags().Int("solver-attempts", 9000, "Solver maximum attempts")
