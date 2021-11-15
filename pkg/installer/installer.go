@@ -29,7 +29,6 @@ import (
 	artifact "github.com/mudler/luet/pkg/compiler/types/artifact"
 	"github.com/mudler/luet/pkg/config"
 	fileHelper "github.com/mudler/luet/pkg/helpers/file"
-	"github.com/mudler/luet/pkg/helpers/match"
 	. "github.com/mudler/luet/pkg/logger"
 	pkg "github.com/mudler/luet/pkg/package"
 	"github.com/mudler/luet/pkg/solver"
@@ -1048,51 +1047,6 @@ func (l *LuetInstaller) installerWorker(i int, wg *sync.WaitGroup, c <-chan Arti
 	return nil
 }
 
-func checkAndPrunePath(path string) {
-	// check if now the target path is empty
-	targetPath := filepath.Dir(path)
-
-	fi, err := os.Lstat(targetPath)
-	if err != nil {
-		//	Warning("Dir not found (it was before?) ", err.Error())
-		return
-	}
-
-	switch mode := fi.Mode(); {
-	case mode.IsDir():
-		files, err := ioutil.ReadDir(targetPath)
-		if err != nil {
-			Warning("Failed reading folder", targetPath, err.Error())
-		}
-		if len(files) != 0 {
-			Debug("Preserving not-empty folder", targetPath)
-			return
-		}
-	}
-	if err = os.Remove(targetPath); err != nil {
-		Warning("Failed removing file (maybe not present in the system target anymore ?)", targetPath, err.Error())
-	}
-}
-
-// We will try to cleanup every path from the file, if the folders left behind are empty
-func pruneEmptyFilePath(path string) {
-	checkAndPrunePath(path)
-
-	// A path is for e.g. /usr/bin/bar
-	// we want to create an array as "/usr", "/usr/bin", "/usr/bin/bar"
-	paths := strings.Split(path, string(os.PathSeparator))
-	currentPath := filepath.Join(string(os.PathSeparator), paths[0])
-	allPaths := []string{currentPath}
-	for _, p := range paths[1:] {
-		currentPath = filepath.Join(currentPath, p)
-		allPaths = append(allPaths, currentPath)
-	}
-	match.ReverseAny(allPaths)
-	for _, p := range allPaths {
-		checkAndPrunePath(p)
-	}
-}
-
 func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 	var cp *config.ConfigProtect
 	annotationDir := ""
@@ -1115,7 +1069,12 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 		cp.Map(files)
 	}
 
-	toRemove, notPresent := fileHelper.OrderFiles(s.Target, files)
+	toRemove, dirs2Remove, notPresent := fileHelper.OrderFiles(s.Target, files)
+
+	mapDirs := make(map[string]int, 0)
+	for _, d := range dirs2Remove {
+		mapDirs[d] = 1
+	}
 
 	// Remove from target
 	for _, f := range toRemove {
@@ -1130,13 +1089,14 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 		if l.Options.PreserveSystemEssentialData &&
 			strings.HasPrefix(f, config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath()) ||
 			strings.HasPrefix(f, config.LuetCfg.GetSystem().GetSystemRepoDatabaseDirPath()) {
-			Warning("Preserve ", f, " which is required by luet ( you have to delete it manually if you really need to)")
+			Warning("Preserve ", f,
+				" which is required by luet ( you have to delete it manually if you really need to)")
 			continue
 		}
 
 		fi, err := os.Lstat(target)
 		if err != nil {
-			Warning("File not found (it was before?) ", err.Error())
+			Warning("File not found (it was before?)", err.Error())
 			continue
 		}
 		switch mode := fi.Mode(); {
@@ -1146,7 +1106,7 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 				Warning("Failed reading folder", target, err.Error())
 			}
 			if len(files) != 0 {
-				Debug("Preserving not-empty folder", target)
+				Info("DROPPED = Preserving not-empty folder", target)
 				continue
 			}
 		}
@@ -1155,7 +1115,17 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 			Warning("Failed removing file (maybe not present in the system target anymore ?)", target, err.Error())
 		}
 
-		pruneEmptyFilePath(target)
+		// Add subpaths of the file to ensure that all dirs
+		// are injected for the prune phase. (NOTE: i'm not sure about this)
+		dirname := filepath.Dir(target)
+		words := strings.Split(dirname, string(os.PathSeparator))
+
+		for i := len(words); i > 1; i-- {
+			cpath := strings.Join(words[0:i], string(os.PathSeparator))
+			if _, ok := mapDirs[cpath]; !ok {
+				mapDirs[cpath] = 1
+			}
+		}
 	}
 
 	for _, f := range notPresent {
@@ -1169,8 +1139,48 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 		if err = os.Remove(target); err != nil {
 			Debug("Failed removing file (not present in the system target)", target, err.Error())
 		}
+	}
 
-		pruneEmptyFilePath(target)
+	// Sorting the dirs from the mapDirs keys
+	dirs2Remove = []string{}
+	for k, _ := range mapDirs {
+		dirs2Remove = append(dirs2Remove, k)
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(dirs2Remove)))
+
+	Debug("Directories tagged for the check and remove", len(dirs2Remove))
+
+	// Check if directories could be removed.
+	for _, f := range dirs2Remove {
+		target := filepath.Join(s.Target, f)
+
+		if l.Options.PreserveSystemEssentialData &&
+			strings.HasPrefix(f, config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath()) ||
+			strings.HasPrefix(f, config.LuetCfg.GetSystem().GetSystemRepoDatabaseDirPath()) {
+			Warning("Preserve ", f,
+				" which is required by luet ( you have to delete it manually if you really need to)")
+			continue
+		}
+
+		if !config.LuetCfg.ConfigProtectSkip && cp.Protected(f) {
+			Debug("Preserving protected file:", f)
+			continue
+		}
+
+		files, err := ioutil.ReadDir(target)
+		if err != nil {
+			Warning("Failed reading folder", target, err.Error())
+		}
+		Debug("Removing dir", target, "if empty: files ", len(files), ".")
+
+		if len(files) != 0 {
+			Debug("Preserving not-empty folder", target)
+			continue
+		}
+
+		if err = os.Remove(target); err != nil {
+			Debug("Failed removing file (not present in the system target)", target, err.Error())
+		}
 	}
 
 	err = s.Database.RemovePackageFiles(p)
