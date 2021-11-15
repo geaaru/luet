@@ -72,6 +72,12 @@ func SetSolverConfig() (c *config.LuetSolverOptions) {
 	LuetCfg.GetSolverOptions().MaxAttempts = attempts
 	LuetCfg.GetSolverOptions().Implementation = implementation
 
+	if implementation == "" {
+		// Using solver.type until i will drop solver.implementation option.
+		LuetCfg.GetSolverOptions().Implementation = stype
+		implementation = stype
+	}
+
 	return &config.LuetSolverOptions{
 		Type:           stype,
 		LearnRate:      float32(rate),
