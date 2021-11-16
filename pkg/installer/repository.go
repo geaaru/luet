@@ -773,23 +773,36 @@ func (r *LuetSystemRepository) SyncBuildMetadata(path string) error {
 	return nil
 }
 
-func (r *LuetSystemRepository) Load() (*LuetSystemRepository, error) {
+func (r *LuetSystemRepository) Load(alternativeRepoSpecfile, alternativeTreeFs, alternativeMetafs string) (*LuetSystemRepository, error) {
 	var treefs, metafs string
 	aurora := GetAurora()
 
 	repobasedir := config.LuetCfg.GetSystem().GetRepoDatabaseDirPath(r.GetName())
 
-	if r.GetTreePath() == "" {
-		treefs = filepath.Join(repobasedir, "treefs")
-	} else {
-		treefs = r.GetTreePath()
-	}
-	if r.GetMetaPath() == "" {
-		metafs = filepath.Join(repobasedir, "metafs")
-	} else {
-		metafs = r.GetMetaPath()
-	}
 	repospecfile := filepath.Join(repobasedir, REPOSITORY_SPECFILE)
+	if alternativeRepoSpecfile != "" {
+		repospecfile = alternativeRepoSpecfile
+	}
+
+	if alternativeTreeFs != "" {
+		treefs = alternativeTreeFs
+	} else {
+		if r.GetTreePath() == "" {
+			treefs = filepath.Join(repobasedir, "treefs")
+		} else {
+			treefs = r.GetTreePath()
+		}
+	}
+
+	if alternativeMetafs != "" {
+		metafs = alternativeMetafs
+	} else {
+		if r.GetMetaPath() == "" {
+			metafs = filepath.Join(repobasedir, "metafs")
+		} else {
+			metafs = r.GetMetaPath()
+		}
+	}
 	metafile := filepath.Join(metafs, REPOSITORY_METAFILE)
 
 	Debug(fmt.Sprintf("[%s] Using spec file %s", r.GetName(), repospecfile))
@@ -956,7 +969,11 @@ func (r *LuetSystemRepository) Sync(force bool) (*LuetSystemRepository, error) {
 		Info("Repository", downloadedRepoMeta.GetName(), "is already up to date.")
 	}
 
-	return r.Load()
+	if r.Cached {
+		return r.Load("", "", "")
+	} else {
+		return r.Load(file, treefs, metafs)
+	}
 }
 
 func (r *LuetSystemRepository) fill(r2 *LuetSystemRepository) {

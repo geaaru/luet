@@ -231,7 +231,7 @@ func (l *LuetInstaller) Upgrade(s *System) error {
 func (l *LuetInstaller) LoadRepositories(inMemory bool) (Repositories, error) {
 	repos := Repositories{}
 	for _, r := range l.PackageRepositories {
-		repo, err := r.Load()
+		repo, err := r.Load("", "", "")
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed load repository: "+r.GetName())
 		}
