@@ -130,7 +130,7 @@ func searchOnline(term string, results *Results, label, labelMatch, revdeps, hid
 	)
 	inst.Repositories(repos)
 
-	synced, err := inst.LoadRepositories(false)
+	synced, err := inst.GetRepositoriesInstances(true)
 	if err != nil {
 		Fatal("Error: " + err.Error())
 	}
@@ -219,7 +219,7 @@ func searchFiles(term string, results *Results) {
 		},
 	)
 	inst.Repositories(repos)
-	synced, err := inst.LoadRepositories(false)
+	synced, err := inst.GetRepositoriesInstances(true)
 	if err != nil {
 		Fatal("Error: " + err.Error())
 	}

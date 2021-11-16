@@ -196,14 +196,14 @@ func (l *LuetInstaller) AreThereNotCachedRepos() bool {
 	return ans
 }
 
-func (l *LuetInstaller) getRepositoriesInstances() (Repositories, error) {
+func (l *LuetInstaller) GetRepositoriesInstances(inMemory bool) (Repositories, error) {
 	var repos Repositories
 	var err error
 
 	if l.AreThereNotCachedRepos() || l.Options.SyncRepositories {
-		repos, err = l.SyncRepositories(true)
+		repos, err = l.SyncRepositories(inMemory)
 	} else {
-		repos, err = l.LoadRepositories(true)
+		repos, err = l.LoadRepositories(inMemory)
 	}
 	if err != nil {
 		return nil, err
@@ -215,7 +215,7 @@ func (l *LuetInstaller) getRepositoriesInstances() (Repositories, error) {
 // Upgrade upgrades a System based on the Installer options. Returns error in case of failure
 func (l *LuetInstaller) Upgrade(s *System) error {
 
-	repos, err := l.getRepositoriesInstances()
+	repos, err := l.GetRepositoriesInstances(true)
 	if err != nil {
 		return err
 	}
@@ -271,7 +271,7 @@ func (l *LuetInstaller) SyncRepositories(inMemory bool) (Repositories, error) {
 }
 
 func (l *LuetInstaller) Swap(toRemove pkg.Packages, toInstall pkg.Packages, s *System) error {
-	repos, err := l.getRepositoriesInstances()
+	repos, err := l.GetRepositoriesInstances(true)
 	if err != nil {
 		return err
 	}
@@ -608,7 +608,7 @@ func (l *LuetInstaller) checkAndUpgrade(r Repositories, s *System) error {
 }
 
 func (l *LuetInstaller) Install(cp pkg.Packages, s *System) error {
-	repos, err := l.getRepositoriesInstances()
+	repos, err := l.GetRepositoriesInstances(true)
 	if err != nil {
 		return err
 	}
@@ -703,7 +703,7 @@ func (l *LuetInstaller) download(syncedRepos Repositories, toDownload map[string
 // if files from artifacts in the repositories are found
 // in the system target
 func (l *LuetInstaller) Reclaim(s *System) error {
-	repos, err := l.getRepositoriesInstances()
+	repos, err := l.GetRepositoriesInstances(true)
 	if err != nil {
 		return err
 	}
