@@ -69,7 +69,10 @@ func packageToList(l list.Writer, repo string, p pkg.Package) {
 func searchLocally(term string, l list.Writer, t table.Writer, label, labelMatch, revdeps, hidden bool) Results {
 	var results Results
 
-	system := &installer.System{Database: LuetCfg.GetSystemDB(), Target: LuetCfg.GetSystem().Rootfs}
+	system := &installer.System{
+		Database: LuetCfg.GetSystemDB(),
+		Target:   LuetCfg.GetSystem().Rootfs,
+	}
 
 	var err error
 	iMatches := pkg.Packages{}
@@ -145,7 +148,8 @@ func searchOnline(term string, l list.Writer, t table.Writer, label, labelMatch,
 		},
 	)
 	inst.Repositories(repos)
-	synced, err := inst.SyncRepositories(false)
+
+	synced, err := inst.LoadRepositories(false)
 	if err != nil {
 		Fatal("Error: " + err.Error())
 	}

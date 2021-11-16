@@ -76,6 +76,7 @@ To force install a package:
 		finalizerEnvs, _ := cmd.Flags().GetStringArray("finalizer-env")
 		relax, _ := cmd.Flags().GetBool("relax")
 		skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
+		syncRepos, _ := cmd.Flags().GetBool("sync-repos")
 
 		util.SetSystemConfig()
 		util.SetSolverConfig()
@@ -103,10 +104,14 @@ To force install a package:
 			Ask:                         !yes,
 			Relaxed:                     relax,
 			SkipFinalizers:              skipFinalizers,
+			SyncRepositories:            syncRepos,
 		})
 		inst.Repositories(repos)
 
-		system := &installer.System{Database: LuetCfg.GetSystemDB(), Target: LuetCfg.GetSystem().Rootfs}
+		system := &installer.System{
+			Database: LuetCfg.GetSystemDB(),
+			Target:   LuetCfg.GetSystem().Rootfs,
+		}
 		err = inst.Install(toInstall, system)
 		if err != nil {
 			Fatal("Error: " + err.Error())
@@ -137,6 +142,7 @@ func init() {
 		"Overwrite exiting directories permissions.")
 	installCmd.Flags().Bool("skip-finalizers", false,
 		"Skip the execution of the finalizers.")
-
+	installCmd.Flags().Bool("sync-repos", false,
+		"Sync repositories before install. Note: If there are in memory repositories then the sync is done always.")
 	RootCmd.AddCommand(installCmd)
 }

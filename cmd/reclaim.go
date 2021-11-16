@@ -51,6 +51,7 @@ It scans the target file system, and if finds a match with a package available i
 		}
 
 		force := LuetCfg.Viper.GetBool("force")
+		syncRepos, _ := cmd.Flags().GetBool("sync-repos")
 
 		Debug("Solver", LuetCfg.GetSolverOptions().CompactString())
 
@@ -58,10 +59,14 @@ It scans the target file system, and if finds a match with a package available i
 			Concurrency:                 LuetCfg.GetGeneral().Concurrency,
 			Force:                       force,
 			PreserveSystemEssentialData: true,
+			SyncRepositories:            syncRepos,
 		})
 		inst.Repositories(repos)
 
-		system := &installer.System{Database: LuetCfg.GetSystemDB(), Target: LuetCfg.GetSystem().Rootfs}
+		system := &installer.System{
+			Database: LuetCfg.GetSystemDB(),
+			Target:   LuetCfg.GetSystem().Rootfs,
+		}
 		err := inst.Reclaim(system)
 		if err != nil {
 			Fatal("Error: " + err.Error())
@@ -77,5 +82,7 @@ func init() {
 
 	reclaimCmd.Flags().Bool("force", false, "Skip errors and keep going (potentially harmful)")
 
+	reclaimCmd.Flags().Bool("sync-repos", false,
+		"Sync repositories before reclaim. Note: If there are in memory repositories then the sync is done always.")
 	RootCmd.AddCommand(reclaimCmd)
 }

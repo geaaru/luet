@@ -773,6 +773,73 @@ func (r *LuetSystemRepository) SyncBuildMetadata(path string) error {
 	return nil
 }
 
+func (r *LuetSystemRepository) Load() (*LuetSystemRepository, error) {
+	var treefs, metafs string
+	aurora := GetAurora()
+
+	repobasedir := config.LuetCfg.GetSystem().GetRepoDatabaseDirPath(r.GetName())
+
+	if r.GetTreePath() == "" {
+		treefs = filepath.Join(repobasedir, "treefs")
+	} else {
+		treefs = r.GetTreePath()
+	}
+	if r.GetMetaPath() == "" {
+		metafs = filepath.Join(repobasedir, "metafs")
+	} else {
+		metafs = r.GetMetaPath()
+	}
+	repospecfile := filepath.Join(repobasedir, REPOSITORY_SPECFILE)
+	metafile := filepath.Join(metafs, REPOSITORY_METAFILE)
+
+	Debug(fmt.Sprintf("[%s] Using spec file %s", r.GetName(), repospecfile))
+
+	if !fileHelper.Exists(repospecfile) || !fileHelper.Exists(metafile) ||
+		!fileHelper.Exists(treefs) {
+		return nil, errors.New(
+			fmt.Sprintf("The repository %s is not available.\n"+
+				"You need to sync the database.", r.GetName()))
+	}
+
+	repoMeta, err := r.ReadSpecFile(repospecfile)
+	if err != nil {
+		return nil, err
+	}
+
+	meta, err := NewLuetSystemRepositoryMetadata(metafile, false)
+	if err != nil {
+		return nil, errors.Wrap(err, "While processing "+REPOSITORY_METAFILE)
+	}
+	repoMeta.SetIndex(meta.ToArtifactIndex())
+
+	reciper := tree.NewInstallerRecipe(pkg.NewInMemoryDatabase(false))
+	err = reciper.Load(treefs)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error met while unpacking rootfs")
+	}
+
+	repoMeta.SetTree(reciper)
+	repoMeta.SetTreePath(treefs)
+
+	// Copy the local available data to the one which was synced
+	// e.g. locally we can override the type (disk), or priority
+	// while remotely it could be advertized differently
+	r.fill(repoMeta)
+
+	InfoC(
+		aurora.Yellow(":information_source:").String() +
+			aurora.Magenta("Repository: ").String() +
+			aurora.Green(aurora.Bold(repoMeta.GetName()).String()).String() +
+			aurora.Magenta(" Priority: ").String() +
+			aurora.Bold(aurora.Green(repoMeta.GetPriority())).String() +
+			aurora.Magenta(" Type: ").String() +
+			aurora.Bold(aurora.Green(repoMeta.GetType())).String() +
+			aurora.Magenta(" Revision: ").String() +
+			aurora.Bold(aurora.Green(repoMeta.GetRevision())).String(),
+	)
+	return repoMeta, nil
+}
+
 func (r *LuetSystemRepository) Sync(force bool) (*LuetSystemRepository, error) {
 	var repoUpdated bool = false
 	var treefs, metafs string
@@ -889,38 +956,7 @@ func (r *LuetSystemRepository) Sync(force bool) (*LuetSystemRepository, error) {
 		Info("Repository", downloadedRepoMeta.GetName(), "is already up to date.")
 	}
 
-	meta, err := NewLuetSystemRepositoryMetadata(
-		filepath.Join(metafs, REPOSITORY_METAFILE), false,
-	)
-	if err != nil {
-		return nil, errors.Wrap(err, "While processing "+REPOSITORY_METAFILE)
-	}
-	downloadedRepoMeta.SetIndex(meta.ToArtifactIndex())
-
-	reciper := tree.NewInstallerRecipe(pkg.NewInMemoryDatabase(false))
-	err = reciper.Load(treefs)
-	if err != nil {
-		return nil, errors.Wrap(err, "Error met while unpacking rootfs")
-	}
-
-	downloadedRepoMeta.SetTree(reciper)
-	downloadedRepoMeta.SetTreePath(treefs)
-
-	// Copy the local available data to the one which was synced
-	// e.g. locally we can override the type (disk), or priority
-	// while remotely it could be advertized differently
-	r.fill(downloadedRepoMeta)
-
-	InfoC(
-		aurora.Yellow(":information_source:").String() +
-			aurora.Magenta("Repository: ").String() +
-			aurora.Green(aurora.Bold(downloadedRepoMeta.GetName()).String()).String() +
-			aurora.Magenta(" Priority: ").String() +
-			aurora.Bold(aurora.Green(downloadedRepoMeta.GetPriority())).String() +
-			aurora.Magenta(" Type: ").String() +
-			aurora.Bold(aurora.Green(downloadedRepoMeta.GetType())).String(),
-	)
-	return downloadedRepoMeta, nil
+	return r.Load()
 }
 
 func (r *LuetSystemRepository) fill(r2 *LuetSystemRepository) {

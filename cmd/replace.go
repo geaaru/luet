@@ -1,4 +1,5 @@
-// Copyright © 2020 Ettore Di Giacinto <mudler@mocaccino.org>
+// Copyright © 2020-2021 Ettore Di Giacinto <mudler@mocaccino.org>
+//                       Daniele Rondina <geaaru@sabayonlinux.org>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -55,6 +56,7 @@ var replaceCmd = &cobra.Command{
 		onlydeps := LuetCfg.Viper.GetBool("onlydeps")
 		yes := LuetCfg.Viper.GetBool("yes")
 		downloadOnly, _ := cmd.Flags().GetBool("download-only")
+		syncRepos, _ := cmd.Flags().GetBool("sync-repos")
 
 		util.SetSystemConfig()
 		util.SetSolverConfig()
@@ -84,8 +86,6 @@ var replaceCmd = &cobra.Command{
 			repos = append(repos, r)
 		}
 
-		LuetCfg.GetSolverOptions().Implementation = solver.SolverV2ResolverType
-
 		Debug("Solver", LuetCfg.GetSolverOptions().CompactString())
 
 		// Load config protect configs
@@ -100,6 +100,7 @@ var replaceCmd = &cobra.Command{
 			PreserveSystemEssentialData: true,
 			Ask:                         !yes,
 			DownloadOnly:                downloadOnly,
+			SyncRepositories:            syncRepos,
 		})
 		inst.Repositories(repos)
 
@@ -128,6 +129,8 @@ func init() {
 	replaceCmd.Flags().BoolP("yes", "y", false, "Don't ask questions")
 	replaceCmd.Flags().StringSlice("for", []string{}, "Packages that has to be installed in place of others")
 	replaceCmd.Flags().Bool("download-only", false, "Download only")
+	replaceCmd.Flags().Bool("sync-repos", false,
+		"Sync repositories before replace. Note: If there are in memory repositories then the sync is done always.")
 
 	RootCmd.AddCommand(replaceCmd)
 }

@@ -57,6 +57,7 @@ var upgradeCmd = &cobra.Command{
 		yes := LuetCfg.Viper.GetBool("yes")
 		downloadOnly, _ := cmd.Flags().GetBool("download-only")
 		skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
+		syncRepos, _ := cmd.Flags().GetBool("sync-repos")
 
 		util.SetSystemConfig()
 		opts := util.SetSolverConfig()
@@ -79,10 +80,14 @@ var upgradeCmd = &cobra.Command{
 			Ask:                         !yes,
 			DownloadOnly:                downloadOnly,
 			SkipFinalizers:              skipFinalizers,
+			SyncRepositories:            syncRepos,
 		})
 		inst.Repositories(repos)
 
-		system := &installer.System{Database: LuetCfg.GetSystemDB(), Target: LuetCfg.GetSystem().Rootfs}
+		system := &installer.System{
+			Database: LuetCfg.GetSystemDB(),
+			Target:   LuetCfg.GetSystem().Rootfs,
+		}
 		if err := inst.Upgrade(system); err != nil {
 			Fatal("Error: " + err.Error())
 		}
@@ -109,6 +114,8 @@ func init() {
 	upgradeCmd.Flags().Bool("download-only", false, "Download only")
 	upgradeCmd.Flags().Bool("skip-finalizers", false,
 		"Skip the execution of the finalizers.")
+	upgradeCmd.Flags().Bool("sync-repos", false,
+		"Sync repositories before upgrade. Note: If there are in memory repositories then the sync is done always.")
 
 	RootCmd.AddCommand(upgradeCmd)
 }

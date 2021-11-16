@@ -1,4 +1,5 @@
-// Copyright © 2019 Ettore Di Giacinto <mudler@gentoo.org>
+// Copyright © 2019-2021 Ettore Di Giacinto <mudler@gentoo.org>
+//                       Daniele Rondina <geaaru@sabayonlinux.org>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -52,6 +53,7 @@ type LuetInstallerOptions struct {
 	DownloadOnly                                                   bool
 	Relaxed                                                        bool
 	SkipFinalizers                                                 bool
+	SyncRepositories                                               bool
 }
 
 type LuetInstaller struct {
@@ -81,7 +83,7 @@ func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg
 	syncedRepos.SyncDatabase(allRepos)
 	start := time.Now()
 
-	Info("Using solver implementation = ", l.Options.SolverOptions.Implementation)
+	Info("Using solver implementation ", l.Options.SolverOptions.Implementation, ".")
 
 	defcopy := pkg.NewInMemoryDatabase(false)
 	err = allRepos.Clone(defcopy)
@@ -180,10 +182,40 @@ func matchesToList(artefacts map[string]ArtifactMatch) string {
 	return strings.Join(packs, " ")
 }
 
+func (l *LuetInstaller) AreThereNotCachedRepos() bool {
+	ans := false
+
+	for _, r := range l.PackageRepositories {
+		if !r.Cached {
+			Debug(fmt.Sprintf("Repository %s is not cached.", r.GetName()))
+			ans = true
+			break
+		}
+	}
+
+	return ans
+}
+
+func (l *LuetInstaller) getRepositoriesInstances() (Repositories, error) {
+	var repos Repositories
+	var err error
+
+	if l.AreThereNotCachedRepos() || l.Options.SyncRepositories {
+		repos, err = l.SyncRepositories(true)
+	} else {
+		repos, err = l.LoadRepositories(true)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return repos, err
+}
+
 // Upgrade upgrades a System based on the Installer options. Returns error in case of failure
 func (l *LuetInstaller) Upgrade(s *System) error {
 
-	syncedRepos, err := l.SyncRepositories(true)
+	repos, err := l.getRepositoriesInstances()
 	if err != nil {
 		return err
 	}
@@ -193,7 +225,27 @@ func (l *LuetInstaller) Upgrade(s *System) error {
 		Info(":memo: note: will consider new build revisions while upgrading")
 	}
 
-	return l.checkAndUpgrade(syncedRepos, s)
+	return l.checkAndUpgrade(repos, s)
+}
+
+func (l *LuetInstaller) LoadRepositories(inMemory bool) (Repositories, error) {
+	repos := Repositories{}
+	for _, r := range l.PackageRepositories {
+		repo, err := r.Load()
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed load repository: "+r.GetName())
+		}
+		repos = append(repos, repo)
+	}
+
+	// compute what to install and from where
+	sort.Sort(repos)
+
+	if !inMemory {
+		l.PackageRepositories = repos
+	}
+
+	return repos, nil
 }
 
 func (l *LuetInstaller) SyncRepositories(inMemory bool) (Repositories, error) {
@@ -219,7 +271,7 @@ func (l *LuetInstaller) SyncRepositories(inMemory bool) (Repositories, error) {
 }
 
 func (l *LuetInstaller) Swap(toRemove pkg.Packages, toInstall pkg.Packages, s *System) error {
-	syncedRepos, err := l.SyncRepositories(true)
+	repos, err := l.getRepositoriesInstances()
 	if err != nil {
 		return err
 	}
@@ -243,7 +295,7 @@ func (l *LuetInstaller) Swap(toRemove pkg.Packages, toInstall pkg.Packages, s *S
 		OnlyDeps:           false,
 	}
 
-	return l.swap(o, syncedRepos, toRemoveFinal, toInstall, s)
+	return l.swap(o, repos, toRemoveFinal, toInstall, s)
 }
 
 func (l *LuetInstaller) computeSwap(o Option, syncedRepos Repositories, toRemove pkg.Packages, toInstall pkg.Packages, s *System) (map[string]ArtifactMatch, pkg.Packages, solver.PackagesAssertions, pkg.PackageDatabase, error) {
@@ -506,7 +558,7 @@ func (l *LuetInstaller) checkAndUpgrade(r Repositories, s *System) error {
 	Spinner(32)
 	start := time.Now()
 	uninstall, toInstall, err := l.computeUpgrade(r, s)
-	Info(fmt.Sprintf("Compute upgrade completed in %d µs.",
+	Info(fmt.Sprintf("Completed compute upgrade analysis in %d µs.",
 		time.Now().Sub(start).Nanoseconds()/1e3))
 	if err != nil {
 		return errors.Wrap(err, "failed computing upgrade")
@@ -556,14 +608,14 @@ func (l *LuetInstaller) checkAndUpgrade(r Repositories, s *System) error {
 }
 
 func (l *LuetInstaller) Install(cp pkg.Packages, s *System) error {
-	syncedRepos, err := l.SyncRepositories(true)
+	repos, err := l.getRepositoriesInstances()
 	if err != nil {
 		return err
 	}
 
 	if len(s.Database.World()) > 0 && !l.Options.Relaxed {
 		Info(":thinking: Checking for available upgrades")
-		if err := l.checkAndUpgrade(syncedRepos, s); err != nil {
+		if err := l.checkAndUpgrade(repos, s); err != nil {
 			return errors.Wrap(err, "while checking upgrades before install")
 		}
 	}
@@ -575,7 +627,7 @@ func (l *LuetInstaller) Install(cp pkg.Packages, s *System) error {
 		CheckFileConflicts: true,
 		RunFinalizers:      !l.Options.SkipFinalizers,
 	}
-	match, packages, assertions, allRepos, err := l.computeInstall(o, syncedRepos, cp, s)
+	match, packages, assertions, allRepos, err := l.computeInstall(o, repos, cp, s)
 	if err != nil {
 		return err
 	}
@@ -618,12 +670,12 @@ func (l *LuetInstaller) Install(cp pkg.Packages, s *System) error {
 		Info("By going forward, you are also accepting the licenses of the packages that you are going to install in your system.")
 		if Ask() {
 			l.Options.Ask = false // Don't prompt anymore
-			return l.install(o, syncedRepos, match, packages, assertions, allRepos, s)
+			return l.install(o, repos, match, packages, assertions, allRepos, s)
 		} else {
 			return errors.New("Aborted by user")
 		}
 	}
-	return l.install(o, syncedRepos, match, packages, assertions, allRepos, s)
+	return l.install(o, repos, match, packages, assertions, allRepos, s)
 }
 
 func (l *LuetInstaller) download(syncedRepos Repositories, toDownload map[string]ArtifactMatch) error {
@@ -651,14 +703,14 @@ func (l *LuetInstaller) download(syncedRepos Repositories, toDownload map[string
 // if files from artifacts in the repositories are found
 // in the system target
 func (l *LuetInstaller) Reclaim(s *System) error {
-	syncedRepos, err := l.SyncRepositories(true)
+	repos, err := l.getRepositoriesInstances()
 	if err != nil {
 		return err
 	}
 
 	var toMerge []ArtifactMatch = []ArtifactMatch{}
 
-	for _, repo := range syncedRepos {
+	for _, repo := range repos {
 		for _, artefact := range repo.GetIndex() {
 			Debug("Checking if",
 				artefact.CompileSpec.GetPackage().HumanReadableString(),
