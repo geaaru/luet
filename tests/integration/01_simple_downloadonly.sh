@@ -56,13 +56,13 @@ EOF
 }
 
 testDownloadOnly() {
-    luet install -y --download-only --config $tmpdir/luet.yaml test/c > /dev/null
+    luet install --sync-repos -y --download-only --config $tmpdir/luet.yaml test/c > /dev/null
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package not installed' "[ ! -e '$tmpdir/testrootfs/c' ]"
     assertTrue 'cache populated' "[ -e '$tmpdir/testrootfs/var/cache/luet/packages/c-test-1.0.package.tar.gz' ]"
 
-    luet install -y --config $tmpdir/luet.yaml test/c > /dev/null
+    luet install --sync-repos -y --config $tmpdir/luet.yaml test/c > /dev/null
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"

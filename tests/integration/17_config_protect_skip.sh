@@ -75,7 +75,7 @@ testInstall() {
     mkdir $tmpdir/testrootfs/etc/a -p
     echo "fakeconf" > $tmpdir/testrootfs/etc/a/conf
 
-    luet install -y --config $tmpdir/luet.yaml test/a
+    luet install --sync-repos -y --config $tmpdir/luet.yaml test/a
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 

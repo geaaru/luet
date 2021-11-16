@@ -56,7 +56,7 @@ EOF
 }
 
 testInstall() {
-    luet install -y --config $tmpdir/luet.yaml test/c
+    luet install --sync-repos -y --config $tmpdir/luet.yaml test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"
@@ -70,7 +70,7 @@ testCleanup() {
 }
 
 testInstall2() {
-    luet install -y --config $tmpdir/luet.yaml --system-target $tmpdir/foo test/c
+    luet install --sync-repos -y --config $tmpdir/luet.yaml --system-target $tmpdir/foo test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'db not created' "[ ! -e '$tmpdir/foo/var/cache/luet/luet.db' ]"
@@ -96,7 +96,7 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet install -y --config $tmpdir/luet2.yaml --system-target $tmpdir/baz test/c
+    luet install --sync-repos -y --config $tmpdir/luet2.yaml --system-target $tmpdir/baz test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/baz/c' ]"
@@ -110,7 +110,7 @@ testCleanup3() {
 }
 
 testInstall4() {
-    luet install -y --config $tmpdir/luet2.yaml --system-target $tmpdir/bad --system-engine boltdb test/c
+    luet install --sync-repos -y --config $tmpdir/luet2.yaml --system-target $tmpdir/bad --system-engine boltdb test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/bad/c' ]"

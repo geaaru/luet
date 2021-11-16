@@ -79,7 +79,7 @@ EOF
 }
 
 testInstall() {
-    luet install -y --force --config $tmpdir/luet.yaml test1/conflict@1.0 test2/conflict@1.0
+    luet install --sync-repos -y --force --config $tmpdir/luet.yaml test1/conflict@1.0 test2/conflict@1.0
     #luet install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
     installst=$?
     assertEquals 'install test succeded' "$installst" "0"
@@ -87,13 +87,13 @@ testInstall() {
 }
 
 testUpgrade() {
-    out=$(luet upgrade -y --config $tmpdir/luet.yaml)
+    out=$(luet upgrade --sync-repos -y --config $tmpdir/luet.yaml)
     installst=$?
     assertEquals 'install test succeeded' "$installst" "1"
     assertContains 'does find conflicts' "$out" \
       "Error: file conflict found: file test1 conflict between package"
 
-    luet upgrade -y --config $tmpdir/luet.yaml --force
+    luet upgrade --sync-repos -y --config $tmpdir/luet.yaml --force
     #luet install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
     installst=$?
     assertEquals 'install test succeeded' "$installst" "0"

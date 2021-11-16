@@ -57,7 +57,7 @@ EOF
 }
 
 testInstall() {
-    luet install -y --config $tmpdir/luet.yaml test/c
+    luet install --sync-repos -y --config $tmpdir/luet.yaml test/c
     #luet install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
@@ -65,7 +65,7 @@ testInstall() {
 }
 
 testFullInstall() {
-    output=$(luet install -y --config $tmpdir/luet.yaml test/d test/f test/e test/a)
+    output=$(luet install --sync-repos -y --config $tmpdir/luet.yaml test/d test/f test/e test/a)
     installst=$?
     assertEquals 'cannot install' "$installst" "1"
     assertTrue 'package D installed' "[ ! -e '$tmpdir/testrootfs/d' ]"
@@ -73,7 +73,7 @@ testFullInstall() {
 }
 
 testInstallAgain() {
-    output=$(luet install -y --solver-type qlearning --config $tmpdir/luet.yaml test/d test/f test/e test/a)
+    output=$(luet install --sync-repos -y --solver-type qlearning --config $tmpdir/luet.yaml test/d test/f test/e test/a)
     installst=$?
     echo "$output"
     assertEquals 'install test successfully' "0" "$installst"

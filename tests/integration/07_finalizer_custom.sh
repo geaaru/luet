@@ -56,7 +56,7 @@ EOF
 }
 
 testInstall() {
-    luet install -y --config $tmpdir/luet.yaml seed/alpine
+    luet install --sync-repos -y --config $tmpdir/luet.yaml seed/alpine
     #luet install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"

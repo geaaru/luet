@@ -57,13 +57,13 @@ EOF
 }
 
 testInstall() {
-    luet install -y --config $tmpdir/luet.yaml test1/noconflict@1.0
+    luet install --sync-repos -y --config $tmpdir/luet.yaml test1/noconflict@1.0
     installst=$?
     #assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"
 }
 
 testUpgrade() {
-    out=$(luet upgrade -y --config $tmpdir/luet.yaml)
+    out=$(luet upgrade --sync-repos -y --config $tmpdir/luet.yaml)
     installst=$?
     assertEquals 'install test succeeded' "$installst" "0"
     assertNotContains 'does find conflicts' "$out" \

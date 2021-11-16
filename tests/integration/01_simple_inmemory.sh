@@ -56,7 +56,7 @@ EOF
 }
 
 testInstall() {
-    luet install -y --config $tmpdir/luet.yaml test/c
+    luet install --sync-repos -y --config $tmpdir/luet.yaml test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"

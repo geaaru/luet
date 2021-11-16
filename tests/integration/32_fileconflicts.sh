@@ -57,7 +57,7 @@ EOF
 }
 
 testInstall() {
-    luet install -y --config $tmpdir/luet.yaml test1/conflict test2/conflict
+    luet install --sync-repos -y --config $tmpdir/luet.yaml test1/conflict test2/conflict
     #luet install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
     installst=$?
     assertEquals 'install test failed' "$installst" "1"
@@ -65,15 +65,15 @@ testInstall() {
 }
 
 testReInstall() {
-    luet install -y --config $tmpdir/luet.yaml test1/conflict
+    luet install --sync-repos -y --config $tmpdir/luet.yaml test1/conflict
     #luet install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
     installst=$?
     assertEquals 'install test succeeded' "$installst" "0"
-    luet install -y --config $tmpdir/luet.yaml test2/conflict
+    luet install --sync-repos -y --config $tmpdir/luet.yaml test2/conflict
     #luet install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
     installst=$?
     assertEquals 'install test succeeded' "$installst" "1"
-    luet install -y --force --config $tmpdir/luet.yaml test2/conflict
+    luet install --sync-repos -y --force --config $tmpdir/luet.yaml test2/conflict
     #luet install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
     installst=$?
     assertEquals 'install test succeeded' "$installst" "0"

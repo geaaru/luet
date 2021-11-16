@@ -61,7 +61,7 @@ EOF
 
 testInstall() {
     [ "$LUET_BACKEND" == "img" ] && startSkipping
-    luet install -y --config $tmpdir/luet.yaml test/unpack test/delta
+    luet install --sync-repos -y --config $tmpdir/luet.yaml test/unpack test/delta
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     fileUID=$(stat -c "%u" $tmpdir/testrootfs/foo)

@@ -57,7 +57,7 @@ EOF
 }
 
 testInstall() {
-    luet install -y --config $tmpdir/luet.yaml seed/alpine@0.9
+    luet install --sync-repos -y --config $tmpdir/luet.yaml seed/alpine@0.9
     #luet install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
@@ -67,7 +67,7 @@ testInstall() {
 
 
 testUpgrade() {
-    luet upgrade -y --config $tmpdir/luet.yaml 
+    luet upgrade --sync-repos -y --config $tmpdir/luet.yaml 
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"

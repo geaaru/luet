@@ -107,7 +107,7 @@ testInstall() {
     # Disable tests which require a DOCKER registry
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
-    luet install -y --config $tmpdir/luet-client.yaml test/c@1.0 test/z test/interpolated
+    luet install --sync-repos -y --config $tmpdir/luet-client.yaml test/c@1.0 test/z test/interpolated
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"
@@ -120,7 +120,7 @@ testReInstall() {
     # Disable tests which require a DOCKER registry
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
-    output=$(luet install -y --config $tmpdir/luet-client.yaml  test/c@1.0)
+    output=$(luet install --sync-repos -y --config $tmpdir/luet-client.yaml  test/c@1.0)
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertContains 'contains warning' "$output" 'No packages to install'
@@ -141,7 +141,7 @@ testInstallAgain() {
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
-    output=$(luet install -y --config $tmpdir/luet-client.yaml test/c@1.0)
+    output=$(luet install --sync-repos -y --config $tmpdir/luet-client.yaml test/c@1.0)
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertNotContains 'contains warning' "$output" 'No packages to install'

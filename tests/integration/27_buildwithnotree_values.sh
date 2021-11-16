@@ -113,7 +113,7 @@ repositories:
      urls:
        - "$tmpdir/testbuild2"
 EOF
-    luet install -y --config $tmpdir/luet2.yaml distro/a
+    luet install --sync-repos -y --config $tmpdir/luet2.yaml distro/a
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -135,7 +135,7 @@ EOF
     assertEquals 'install test successfully' "$installst" "0"
 
     # We do the same check for the others
-    luet install -y --config $tmpdir/luet2.yaml distro/b
+    luet install -y --sync-repos --config $tmpdir/luet2.yaml distro/b
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -154,7 +154,7 @@ EOF
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
-    luet install -y --config $tmpdir/luet2.yaml distro/c
+    luet install --sync-repos -y --config $tmpdir/luet2.yaml distro/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -173,7 +173,7 @@ EOF
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
-    luet install -y --config $tmpdir/luet2.yaml test/foo
+    luet install --sync-repos -y --config $tmpdir/luet2.yaml test/foo
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -231,7 +231,7 @@ repositories:
      urls:
        - "$tmpdir/testbuild3"
 EOF
-    luet install -y --config $tmpdir/luet2.yaml distro/a
+    luet install --sync-repos -y --config $tmpdir/luet2.yaml distro/a
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -252,7 +252,7 @@ EOF
     assertEquals 'install test successfully' "$installst" "0"
 
     # We do the same check for the others
-    luet install -y --config $tmpdir/luet2.yaml distro/b
+    luet install -y --sync-repos --config $tmpdir/luet2.yaml distro/b
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -270,7 +270,7 @@ EOF
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
-    luet install -y --config $tmpdir/luet2.yaml distro/c
+    luet install --sync-repos -y --config $tmpdir/luet2.yaml distro/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -289,7 +289,7 @@ EOF
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
-    luet install -y --config $tmpdir/luet2.yaml test/foo
+    luet install --sync-repos -y --config $tmpdir/luet2.yaml test/foo
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 

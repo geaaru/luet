@@ -57,10 +57,10 @@ EOF
 }
 
 testReInstall() {
-    luet install -y --config $tmpdir/luet.yaml test1/conflict
+    luet install --sync-repos -y --config $tmpdir/luet.yaml test1/conflict
     installst=$?
     assertEquals 'install test succeeded' "$installst" "0"
-    luet reinstall -y --config $tmpdir/luet.yaml test1/conflict
+    luet reinstall --sync-repos -y --config $tmpdir/luet.yaml test1/conflict
     installst=$?
     assertEquals 'reinstall test succeeded' "$installst" "0"
 }

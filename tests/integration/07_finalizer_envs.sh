@@ -81,7 +81,7 @@ EOF
 }
 
 testInstall() {
-    ${luetbin} install -y --finalizer-env "CLI_ENV=1" --config $tmpdir/luet.yaml seed/alpine-finalizer-envs@1.0
+    ${luetbin} install --sync-repos -y --finalizer-env "CLI_ENV=1" --config $tmpdir/luet.yaml seed/alpine-finalizer-envs@1.0
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"

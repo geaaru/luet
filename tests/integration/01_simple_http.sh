@@ -63,14 +63,14 @@ EOF
 }
 
 testInstall() {
-    luet install -y --config $tmpdir/luet.yaml test/c@1.0
+    luet install --sync-repos -y --config $tmpdir/luet.yaml test/c@1.0
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"
 }
 
 testReInstall() {
-    output=$(luet install -y --config $tmpdir/luet.yaml  test/c@1.0)
+    output=$(luet install --sync-repos -y --config $tmpdir/luet.yaml  test/c@1.0)
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertContains 'contains warning' "$output" 'No packages to install'
@@ -85,7 +85,7 @@ testUnInstall() {
 
 testInstallAgain() {
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
-    output=$(luet install -y --config $tmpdir/luet.yaml test/c@1.0)
+    output=$(luet install --sync-repos -y --config $tmpdir/luet.yaml test/c@1.0)
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertNotContains 'contains warning' "$output" 'No packages to install'

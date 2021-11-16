@@ -58,14 +58,14 @@ EOF
 }
 
 testInstall() {
-    luet install -y --config $tmpdir/luet.yaml test/b
+    luet install --sync-repos -y --config $tmpdir/luet.yaml test/b
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed B' "[ -e '$tmpdir/testrootfs/b' ]"
 }
 
 testReplace() {
-    luet --config $tmpdir/luet.yaml replace --nodeps -y test/b --for test/c
+    luet --config $tmpdir/luet.yaml replace --sync-repos --nodeps -y test/b --for test/c
     installst=$?
     assertEquals 'replace test successfully' "$installst" "0"
     echo "$upgrade"

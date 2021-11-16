@@ -105,7 +105,7 @@ repositories:
      urls:
        - "$tmpdir/testbuild2"
 EOF
-    luet install -y --config $tmpdir/luet2.yaml --system-target $tmpdir/foo test/c
+    luet install --sync-repos -y --config $tmpdir/luet2.yaml --system-target $tmpdir/foo test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'db not created' "[ ! -e '$tmpdir/foo/var/cache/luet/luet.db' ]"

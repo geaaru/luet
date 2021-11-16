@@ -85,6 +85,7 @@ EOF
 
 
 testSearch() {
+    luet repo update --config $tmpdir/luet.yaml
     installed=$(luet --config $tmpdir/luet.yaml search --files testaa)
     searchst=$?
     assertEquals 'search exists successfully' "$searchst" "0"
@@ -92,7 +93,7 @@ testSearch() {
 }
 
 testGetSearchLocal() {
-    luet install -y --config $tmpdir/luet.yaml test/a@1.0
+    luet install --sync-repos -y --config $tmpdir/luet.yaml test/a@1.0
     assertTrue 'package installed A' "[ -e '$tmpdir/testrootfs/testaa' ]"
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
