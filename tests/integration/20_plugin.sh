@@ -8,7 +8,6 @@ oneTimeSetUp() {
   export tmpdir="$(mktemp -d)"
   export EVENT_FILE=$tmpdir/events.txt
   export PAYLOAD_FILE=$tmpdir/payloads.txt
-  export tmpdir="$(mktemp -d)"
   cat <<EOF > $tmpdir/luet-build.yaml
 general:
   debug: true

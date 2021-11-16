@@ -3,6 +3,20 @@
 export LUET_NOLOCK=true
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
+  cat <<EOF > $tmpdir/luet-build.yaml
+general:
+  debug: true
+logging:
+  enable_emoji: false
+  color: false
+system:
+  rootfs: $tmpdir/testrootfs
+  database_path: "/"
+  database_engine: "memory"
+config_from_host: true
+repos_confdir:
+  - "$tmpdir/etc/luet/repos.conf.d"
+EOF
 }
 
 oneTimeTearDown() {
@@ -11,35 +25,35 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/b@1.0 
+    luet build --config $tmpdir/luet-build.yaml --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/b@1.0 
     buildst=$?
     assertTrue 'create package B 1.0' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
     assertEquals 'builds successfully' "$buildst" "0"
 
-    luet build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/b@1.1
+    luet build --config $tmpdir/luet-build.yaml --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/b@1.1
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package B 1.1' "[ -e '$tmpdir/testbuild/b-test-1.1.package.tar.gz' ]"
 
-    luet build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/a@1.0
+    luet build --config $tmpdir/luet-build.yaml --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/a@1.0
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package A 1.0' "[ -e '$tmpdir/testbuild/a-test-1.0.package.tar.gz' ]"
 
-    luet build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/a@1.1
+    luet build --config $tmpdir/luet-build.yaml --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/a@1.1
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
 
     assertTrue 'create package A 1.1' "[ -e '$tmpdir/testbuild/a-test-1.1.package.tar.gz' ]"
 
-    luet build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/a@1.2
+    luet build --config $tmpdir/luet-build.yaml --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/a@1.2
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
 
     assertTrue 'create package A 1.2' "[ -e '$tmpdir/testbuild/a-test-1.2.package.tar.gz' ]"
 
 
-    luet build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/c@1.0
+    luet build --config $tmpdir/luet-build.yaml --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/c@1.0
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package C 1.0' "[ -e '$tmpdir/testbuild/c-test-1.0.package.tar.gz' ]"
@@ -48,13 +62,14 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" \
-    --output $tmpdir/testbuild \
-    --packages $tmpdir/testbuild \
-    --name "test" \
-    --descr "Test Repo" \
-    --urls $tmpdir/testrootfs \
-    --type disk
+    luet create-repo --config $tmpdir/luet-build.yaml \
+      --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" \
+      --output $tmpdir/testbuild \
+      --packages $tmpdir/testbuild \
+      --name "test" \
+      --descr "Test Repo" \
+      --urls $tmpdir/testrootfs \
+      --type disk
 
     createst=$?
     assertEquals 'create repo successfully' "$createst" "0"
@@ -71,6 +86,8 @@ system:
   database_path: "/"
   database_engine: "boltdb"
 config_from_host: true
+repos_confdir:
+  - "$tmpdir/etc/luet/repos.conf.d"
 repositories:
    - name: "main"
      type: "disk"
@@ -85,7 +102,6 @@ EOF
 
 
 testSearch() {
-    luet repo update --config $tmpdir/luet.yaml
     installed=$(luet --config $tmpdir/luet.yaml search --files testaa)
     searchst=$?
     assertEquals 'search exists successfully' "$searchst" "0"
