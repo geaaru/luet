@@ -1,4 +1,5 @@
 // Copyright © 2021 Ettore Di Giacinto <mudler@mocaccino.org>
+//                  Daniele Rondina <geaaru@sabayonlinux.org>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -51,6 +52,7 @@ var reinstallCmd = &cobra.Command{
 		yes := LuetCfg.Viper.GetBool("yes")
 
 		downloadOnly, _ := cmd.Flags().GetBool("download-only")
+		syncRepos, _ := cmd.Flags().GetBool("sync-repos")
 
 		util.SetSystemConfig()
 
@@ -89,10 +91,14 @@ var reinstallCmd = &cobra.Command{
 			PreserveSystemEssentialData: true,
 			Ask:                         !yes,
 			DownloadOnly:                downloadOnly,
+			SyncRepositories:            syncRepos,
 		})
 		inst.Repositories(repos)
 
-		system := &installer.System{Database: LuetCfg.GetSystemDB(), Target: LuetCfg.GetSystem().Rootfs}
+		system := &installer.System{
+			Database: LuetCfg.GetSystemDB(),
+			Target:   LuetCfg.GetSystem().Rootfs,
+		}
 		err := inst.Swap(toUninstall, toAdd, system)
 		if err != nil {
 			Fatal("Error: " + err.Error())
@@ -115,6 +121,8 @@ func init() {
 	reinstallCmd.Flags().Bool("solver-concurrent", false, "Use concurrent solver (experimental)")
 	reinstallCmd.Flags().BoolP("yes", "y", false, "Don't ask questions")
 	reinstallCmd.Flags().Bool("download-only", false, "Download only")
+	reinstallCmd.Flags().Bool("sync-repos", false,
+		"Sync repositories before install. Note: If there are in memory repositories then the sync is done always.")
 
 	RootCmd.AddCommand(reinstallCmd)
 }
