@@ -37,7 +37,6 @@ require (
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12
 	github.com/jedib0t/go-pretty v4.3.0+incompatible
-	github.com/jedib0t/go-pretty/v6 v6.0.5
 	github.com/jinzhu/copier v0.0.0-20180308034124-7e38e58719c3
 	github.com/klauspost/compress v1.12.2
 	github.com/klauspost/pgzip v1.2.1

@@ -346,10 +346,6 @@ github.com/inconshreveable/mousetrap
 ## explicit
 github.com/jedib0t/go-pretty/table
 github.com/jedib0t/go-pretty/text
-# github.com/jedib0t/go-pretty/v6 v6.0.5
-## explicit
-github.com/jedib0t/go-pretty/v6/list
-github.com/jedib0t/go-pretty/v6/text
 # github.com/jinzhu/copier v0.0.0-20180308034124-7e38e58719c3
 ## explicit
 github.com/jinzhu/copier
