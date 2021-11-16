@@ -16,11 +16,10 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
+	"os"
 
 	"github.com/ghodss/yaml"
 	"github.com/jedib0t/go-pretty/table"
-	"github.com/jedib0t/go-pretty/v6/list"
 	"github.com/mudler/luet/cmd/util"
 	. "github.com/mudler/luet/pkg/config"
 	installer "github.com/mudler/luet/pkg/installer"
@@ -34,6 +33,7 @@ type PackageResult struct {
 	Name       string   `json:"name"`
 	Category   string   `json:"category"`
 	Version    string   `json:"version"`
+	License    string   `json:"License"`
 	Repository string   `json:"repository"`
 	Target     string   `json:"target"`
 	Hidden     bool     `json:"hidden"`
@@ -44,30 +44,15 @@ type Results struct {
 	Packages []PackageResult `json:"packages"`
 }
 
+func (r *Results) AddPackage(p *PackageResult) {
+	r.Packages = append(r.Packages, *p)
+}
+
 func (r PackageResult) String() string {
 	return fmt.Sprintf("%s/%s-%s required for %s", r.Category, r.Name, r.Version, r.Target)
 }
 
-var rows table.Row = table.Row{"Package", "Category", "Name", "Version", "Repository", "Description", "License", "URI"}
-
-func packageToRow(repo string, p pkg.Package) table.Row {
-	return table.Row{p.HumanReadableString(), p.GetCategory(), p.GetName(), p.GetVersion(), repo, p.GetDescription(), p.GetLicense(), strings.Join(p.GetURI(), "\n")}
-}
-
-func packageToList(l list.Writer, repo string, p pkg.Package) {
-	l.AppendItem(p.HumanReadableString())
-	l.Indent()
-	l.AppendItem(fmt.Sprintf("Category: %s", p.GetCategory()))
-	l.AppendItem(fmt.Sprintf("Name: %s", p.GetName()))
-	l.AppendItem(fmt.Sprintf("Version: %s", p.GetVersion()))
-	l.AppendItem(fmt.Sprintf("Description: %s", p.GetDescription()))
-	l.AppendItem(fmt.Sprintf("Repository: %s ", repo))
-	l.AppendItem(fmt.Sprintf("Uri: %s ", strings.Join(p.GetURI(), "\n")))
-	l.UnIndent()
-}
-
-func searchLocally(term string, l list.Writer, t table.Writer, label, labelMatch, revdeps, hidden bool) Results {
-	var results Results
+func searchLocally(term string, results *Results, label, labelMatch, revdeps, hidden bool) {
 
 	system := &installer.System{
 		Database: LuetCfg.GetSystemDB(),
@@ -91,47 +76,43 @@ func searchLocally(term string, l list.Writer, t table.Writer, label, labelMatch
 	for _, pack := range iMatches {
 		if !revdeps {
 			if !pack.IsHidden() || pack.IsHidden() && hidden {
-
-				t.AppendRow(packageToRow("system", pack))
-				packageToList(l, "system", pack)
 				f, _ := system.Database.GetPackageFiles(pack)
-				results.Packages = append(results.Packages,
-					PackageResult{
+				results.AddPackage(
+					&PackageResult{
 						Name:       pack.GetName(),
 						Version:    pack.GetVersion(),
 						Category:   pack.GetCategory(),
+						License:    pack.GetLicense(),
 						Repository: "system",
 						Hidden:     pack.IsHidden(),
 						Files:      f,
-					})
+					},
+				)
 			}
 		} else {
 
 			packs, _ := system.Database.GetRevdeps(pack)
 			for _, revdep := range packs {
 				if !revdep.IsHidden() || revdep.IsHidden() && hidden {
-					t.AppendRow(packageToRow("system", pack))
-					packageToList(l, "system", pack)
 					f, _ := system.Database.GetPackageFiles(revdep)
-					results.Packages = append(results.Packages,
-						PackageResult{
+					results.AddPackage(
+						&PackageResult{
 							Name:       revdep.GetName(),
 							Version:    revdep.GetVersion(),
 							Category:   revdep.GetCategory(),
+							License:    revdep.GetLicense(),
 							Repository: "system",
 							Hidden:     revdep.IsHidden(),
 							Files:      f,
-						})
+						},
+					)
 				}
 			}
 		}
 	}
-	return results
 
 }
-func searchOnline(term string, l list.Writer, t table.Writer, label, labelMatch, revdeps, hidden bool) Results {
-	var results Results
-
+func searchOnline(term string, results *Results, label, labelMatch, revdeps, hidden bool) {
 	repos := installer.Repositories{}
 	for _, repo := range LuetCfg.SystemRepositories {
 		if !repo.Enable {
@@ -154,8 +135,6 @@ func searchOnline(term string, l list.Writer, t table.Writer, label, labelMatch,
 		Fatal("Error: " + err.Error())
 	}
 
-	Info("--- Search results (" + term + "): ---")
-
 	matches := []installer.PackageMatch{}
 	if label {
 		matches = synced.SearchLabel(term)
@@ -168,69 +147,62 @@ func searchOnline(term string, l list.Writer, t table.Writer, label, labelMatch,
 	for _, m := range matches {
 		if !revdeps {
 			if !m.Package.IsHidden() || m.Package.IsHidden() && hidden {
-				t.AppendRow(packageToRow(m.Repo.GetName(), m.Package))
-				packageToList(l, m.Repo.GetName(), m.Package)
 				r := &PackageResult{
 					Name:       m.Package.GetName(),
 					Version:    m.Package.GetVersion(),
 					Category:   m.Package.GetCategory(),
+					License:    m.Package.GetLicense(),
 					Repository: m.Repo.GetName(),
 					Hidden:     m.Package.IsHidden(),
 				}
 				if m.Artifact != nil {
 					r.Files = m.Artifact.Files
 				}
-				results.Packages = append(results.Packages, *r)
+				results.AddPackage(r)
 			}
 		} else {
 			packs, _ := m.Repo.GetTree().GetDatabase().GetRevdeps(m.Package)
 			for _, revdep := range packs {
 				if !revdep.IsHidden() || revdep.IsHidden() && hidden {
-					t.AppendRow(packageToRow(m.Repo.GetName(), revdep))
-					packageToList(l, m.Repo.GetName(), revdep)
 					r := &PackageResult{
 						Name:       revdep.GetName(),
 						Version:    revdep.GetVersion(),
 						Category:   revdep.GetCategory(),
 						Repository: m.Repo.GetName(),
+						License:    revdep.GetLicense(),
 						Hidden:     revdep.IsHidden(),
 					}
 					if m.Artifact != nil {
 						r.Files = m.Artifact.Files
 					}
-					results.Packages = append(results.Packages, *r)
+					results.AddPackage(r)
 				}
 			}
 		}
 	}
-	return results
 }
-func searchLocalFiles(term string, l list.Writer, t table.Writer) Results {
-	var results Results
+
+func searchLocalFiles(term string, results *Results) {
 	Info("--- Search results (" + term + "): ---")
 
 	matches, _ := LuetCfg.GetSystemDB().FindPackageByFile(term)
 	for _, pack := range matches {
-		t.AppendRow(packageToRow("system", pack))
-		packageToList(l, "system", pack)
 		f, _ := LuetCfg.GetSystemDB().GetPackageFiles(pack)
-		results.Packages = append(results.Packages,
-			PackageResult{
+		results.AddPackage(
+			&PackageResult{
 				Name:       pack.GetName(),
 				Version:    pack.GetVersion(),
 				Category:   pack.GetCategory(),
 				Repository: "system",
 				Hidden:     pack.IsHidden(),
+				License:    pack.GetLicense(),
 				Files:      f,
-			})
+			},
+		)
 	}
-
-	return results
 }
 
-func searchFiles(term string, l list.Writer, t table.Writer) Results {
-	var results Results
-
+func searchFiles(term string, results *Results) {
 	repos := installer.Repositories{}
 	for _, repo := range LuetCfg.SystemRepositories {
 		if !repo.Enable {
@@ -247,31 +219,27 @@ func searchFiles(term string, l list.Writer, t table.Writer) Results {
 		},
 	)
 	inst.Repositories(repos)
-	synced, err := inst.SyncRepositories(false)
+	synced, err := inst.LoadRepositories(false)
 	if err != nil {
 		Fatal("Error: " + err.Error())
 	}
 
-	Info("--- Search results (" + term + "): ---")
-
 	matches := []installer.PackageMatch{}
-
 	matches = synced.SearchPackages(term, installer.FileSearch)
 
 	for _, m := range matches {
-		t.AppendRow(packageToRow(m.Repo.GetName(), m.Package))
-		packageToList(l, m.Repo.GetName(), m.Package)
-		results.Packages = append(results.Packages,
-			PackageResult{
+		results.AddPackage(
+			&PackageResult{
 				Name:       m.Package.GetName(),
 				Version:    m.Package.GetVersion(),
 				Category:   m.Package.GetCategory(),
 				Repository: m.Repo.GetName(),
 				Hidden:     m.Package.IsHidden(),
 				Files:      m.Artifact.Files,
-			})
+				License:    m.Package.GetLicense(),
+			},
+		)
 	}
-	return results
 }
 
 var searchCmd = &cobra.Command{
@@ -336,51 +304,63 @@ Search can also return results in the terminal in different ways: as terminal ou
 		util.SetSolverConfig()
 
 		out, _ := cmd.Flags().GetString("output")
-		if out != "terminal" {
-			LuetCfg.GetLogging().SetLogLevel("error")
-		}
-
-		l := list.NewWriter()
-		t := table.NewWriter()
-		t.AppendHeader(rows)
-		Debug("Solver", LuetCfg.GetSolverOptions().CompactString())
+		LuetCfg.GetLogging().SetLogLevel("error")
 
 		switch {
 		case files && installed:
-			results = searchLocalFiles(args[0], l, t)
+			searchLocalFiles(args[0], &results)
 		case files && !installed:
-			results = searchFiles(args[0], l, t)
+			searchFiles(args[0], &results)
 		case !installed:
-			results = searchOnline(args[0], l, t, searchWithLabel, searchWithLabelMatch, revdeps, hidden)
+			searchOnline(args[0], &results, searchWithLabel,
+				searchWithLabelMatch, revdeps, hidden)
 		default:
-			results = searchLocally(args[0], l, t, searchWithLabel, searchWithLabelMatch, revdeps, hidden)
+			searchLocally(args[0], &results, searchWithLabel,
+				searchWithLabelMatch, revdeps, hidden)
 		}
 
-		t.AppendFooter(rows)
-		t.SetStyle(table.StyleColoredBright)
-
-		l.SetStyle(list.StyleConnectedRounded)
-		if tableMode {
-			Info(t.Render())
-		} else {
-			Info(l.Render())
-		}
-
-		y, err := yaml.Marshal(results)
-		if err != nil {
-			fmt.Printf("err: %v\n", err)
-			return
-		}
-		switch out {
-		case "yaml":
-			fmt.Println(string(y))
-		case "json":
-			j2, err := yaml.YAMLToJSON(y)
+		if out == "json" || out == "yaml" {
+			y, err := yaml.Marshal(results)
 			if err != nil {
 				fmt.Printf("err: %v\n", err)
 				return
 			}
-			fmt.Println(string(j2))
+			switch out {
+			case "yaml":
+				fmt.Println(string(y))
+			case "json":
+				j2, err := yaml.YAMLToJSON(y)
+				if err != nil {
+					fmt.Printf("err: %v\n", err)
+					return
+				}
+				fmt.Println(string(j2))
+			}
+		} else if tableMode {
+
+			t := table.NewWriter()
+			t.SetOutputMirror(os.Stdout)
+			t.AppendHeader(
+				table.Row{
+					"Package", "Version", "Repository", "License",
+				},
+			)
+
+			for _, p := range results.Packages {
+				t.AppendRow([]interface{}{
+					fmt.Sprintf("%s/%s", p.Category, p.Name),
+					p.Version,
+					p.Repository,
+					p.License,
+				})
+			}
+			t.Render()
+		} else {
+			for _, p := range results.Packages {
+				fmt.Println(fmt.Sprintf("%s/%s-%s",
+					p.Category, p.Name, p.Version,
+				))
+			}
 		}
 
 	},
