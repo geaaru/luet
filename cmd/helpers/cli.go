@@ -56,11 +56,6 @@ func packageData(p string) (string, string) {
 	return cat, name
 }
 
-func packageHasGentooSelector(v string) bool {
-	return (strings.HasPrefix(v, "=") || strings.HasPrefix(v, ">") ||
-		strings.HasPrefix(v, "<"))
-}
-
 func gentooVersion(gp *_gentoo.GentooPackage) string {
 
 	condition := gp.Condition.String()
@@ -85,25 +80,6 @@ func gentooVersion(gp *_gentoo.GentooPackage) string {
 }
 
 func ParsePackageStr(p string) (*pkg.DefaultPackage, error) {
-
-	if packageHasGentooSelector(p) {
-		gp, err := _gentoo.ParsePackageStr(p)
-		if err != nil {
-			return nil, err
-		}
-		if gp.Version == "" {
-			gp.Version = "0"
-			gp.Condition = _gentoo.PkgCondGreaterEqual
-		}
-
-		return &pkg.DefaultPackage{
-			Name:     gp.Name,
-			Category: gp.Category,
-			Version:  gentooVersion(gp),
-			Uri:      make([]string, 0),
-		}, nil
-	}
-
 	ver := ">=0"
 	cat := ""
 	name := ""
@@ -113,7 +89,18 @@ func ParsePackageStr(p string) (*pkg.DefaultPackage, error) {
 		ver = packageinfo[1]
 		cat, name = packageData(packageinfo[0])
 	} else {
-		cat, name = packageData(p)
+		gp, err := _gentoo.ParsePackageStr(p)
+		if err != nil {
+			return nil, err
+		}
+		if gp.Version == "" {
+			gp.Version = "0"
+			gp.Condition = _gentoo.PkgCondGreaterEqual
+		}
+
+		ver = gentooVersion(gp)
+		cat = gp.Category
+		name = gp.Name
 	}
 
 	return &pkg.DefaultPackage{
