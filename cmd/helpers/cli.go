@@ -86,7 +86,9 @@ func ParsePackageStr(p string) (*pkg.DefaultPackage, error) {
 
 	if strings.Contains(p, "@") || !strings.Contains(p, "/") {
 		packageinfo := strings.Split(p, "@")
-		ver = packageinfo[1]
+		if len(packageinfo) > 1 {
+			ver = packageinfo[1]
+		}
 		cat, name = packageData(packageinfo[0])
 	} else {
 		gp, err := _gentoo.ParsePackageStr(p)
