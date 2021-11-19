@@ -43,5 +43,5 @@ luet repo update
 luet install -y repository/luet repository/mocaccino-repository-index
 luet install --sync-repos -y system/luet-extensions
 
-#rm -rf luet
+rm -rf luet
 
