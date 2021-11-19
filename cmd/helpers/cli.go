@@ -84,7 +84,7 @@ func ParsePackageStr(p string) (*pkg.DefaultPackage, error) {
 	cat := ""
 	name := ""
 
-	if strings.Contains(p, "@") {
+	if strings.Contains(p, "@") || !strings.Contains(p, "/") {
 		packageinfo := strings.Split(p, "@")
 		ver = packageinfo[1]
 		cat, name = packageData(packageinfo[0])
