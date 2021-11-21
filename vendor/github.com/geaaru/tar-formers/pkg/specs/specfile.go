@@ -22,6 +22,7 @@ import (
 	"archive/tar"
 	"io/fs"
 	"io/ioutil"
+	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -29,13 +30,16 @@ import (
 
 func NewSpecFile() *SpecFile {
 	return &SpecFile{
-		MatchPrefix: []string{},
-		IgnoreFiles: []string{},
-		Rename:      []RenameRule{},
-		RemapUids:   make(map[string]string, 0),
-		RemapGids:   make(map[string]string, 0),
-		RemapUsers:  make(map[string]string, 0),
-		RemapGroups: make(map[string]string, 0),
+		MatchPrefix:            []string{},
+		IgnoreFiles:            []string{},
+		IgnoreRegexes:          []string{},
+		TriggeredFiles:         []string{},
+		TriggeredMatchesPrefix: []string{},
+		Rename:                 []RenameRule{},
+		RemapUids:              make(map[string]string, 0),
+		RemapGids:              make(map[string]string, 0),
+		RemapUsers:             make(map[string]string, 0),
+		RemapGroups:            make(map[string]string, 0),
 
 		SameOwner:        true,
 		SameChtimes:      false,
@@ -44,7 +48,8 @@ func NewSpecFile() *SpecFile {
 		EnableMutex:      false,
 		OverwritePerms:   false,
 
-		mapModifier: make(map[string]bool, 0),
+		mapModifier:   make(map[string]bool, 0),
+		ignoreRegexes: []*regexp.Regexp{},
 	}
 }
 
@@ -94,7 +99,7 @@ func (s *SpecFile) IsFileTriggered(path string) bool {
 	return false
 }
 
-func (s *SpecFile) Prepare() {
+func (s *SpecFile) Prepare() error {
 	// Creating map to speedup research
 	s.mapModifier = make(map[string]bool, 0)
 
@@ -103,6 +108,19 @@ func (s *SpecFile) Prepare() {
 			s.mapModifier[f] = true
 		}
 	}
+
+	if len(s.IgnoreRegexes) > 0 {
+		for _, f := range s.IgnoreRegexes {
+			r, err := regexp.Compile(f)
+			if err != nil {
+				return err
+			}
+
+			s.ignoreRegexes = append(s.ignoreRegexes, r)
+		}
+	}
+
+	return nil
 }
 
 func (s *SpecFile) IsPath2Skip(resource string) bool {
@@ -122,6 +140,15 @@ func (s *SpecFile) IsPath2Skip(resource string) bool {
 	if len(s.IgnoreFiles) > 0 && !ans {
 		for _, f := range s.IgnoreFiles {
 			if f == resource {
+				ans = true
+				break
+			}
+		}
+	}
+
+	if len(s.IgnoreRegexes) > 0 && !ans {
+		for _, r := range s.ignoreRegexes {
+			if r.MatchString(resource) {
 				ans = true
 				break
 			}
