@@ -26,6 +26,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jedib0t/go-pretty/table"
 	"github.com/mudler/luet/pkg/bus"
 	artifact "github.com/mudler/luet/pkg/compiler/types/artifact"
 	"github.com/mudler/luet/pkg/config"
@@ -66,6 +67,11 @@ type ArtifactMatch struct {
 	Package    pkg.Package
 	Artifact   *artifact.PackageArtifact
 	Repository *LuetSystemRepository
+}
+
+type ArtefactAction struct {
+	NewPackage *pkg.Package
+	OldPackage *pkg.Package
 }
 
 func NewLuetInstaller(opts LuetInstallerOptions) *LuetInstaller {
@@ -161,6 +167,79 @@ func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg
 	return uninstall, toInstall, nil
 }
 
+func packsToTable(install *pkg.Packages, uninstall *pkg.Packages) table.Writer {
+	mOpts := make(map[string]*ArtefactAction, 0)
+	var op *ArtefactAction
+
+	toInstall := *install
+	toUninstall := *uninstall
+
+	for idx, p := range toUninstall {
+		op = &ArtefactAction{
+			OldPackage: &toUninstall[idx],
+			NewPackage: nil,
+		}
+		mOpts[p.PackageName()] = op
+	}
+
+	for idx, p := range toInstall {
+		if _, ok := mOpts[p.PackageName()]; ok {
+			op = mOpts[p.PackageName()]
+			op.NewPackage = &toInstall[idx]
+		} else {
+			op = &ArtefactAction{
+				OldPackage: nil,
+				NewPackage: &toInstall[idx],
+			}
+		}
+
+		mOpts[p.PackageName()] = op
+	}
+
+	pKeys := []string{}
+	for k, _ := range mOpts {
+		pKeys = append(pKeys, k)
+	}
+
+	sort.Strings(pKeys)
+
+	// TODO: add repository
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(
+		table.Row{
+			"Package", "New Version", "Old Version", "Repository", "License",
+		},
+	)
+
+	for _, k := range pKeys {
+		newVers := ""
+		oldVers := ""
+		licence := ""
+		repos := ""
+
+		o, _ := mOpts[k]
+		if o.NewPackage != nil {
+			newVers = (*o.NewPackage).GetVersion()
+			licence = (*o.NewPackage).GetLicense()
+			repos = (*o.NewPackage).GetRepository()
+		}
+
+		if o.OldPackage != nil {
+			oldVers = (*o.OldPackage).GetVersion()
+			licence = (*o.OldPackage).GetLicense()
+			repos = (*o.OldPackage).GetRepository()
+		}
+
+		t.AppendRow([]interface{}{
+			k, newVers, oldVers, repos, licence,
+		})
+
+	}
+
+	return t
+}
+
 func packsToList(p pkg.Packages) string {
 	var packs []string
 
@@ -180,6 +259,19 @@ func matchesToList(artefacts map[string]ArtifactMatch) string {
 	}
 	sort.Strings(packs)
 	return strings.Join(packs, " ")
+}
+
+func matchesToPkgsList(artefacts *map[string]ArtifactMatch) *pkg.Packages {
+	ans := pkg.Packages{}
+	match := *artefacts
+	for _, m := range match {
+		// TODO: move this in another place
+		p := m.Package
+		p.SetRepository(m.Repository.GetName())
+		ans = append(ans, p)
+	}
+
+	return &ans
 }
 
 func (l *LuetInstaller) AreThereNotCachedRepos() bool {
@@ -342,13 +434,9 @@ func (l *LuetInstaller) swap(o Option, syncedRepos Repositories, toRemove pkg.Pa
 	}
 
 	if l.Options.Ask {
-		if len(toRemove) > 0 {
-			Info(":recycle: Packages that are going to be removed from the system:\n ", Yellow(packsToList(toRemove)).BgBlack().String())
-		}
 
-		if len(match) > 0 {
-			Info("Packages that are going to be installed in the system: \n ", Green(matchesToList(match)).BgBlack().String())
-		}
+		t := packsToTable(&toInstall, matchesToPkgsList(&match))
+		t.Render()
 
 		Info("By going forward, you are also accepting the licenses of the packages that you are going to install in your system.")
 		if Ask() {
@@ -565,18 +653,13 @@ func (l *LuetInstaller) checkAndUpgrade(r Repositories, s *System) error {
 	}
 	SpinnerStop()
 
-	if len(uninstall) > 0 {
-		Info(":recycle: Packages that are going to be removed from the system:\n ", Yellow(packsToList(uninstall)).BgBlack().String())
-	}
-
-	if len(toInstall) > 0 {
-		Info(":zap:Packages that are going to be installed in the system:\n ", Green(packsToList(toInstall)).BgBlack().String())
-	}
-
 	if len(toInstall) == 0 && len(uninstall) == 0 {
 		Info("Nothing to do")
 		return nil
 	}
+
+	t := packsToTable(&toInstall, &uninstall)
+	t.Render()
 
 	// We don't want any conflict with the installed to raise during the upgrade.
 	// In this way we both force uninstalls and we avoid to check with conflicts
@@ -664,7 +747,9 @@ func (l *LuetInstaller) Install(cp pkg.Packages, s *System) error {
 			}
 		}
 	}
-	Info("Packages that are going to be installed in the system: \n ", Green(matchesToList(match)).BgBlack().String())
+
+	t := packsToTable(matchesToPkgsList(&match), &pkg.Packages{})
+	t.Render()
 
 	if l.Options.Ask {
 		Info("By going forward, you are also accepting the licenses of the packages that you are going to install in your system.")
@@ -1052,6 +1137,7 @@ func (l *LuetInstaller) installPackage(m ArtifactMatch, s *System) error {
 		return errors.Wrap(err, "Could not open package archive")
 	}
 
+	// TODO: Check if enable always subsets.
 	err = a.Unpack(s.Target, true)
 	if err != nil && !l.Options.Force {
 		return errors.Wrap(err, "Error met while unpacking rootfs")

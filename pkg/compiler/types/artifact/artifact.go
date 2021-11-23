@@ -1,4 +1,5 @@
-// Copyright © 2019 Ettore Di Giacinto <mudler@gentoo.org>
+// Copyright © 2019-2021 Ettore Di Giacinto <mudler@gentoo.org>
+//                       Daniele Rondina <geaaru@sabayonlinux.org>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -213,7 +214,7 @@ func (a *PackageArtifact) GenerateFinalImage(imageName string, b ImageBuilder, k
 		return builderOpts, errors.Wrap(err, "error met while creating tempdir for "+a.Path)
 	}
 
-	if err := a.Unpack(uncompressedFiles, keepPerms); err != nil {
+	if err := a.Unpack(uncompressedFiles, true); err != nil {
 		return builderOpts, errors.Wrap(err, "error met while uncompressing artifact "+a.Path)
 	}
 
@@ -471,13 +472,15 @@ func (a *PackageArtifact) GetProtectFiles() []string {
 }
 
 // Unpack Untar and decompress (TODO) to the given path
-func (a *PackageArtifact) Unpack(dst string, keepPerms bool) error {
+func (a *PackageArtifact) Unpack(dst string, enableSubsets bool) error {
 	if !strings.HasPrefix(dst, "/") {
 		return errors.New("destination must be an absolute path")
 	}
 
-	// Create
+	// Create protected file list
 	protectedFiles := a.GetProtectFiles()
+	// Create untar specs
+	spec := a.GetTarFormersSpec(enableSubsets)
 
 	switch a.CompressionType {
 	case compression.Zstandard:
@@ -508,10 +511,8 @@ func (a *PackageArtifact) Unpack(dst string, keepPerms bool) error {
 			return errors.Wrap(err, "Cannot copy to "+a.Path+".uncompressed")
 		}
 
-		err = helpers.UntarProtect(a.Path+".uncompressed", dst,
-			LuetCfg.GetGeneral().SameOwner,
-			LuetCfg.GetGeneral().OverwriteDirPerms,
-			protectedFiles, tarModifierWrapperFunc)
+		err = helpers.UntarProtectSpec(a.Path+".uncompressed", dst,
+			protectedFiles, tarModifierWrapperFunc, spec)
 		if err != nil {
 			return err
 		}
@@ -543,10 +544,8 @@ func (a *PackageArtifact) Unpack(dst string, keepPerms bool) error {
 			return errors.Wrap(err, "Cannot copy to "+a.Path+".uncompressed")
 		}
 
-		err = helpers.UntarProtect(a.Path+".uncompressed", dst,
-			LuetCfg.GetGeneral().SameOwner,
-			LuetCfg.GetGeneral().OverwriteDirPerms,
-			protectedFiles, tarModifierWrapperFunc)
+		err = helpers.UntarProtectSpec(a.Path+".uncompressed", dst,
+			protectedFiles, tarModifierWrapperFunc, spec)
 		if err != nil {
 			return err
 		}
@@ -558,7 +557,6 @@ func (a *PackageArtifact) Unpack(dst string, keepPerms bool) error {
 			LuetCfg.GetGeneral().OverwriteDirPerms,
 			protectedFiles, tarModifierWrapperFunc)
 	}
-	return errors.New("Compression type must be supplied")
 }
 
 // FileList generates the list of file of a package from the local archive

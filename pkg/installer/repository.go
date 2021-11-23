@@ -39,8 +39,9 @@ import (
 	pkg "github.com/mudler/luet/pkg/package"
 	tree "github.com/mudler/luet/pkg/tree"
 
-	"github.com/ghodss/yaml"
+	//"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -59,20 +60,20 @@ const (
 )
 
 type LuetRepositoryFile struct {
-	FileName        string                     `json:"filename"`
-	CompressionType compression.Implementation `json:"compressiontype,omitempty"`
-	Checksums       artifact.Checksums         `json:"checksums,omitempty"`
+	FileName        string                     `json:"filename" yaml:"filename"`
+	CompressionType compression.Implementation `json:"compressiontype,omitempty" yaml:"compressiontype,omitempty"`
+	Checksums       artifact.Checksums         `json:"checksums,omitempty" yaml:"checksums,omitempty"`
 }
 
 type LuetSystemRepository struct {
 	*config.LuetRepository
 
-	Index           compiler.ArtifactIndex        `json:"index"`
-	BuildTree, Tree tree.Builder                  `json:"-"`
-	RepositoryFiles map[string]LuetRepositoryFile `json:"repo_files"`
-	Backend         compiler.CompilerBackend      `json:"-"`
-	PushImages      bool                          `json:"-"`
-	ForcePush       bool                          `json:"-"`
+	Index           compiler.ArtifactIndex        `json:"index" yaml:"index"`
+	BuildTree, Tree tree.Builder                  `json:"-" yaml:"-"`
+	RepositoryFiles map[string]LuetRepositoryFile `json:"repo_files" yaml:"repo_files"`
+	Backend         compiler.CompilerBackend      `json:"-" yaml:"-"`
+	PushImages      bool                          `json:"-" yaml:"-"`
+	ForcePush       bool                          `json:"-" yaml:"-"`
 
 	imagePrefix string
 }
@@ -625,6 +626,7 @@ func (r *LuetSystemRepository) ReadSpecFile(file string) (*LuetSystemRepository,
 	if err != nil {
 		return nil, errors.Wrap(err, "Error reading file "+file)
 	}
+
 	var repo *LuetSystemRepository
 	repo, err = NewLuetSystemRepositoryFromYaml(dat, pkg.NewInMemoryDatabase(false))
 	if err != nil {
@@ -840,7 +842,7 @@ func (r *LuetSystemRepository) Load(alternativeRepoSpecfile, alternativeTreeFs, 
 	r.fill(repoMeta)
 
 	InfoC(
-		aurora.Yellow(":information_source:").String() +
+		aurora.Yellow(":information_source: ").String() +
 			aurora.Magenta("Repository: ").String() +
 			aurora.Green(aurora.Bold(repoMeta.GetName()).String()).String() +
 			aurora.Magenta(" Priority: ").String() +
@@ -943,7 +945,7 @@ func (r *LuetSystemRepository) Sync(force bool) (*LuetSystemRepository, error) {
 		}
 		Debug("Decompress tree of the repository " + r.Name + "...")
 
-		err = treeFileArtifact.Unpack(treefs, true)
+		err = treeFileArtifact.Unpack(treefs, false)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error met while unpacking tree")
 		}
@@ -951,7 +953,7 @@ func (r *LuetSystemRepository) Sync(force bool) (*LuetSystemRepository, error) {
 		// FIXME: It seems that tar with only one file doesn't create destination
 		//       directory. I create directory directly for now.
 		os.MkdirAll(metafs, os.ModePerm)
-		err = metaFileArtifact.Unpack(metafs, true)
+		err = metaFileArtifact.Unpack(metafs, false)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error met while unpacking metadata")
 		}

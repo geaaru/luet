@@ -51,20 +51,28 @@ func Tar(src, dest string) error {
 }
 
 func UntarProtect(src, dst string, sameOwner, overwriteDirPerms bool, protectedFiles []string, modifier tarf.TarFileHandlerFunc) error {
-	in, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
 
 	spec := tarf_specs.NewSpecFile()
 	spec.SameOwner = sameOwner
 	spec.EnableMutex = true
 	spec.OverwritePerms = overwriteDirPerms
-	spec.IgnoreFiles = []string{
+	spec.IgnoreRegexes = []string{
 		// prevent 'operation not permitted'
-		"/dev",
+		"^/dev",
 	}
+	spec.IgnoreFiles = []string{}
+
+	return UntarProtectSpec(
+		src, dst, protectedFiles, modifier, spec,
+	)
+}
+
+func UntarProtectSpec(src, dst string, protectedFiles []string, modifier tarf.TarFileHandlerFunc, spec *tarf_specs.SpecFile) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
 
 	tarformers := tarf.NewTarFormers(tarf.GetOptimusPrime().Config)
 	tarformers.SetReader(in)

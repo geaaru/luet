@@ -1,4 +1,5 @@
 // Copyright © 2019-2021 Ettore Di Giacinto <mudler@sabayon.org>
+//                       Daniele Rondina <geaaru@sabayonlinux.org>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -857,7 +858,7 @@ func (cs *LuetCompiler) resolveFinalImages(concurrency int, keepPermissions bool
 				return errors.Wrap(err, "failed building join image")
 			}
 
-			err = artifact.Unpack(joinDir, keepPermissions)
+			err = artifact.Unpack(joinDir, false)
 			if err != nil {
 				return errors.Wrap(err, "failed building join image")
 			}

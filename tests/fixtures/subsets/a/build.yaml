@@ -1,0 +1,13 @@
+image: "alpine"
+prelude:
+  - echo foo > /test
+  - echo bar > /test2
+steps:
+  - echo c > /c
+  - echo c > /cd
+  - mkdir /opt/etc
+  - mkdir /usr/include/ -p
+  - mkdir /var/db/pkg/cat/foo -p
+  - echo "include" > /usr/include/file.h
+  - echo "5" > /var/db/pkg/cat/foo/EAPI
+  - echo config > /opt/etc/conf

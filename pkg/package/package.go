@@ -67,6 +67,7 @@ type Package interface {
 	GetName() string
 	SetName(string)
 	GetCategory() string
+	PackageName() string
 
 	GetVersion() string
 	SetVersion(string)
@@ -104,6 +105,7 @@ type Package interface {
 	GetAnnotations() map[string]interface{}
 	HasAnnotation(string) bool
 	MatchAnnotation(*regexp.Regexp) bool
+	GetAnnotationByKey(k string) interface{}
 
 	IsHidden() bool
 	IsSelector() bool
@@ -126,6 +128,9 @@ type Package interface {
 	Mark() Package
 
 	JSON() ([]byte, error)
+
+	GetRepository() string
+	SetRepository(string)
 }
 
 const (
@@ -289,6 +294,8 @@ type DefaultPackage struct {
 	Labels map[string]string `json:"labels,omitempty"` // Affects YAML field names too.
 
 	TreeDir string `json:"treedir,omitempty"`
+
+	Repository string `json:"repository,omitempty"`
 }
 
 // State represent the package state
@@ -304,6 +311,9 @@ func NewPackage(name, version string, requires []*DefaultPackage, conflicts []*D
 		Labels:           nil,
 	}
 }
+
+func (p *DefaultPackage) SetRepository(r string) { p.Repository = r }
+func (p *DefaultPackage) GetRepository() string  { return p.Repository }
 
 func (p *DefaultPackage) SetTreeDir(s string) {
 	p.TreeDir = s
@@ -333,6 +343,16 @@ func (p *DefaultPackage) HashFingerprint(salt string) string {
 
 func (p *DefaultPackage) HumanReadableString() string {
 	return fmt.Sprintf("%s/%s-%s", p.Category, p.Name, p.Version)
+}
+
+func (p *DefaultPackage) PackageName() string {
+	if p.Category != "" && p.Name != "" {
+		return fmt.Sprintf("%s/%s", p.Category, p.Name)
+	} else if p.Category != "" {
+		return p.Category
+	} else {
+		return p.Name
+	}
 }
 
 func FromString(s string) Package {
@@ -503,6 +523,13 @@ func (p *DefaultPackage) GetLabels() map[string]string {
 }
 func (p *DefaultPackage) GetAnnotations() map[string]interface{} {
 	return p.Annotations
+}
+func (p *DefaultPackage) GetAnnotationByKey(k string) (ans interface{}) {
+	if p.HasAnnotation(k) {
+		ans = p.Annotations[k]
+	}
+
+	return ans
 }
 func (p *DefaultPackage) GetProvides() []*DefaultPackage {
 	return p.Provides

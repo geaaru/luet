@@ -1,4 +1,4 @@
-// Copyright © 2019-2020 Ettore Di Giacinto <mudler@gentoo.org>
+// Copyright © 2019-2021 Ettore Di Giacinto <mudler@gentoo.org>
 //                       Daniele Rondina <geaaru@sabayonlinux.org>
 //
 // This program is free software; you can redistribute it and/or modify
@@ -20,4 +20,5 @@ type AnnotationKey string
 
 const (
 	ConfigProtectAnnnotation AnnotationKey = "config_protect"
+	SubsetsAnnotation        AnnotationKey = "subsets"
 )

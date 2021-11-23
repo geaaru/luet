@@ -1,0 +1,10 @@
+category: "subset"
+name: "a"
+version: "1.0"
+annotations:
+  subsets:
+    rules:
+      devel:
+        - "^/usr/include|^/usr/include/"
+      portage:
+        - "^/var/db/pkg|^/var/db/pkg/"

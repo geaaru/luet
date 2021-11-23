@@ -222,6 +222,32 @@ type LuetConfig struct {
 	FinalizerEnvs []LuetKV `json:"finalizer_envs,omitempty" yaml:"finalizer_envs,omitempty" mapstructure:"finalizer_envs,omitempty"`
 
 	ConfigProtectConfFiles []ConfigProtectConfFile `yaml:"-" mapstructure:"-"`
+
+	// Subsets config directories for users override.
+	SubsetsConfDir []string          `yaml:"subsets_confdir,omitempty" mapstructure:"subsets_confdir"`
+	SubsetsDefDir  []string          `yaml:"subsets_defdir,omitempty" mapstructure:"subsets_defdir"`
+	Subsets        LuetSubsetsConfig `yaml:"subsets,omitempty" mapstructure:"subsets"`
+
+	SubsetsDefinitions *LuetSubsetsDefinition            `yaml:"-" mapstructure:"-"`
+	SubsetsPkgsDefMap  map[string]*LuetSubsetsDefinition `yaml:"-" mapstructure:"-"`
+	SubsetsCatDefMap   map[string]*LuetSubsetsDefinition `yaml:"-" mapstructure:"-"`
+}
+
+type LuetSubsetsConfig struct {
+	Enabled []string `yaml:"enabled,omitempty" mapstructure:"enabled"`
+}
+
+type LuetSubsetsDefinition struct {
+	Definitions map[string]*LuetSubsetDefinition `yaml:"subsets_def,omitempty" mapstructure:"subsets_def"`
+}
+
+type LuetSubsetDefinition struct {
+	Description string   `yaml:"descr,omitempty" mapstructure:"descr"`
+	Name        string   `yaml:"name,omitempty" mapstructure:"name"`
+	Rules       []string `yaml:"rules,omitempty" mapstructure:"rules"`
+
+	Packages   []string `yaml:"packages,omitempty" mapstructure:"packages"`
+	Categories []string `yaml:"categories,omitempty" mapstructure:"categories"`
 }
 
 func NewLuetConfig(viper *v.Viper) *LuetConfig {
@@ -230,7 +256,13 @@ func NewLuetConfig(viper *v.Viper) *LuetConfig {
 	}
 
 	GenDefault(viper)
-	return &LuetConfig{Viper: viper, ConfigProtectConfFiles: nil}
+	return &LuetConfig{
+		Viper:                  viper,
+		ConfigProtectConfFiles: nil,
+		SubsetsDefinitions:     nil,
+		SubsetsCatDefMap:       make(map[string]*LuetSubsetsDefinition, 0),
+		SubsetsPkgsDefMap:      make(map[string]*LuetSubsetsDefinition, 0),
+	}
 }
 
 func GenDefault(viper *v.Viper) {
@@ -266,6 +298,8 @@ func GenDefault(viper *v.Viper) {
 
 	viper.SetDefault("repos_confdir", []string{"/etc/luet/repos.conf.d"})
 	viper.SetDefault("config_protect_confdir", []string{"/etc/luet/config.protect.d"})
+	viper.SetDefault("subsets_confdir", []string{})
+	viper.SetDefault("subsets_defdir", []string{})
 	viper.SetDefault("config_protect_skip", false)
 	// TODO: Set default to false when we are ready for migration.
 	viper.SetDefault("config_from_host", true)
