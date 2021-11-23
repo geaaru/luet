@@ -201,8 +201,12 @@ func Msg(level string, withoutColor, ln bool, msg ...interface{}) {
 		return
 	}
 
-	for _, m := range msg {
-		message += " " + fmt.Sprintf("%v", m)
+	for idx, m := range msg {
+		if idx > 0 {
+			message += " " + fmt.Sprintf("%v", m)
+		} else {
+			message += fmt.Sprintf("%v", m)
+		}
 	}
 
 	var levelMsg string
