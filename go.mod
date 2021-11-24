@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/Microsoft/go-winio v0.5.0 // indirect
-	github.com/Sabayon/pkgs-checker v0.8.4
+	github.com/Sabayon/pkgs-checker v0.10.5
 	github.com/apex/log v1.9.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/asdine/storm v0.0.0-20190418133842-e0f77eada154
