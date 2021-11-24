@@ -58,7 +58,7 @@ func UntarProtect(src, dst string, sameOwner, overwriteDirPerms bool, protectedF
 	spec.OverwritePerms = overwriteDirPerms
 	spec.IgnoreRegexes = []string{
 		// prevent 'operation not permitted'
-		"^/dev",
+		//"^/dev/",
 	}
 	spec.IgnoreFiles = []string{}
 

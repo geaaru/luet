@@ -33,7 +33,7 @@ func (a *PackageArtifact) GetTarFormersSpec(enableSubsets bool) *tarf_specs.Spec
 	spec.OverwritePerms = LuetCfg.GetGeneral().OverwriteDirPerms
 	spec.IgnoreRegexes = []string{
 		// prevent 'operation not permitted'
-		"^/dev",
+		//"^/dev",
 	}
 	spec.IgnoreFiles = []string{}
 
