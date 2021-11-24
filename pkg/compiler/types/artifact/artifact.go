@@ -57,16 +57,16 @@ import (
 // which will consist in just of an repository.yaml which is just the repository structure with the list of package artifact.
 // In this way a generic client can fetch the packages and, after unpacking the tree, performing queries to install packages.
 type PackageArtifact struct {
-	Path string `json:"path"`
+	Path string `json:"path" yaml:"path"`
 
-	Dependencies      []*PackageArtifact                `json:"dependencies"`
-	CompileSpec       *compilerspec.LuetCompilationSpec `json:"compilationspec"`
-	Checksums         Checksums                         `json:"checksums"`
-	SourceAssertion   solver.PackagesAssertions         `json:"-"`
-	CompressionType   compression.Implementation        `json:"compressiontype"`
-	Files             []string                          `json:"files"`
-	PackageCacheImage string                            `json:"package_cacheimage"`
-	Runtime           *pkg.DefaultPackage               `json:"runtime,omitempty"`
+	Dependencies      []*PackageArtifact                `json:"dependencies" yaml:"dependencies"`
+	CompileSpec       *compilerspec.LuetCompilationSpec `json:"compilationspec" yaml:"compilationspec"`
+	Checksums         Checksums                         `json:"checksums" yaml:"checksums"`
+	SourceAssertion   solver.PackagesAssertions         `json:"-" yaml:"-"`
+	CompressionType   compression.Implementation        `json:"compressiontype" yaml:"compressiontype"`
+	Files             []string                          `json:"files" yaml:"files"`
+	PackageCacheImage string                            `json:"package_cacheimage" yaml:"package_cacheimage"`
+	Runtime           *pkg.DefaultPackage               `json:"runtime,omitempty" yaml:"runtime,omitempty"`
 }
 
 func (p *PackageArtifact) ShallowCopy() *PackageArtifact {

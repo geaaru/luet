@@ -157,9 +157,9 @@ type LuetRepository struct {
 	// Serialized options not used in repository configuration
 
 	// Incremented value that identify revision of the repository in a user-friendly way.
-	Revision int `json:"revision,omitempty" yaml:"-" mapstructure:"-"`
+	Revision int `json:"revision,omitempty" yaml:"revision,omitempty" mapstructure:"-"`
 	// Epoch time in seconds
-	LastUpdate string `json:"last_update,omitempty" yaml:"-" mapstructure:"-"`
+	LastUpdate string `json:"last_update,omitempty" yaml:"last_update,omitempty" mapstructure:"-"`
 }
 
 func NewLuetRepository(name, t, descr string, urls []string, priority int, enable, cached bool) *LuetRepository {

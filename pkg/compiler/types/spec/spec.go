@@ -89,32 +89,32 @@ func (specs *LuetCompilationspecs) Unique() *LuetCompilationspecs {
 }
 
 type CopyField struct {
-	Package     *pkg.DefaultPackage `json:"package"`
-	Image       string              `json:"image"`
-	Source      string              `json:"source"`
-	Destination string              `json:"destination"`
+	Package     *pkg.DefaultPackage `json:"package" yaml:"package"`
+	Image       string              `json:"image" yaml:"image"`
+	Source      string              `json:"source" yaml:"source"`
+	Destination string              `json:"destination" yaml:"destination"`
 }
 
 type LuetCompilationSpec struct {
-	Steps           []string                  `json:"steps"` // Are run inside a container and the result layer diff is saved
-	Env             []string                  `json:"env"`
-	Prelude         []string                  `json:"prelude"` // Are run inside the image which will be our builder
-	Image           string                    `json:"image"`
-	Seed            string                    `json:"seed"`
-	Package         *pkg.DefaultPackage       `json:"package"`
-	SourceAssertion solver.PackagesAssertions `json:"-"`
+	Steps           []string                  `json:"steps" yaml:"steps"` // Are run inside a container and the result layer diff is saved
+	Env             []string                  `json:"env" yaml:"env"`
+	Prelude         []string                  `json:"prelude" yaml:"prelude"` // Are run inside the image which will be our builder
+	Image           string                    `json:"image" yaml:"image"`
+	Seed            string                    `json:"seed" yaml:"seed"`
+	Package         *pkg.DefaultPackage       `json:"package" yaml:"package"`
+	SourceAssertion solver.PackagesAssertions `json:"-" yaml:"-"`
 	PackageDir      string                    `json:"package_dir" yaml:"package_dir"`
 
-	Retrieve []string `json:"retrieve"`
+	Retrieve []string `json:"retrieve" yaml:"retrieve"`
 
-	OutputPath string   `json:"-"` // Where the build processfiles go
-	Unpack     bool     `json:"unpack"`
-	Includes   []string `json:"includes"`
-	Excludes   []string `json:"excludes"`
+	OutputPath string   `json:"-" yaml:"-"` // Where the build processfiles go
+	Unpack     bool     `json:"unpack" yaml:"unpack"`
+	Includes   []string `json:"includes" yaml:"includes"`
+	Excludes   []string `json:"excludes" yaml:"excludes"`
 
-	BuildOptions *options.Compiler `json:"build_options"`
+	BuildOptions *options.Compiler `json:"build_options" yaml:"build_options"`
 
-	Copy []CopyField `json:"copy"`
+	Copy []CopyField `json:"copy" yaml:"copy"`
 
 	RequiresFinalImages bool `json:"requires_final_images" yaml:"requires_final_images"`
 }

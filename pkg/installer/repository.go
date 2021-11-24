@@ -66,7 +66,7 @@ type LuetRepositoryFile struct {
 }
 
 type LuetSystemRepository struct {
-	*config.LuetRepository
+	config.LuetRepository `yaml:",inline"`
 
 	Index           compiler.ArtifactIndex        `json:"index" yaml:"index"`
 	BuildTree, Tree tree.Builder                  `json:"-" yaml:"-"`
@@ -75,11 +75,11 @@ type LuetSystemRepository struct {
 	PushImages      bool                          `json:"-" yaml:"-"`
 	ForcePush       bool                          `json:"-" yaml:"-"`
 
-	imagePrefix string
+	imagePrefix string `json:"-" yaml:"-"`
 }
 
 type LuetSystemRepositoryMetadata struct {
-	Index []*artifact.PackageArtifact `json:"index,omitempty"`
+	Index []*artifact.PackageArtifact `json:"index,omitempty" yaml:"index,omitempty"`
 }
 
 type LuetSearchModeType int
@@ -341,7 +341,7 @@ func GenerateRepository(p ...RepositoryOption) (*LuetSystemRepository, error) {
 	}
 
 	repo := &LuetSystemRepository{
-		LuetRepository:  config.NewLuetRepository(c.Name, c.Type, c.Description, c.Urls, c.Priority, true, false),
+		LuetRepository:  *config.NewLuetRepository(c.Name, c.Type, c.Description, c.Urls, c.Priority, true, false),
 		Tree:            tree.NewInstallerRecipe(runtimeTree),
 		BuildTree:       btr,
 		RepositoryFiles: map[string]LuetRepositoryFile{},
@@ -360,9 +360,18 @@ func GenerateRepository(p ...RepositoryOption) (*LuetSystemRepository, error) {
 
 func NewSystemRepository(repo config.LuetRepository) *LuetSystemRepository {
 	return &LuetSystemRepository{
-		LuetRepository:  &repo,
+		LuetRepository:  repo,
 		RepositoryFiles: map[string]LuetRepositoryFile{},
 	}
+}
+
+func (r *LuetSystemRepository) String() string {
+	ans := ""
+	d, err := yaml.Marshal(r)
+	if err == nil {
+		ans = string(d)
+	}
+	return ans
 }
 
 func NewLuetSystemRepositoryFromYaml(data []byte, db pkg.PackageDatabase) (*LuetSystemRepository, error) {
