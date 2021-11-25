@@ -16,6 +16,8 @@
 package compiler_test
 
 import (
+	"fmt"
+
 	. "github.com/mudler/luet/pkg/compiler"
 	sd "github.com/mudler/luet/pkg/compiler/backend"
 	"github.com/mudler/luet/pkg/compiler/types/options"
@@ -27,32 +29,52 @@ import (
 
 var _ = Describe("ImageHashTree", func() {
 	generalRecipe := tree.NewCompilerRecipe(pkg.NewInMemoryDatabase(false))
-	compiler := NewLuetCompiler(sd.NewSimpleDockerBackend(), generalRecipe.GetDatabase(), options.Concurrency(2))
+	compiler := NewLuetCompiler(
+		sd.NewSimpleDockerBackend(),
+		generalRecipe.GetDatabase(),
+		options.Concurrency(2),
+	)
 	hashtree := NewHashTree(generalRecipe.GetDatabase())
 	Context("Simple package definition", func() {
 		BeforeEach(func() {
 			generalRecipe = tree.NewCompilerRecipe(pkg.NewInMemoryDatabase(false))
 			err := generalRecipe.Load("../../tests/fixtures/buildable")
 			Expect(err).ToNot(HaveOccurred())
-			compiler = NewLuetCompiler(sd.NewSimpleDockerBackend(), generalRecipe.GetDatabase(), options.Concurrency(2))
+			compiler = NewLuetCompiler(
+				sd.NewSimpleDockerBackend(),
+				generalRecipe.GetDatabase(),
+				options.Concurrency(2),
+			)
 			hashtree = NewHashTree(generalRecipe.GetDatabase())
 
 		})
 
 		It("Calculates the hash correctly", func() {
 
-			spec, err := compiler.FromPackage(&pkg.DefaultPackage{Name: "b", Category: "test", Version: "1.0"})
+			spec, err := compiler.FromPackage(
+				&pkg.DefaultPackage{
+					Name:     "b",
+					Category: "test",
+					Version:  "1.0",
+				})
 			Expect(err).ToNot(HaveOccurred())
 
 			packageHash, err := hashtree.Query(compiler, spec)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(packageHash.Target.Hash.BuildHash).To(Equal("895697a8bb51b219b78ed081fa1b778801e81505bb03f56acafcf3c476620fc1"))
-			Expect(packageHash.Target.Hash.PackageHash).To(Equal("2a6c3dc0dd7af2902fd8823a24402d89b2030cfbea6e63fe81afb34af8b1a005"))
-			Expect(packageHash.BuilderImageHash).To(Equal("builder-3a28d240f505d69123735a567beaf80e"))
+			fmt.Println("Package Target Hash BuildHash ", packageHash.Target.Hash.BuildHash)
+			fmt.Println("Package Target PackageHash ", packageHash.Target.Hash.PackageHash)
+			fmt.Println("Package Builder Image Hash", packageHash.BuilderImageHash)
+			Expect(packageHash.Target.Hash.BuildHash).To(
+				Equal("895697a8bb51b219b78ed081fa1b778801e81505bb03f56acafcf3c476620fc1"))
+			Expect(packageHash.Target.Hash.PackageHash).To(
+				Equal("2a6c3dc0dd7af2902fd8823a24402d89b2030cfbea6e63fe81afb34af8b1a005"))
+			Expect(packageHash.BuilderImageHash).To(
+				Equal("builder-3a28d240f505d69123735a567beaf80e"))
 		})
 	})
 
-	expectedPackageHash := "f3f42a7435293225e92a51da8416f90b7c0ccd5958cd5c72276c39ece408c01f"
+	//expectedPackageHash := "f3f42a7435293225e92a51da8416f90b7c0ccd5958cd5c72276c39ece408c01f"
+	expectedPackageHash := "fd19b663238f389b0df16ecf00f3e6c3efed54b0c50d0f5ea47473b503c661fd"
 
 	Context("complex package definition", func() {
 		BeforeEach(func() {
@@ -71,12 +93,19 @@ var _ = Describe("ImageHashTree", func() {
 			packageHash, err := hashtree.Query(compiler, spec)
 			Expect(err).ToNot(HaveOccurred())
 
+			fmt.Println("Package hash last dependency",
+				packageHash.Dependencies[len(packageHash.Dependencies)-1].Hash.PackageHash,
+				packageHash.Dependencies[len(packageHash.Dependencies)-1],
+				packageHash.Target.Hash.PackageHash,
+			)
 			Expect(packageHash.Dependencies[len(packageHash.Dependencies)-1].Hash.PackageHash).To(Equal(expectedPackageHash))
 			Expect(packageHash.SourceHash).To(Equal(expectedPackageHash))
-			Expect(packageHash.BuilderImageHash).To(Equal("builder-977129605c0d7e974cc8a431a563cec1"))
+			Expect(packageHash.BuilderImageHash).To(Equal("builder-2cd316290c2c2631f30f71219f763b13"))
+			//Expect(packageHash.BuilderImageHash).To(Equal("builder-977129605c0d7e974cc8a431a563cec1"))
 
 			//Expect(packageHash.Target.Hash.BuildHash).To(Equal("79d7107d13d578b362e6a7bf10ec850efce26316405b8d732ce8f9e004d64281"))
-			Expect(packageHash.Target.Hash.PackageHash).To(Equal("9112e2c97bf8ca998c1df303a9ebc4957b685930c882e9aa556eab4507220079"))
+			//Expect(packageHash.Target.Hash.PackageHash).To(Equal("9112e2c97bf8ca998c1df303a9ebc4957b685930c882e9aa556eab4507220079"))
+			Expect(packageHash.Target.Hash.PackageHash).To(Equal("33c75f8d07738ddc7edd1640f5ce73ad09bc526273ba9b91760fecc9a06c84d9"))
 			a := &pkg.DefaultPackage{Name: "a", Category: "test", Version: "1.1"}
 			hash, err := packageHash.DependencyBuildImage(a)
 			Expect(err).ToNot(HaveOccurred())
@@ -113,17 +142,20 @@ var _ = Describe("ImageHashTree", func() {
 
 			packageHash, err := hashtree.Query(compiler, spec)
 			Expect(err).ToNot(HaveOccurred())
+			fmt.Println("Package hash ",
+				packageHash.Dependencies[len(packageHash.Dependencies)-1].Hash.PackageHash,
+				packageHash.Target.Hash.PackageHash)
 			Expect(packageHash.Dependencies[len(packageHash.Dependencies)-1].Hash.PackageHash).ToNot(Equal(expectedPackageHash))
-			sourceHash := "f0d96e79a0021b065674c58203158a02ed702ff29cc2ee6605e1f16f1fae9b89"
+			sourceHash := "fcaba1ecac3525a42439f5f3aaf7be29e884890dc9a7679904d66fe26f1b5993"
 			Expect(packageHash.Dependencies[len(packageHash.Dependencies)-1].Hash.PackageHash).To(Equal(sourceHash))
 			Expect(packageHash.SourceHash).To(Equal(sourceHash))
 
 			Expect(packageHash.SourceHash).ToNot(Equal(expectedPackageHash))
 
-			Expect(packageHash.BuilderImageHash).To(Equal("builder-05506adb3777ed74825254e8b46da5e9"))
+			Expect(packageHash.BuilderImageHash).To(Equal("builder-4b46a6376d4753fbcb5ebddb7b81d98c"))
 
 			//Expect(packageHash.Target.Hash.BuildHash).To(Equal("79d7107d13d578b362e6a7bf10ec850efce26316405b8d732ce8f9e004d64281"))
-			Expect(packageHash.Target.Hash.PackageHash).To(Equal("489ece9825e18eba2de91e93293d5c61578d492d42bbfe9b6ae2e2c3c11bc842"))
+			Expect(packageHash.Target.Hash.PackageHash).To(Equal("0a62e10e4c89f2a5246d7eeca2dfbba9eeade322fe9a6eb33298bd6867adb9d2"))
 			a := &pkg.DefaultPackage{Name: "a", Category: "test", Version: "1.1"}
 			hash, err := packageHash.DependencyBuildImage(a)
 			Expect(err).ToNot(HaveOccurred())
@@ -132,7 +164,7 @@ var _ = Describe("ImageHashTree", func() {
 
 			assertionA := packageHash.Dependencies.Search(a.GetFingerPrint())
 
-			Expect(assertionA.Hash.PackageHash).To(Equal("f0d96e79a0021b065674c58203158a02ed702ff29cc2ee6605e1f16f1fae9b89"))
+			Expect(assertionA.Hash.PackageHash).To(Equal("fcaba1ecac3525a42439f5f3aaf7be29e884890dc9a7679904d66fe26f1b5993"))
 			Expect(assertionA.Hash.PackageHash).ToNot(Equal(expectedPackageHash))
 
 			b := &pkg.DefaultPackage{Name: "b", Category: "test", Version: "1.0"}

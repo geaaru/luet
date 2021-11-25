@@ -77,7 +77,11 @@ func (ht *PackageImageHashTree) String() string {
 // Query takes a compiler and a compilation spec and returns a PackageImageHashTree tied to it.
 // PackageImageHashTree contains all the informations to resolve the spec build images in order to
 // reproducibly re-build images from packages
-func (ht *ImageHashTree) Query(cs *LuetCompiler, p *compilerspec.LuetCompilationSpec) (*PackageImageHashTree, error) {
+func (ht *ImageHashTree) Query(
+	cs *LuetCompiler,
+	p *compilerspec.LuetCompilationSpec,
+) (*PackageImageHashTree, error) {
+
 	assertions, err := ht.resolve(cs, p)
 	if err != nil {
 		return nil, err
