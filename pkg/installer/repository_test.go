@@ -335,8 +335,8 @@ urls:
 
 			_, err = builder2.GetDatabase().CreatePackage(package2)
 			Expect(err).ToNot(HaveOccurred())
-			repo1 := &LuetSystemRepository{LuetRepository: &config.LuetRepository{Name: "test1"}, Tree: builder1}
-			repo2 := &LuetSystemRepository{LuetRepository: &config.LuetRepository{Name: "test2"}, Tree: builder2}
+			repo1 := &LuetSystemRepository{LuetRepository: config.LuetRepository{Name: "test1"}, Tree: builder1}
+			repo2 := &LuetSystemRepository{LuetRepository: config.LuetRepository{Name: "test2"}, Tree: builder2}
 			repositories := Repositories{repo1, repo2}
 			matches := repositories.PackageMatches([]pkg.Package{package1})
 			Expect(matches).To(Equal([]PackageMatch{{Repo: repo1, Package: package1}}))
