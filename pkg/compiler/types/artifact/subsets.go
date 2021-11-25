@@ -62,33 +62,35 @@ func (a *PackageArtifact) GetTarFormersSpec(enableSubsets bool) *tarf_specs.Spec
 func (a *PackageArtifact) GetSubsets() *LuetSubsetsDefinition {
 	ans := &LuetSubsetsDefinition{}
 
-	// Get global/user category subsets defined
-	catSubsets := LuetCfg.SubsetsCatDefMap[a.Runtime.GetCategory()]
+	if a.Runtime != nil {
+		// Get global/user category subsets defined
+		catSubsets := LuetCfg.SubsetsCatDefMap[a.Runtime.GetCategory()]
 
-	// Get global/user package subsets defined
-	pkgSubsets := LuetCfg.SubsetsPkgsDefMap[a.Runtime.PackageName()]
+		// Get global/user package subsets defined
+		pkgSubsets := LuetCfg.SubsetsPkgsDefMap[a.Runtime.PackageName()]
 
-	// Check if there is subsets definition on annotations
-	if a.Runtime.HasAnnotation(string(pkg.SubsetsAnnotation)) {
-		ans = a.unmarshalSubsets()
-	}
-
-	// Respect this order on override the subsets:
-	// If there are subsets on package annotation I set the
-	// initial definitions.
-	// If there is a pkg subsets defined locally i use them
-	// to add new subsets or override existing with the same keys.
-	// If there isn't a pkg subsets and there are subsets
-	// defined for the category i override the subsets at the
-	// same way.
-
-	if pkgSubsets != nil {
-		for k, v := range pkgSubsets.Definitions {
-			ans.Definitions[k] = v
+		// Check if there is subsets definition on annotations
+		if a.Runtime.HasAnnotation(string(pkg.SubsetsAnnotation)) {
+			ans = a.unmarshalSubsets()
 		}
-	} else if catSubsets != nil {
-		for k, v := range catSubsets.Definitions {
-			ans.Definitions[k] = v
+
+		// Respect this order on override the subsets:
+		// If there are subsets on package annotation I set the
+		// initial definitions.
+		// If there is a pkg subsets defined locally i use them
+		// to add new subsets or override existing with the same keys.
+		// If there isn't a pkg subsets and there are subsets
+		// defined for the category i override the subsets at the
+		// same way.
+
+		if pkgSubsets != nil {
+			for k, v := range pkgSubsets.Definitions {
+				ans.Definitions[k] = v
+			}
+		} else if catSubsets != nil {
+			for k, v := range catSubsets.Definitions {
+				ans.Definitions[k] = v
+			}
 		}
 	}
 
