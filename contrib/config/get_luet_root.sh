@@ -41,6 +41,6 @@ EOF
 
 luet repo update
 luet install -y repository/mottainai-stable repository/geaaru-repo-index --force
-luet install --sync-repos -y system/luet-extensions system/luet-${GITHUB_USER} --force
+luet install --sync-repos -y system/luet-${GITHUB_USER} --force
 
 #rm -rf luet
