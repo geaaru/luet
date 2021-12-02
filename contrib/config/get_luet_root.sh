@@ -27,7 +27,7 @@ if [ "${LUET_CONFIG_PROTECT}" = "1" ] ; then
   mkdir -p /etc/luet/config.protect.d || true
   curl -L https://raw.githubusercontent.com/${GITHUB_USER}/luet/${GITHUB_BRANCH}/contrib/config/config.protect.d/01_etc.yml.example --output /etc/luet/config.protect.d/01_etc.yml
 fi
-curl -L https://raw.githubusercontent.com/mocaccinoOS/repository-index/master/packages/mocaccino-repository-index.yml --output /etc/luet/repos.conf.d/mocaccino-repository-index.yml
+curl -L https://raw.githubusercontent.com/geaaru/repo-index/master/packages/geaaru-repo-index.yml --output /etc/luet/repos.conf.d/geaaru-repo-index.yml
 
 cat > /etc/luet/luet.yaml <<EOF
 general:
@@ -40,8 +40,7 @@ system:
 EOF
 
 luet repo update
-luet install -y repository/luet repository/mocaccino-repository-index
+luet install -y repository/mottainai-stable repository/geaaru-repo-index --force
 luet install --sync-repos -y system/luet-extensions
 
 rm -rf luet
-
