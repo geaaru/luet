@@ -60,7 +60,7 @@ type PackageArtifact struct {
 	Path string `json:"path" yaml:"path"`
 
 	Dependencies      []*PackageArtifact                `json:"dependencies" yaml:"dependencies"`
-	CompileSpec       *compilerspec.LuetCompilationSpec `json:"compilationspec" yaml:"compilationspec"`
+	CompileSpec       *compilerspec.LuetCompilationSpec `json:"compilespec" yaml:"compilespec"`
 	Checksums         Checksums                         `json:"checksums" yaml:"checksums"`
 	SourceAssertion   solver.PackagesAssertions         `json:"-" yaml:"-"`
 	CompressionType   compression.Implementation        `json:"compressiontype" yaml:"compressiontype"`
