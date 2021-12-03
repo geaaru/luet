@@ -7,14 +7,14 @@ fi
 set -ex
 export LUET_NOLOCK=true
 
-LUET_VERSION="v0.20.2-geaaru"
+GITHUB_USER="${GITHUB_USER:-geaaru}"
+GITHUB_BRANCH="${GITHUB_BRANCH:-master}"
+
+LUET_VERSION="v0.21.2-${GITHUB_USER}"
 LUET_ROOTFS=${LUET_ROOTFS:-/}
 LUET_DATABASE_PATH=${LUET_DATABASE_PATH:-/var/luet/db}
 LUET_DATABASE_ENGINE=${LUET_DATABASE_ENGINE:-boltdb}
 LUET_CONFIG_PROTECT=${LUET_CONFIG_PROTECT:-1}
-
-GITHUB_USER="${GITHUB_USER:-geaaru}"
-GITHUB_BRANCH="${GITHUB_BRANCH:-master}"
 
 curl -L https://github.com/${GITHUB_USER}/luet/releases/download/${LUET_VERSION}/luet-${LUET_VERSION}-linux-amd64 --output /usr/bin/luet
 chmod +x /usr/bin/luet
@@ -43,4 +43,4 @@ luet repo update
 luet install -y repository/mottainai-stable repository/geaaru-repo-index --force
 luet install --sync-repos -y system/luet-${GITHUB_USER} --force
 
-#rm -rf luet
+#rm -rf lue
