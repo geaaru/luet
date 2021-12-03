@@ -59,6 +59,8 @@ func buildPackageIndex(path string, db pkg.PackageDatabase) ([]*artifact.Package
 		a, err := artifact.NewPackageArtifactFromYaml(dat)
 		if err != nil {
 			return errors.Wrap(err, "Error reading yaml "+currentpath)
+		} else if a.CompileSpec == nil {
+			return errors.New("Unexpected metadata for artefact " + a)
 		}
 
 		// We want to include packages that are ONLY referenced in the tree.

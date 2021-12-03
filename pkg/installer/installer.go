@@ -915,7 +915,9 @@ func (l *LuetInstaller) computeInstall(o Option, syncedRepos Repositories, cp pk
 		}
 	A:
 		for _, artefact := range matches[0].Repo.GetIndex() {
-			if artefact.CompileSpec.GetPackage() == nil {
+
+			// CompilerSpec could be nil if the metafs generated is broken.
+			if artefact.CompileSpec == nil || artefact.CompileSpec.GetPackage() == nil {
 				return toInstall, p, solution, allRepos, errors.New("Package in compilespec empty")
 			}
 			if matches[0].Package.Matches(artefact.CompileSpec.GetPackage()) {
