@@ -33,6 +33,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	LuetVersion = "0.21.2"
+)
+
 var LuetCfg = NewLuetConfig(v.GetViper())
 
 type LuetLoggingConfig struct {

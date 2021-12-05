@@ -44,7 +44,6 @@ var Verbose bool
 var LockedCommands = []string{"install", "uninstall", "upgrade"}
 
 const (
-	LuetCLIVersion  = "0.21.2"
 	LuetEnvPrefix   = "LUET"
 	LuetForkVersion = "geaaru"
 )
@@ -58,7 +57,7 @@ var (
 )
 
 func version() string {
-	return fmt.Sprintf("%s-%s-g%s %s", LuetCLIVersion, LuetForkVersion, BuildCommit, BuildTime)
+	return fmt.Sprintf("%s-%s-g%s %s", config.LuetVersion, LuetForkVersion, BuildCommit, BuildTime)
 }
 
 var bannerCommands = []string{

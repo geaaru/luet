@@ -1,4 +1,5 @@
-// Copyright © 2019 Ettore Di Giacinto <mudler@gentoo.org>
+// Copyright © 2019-2021 Ettore Di Giacinto <mudler@gentoo.org>
+//                       Daniele Rondina <geaaru@funtoo.org>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,6 +17,7 @@
 package installer
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 
@@ -47,19 +49,25 @@ func (f *LuetFinalizer) RunInstall(s *System) error {
 		}
 	}
 
+	envs := LuetCfg.GetFinalizerEnvs()
+	// Add LUET_VERSION env so finalizer are able to know
+	// what is the luet version and that the script is running
+	// inside the luet command.
+	envs = append(envs, fmt.Sprintf("LUET_VERSION=%s", LuetVersion))
+
 	for _, c := range f.Install {
 		toRun := append(args, c)
 		Info(":shell: Executing finalizer on ", s.Target, cmd, toRun)
 		if s.Target == string(os.PathSeparator) {
 			cmd := exec.Command(cmd, toRun...)
-			cmd.Env = LuetCfg.GetFinalizerEnvs()
+			cmd.Env = envs
 			stdoutStderr, err := cmd.CombinedOutput()
 			if err != nil {
 				return errors.Wrap(err, "Failed running command: "+string(stdoutStderr))
 			}
 			Info(string(stdoutStderr))
 		} else {
-			b := box.NewBox(cmd, toRun, []string{}, LuetCfg.GetFinalizerEnvs(), s.Target, false, true, true)
+			b := box.NewBox(cmd, toRun, []string{}, envs, s.Target, false, true, true)
 			err := b.Run()
 			if err != nil {
 				return errors.Wrap(err, "Failed running command: ")
