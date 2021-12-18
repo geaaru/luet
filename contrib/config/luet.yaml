@@ -169,3 +169,27 @@
 #   Number of overall attempts that the solver has available before bailing out.
 #   max_attempts: 9000
 #
+# ---------------------------------------------
+# Subsets section configuration
+# ---------------------------------------------
+#
+# Define the paths where read the configuration
+# files where are defined the subsets enabled.
+# By default doesn't parse directories.
+# subsets_confdir:
+#   - /etc/luet/subsets.conf.d
+#
+# Define the list of the subsets enabled.
+# This is an inline configuration that is
+# alternative to subsets_confdir.
+# subsets:
+#   enabled:
+#     - portage
+#     - devel
+#
+# Define the directories where parse
+# local subsets definitions that override
+# the packages metadata.
+# By default doesn't parse directories.
+# subsets_defdir:
+#   - /etc/luet/subsets.def.d
