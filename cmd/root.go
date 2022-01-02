@@ -274,6 +274,7 @@ func init() {
 	// Add main commands
 	RootCmd.AddCommand(
 		newCleanupCommand(config.LuetCfg),
+		newQueryCommand(config.LuetCfg),
 	)
 
 	// Extensions must be binary with the "luet-" prefix to be able to be shown in the help.

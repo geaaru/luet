@@ -1073,7 +1073,8 @@ PACKAGE:
 		for _, r := range re {
 			c, err := r.GetTree().GetDatabase().FindPackage(pack)
 			if err == nil {
-				matches = append(matches, PackageMatch{Package: c, Repo: r})
+				a, _ := r.SearchArtefact(pack)
+				matches = append(matches, PackageMatch{Package: c, Repo: r, Artifact: a})
 				continue PACKAGE
 			}
 		}
