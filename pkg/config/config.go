@@ -122,6 +122,11 @@ func (sc *LuetSystemConfig) GetSystemRepoDatabaseDirPath() string {
 	return dbpath
 }
 
+func (sc *LuetSystemConfig) GetSystemReposDirPath() string {
+	ans := filepath.Join(sc.Rootfs, sc.DatabasePath, "repos")
+	return ans
+}
+
 func (sc *LuetSystemConfig) GetSystemPkgsCacheDirPath() (ans string) {
 	var cachepath string
 	if sc.PkgsCachePath != "" {

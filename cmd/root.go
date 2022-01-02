@@ -271,6 +271,11 @@ func init() {
 	config.LuetCfg.Viper.BindPFlag("no_spinner", pflags.Lookup("no-spinner"))
 	config.LuetCfg.Viper.BindPFlag("config_protect_skip", pflags.Lookup("skip-config-protect"))
 
+	// Add main commands
+	RootCmd.AddCommand(
+		newCleanupCommand(config.LuetCfg),
+	)
+
 	// Extensions must be binary with the "luet-" prefix to be able to be shown in the help.
 	// we also accept extensions in the relative path where luet is being started, "extensions/"
 	exts := extensions.Discover("luet", "extensions")
