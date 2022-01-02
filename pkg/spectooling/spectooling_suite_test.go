@@ -22,7 +22,7 @@ import (
 	. "github.com/mudler/luet/cmd"
 	config "github.com/mudler/luet/pkg/config"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

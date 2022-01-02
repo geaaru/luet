@@ -151,7 +151,8 @@ Build packages specifying multiple definition trees:
 
 		Debug("Solver", opts.CompactString())
 
-		luetCompiler := compiler.NewLuetCompiler(compilerBackend, generalRecipe.GetDatabase(),
+		luetCompiler := compiler.NewLuetCompiler(compilerBackend,
+			generalRecipe.GetDatabase(),
 			options.NoDeps(nodeps),
 			options.WithBackendType(backendType),
 			options.PushImages(push),

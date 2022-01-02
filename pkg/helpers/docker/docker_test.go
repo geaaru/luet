@@ -17,7 +17,7 @@ package docker_test
 
 import (
 	"github.com/mudler/luet/pkg/helpers/docker"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

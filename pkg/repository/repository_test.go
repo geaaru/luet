@@ -20,7 +20,7 @@ import (
 	. "github.com/mudler/luet/pkg/config"
 	. "github.com/mudler/luet/pkg/repository"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	viper "github.com/spf13/viper"
 )
