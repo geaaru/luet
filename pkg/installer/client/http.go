@@ -46,7 +46,7 @@ func NewHttpClient(r RepoData) *HttpClient {
 }
 
 func NewGrabClient() *grab.Client {
-	httpTimeout := LuetCfg.GetGeneral().ClientTimeout
+	httpTimeout := config.LuetCfg.GetGeneral().ClientTimeout
 	timeout := os.Getenv("HTTP_TIMEOUT")
 	if timeout != "" {
 		timeoutI, err := strconv.Atoi(timeout)
