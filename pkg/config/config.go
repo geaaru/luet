@@ -67,6 +67,8 @@ type LuetGeneralConfig struct {
 	SpinnerCharset  int  `yaml:"spinner_charset,omitempty" mapstructure:"spinner_charset"`
 	FatalWarns      bool `yaml:"fatal_warnings,omitempty" mapstructure:"fatal_warnings"`
 
+	ClientTimeout int `yaml:"client_timeout,omitempty" mapstructure:"client_timeout,omitempty"`
+
 	OverwriteDirPerms bool `yaml:"overwrite_dir_perms,omitempty" mapstructure:"overwrite_dir_perms,omitempty"`
 }
 
@@ -290,6 +292,7 @@ func GenDefault(viper *v.Viper) {
 	viper.SetDefault("general.spinner_charset", 22)
 	viper.SetDefault("general.fatal_warnings", false)
 	viper.SetDefault("general.overwrite_dir_perms", false)
+	viper.SetDefault("general.client_timeout", 3600)
 
 	u, err := user.Current()
 	// os/user doesn't work in from scratch environments
