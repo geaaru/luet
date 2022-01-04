@@ -16,6 +16,7 @@
 package cmd_query
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -27,6 +28,7 @@ import (
 	pkg "github.com/mudler/luet/pkg/package"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 )
 
 func NewQueryFilesCommand(config *cfg.LuetConfig) *cobra.Command {
@@ -43,6 +45,8 @@ func NewQueryFilesCommand(config *cfg.LuetConfig) *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			var pkgs pkg.Packages
+
+			out, _ := cmd.Flags().GetString("output")
 
 			for _, a := range args {
 				pack, err := helpers.ParsePackageStr(a)
@@ -76,19 +80,46 @@ func NewQueryFilesCommand(config *cfg.LuetConfig) *cobra.Command {
 			matches := synced.PackageMatches(pkgs)
 
 			if len(matches) > 0 {
+
+				ans := []string{}
+				var data []byte
+
 				for _, m := range matches {
 
 					files := m.Artifact.Files
 
 					for _, f := range files {
-						fmt.Println(f)
+
+						switch out {
+						case "yaml", "json":
+							ans = append(ans, f)
+						default:
+							fmt.Println(f)
+						}
 					}
 
+				}
+
+				if out == "yaml" || out == "json" {
+					switch out {
+					case "yaml":
+						data, err = yaml.Marshal(ans)
+					case "json":
+						data, err = json.Marshal(ans)
+					}
+
+					if err != nil {
+						Fatal("Error on marshal data:", err.Error())
+					}
+
+					fmt.Println(string(data))
 				}
 			}
 
 		},
 	}
 
+	ans.Flags().StringP("output", "o", "terminal",
+		"Output format ( Defaults: terminal, available: json,yaml )")
 	return ans
 }
