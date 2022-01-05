@@ -771,7 +771,7 @@ func (l *LuetInstaller) download(syncedRepos Repositories, toDownload map[string
 	var wg = new(sync.WaitGroup)
 
 	// Download
-	for i := 0; i < l.Options.Concurrency; i++ {
+	for i := 0; i < config.LuetCfg.GetGeneral().ClientMultiFetch; i++ {
 		wg.Add(1)
 		go l.downloadWorker(i, wg, all)
 	}

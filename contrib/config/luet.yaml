@@ -47,6 +47,14 @@
 #   Try extracting tree/packages with the same ownership as exists in the archive (default for superuser).
 #   same_owner: false
 #
+#   Define the HTTP timeout on fetching data. 0 means unlimited.
+#   Note: In golang the timeout is related to the full time to download
+#         a resource. If you have few bandwith sets this value high.
+#   client_timeout: 3600
+#
+#   Define the number of simultaneous download of packages.
+#   client_multifetch: 2
+#
 # ---------------------------------------------
 # System configuration section:
 # ---------------------------------------------
