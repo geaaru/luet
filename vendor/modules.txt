@@ -36,9 +36,6 @@ github.com/Microsoft/hcsshim/internal/timeout
 github.com/Microsoft/hcsshim/internal/vmcompute
 github.com/Microsoft/hcsshim/internal/wclayer
 github.com/Microsoft/hcsshim/osversion
-# github.com/Sabayon/pkgs-checker v0.10.5
-## explicit
-github.com/Sabayon/pkgs-checker/pkg/gentoo
 # github.com/apex/log v1.9.0
 ## explicit
 github.com/apex/log
@@ -216,6 +213,9 @@ github.com/fsnotify/fsnotify
 # github.com/fsouza/go-dockerclient v1.6.4
 ## explicit
 github.com/fsouza/go-dockerclient
+# github.com/geaaru/pkgs-checker v0.11.0
+## explicit
+github.com/geaaru/pkgs-checker/pkg/gentoo
 # github.com/geaaru/tar-formers v0.4.0
 ## explicit
 github.com/geaaru/tar-formers/pkg/executor

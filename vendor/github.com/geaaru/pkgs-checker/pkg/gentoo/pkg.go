@@ -286,7 +286,9 @@ func (p *GentooPackage) GreaterThan(i *GentooPackage) (bool, error) {
 		}
 
 		sort.Strings(versionsSuffix)
-		if versionsSuffix[1] == p.VersionSuffix+"+"+p.VersionBuild {
+		if versionsSuffix[0] == versionsSuffix[1] {
+			ans = false
+		} else if versionsSuffix[1] == p.VersionSuffix+"+"+p.VersionBuild {
 			ans = true
 		} else {
 			ans = false
@@ -317,7 +319,9 @@ func (p *GentooPackage) LessThan(i *GentooPackage) (bool, error) {
 		}
 
 		sort.Strings(versionsSuffix)
-		if versionsSuffix[0] == p.VersionSuffix+"+"+p.VersionBuild {
+		if versionsSuffix[0] == versionsSuffix[1] {
+			ans = false
+		} else if versionsSuffix[0] == p.VersionSuffix+"+"+p.VersionBuild {
 			ans = true
 		} else {
 			ans = false
@@ -347,7 +351,9 @@ func (p *GentooPackage) LessThanOrEqual(i *GentooPackage) (bool, error) {
 		}
 
 		sort.Strings(versionsSuffix)
-		if versionsSuffix[0] == p.VersionSuffix+"+"+p.VersionBuild {
+		if versionsSuffix[0] == versionsSuffix[1] {
+			ans = false
+		} else if versionsSuffix[0] == p.VersionSuffix+"+"+p.VersionBuild {
 			ans = true
 		} else {
 			ans = false
@@ -378,7 +384,9 @@ func (p *GentooPackage) GreaterThanOrEqual(i *GentooPackage) (bool, error) {
 		}
 
 		sort.Strings(versionsSuffix)
-		if versionsSuffix[1] == p.VersionSuffix+"+"+p.VersionBuild {
+		if versionsSuffix[0] == versionsSuffix[1] {
+			ans = false
+		} else if versionsSuffix[1] == p.VersionSuffix+"+"+p.VersionBuild {
 			ans = true
 		} else {
 			ans = false

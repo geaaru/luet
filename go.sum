@@ -113,10 +113,6 @@ github.com/PuerkitoBio/purell v1.1.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbt
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20160726150825-5bd2802263f2/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
-github.com/Sabayon/pkgs-checker v0.8.4 h1:63wYz7NqsEVWnq2tkSFKcI4MTd+1jog2blRDl878qiw=
-github.com/Sabayon/pkgs-checker v0.8.4/go.mod h1:g0SbGeqXvwSdDMbERRYn6dnmyUG9+KlLMmaAyioAzvc=
-github.com/Sabayon/pkgs-checker v0.10.5 h1:l1g25JiyAibBh6S4IQqVy15G6dmcgLYEo6HiaJyT1rg=
-github.com/Sabayon/pkgs-checker v0.10.5/go.mod h1:7Ax1FE9OmwtTCP+PLJnxHR9BOHvaLlB39S7tWfMC5og=
 github.com/Sereal/Sereal v0.0.0-20181211220259-509a78ddbda3/go.mod h1:D0JMgToj/WdxCgd30Kc1UcA9E+WdZoJqeVOuYW7iTBM=
 github.com/Shopify/logrus-bugsnag v0.0.0-20170309145241-6dbc35f2c30d/go.mod h1:HI8ITrYtUY+O+ZhtlqUnD8+KwNPOyugEhfP9fdUIaEQ=
 github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d/go.mod h1:HI8ITrYtUY+O+ZhtlqUnD8+KwNPOyugEhfP9fdUIaEQ=
@@ -354,6 +350,8 @@ github.com/fsnotify/fsnotify v1.5.1/go.mod h1:T3375wBYaZdLLcVNkcVbzGHY7f1l/uK5T5
 github.com/fsouza/go-dockerclient v1.6.4 h1:B+L+1lz1LUrNgEUUh8PSG76s70EYC49ssv2xvTefTMM=
 github.com/fsouza/go-dockerclient v1.6.4/go.mod h1:GOdftxWLWIbIWKbIMDroKFJzPdg6Iw7r+jX1DDZdVsA=
 github.com/garyburd/redigo v0.0.0-20150301180006-535138d7bcd7/go.mod h1:NR3MbYisc3/PwhQ00EMzDiPmrwpPxAn5GI05/YaO1SY=
+github.com/geaaru/pkgs-checker v0.11.0 h1:ma/fD3llJL++nG67gpm3r+X50wDLjVrOpGpWpm1FtzA=
+github.com/geaaru/pkgs-checker v0.11.0/go.mod h1:A1b5ziC+FWvaI9WRVojz+2PveAYFNTyQNxq/41TTVw8=
 github.com/geaaru/tar-formers v0.2.0 h1:HQUMLLNp7F7G6WeZG7lQokY2dEzc6TCW8dUQVgtP2Fo=
 github.com/geaaru/tar-formers v0.2.0/go.mod h1:+zwtgS7jkG1OhvIlCRnX4XnMJKxgAfU9bcNPB67FKwE=
 github.com/geaaru/tar-formers v0.2.1-0.20211022115333-162d97b86c2f h1:yFK59IQj4NLehAal3cKnJq4ThgMbyafeM+gkBFG5wsg=
