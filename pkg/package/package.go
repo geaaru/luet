@@ -33,7 +33,7 @@ import (
 	"github.com/mudler/luet/pkg/helpers/match"
 	version "github.com/mudler/luet/pkg/versioner"
 
-	gentoo "github.com/Sabayon/pkgs-checker/pkg/gentoo"
+	gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 	"github.com/crillab/gophersat/bf"
 	"github.com/ghodss/yaml"
 	"github.com/jinzhu/copier"

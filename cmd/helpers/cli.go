@@ -24,7 +24,7 @@ import (
 
 	. "github.com/mudler/luet/pkg/logger"
 
-	_gentoo "github.com/Sabayon/pkgs-checker/pkg/gentoo"
+	_gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 	pkg "github.com/mudler/luet/pkg/package"
 )
 
