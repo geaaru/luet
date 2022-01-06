@@ -74,7 +74,7 @@ func (s *Dockerv2) ImageDefinitionToTar(opts Options) error {
 
 func (d *Dockerv2) createTarFormers() *tarf.TarFormers {
 	// Create config
-	cfg := tarf_specs.NewConfig(config.LuetCfg.Viper)
+	cfg := tarf_specs.NewConfig(config.LuetCfg.Viper.New())
 	cfg.GetGeneral().Debug = config.LuetCfg.GetGeneral().Debug
 	cfg.GetLogging().Level = config.LuetCfg.GetLogging().Level
 
