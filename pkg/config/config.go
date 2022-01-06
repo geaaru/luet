@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	LuetVersion = "0.22.1"
+	LuetVersion = "0.22.2"
 )
 
 var LuetCfg = NewLuetConfig(v.GetViper())
