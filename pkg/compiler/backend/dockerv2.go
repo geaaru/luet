@@ -23,6 +23,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	fileHelper "github.com/mudler/luet/pkg/helpers/file"
 
@@ -39,6 +40,10 @@ import (
 type Dockerv2 struct {
 	*SimpleDocker
 }
+
+// Mutex to avoid errors on parallel
+// setup of the viper object.
+var mutex sync.Mutex
 
 func NewDockerv2Backend() *Dockerv2 {
 	return &Dockerv2{
@@ -73,8 +78,11 @@ func (s *Dockerv2) ImageDefinitionToTar(opts Options) error {
 }
 
 func (d *Dockerv2) createTarFormers() *tarf.TarFormers {
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	// Create config
-	cfg := tarf_specs.NewConfig(config.LuetCfg.Viper.New())
+	cfg := tarf_specs.NewConfig(config.LuetCfg.Viper)
 	cfg.GetGeneral().Debug = config.LuetCfg.GetGeneral().Debug
 	cfg.GetLogging().Level = config.LuetCfg.GetLogging().Level
 
