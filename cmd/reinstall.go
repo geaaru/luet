@@ -23,6 +23,7 @@ import (
 	. "github.com/mudler/luet/pkg/logger"
 	pkg "github.com/mudler/luet/pkg/package"
 	"github.com/mudler/luet/pkg/solver"
+	"github.com/mudler/luet/pkg/subsets"
 
 	"github.com/spf13/cobra"
 )
@@ -81,6 +82,10 @@ var reinstallCmd = &cobra.Command{
 
 		// Load config protect configs
 		installer.LoadConfigProtectConfs(LuetCfg)
+		// Load subsets defintions
+		subsets.LoadSubsetsDefintions(LuetCfg)
+		// Load subsets config
+		subsets.LoadSubsetsConfig(LuetCfg)
 
 		inst := installer.NewLuetInstaller(installer.LuetInstallerOptions{
 			Concurrency:                 LuetCfg.GetGeneral().Concurrency,
