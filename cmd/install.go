@@ -23,6 +23,7 @@ import (
 	. "github.com/mudler/luet/pkg/logger"
 	pkg "github.com/mudler/luet/pkg/package"
 	"github.com/mudler/luet/pkg/solver"
+	"github.com/mudler/luet/pkg/subsets"
 
 	"github.com/spf13/cobra"
 )
@@ -86,6 +87,10 @@ To force install a package:
 
 		// Load config protect configs
 		installer.LoadConfigProtectConfs(LuetCfg)
+		// Load subsets defintions
+		subsets.LoadSubsetsDefintions(LuetCfg)
+		// Load subsets config
+		subsets.LoadSubsetsConfig(LuetCfg)
 
 		// Load finalizer runtime environments
 		err := util.SetCliFinalizerEnvs(finalizerEnvs)
