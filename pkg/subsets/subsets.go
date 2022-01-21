@@ -13,10 +13,11 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, see <http://www.gnu.org/licenses/>.
 
-package config
+package subsets
 
 import (
 	"io/ioutil"
+	"path"
 	"path/filepath"
 	"regexp"
 
@@ -30,14 +31,13 @@ import (
 
 func NewLuetSubsetsConfig() *LuetSubsetsConfig {
 	return &LuetSubsetsConfig{
-		Enabled:  []string{},
-		Disabled: []string{},
+		Enabled: []string{},
 	}
 }
 
 func NewLuetSubsetsDefinition() *LuetSubsetsDefinition {
 	return &LuetSubsetsDefinition{
-		Defintions: make(map[string]*LuetSubsetDefinition, 0),
+		Definitions: make(map[string]*LuetSubsetDefinition, 0),
 	}
 }
 
@@ -61,7 +61,7 @@ func LoadSubsetsConfig(c *LuetConfig) error {
 
 		files, err := ioutil.ReadDir(sdir)
 		if err != nil {
-			Debug("Skip dir", rdir, ":", err.Error())
+			Debug("Skip dir", sdir, ":", err.Error())
 			continue
 		}
 
@@ -75,21 +75,21 @@ func LoadSubsetsConfig(c *LuetConfig) error {
 				continue
 			}
 
-			content, err := ioutil.ReadFile(path.Join(rdir, file.Name()))
+			content, err := ioutil.ReadFile(path.Join(sdir, file.Name()))
 			if err != nil {
 				Warning("On read file", file.Name(), ":", err.Error())
 				Warning("File", file.Name(), "skipped.")
 				continue
 			}
 
-			r, err := LoadSubsetsConfig(content)
+			sc, err := NewSubsetsConfig(content)
 			if err != nil {
 				Warning("On parser file", file.Name(), ":", err.Error())
 				Warning("File", file.Name(), "skipped.")
 				continue
 			}
 
-			if len(r.Enabled) == 0 {
+			if len(sc.Enabled) == 0 {
 				Warning("Invalid subset config ", file.Name())
 				Warning("File", file.Name(), "skipped.")
 				continue
@@ -107,7 +107,7 @@ func LoadSubsetsConfig(c *LuetConfig) error {
 	return nil
 }
 
-func LoadSubsetsConfig(data []byte) (*LuetSubsetsConfig, error) {
+func NewSubsetsConfig(data []byte) (*LuetSubsetsConfig, error) {
 	ans := NewLuetSubsetsConfig()
 	err := yaml.Unmarshal(data, &ans)
 	if err != nil {
@@ -147,7 +147,7 @@ func LoadSubsetsDefintions(c *LuetConfig) error {
 
 		files, err := ioutil.ReadDir(sdir)
 		if err != nil {
-			Debug("Skip dir", rdir, ":", err.Error())
+			Debug("Skip dir", sdir, ":", err.Error())
 			continue
 		}
 
@@ -161,7 +161,7 @@ func LoadSubsetsDefintions(c *LuetConfig) error {
 				continue
 			}
 
-			content, err := ioutil.ReadFile(path.Join(rdir, file.Name()))
+			content, err := ioutil.ReadFile(path.Join(sdir, file.Name()))
 			if err != nil {
 				Warning("On read file", file.Name(), ":", err.Error())
 				Warning("File", file.Name(), "skipped.")
@@ -188,26 +188,46 @@ func LoadSubsetsDefintions(c *LuetConfig) error {
 	return nil
 }
 
-func mergeSubsetsDefition(c *LuetConfig, s *LuetSubsetsDefinition) {
+func mergeSubsetsDefinition(c *LuetConfig, s *LuetSubsetsDefinition) {
 	for k, v := range s.Definitions {
 		if len(v.Packages) == 0 && len(v.Categories) == 0 {
-			c.SubsetsDefinitions[k] = v
+			c.SubsetsDefinitions.Definitions[k] = v
 		} else {
 			if len(v.Packages) > 0 {
 				for _, p := range v.Packages {
 					if _, ok := c.SubsetsPkgsDefMap[p]; ok {
-						for kk, vv := range v.Definitions {
-							c.SubsetsPkgsDefMap[p].Definitions[kk] = vv
+						if _, ok2 := c.SubsetsPkgsDefMap[p].Definitions[v.Name]; ok2 {
+							c.SubsetsPkgsDefMap[p].Definitions[v.Name].Rules =
+								append(c.SubsetsPkgsDefMap[p].Definitions[v.Name].Rules, v.Rules...)
+						} else {
+							c.SubsetsPkgsDefMap[p].Definitions[v.Name] = s.Definitions[k]
 						}
 					} else {
-						c.SubsetsPkgsDefMap[p] = v
+						c.SubsetsPkgsDefMap[p] = &LuetSubsetsDefinition{
+							Definitions: make(map[string]*LuetSubsetDefinition, 0),
+						}
+						c.SubsetsPkgsDefMap[p].Definitions[v.Name] = s.Definitions[k]
 					}
 				}
 			}
 
 			if len(v.Categories) > 0 {
-				for _, c := range v.Categories {
-					c.SubsetsCatDefMap[c] = v
+				for _, cn := range v.Categories {
+					if _, ok := c.SubsetsCatDefMap[cn]; ok {
+						if _, ok2 := c.SubsetsCatDefMap[cn].Definitions[v.Name]; ok2 {
+
+							c.SubsetsCatDefMap[cn].Definitions[v.Name].Rules =
+								append(c.SubsetsCatDefMap[cn].Definitions[v.Name].Rules,
+									v.Rules...)
+						} else {
+							c.SubsetsCatDefMap[cn].Definitions[v.Name] = s.Definitions[k]
+						}
+					} else {
+						c.SubsetsCatDefMap[cn] = &LuetSubsetsDefinition{
+							Definitions: make(map[string]*LuetSubsetDefinition, 0),
+						}
+						c.SubsetsCatDefMap[cn].Definitions[v.Name] = s.Definitions[k]
+					}
 				}
 			}
 		}
