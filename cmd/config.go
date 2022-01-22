@@ -20,7 +20,9 @@ import (
 
 	"github.com/mudler/luet/cmd/util"
 	config "github.com/mudler/luet/pkg/config"
+	"github.com/mudler/luet/pkg/installer"
 	. "github.com/mudler/luet/pkg/logger"
+	"github.com/mudler/luet/pkg/subsets"
 
 	"github.com/spf13/cobra"
 )
@@ -33,6 +35,13 @@ var configCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		util.SetSystemConfig()
 		util.SetSolverConfig()
+
+		// Load config protect configs
+		installer.LoadConfigProtectConfs(config.LuetCfg)
+		// Load subsets defintions
+		subsets.LoadSubsetsDefintions(config.LuetCfg)
+		// Load subsets config
+		subsets.LoadSubsetsConfig(config.LuetCfg)
 
 		data, err := config.LuetCfg.YAML()
 		if err != nil {
