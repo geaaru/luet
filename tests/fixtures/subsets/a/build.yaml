@@ -11,3 +11,4 @@ steps:
   - echo "include" > /usr/include/file.h
   - echo "5" > /var/db/pkg/cat/foo/EAPI
   - echo config > /opt/etc/conf
+  - mkdir /opt/data -p && echo foo > /opt/data/file

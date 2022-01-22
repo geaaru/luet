@@ -57,11 +57,22 @@ testConfig() {
     mkdir $tmpdir/testrootfs
 
     mkdir $tmpdir/config.protect.d
+    mkdir $tmpdir/etc/luet/subsets.conf.d -p
+    mkdir $tmpdir/etc/luet/subsets.def.d -p
 
     cat <<EOF > $tmpdir/config.protect.d/conf1.yml
 name: "protect1"
 dirs:
 - /etc/
+EOF
+
+    cat <<EOF > $tmpdir/etc/luet/subsets.def.d
+description: "Local subset"
+name: "test-data"
+rules:
+- ^/opt/data
+categories:
+- subset
 EOF
 
     cat <<EOF > $tmpdir/luet.yaml
@@ -74,6 +85,10 @@ system:
 config_protect_confdir:
     - $tmpdir/config.protect.d
 config_from_host: true
+subsets_confdir:
+  - "$tmpdir/etc/luet/subsets.conf.d"
+subsets_defdir:
+  - "$tmpdir/etc/luet/subsets.def.d"
 repos_confdir:
   - "$tmpdir/etc/luet/repos.conf.d"
 repositories:
@@ -95,10 +110,11 @@ testInstall() {
 
    assertTrue 'package A /c installed' "[ -e '$tmpdir/testrootfs/c' ]"
    assertTrue 'package A /cd installed' "[ -e '$tmpdir/testrootfs/cd' ]"
-   assertTrue 'package A /opt/data/file installed' \
-     "[ -e '$tmpdir/opt/data/file' ]"
    assertTrue 'package A /usr/include/file.h not installed' \
      "[ ! -e '$tmpdir/usr/include/file.h' ]"
+
+   assertTrue 'package A /opt/data/file not installed' \
+     "[ ! -e '$tmpdir/opt/data/file' ]"
 }
 
 
