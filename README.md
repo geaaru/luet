@@ -21,7 +21,7 @@ It is written entirely in Golang and where used as package manager, it can run i
   configured from an user at runtime.
 
 * `solverv2` implementation: i begin the rewriting of all solver code and for now i only rewrite some internal
-  code to speedup solver logic. It's yet too slow for a stable condition but i hope to rewrite completed all
+  code to speedup solver logic. It's yet too slow for a stable condition but i hope to rewrite completly all
   this part.
 
 * `annotations`: the annotations are managed as interface{} struct without define only strings
