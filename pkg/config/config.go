@@ -41,44 +41,44 @@ var LuetCfg = NewLuetConfig(v.GetViper())
 
 type LuetLoggingConfig struct {
 	// Path of the logfile
-	Path string `mapstructure:"path"`
+	Path string `yaml:"path,omitempty" json:"path,omitempty" mapstructure:"path"`
 	// Enable/Disable logging to file
-	EnableLogFile bool `mapstructure:"enable_logfile"`
+	EnableLogFile bool `yaml:"enable_logfile,omitempty" json:"enable_logfile,omitempty" mapstructure:"enable_logfile"`
 	// Enable JSON format logging in file
-	JsonFormat bool `mapstructure:"json_format"`
+	JsonFormat bool `yaml:"json_format,omitempty" json:"json_format,omitempty" mapstructure:"json_format"`
 
 	// Log level
-	Level string `mapstructure:"level"`
+	Level string `yaml:"level,omitempty" json:"level,omitempty" mapstructure:"level"`
 	// Enable extra debug logging
-	Paranoid bool `mapstructure:"paranoid"`
+	Paranoid bool `yaml:"paranoid,omitempty" json:"paranoid,omitempty" mapstructure:"paranoid"`
 
 	// Enable emoji
-	EnableEmoji bool `mapstructure:"enable_emoji"`
+	EnableEmoji bool `yaml:"enable_emoji,omitempty" json:"enable_emoji,omitempty" mapstructure:"enable_emoji"`
 	// Enable/Disable color in logging
-	Color bool `mapstructure:"color"`
+	Color bool `yaml:"color,omitempty" json:"color,omitempty" mapstructure:"color"`
 }
 
 type LuetGeneralConfig struct {
-	SameOwner       bool `yaml:"same_owner,omitempty" mapstructure:"same_owner"`
-	Concurrency     int  `yaml:"concurrency,omitempty" mapstructure:"concurrency"`
-	Debug           bool `yaml:"debug,omitempty" mapstructure:"debug"`
-	ShowBuildOutput bool `yaml:"show_build_output,omitempty" mapstructure:"show_build_output"`
-	SpinnerMs       int  `yaml:"spinner_ms,omitempty" mapstructure:"spinner_ms"`
-	SpinnerCharset  int  `yaml:"spinner_charset,omitempty" mapstructure:"spinner_charset"`
-	FatalWarns      bool `yaml:"fatal_warnings,omitempty" mapstructure:"fatal_warnings"`
+	SameOwner       bool `yaml:"same_owner,omitempty" json:"same_owner,omitempty" mapstructure:"same_owner"`
+	Concurrency     int  `yaml:"concurrency,omitempty" json:"concurrency,omitempty" mapstructure:"concurrency"`
+	Debug           bool `yaml:"debug,omitempty" json:"debug,omitempty" mapstructure:"debug"`
+	ShowBuildOutput bool `yaml:"show_build_output,omitempty" json:"show_build_output,omitempty" mapstructure:"show_build_output"`
+	SpinnerMs       int  `yaml:"spinner_ms,omitempty" json:"spinner_ms,omitempty" mapstructure:"spinner_ms"`
+	SpinnerCharset  int  `yaml:"spinner_charset,omitempty" json:"spinner_charset,omitempty" mapstructure:"spinner_charset"`
+	FatalWarns      bool `yaml:"fatal_warnings,omitempty" json:"fatal_warnings,omitempty" mapstructure:"fatal_warnings"`
 
-	ClientTimeout    int `yaml:"client_timeout,omitempty" mapstructure:"client_timeout,omitempty"`
-	ClientMultiFetch int `yaml:"client_multifetch,omitempty" mapstructure:"client_multifetch,omitempty"`
+	ClientTimeout    int `yaml:"client_timeout,omitempty" json:"client_timeout,omitempty" mapstructure:"client_timeout,omitempty"`
+	ClientMultiFetch int `yaml:"client_multifetch,omitempty" json:"client_multifetch,omitempty" mapstructure:"client_multifetch,omitempty"`
 
-	OverwriteDirPerms bool `yaml:"overwrite_dir_perms,omitempty" mapstructure:"overwrite_dir_perms,omitempty"`
+	OverwriteDirPerms bool `yaml:"overwrite_dir_perms,omitempty" json:"overwrite_dir_perms,omitempty" mapstructure:"overwrite_dir_perms,omitempty"`
 }
 
 type LuetSolverOptions struct {
-	Type           string  `yaml:"type,omitempty" mapstructure:"type"`
-	LearnRate      float32 `yaml:"rate,omitempty" mapstructure:"rate"`
-	Discount       float32 `yaml:"discount,omitempty" mapstructure:"discount"`
-	MaxAttempts    int     `yaml:"max_attempts,omitempty" mapstructure:"max_attempts"`
-	Implementation string  `yaml:"implementation,omitempty" mapstructure:"implementation"`
+	Type           string  `yaml:"type,omitempty" json:"type,omitempty" mapstructure:"type"`
+	LearnRate      float32 `yaml:"rate,omitempty" json:"rate,omitempty" mapstructure:"rate"`
+	Discount       float32 `yaml:"discount,omitempty" json:"discount,omitempty" mapstructure:"discount"`
+	MaxAttempts    int     `yaml:"max_attempts,omitempty" json:"max_attempts,omitempty" mapstructure:"max_attempts"`
+	Implementation string  `yaml:"implementation,omitempty" json:"implementation,omitempty" mapstructure:"implementation"`
 }
 
 func (opts *LuetSolverOptions) CompactString() string {
@@ -88,11 +88,11 @@ func (opts *LuetSolverOptions) CompactString() string {
 }
 
 type LuetSystemConfig struct {
-	DatabaseEngine string `yaml:"database_engine" mapstructure:"database_engine"`
-	DatabasePath   string `yaml:"database_path" mapstructure:"database_path"`
-	Rootfs         string `yaml:"rootfs" mapstructure:"rootfs"`
-	PkgsCachePath  string `yaml:"pkgs_cache_path" mapstructure:"pkgs_cache_path"`
-	TmpDirBase     string `yaml:"tmpdir_base" mapstructure:"tmpdir_base"`
+	DatabaseEngine string `yaml:"database_engine" json:"database_engine,omitempty" mapstructure:"database_engine"`
+	DatabasePath   string `yaml:"database_path" json:"database_path" mapstructure:"database_path"`
+	Rootfs         string `yaml:"rootfs" json:"rootfs" mapstructure:"rootfs"`
+	PkgsCachePath  string `yaml:"pkgs_cache_path" json:"pkgs_cache_path" mapstructure:"pkgs_cache_path"`
+	TmpDirBase     string `yaml:"tmpdir_base" json:"tmpdir_base" mapstructure:"tmpdir_base"`
 }
 
 func (s *LuetSystemConfig) SetRootFS(path string) error {
@@ -250,7 +250,7 @@ type LuetSubsetsConfig struct {
 }
 
 type LuetSubsetsDefinition struct {
-	Definitions map[string]*LuetSubsetDefinition `yaml:"subsets_def,omitempty" mapstructure:"subsets_def"`
+	Definitions map[string]*LuetSubsetDefinition `yaml:"subsets_def,omitempty" mapstructure:"subsets_def,omitempty" json:"subsets_def,omitempty"`
 }
 
 type LuetSubsetDefinition struct {
