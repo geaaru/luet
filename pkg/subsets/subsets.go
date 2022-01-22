@@ -23,7 +23,7 @@ import (
 
 	"github.com/mudler/luet/pkg/helpers"
 
-	"github.com/ghodss/yaml"
+	"gopkg.in/yaml.v2"
 
 	. "github.com/mudler/luet/pkg/config"
 	. "github.com/mudler/luet/pkg/logger"
@@ -190,44 +190,47 @@ func LoadSubsetsDefintions(c *LuetConfig) error {
 
 func mergeSubsetsDefinition(c *LuetConfig, s *LuetSubsetsDefinition) {
 	for k, v := range s.Definitions {
+
 		if len(v.Packages) == 0 && len(v.Categories) == 0 {
+			// NOTE: override existing rules with last definition.
 			c.SubsetsDefinitions.Definitions[k] = v
-		} else {
-			if len(v.Packages) > 0 {
-				for _, p := range v.Packages {
-					if _, ok := c.SubsetsPkgsDefMap[p]; ok {
-						if _, ok2 := c.SubsetsPkgsDefMap[p].Definitions[v.Name]; ok2 {
-							c.SubsetsPkgsDefMap[p].Definitions[v.Name].Rules =
-								append(c.SubsetsPkgsDefMap[p].Definitions[v.Name].Rules, v.Rules...)
-						} else {
-							c.SubsetsPkgsDefMap[p].Definitions[v.Name] = s.Definitions[k]
-						}
+			continue
+		}
+
+		if len(v.Packages) > 0 {
+			for _, p := range v.Packages {
+				if _, ok := c.SubsetsPkgsDefMap[p]; ok {
+					if _, ok2 := c.SubsetsPkgsDefMap[p].Definitions[v.Name]; ok2 {
+						c.SubsetsPkgsDefMap[p].Definitions[v.Name].Rules =
+							append(c.SubsetsPkgsDefMap[p].Definitions[v.Name].Rules, v.Rules...)
 					} else {
-						c.SubsetsPkgsDefMap[p] = &LuetSubsetsDefinition{
-							Definitions: make(map[string]*LuetSubsetDefinition, 0),
-						}
 						c.SubsetsPkgsDefMap[p].Definitions[v.Name] = s.Definitions[k]
 					}
+				} else {
+					c.SubsetsPkgsDefMap[p] = &LuetSubsetsDefinition{
+						Definitions: make(map[string]*LuetSubsetDefinition, 0),
+					}
+					c.SubsetsPkgsDefMap[p].Definitions[v.Name] = s.Definitions[k]
 				}
 			}
+		}
 
-			if len(v.Categories) > 0 {
-				for _, cn := range v.Categories {
-					if _, ok := c.SubsetsCatDefMap[cn]; ok {
-						if _, ok2 := c.SubsetsCatDefMap[cn].Definitions[v.Name]; ok2 {
+		if len(v.Categories) > 0 {
+			for _, cn := range v.Categories {
+				if _, ok := c.SubsetsCatDefMap[cn]; ok {
+					if _, ok2 := c.SubsetsCatDefMap[cn].Definitions[v.Name]; ok2 {
 
-							c.SubsetsCatDefMap[cn].Definitions[v.Name].Rules =
-								append(c.SubsetsCatDefMap[cn].Definitions[v.Name].Rules,
-									v.Rules...)
-						} else {
-							c.SubsetsCatDefMap[cn].Definitions[v.Name] = s.Definitions[k]
-						}
+						c.SubsetsCatDefMap[cn].Definitions[v.Name].Rules =
+							append(c.SubsetsCatDefMap[cn].Definitions[v.Name].Rules,
+								v.Rules...)
 					} else {
-						c.SubsetsCatDefMap[cn] = &LuetSubsetsDefinition{
-							Definitions: make(map[string]*LuetSubsetDefinition, 0),
-						}
 						c.SubsetsCatDefMap[cn].Definitions[v.Name] = s.Definitions[k]
 					}
+				} else {
+					c.SubsetsCatDefMap[cn] = &LuetSubsetsDefinition{
+						Definitions: make(map[string]*LuetSubsetDefinition, 0),
+					}
+					c.SubsetsCatDefMap[cn].Definitions[v.Name] = s.Definitions[k]
 				}
 			}
 		}
