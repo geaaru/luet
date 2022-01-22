@@ -111,10 +111,10 @@ testInstall() {
    assertTrue 'package A /c installed' "[ -e '$tmpdir/testrootfs/c' ]"
    assertTrue 'package A /cd installed' "[ -e '$tmpdir/testrootfs/cd' ]"
    assertTrue 'package A /usr/include/file.h not installed' \
-     "[ ! -e '$tmpdir/usr/include/file.h' ]"
+     "[ ! -e '$tmpdir/testrootfs/usr/include/file.h' ]"
 
    assertTrue 'package A /opt/data/file not installed' \
-     "[ ! -e '$tmpdir/opt/data/file' ]"
+     "[ ! -e '$tmpdir/testrootfs/opt/data/file' ]"
 }
 
 
@@ -142,6 +142,7 @@ repos_confdir:
 subsets:
   enabled:
     - devel
+    - test-data
 repositories:
    - name: "main"
      type: "disk"
@@ -159,6 +160,8 @@ EOF
   assertTrue 'package A /cd installed' "[ -e '$tmpdir/testrootfs/cd' ]"
   assertTrue 'package A /usr/include/file.h installed' \
     "[ -e '$tmpdir/testrootfs/usr/include/file.h' ]"
+   assertTrue 'package A /opt/data/file installed' \
+     "[ -e '$tmpdir/testrootfs/opt/data/file' ]"
 
 }
 

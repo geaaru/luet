@@ -96,9 +96,9 @@ testInstall() {
    assertTrue 'package A /c installed' "[ -e '$tmpdir/testrootfs/c' ]"
    assertTrue 'package A /cd installed' "[ -e '$tmpdir/testrootfs/cd' ]"
    assertTrue 'package A /opt/data/file installed' \
-     "[ -e '$tmpdir/opt/data/file' ]"
+     "[ -e '$tmpdir/testrootfs/opt/data/file' ]"
    assertTrue 'package A /usr/include/file.h not installed' \
-     "[ ! -e '$tmpdir/usr/include/file.h' ]"
+     "[ ! -e '$tmpdir/testrootfs/usr/include/file.h' ]"
 }
 
 
