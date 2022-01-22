@@ -13,8 +13,6 @@ It offers a simple [specfile format](https://luet-lab.github.io/docs/docs/concep
 
 It is written entirely in Golang and where used as package manager, it can run in from scratch environment, with zero dependencies.
 
-[![asciicast](https://asciinema.org/a/388348.svg)](https://asciinema.org/a/388348)
-
 ## Major differences between upstream release
 
 * `subsets` feature: Permit to define subsets to choice what files extract from original package.
