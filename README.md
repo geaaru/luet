@@ -3,7 +3,7 @@
   <img width=150 height=150 src="https://user-images.githubusercontent.com/2420543/119691600-0293d700-be4b-11eb-827f-49ff1174a07a.png">
 </p>
 
-# luet - Container-based Package manager
+# luet-geaaru (fork) - Container-based Package manager
 
 [![codecov](https://codecov.io/gh/geaaru/luet/branch/master/graph/badge.svg)](https://codecov.io/gh/geaaru/luet)
 
@@ -14,6 +14,24 @@ It offers a simple [specfile format](https://luet-lab.github.io/docs/docs/concep
 It is written entirely in Golang and where used as package manager, it can run in from scratch environment, with zero dependencies.
 
 [![asciicast](https://asciinema.org/a/388348.svg)](https://asciinema.org/a/388348)
+
+## Major differences between upstream release
+
+* `subsets` feature: Permit to define subsets to choice what files extract from original package.
+  This means that we could avoid splitting of a package, for example for Portage metadata, Include files, etc.
+  and customize the subsets defined in the original package definition with custom options that could be
+  configured from an user at runtime.
+
+* `solverv2` implementation: i begin the rewriting of all solver code and for now i only rewrite some internal
+  code to speedup solver logic. It's yet too slow for a stable condition but i hope to rewrite completed all
+  this part.
+
+* `annotations`: the annotations are managed as interface{} struct without define only strings
+
+* `luet q files`: following the command `equo q files` from Sabayon entropy tool, this command supply the list
+  of the files of a package and in the near future the mapping of the files with the subsets configured.
+
+* `dockerv2` backend: i begin to rewrite the docker backend and using the [tar-formers](https://github.com/geaaru/tar-formers/) to manage the tar streams.
 
 
 ## In a glance
@@ -30,27 +48,29 @@ It is written entirely in Golang and where used as package manager, it can run i
 
 ## Install
 
-To install luet, you can grab a release on the [Release page](https://github.com/mudler/luet/releases) or to install it in your system:
+To install luet, you can grab a release on the [Release page](https://github.com/geaaru/luet/releases) or to install it in your system:
 
 ```bash
-$ curl https://get.mocaccino.org/luet/get_luet_root.sh | sudo sh
-$ luet search ...
-$ luet install ..
-$ luet --help
+$> curl https://raw.githubusercontent.com/geaaru/luet/geaaru/contrib/config/get_luet_root.sh | sh
+$> luet search ...
+$> luet install ..
+$> luet --help
 ```
 
 ## Build from source
 
 ```bash
-$ git clone https://github.com/mudler/luet.git
+$ git clone https://github.com/geaaru/luet.git -b geaaru
 $ cd luet
 $ make build
 ```
 
 ## Documentation
 
-[Documentation](https://luet-lab.github.io/docs) is available, or
+Original [Documentation](https://luet-lab.github.io/docs) is available, or
 run `luet --help`,  any subcommand is documented as well, try e.g.: `luet build --help`.
+
+I hope to prepare an aligned documentation to the geaaru fork soon.
 
 # Dependency solving
 
@@ -69,12 +89,6 @@ when they arises while trying to validate your queries against the system model.
 
 To leverage it, simply pass ```--solver-type qlearning``` to the subcommands that supports it ( you can check out by invoking ```--help``` ).
 
-
-## Authors
-
-Luet is here thanks to our amazing [contributors](https://github.com/mudler/luet/graphs/contributors)!.
-
-Luet was originally created by Ettore Di Giacinto, mudler@sabayon.org, mudler@gentoo.org.
 
 ## License
 
