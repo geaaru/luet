@@ -66,13 +66,15 @@ dirs:
 - /etc/
 EOF
 
-    cat <<EOF > $tmpdir/etc/luet/subsets.def.d
-description: "Local subset"
-name: "test-data"
-rules:
-- ^/opt/data
-categories:
-- subset
+    cat <<EOF > $tmpdir/etc/luet/subsets.def.d/00-testdata.yml
+subsets_def:
+  test-data:
+    description: "Local subset"
+    name: "test-data"
+    rules:
+    - ^/opt/data
+    categories:
+    - subset
 EOF
 
     cat <<EOF > $tmpdir/luet.yaml
