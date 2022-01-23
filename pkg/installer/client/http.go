@@ -124,7 +124,7 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) (*artifact.Pa
 		client := NewGrabClient()
 
 		for _, uri := range c.RepoData.Urls {
-			Debug("Downloading artifact", artifactName, "from", uri)
+			Info("Downloading artifact", artifactName, "from", uri)
 
 			u, err = url.Parse(uri)
 			if err != nil {
@@ -185,14 +185,16 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) (*artifact.Pa
 				continue
 			}
 
-			Info("\nDownloaded", artifactName, "of",
+			bar.Reset()
+			bar.Finish()
+
+			Debug("\nDownloaded", artifactName, "of",
 				fmt.Sprintf("%.2f", (float64(resp.BytesComplete())/1000)/1000), "MB (",
 				fmt.Sprintf("%.2f", (float64(resp.BytesPerSecond())/1024)/1024), "MiB/s )")
 
 			Debug("\nCopying file ", filepath.Join(temp, artifactName), "to", cacheFile)
 			err = fileHelper.CopyFile(filepath.Join(temp, artifactName), cacheFile)
 
-			bar.Finish()
 			ok = true
 			break
 		}
@@ -248,7 +250,7 @@ func (c *HttpClient) DownloadFile(name string) (string, error) {
 			continue
 		}
 
-		Info("Downloaded", filepath.Base(resp.Filename), "of",
+		Debug("Downloaded", filepath.Base(resp.Filename), "of",
 			fmt.Sprintf("%.2f", (float64(resp.BytesComplete())/1000)/1000), "MB (",
 			fmt.Sprintf("%.2f", (float64(resp.BytesPerSecond())/1024)/1024), "MiB/s )")
 
