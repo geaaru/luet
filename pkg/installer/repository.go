@@ -979,7 +979,13 @@ func (r *LuetSystemRepository) Sync(force bool) (*LuetSystemRepository, error) {
 		)
 
 	} else {
-		Info("Repository", downloadedRepoMeta.GetName(), "is already up to date.")
+		InfoC(
+			aurora.Magenta(":information_source: Repository: ").String() +
+				aurora.Bold(
+					aurora.Green(fmt.Sprintf("%20s", downloadedRepoMeta.GetName())).String()+
+						" is already up to date.",
+				).String(),
+		)
 	}
 
 	if r.Cached {
