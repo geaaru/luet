@@ -1160,7 +1160,8 @@ func (l *LuetInstaller) downloadWorker(i int, wg *sync.WaitGroup, c <-chan Artif
 			Fatal("Failed downloading package "+p.Package.GetName(), err.Error())
 			return errors.Wrap(err, "Failed downloading package "+p.Package.GetName())
 		} else {
-			Info(":package: Package ", p.Package.HumanReadableString(), "downloaded")
+			Info(":package: Package ", fmt.Sprintf("%20s", p.Package.HumanReadableString()),
+				"downloaded")
 		}
 	}
 
@@ -1335,7 +1336,7 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 
 	bus.Manager.Publish(bus.EventPackageUnInstall, p)
 
-	Info(":recycle: ", p.GetFingerPrint(), "Removed :heavy_check_mark:")
+	Info(":recycle: ", fmt.Sprintf("%20s", p.GetFingerPrint()), "Removed :heavy_check_mark:")
 	return nil
 }
 

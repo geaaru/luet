@@ -853,13 +853,13 @@ func (r *LuetSystemRepository) Load(alternativeRepoSpecfile, alternativeTreeFs, 
 	InfoC(
 		aurora.Yellow(":information_source: ").String() +
 			aurora.Magenta("Repository: ").String() +
-			aurora.Green(aurora.Bold(repoMeta.GetName()).String()).String() +
+			aurora.Green(aurora.Bold(fmt.Sprintf("%20s", repoMeta.GetName())).String()).String() +
 			aurora.Magenta(" Priority: ").String() +
-			aurora.Bold(aurora.Green(repoMeta.GetPriority())).String() +
+			aurora.Bold(aurora.Green(fmt.Sprintf("%3d", repoMeta.GetPriority()))).String() +
 			aurora.Magenta(" Type: ").String() +
-			aurora.Bold(aurora.Green(repoMeta.GetType())).String() +
+			aurora.Bold(aurora.Green(fmt.Sprintf("%5s", repoMeta.GetType()))).String() +
 			aurora.Magenta(" Revision: ").String() +
-			aurora.Bold(aurora.Green(repoMeta.GetRevision())).String(),
+			aurora.Bold(aurora.Green(fmt.Sprintf("%3d", repoMeta.GetRevision()))).String(),
 	)
 	return repoMeta, nil
 }
@@ -971,7 +971,9 @@ func (r *LuetSystemRepository) Sync(force bool) (*LuetSystemRepository, error) {
 
 		InfoC(
 			aurora.Bold(
-				aurora.Red(":house: Repository "+downloadedRepoMeta.GetName()+" revision: ")).String() +
+				aurora.Red(fmt.Sprintf(
+					":house: Repository %20s revision: ",
+					downloadedRepoMeta.GetName()))).String() +
 				aurora.Bold(aurora.Green(downloadedRepoMeta.GetRevision())).String() + " - " +
 				aurora.Bold(aurora.Green(time.Unix(tsec, 0).String())).String(),
 		)
