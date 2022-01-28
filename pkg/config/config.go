@@ -1,5 +1,5 @@
-// Copyright © 2019 Ettore Di Giacinto <mudler@gentoo.org>
-//                  Daniele Rondina <geaaru@sabayonlinux.org>
+// Copyright © 2019-2022 Ettore Di Giacinto <mudler@gentoo.org>
+//                       Daniele Rondina <geaaru@sabayonlinux.org>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	LuetVersion = "0.22.4"
+	LuetVersion = "0.22.5"
 )
 
 var LuetCfg = NewLuetConfig(v.GetViper())
