@@ -1,4 +1,5 @@
 GOLANG_VERSION=$(shell go env GOVERSION)
+
 # go tool nm ./luet | grep Commit
 override LDFLAGS += -X "github.com/mudler/luet/cmd.BuildTime=$(shell date -u '+%Y-%m-%d %I:%M:%S %Z')"
 override LDFLAGS += -X "github.com/mudler/luet/cmd.BuildCommit=$(shell git rev-parse HEAD)"
@@ -87,7 +88,7 @@ test-docker:
 				bash -c "make test"
 
 multiarch-build:
-	goreleaser build --snapshot --rm-dist
+	GOVERSION=$(GOLANG_VERSION) goreleaser build --snapshot --rm-dist
 
 multiarch-build-small:
 	@$(MAKE) multiarch-build
