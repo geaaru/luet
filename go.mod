@@ -13,7 +13,6 @@ require (
 	github.com/briandowns/spinner v1.12.1-0.20201220203425-e201aaea0a31
 	github.com/cavaliercoder/grab v1.0.1-0.20201108051000-98a5bfe305ec
 	github.com/containerd/containerd v1.4.1-0.20201117152358-0edc412565dc
-	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/crillab/gophersat v1.3.2-0.20210701121804-72b19f5b6b38
 	github.com/docker/cli v20.10.0-beta1.0.20201029214301-1d20b15adc38+incompatible
 	github.com/docker/distribution v2.7.1+incompatible
@@ -26,7 +25,6 @@ require (
 	github.com/genuinetools/img v0.5.11
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/go-containerregistry v0.2.1
 	github.com/google/renameio v1.0.0
 	github.com/google/uuid v1.3.0 // indirect

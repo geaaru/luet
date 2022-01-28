@@ -115,7 +115,6 @@ github.com/containerd/ttrpc
 # github.com/containerd/typeurl v0.0.0-20200205145503-b45ef1f1f737
 github.com/containerd/typeurl
 # github.com/cpuguy83/go-md2man/v2 v2.0.1
-## explicit
 github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/crillab/gophersat v1.3.2-0.20210701121804-72b19f5b6b38
 ## explicit
@@ -254,7 +253,6 @@ github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 github.com/gogo/protobuf/sortkeys
 github.com/gogo/protobuf/types
 # github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
-## explicit
 github.com/golang/groupcache/lru
 # github.com/golang/protobuf v1.5.2
 github.com/golang/protobuf/proto
