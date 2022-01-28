@@ -65,8 +65,9 @@ require (
 	github.com/spf13/viper v1.9.0
 	github.com/theupdateframework/notary v0.7.0
 	go.etcd.io/bbolt v1.3.5
-	go.uber.org/multierr v1.6.0
-	go.uber.org/zap v1.19.1
+	go.uber.org/atomic v1.9.0 // indirect
+	go.uber.org/multierr v1.7.0
+	go.uber.org/zap v1.20.0
 	golang.org/x/mod v0.4.2
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	google.golang.org/grpc v1.40.0
