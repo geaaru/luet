@@ -972,9 +972,9 @@ func (r *LuetSystemRepository) Sync(force bool) (*LuetSystemRepository, error) {
 		InfoC(
 			aurora.Bold(
 				aurora.Red(fmt.Sprintf(
-					":house: Repository %20s revision: ",
+					":house:Repository: %20s Revision: ",
 					downloadedRepoMeta.GetName()))).String() +
-				aurora.Bold(aurora.Green(downloadedRepoMeta.GetRevision())).String() + " - " +
+				aurora.Bold(aurora.Green(fmt.Sprintf("%3d", downloadedRepoMeta.GetRevision()))).String() + " - " +
 				aurora.Bold(aurora.Green(time.Unix(tsec, 0).String())).String(),
 		)
 
