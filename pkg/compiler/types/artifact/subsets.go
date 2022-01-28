@@ -60,7 +60,9 @@ func (a *PackageArtifact) GetTarFormersSpec(enableSubsets bool) *tarf_specs.Spec
 }
 
 func (a *PackageArtifact) GetSubsets() *LuetSubsetsDefinition {
-	ans := &LuetSubsetsDefinition{}
+	ans := &LuetSubsetsDefinition{
+		Definitions: make(map[string]*LuetSubsetDefinition, 0),
+	}
 
 	if a.Runtime != nil {
 		// Get global/user category subsets defined
