@@ -27,7 +27,6 @@ require (
 	github.com/genuinetools/img v0.5.11
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
-	github.com/go-yaml/yaml v2.1.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/go-containerregistry v0.2.1
 	github.com/google/renameio v1.0.0
@@ -45,7 +44,6 @@ require (
 	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/marcsauter/single v0.0.0-20181104081128-f8bf46f26ec0
 	github.com/mattn/go-isatty v0.0.13 // indirect
-	github.com/mattn/go-sqlite3 v1.14.8 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.1
 	github.com/moby/buildkit v0.7.2

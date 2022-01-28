@@ -235,8 +235,6 @@ github.com/go-openapi/strfmt
 ## explicit
 # github.com/go-stack/stack v1.8.0
 github.com/go-stack/stack
-# github.com/go-yaml/yaml v2.1.0+incompatible
-## explicit
 # github.com/gobwas/glob v0.2.3
 github.com/gobwas/glob
 github.com/gobwas/glob/compiler
@@ -382,8 +380,6 @@ github.com/mattn/go-colorable
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.9
 github.com/mattn/go-runewidth
-# github.com/mattn/go-sqlite3 v1.14.8
-## explicit
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/miekg/pkcs11 v1.0.2
