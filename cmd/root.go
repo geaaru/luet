@@ -52,12 +52,19 @@ const (
 //
 // ⚠️ WARNING: should only be set by "-ldflags".
 var (
-	BuildTime   string
-	BuildCommit string
+	BuildTime      string
+	BuildCommit    string
+	BuildGoVersion string
 )
 
 func version() string {
-	return fmt.Sprintf("%s-%s-g%s %s", config.LuetVersion, LuetForkVersion, BuildCommit, BuildTime)
+	if BuildGoVersion != "" {
+		return fmt.Sprintf("%s-%s-g%s %s - %s",
+			config.LuetVersion, LuetForkVersion, BuildCommit, BuildTime,
+			BuildGoVersion)
+	} else {
+		return fmt.Sprintf("%s-%s-g%s %s", config.LuetVersion, LuetForkVersion, BuildCommit, BuildTime)
+	}
 }
 
 var bannerCommands = []string{
