@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math"
 	"os"
 	"regexp"
@@ -38,6 +39,7 @@ type state struct {
 	currentPercent    int
 	lastPercent       int
 	currentSaucerSize int
+	isAltSaucerHead   bool
 
 	lastShown time.Time
 	startTime time.Time
@@ -49,6 +51,8 @@ type state struct {
 	maxLineWidth int
 	currentBytes float64
 	finished     bool
+
+	rendered string
 }
 
 type config struct {
@@ -101,6 +105,7 @@ type config struct {
 // Theme defines the elements of the bar
 type Theme struct {
 	Saucer        string
+	AltSaucerHead string
 	SaucerHead    string
 	SaucerPadding string
 	BarStart      string
@@ -321,8 +326,32 @@ func DefaultBytes(maxBytes int64, description ...string) *ProgressBar {
 		OptionThrottle(65*time.Millisecond),
 		OptionShowCount(),
 		OptionOnCompletion(func() {
-			fmt.Fprint(os.Stderr, "\n")
+			fmt.Printf("\n")
 		}),
+		OptionSpinnerType(14),
+		OptionFullWidth(),
+	)
+	bar.RenderBlank()
+	return bar
+}
+
+// DefaultBytesSilent is the same as DefaultBytes, but does not output anywhere.
+// String() can be used to get the output instead.
+func DefaultBytesSilent(maxBytes int64, description ...string) *ProgressBar {
+	// Mostly the same bar as DefaultBytes
+
+	desc := ""
+	if len(description) > 0 {
+		desc = description[0]
+	}
+	bar := NewOptions64(
+		maxBytes,
+		OptionSetDescription(desc),
+		OptionSetWriter(ioutil.Discard),
+		OptionShowBytes(true),
+		OptionSetWidth(10),
+		OptionThrottle(65*time.Millisecond),
+		OptionShowCount(),
 		OptionSpinnerType(14),
 		OptionFullWidth(),
 	)
@@ -346,13 +375,43 @@ func Default(max int64, description ...string) *ProgressBar {
 		OptionShowCount(),
 		OptionShowIts(),
 		OptionOnCompletion(func() {
-			fmt.Fprint(os.Stderr, "\n")
+			fmt.Printf("\n")
 		}),
 		OptionSpinnerType(14),
 		OptionFullWidth(),
 	)
 	bar.RenderBlank()
 	return bar
+}
+
+// DefaultSilent is the same as Default, but does not output anywhere.
+// String() can be used to get the output instead.
+func DefaultSilent(max int64, description ...string) *ProgressBar {
+	// Mostly the same bar as Default
+
+	desc := ""
+	if len(description) > 0 {
+		desc = description[0]
+	}
+	bar := NewOptions64(
+		max,
+		OptionSetDescription(desc),
+		OptionSetWriter(ioutil.Discard),
+		OptionSetWidth(10),
+		OptionThrottle(65*time.Millisecond),
+		OptionShowCount(),
+		OptionShowIts(),
+		OptionSpinnerType(14),
+		OptionFullWidth(),
+	)
+	bar.RenderBlank()
+	return bar
+}
+
+// String returns the current rendered version of the progress bar.
+// It will never return an empty string while the progress bar is running.
+func (p *ProgressBar) String() string {
+	return p.state.rendered
 }
 
 // RenderBlank renders the current bar state, you can use this to render a 0% state
@@ -393,7 +452,7 @@ func (p *ProgressBar) Set(num int) error {
 // Set64 wil set the bar to a current number
 func (p *ProgressBar) Set64(num int64) error {
 	p.lock.Lock()
-	toAdd := int64(num) - p.state.currentNum
+	toAdd := num - int64(p.state.currentBytes)
 	p.lock.Unlock()
 	return p.Add64(toAdd)
 }
@@ -458,6 +517,7 @@ func (p *ProgressBar) Clear() error {
 // can be changed on the fly (as for a slow running process).
 func (p *ProgressBar) Describe(description string) {
 	p.config.description = description
+	p.RenderBlank()
 }
 
 // New64 returns a new ProgressBar
@@ -489,6 +549,11 @@ func (p *ProgressBar) ChangeMax(newMax int) {
 // to avoid casting
 func (p *ProgressBar) ChangeMax64(newMax int64) {
 	p.config.max = newMax
+
+	if p.config.showBytes {
+		p.config.maxHumanized, p.config.maxHumanizedSuffix = humanizeBytes(float64(p.config.max))
+	}
+
 	p.Add(0) // re-render
 }
 
@@ -520,7 +585,7 @@ func (p *ProgressBar) render() error {
 	if !p.state.finished && p.state.currentNum >= p.config.max {
 		p.state.finished = true
 		if !p.config.clearOnFinish {
-			renderProgressBar(p.config, p.state)
+			renderProgressBar(p.config, &p.state)
 		}
 
 		if p.config.onCompletion != nil {
@@ -539,7 +604,7 @@ func (p *ProgressBar) render() error {
 	}
 
 	// then, re-render the current progress bar
-	w, err := renderProgressBar(p.config, p.state)
+	w, err := renderProgressBar(p.config, &p.state)
 	if err != nil {
 		return err
 	}
@@ -571,10 +636,34 @@ func (p *ProgressBar) State() State {
 // regex matching ansi escape codes
 var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
 
-func renderProgressBar(c config, s state) (int, error) {
+func getStringWidth(c config, str string, colorize bool) int {
+	if c.colorCodes {
+		// convert any color codes in the progress bar into the respective ANSI codes
+		str = colorstring.Color(str)
+	}
+
+	// the width of the string, if printed to the console
+	// does not include the carriage return character
+	cleanString := strings.Replace(str, "\r", "", -1)
+
+	if c.colorCodes {
+		// the ANSI codes for the colors do not take up space in the console output,
+		// so they do not count towards the output string width
+		cleanString = ansiRegex.ReplaceAllString(cleanString, "")
+	}
+
+	// get the amount of runes in the string instead of the
+	// character count of the string, as some runes span multiple characters.
+	// see https://stackoverflow.com/a/12668840/2733724
+	stringWidth := runewidth.StringWidth(cleanString)
+	return stringWidth
+}
+
+func renderProgressBar(c config, s *state) (int, error) {
 	leftBrac := ""
 	rightBrac := ""
 	saucer := ""
+	saucerHead := ""
 	bytesString := ""
 	str := ""
 
@@ -599,7 +688,6 @@ func renderProgressBar(c config, s state) (int, error) {
 					bytesString += fmt.Sprintf("%s/%s%s", currentHumanize, c.maxHumanized, c.maxHumanizedSuffix)
 				} else {
 					bytesString += fmt.Sprintf("%s%s/%s%s", currentHumanize, currentSuffix, c.maxHumanized, c.maxHumanizedSuffix)
-
 				}
 			} else {
 				bytesString += fmt.Sprintf("%.0f/%d", s.currentBytes, c.max)
@@ -649,16 +737,23 @@ func renderProgressBar(c config, s state) (int, error) {
 	// show time prediction in "current/total" seconds format
 	if c.predictTime {
 		leftBrac = (time.Duration(time.Since(s.startTime).Seconds()) * time.Second).String()
-		rightBrac = (time.Duration((1/averageRate)*(float64(c.max)-float64(s.currentNum))) * time.Second).String()
+		rightBracNum := (time.Duration((1/averageRate)*(float64(c.max)-float64(s.currentNum))) * time.Second)
+		if rightBracNum.Seconds() < 0 {
+			rightBracNum = 0 * time.Second
+		}
+		rightBrac = rightBracNum.String()
 	}
 
 	if c.fullWidth && !c.ignoreLength {
 		width, _, err := terminal.GetSize(int(os.Stdout.Fd()))
 		if err != nil {
-			width = 80
+			width, _, err = terminal.GetSize(int(os.Stderr.Fd()))
+			if err != nil {
+				width = 80
+			}
 		}
 
-		c.width = width - len(c.description) - 14 - len(bytesString) - len(leftBrac) - len(rightBrac)
+		c.width = width - getStringWidth(c, c.description, true) - 14 - len(bytesString) - len(leftBrac) - len(rightBrac)
 		s.currentSaucerSize = int(float64(s.currentPercent) / 100.0 * float64(c.width))
 	}
 	if s.currentSaucerSize > 0 {
@@ -667,11 +762,18 @@ func renderProgressBar(c config, s state) (int, error) {
 		} else {
 			saucer = strings.Repeat(c.theme.Saucer, s.currentSaucerSize-1)
 		}
-		saucerHead := c.theme.SaucerHead
-		if saucerHead == "" || s.currentSaucerSize == c.width {
+
+		// Check if an alternate saucer head is set for animation
+		if c.theme.AltSaucerHead != "" && s.isAltSaucerHead {
+			saucerHead = c.theme.AltSaucerHead
+			s.isAltSaucerHead = false
+		} else if c.theme.SaucerHead == "" || s.currentSaucerSize == c.width {
 			// use the saucer for the saucer head if it hasn't been set
 			// to preserve backwards compatibility
 			saucerHead = c.theme.Saucer
+		} else {
+			saucerHead = c.theme.SaucerHead
+			s.isAltSaucerHead = true
 		}
 		saucer += saucerHead
 	}
@@ -686,7 +788,7 @@ func renderProgressBar(c config, s state) (int, error) {
 	}
 	if c.ignoreLength {
 		str = fmt.Sprintf("\r%s %s %s ",
-			spinners[c.spinnerType][int(math.Round(math.Mod(float64(time.Since(s.counterTime).Milliseconds()/100), float64(len(spinners[c.spinnerType])))))],
+			spinners[c.spinnerType][int(math.Round(math.Mod(float64(time.Since(s.startTime).Milliseconds()/100), float64(len(spinners[c.spinnerType])))))],
 			c.description,
 			bytesString,
 		)
@@ -731,25 +833,9 @@ func renderProgressBar(c config, s state) (int, error) {
 		str = colorstring.Color(str)
 	}
 
-	// the width of the string, if printed to the console
-	// does not include the carriage return character
-	cleanString := strings.Replace(str, "\r", "", -1)
+	s.rendered = str
 
-	if c.colorCodes {
-		// the ANSI codes for the colors do not take up space in the console output,
-		// so they do not count towards the output string width
-		cleanString = ansiRegex.ReplaceAllString(cleanString, "")
-	}
-
-	// get the amount of runes in the string instead of the
-	// character count of the string, as some runes span multiple characters.
-	// see https://stackoverflow.com/a/12668840/2733724
-	stringWidth := runewidth.StringWidth(cleanString)
-	if c.useANSICodes {
-		// append the "clear rest of line" ANSI escape sequence
-		str = str + "\033[0K"
-	}
-	return stringWidth, writeString(c, str)
+	return getStringWidth(c, str, false), writeString(c, str)
 }
 
 func clearProgressBar(c config, s state) error {
@@ -757,11 +843,13 @@ func clearProgressBar(c config, s state) error {
 		// write the "clear current line" ANSI escape sequence
 		return writeString(c, "\033[2K\r")
 	}
-	// fill the current line with enough spaces
+	// fill the empty content
 	// to overwrite the progress bar and jump
 	// back to the beginning of the line
 	str := fmt.Sprintf("\r%s\r", strings.Repeat(" ", s.maxLineWidth))
 	return writeString(c, str)
+	// the following does not show correctly if the previous line is longer than subsequent line
+	// return writeString(c, "\r")
 }
 
 func writeString(c config, str string) error {
@@ -820,6 +908,11 @@ func (p *ProgressBar) Write(b []byte) (n int, err error) {
 func (p *ProgressBar) Read(b []byte) (n int, err error) {
 	n = len(b)
 	p.Add(n)
+	return
+}
+
+func (p *ProgressBar) Close() (err error) {
+	p.Finish()
 	return
 }
 
