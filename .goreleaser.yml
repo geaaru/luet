@@ -15,6 +15,7 @@ builds:
       - -s -w
       - -X "github.com/mudler/luet/cmd.BuildTime={{ time "2006-01-02 15:04:05 MST" }}"
       - -X "github.com/mudler/luet/cmd.BuildCommit={{ .FullCommit }}"
+      - -X "github.com/mudler/luet/cmd.BuildGoVersion={{ .Env.GOVERSION }}"
     goos:
       - linux
     goarch:
