@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	pkg "github.com/mudler/luet/pkg/package"
+	pkg "github.com/geaaru/luet/pkg/package"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +
