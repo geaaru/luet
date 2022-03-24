@@ -48,7 +48,7 @@ require (
 	github.com/mudler/docker-companion v0.4.6-0.20200418093252-41846f112d87
 	github.com/mudler/go-pluggable v0.0.0-20210513155700-54c6443073af
 	github.com/mudler/topsort v0.0.0-20201103161459-db5c7901c290
-	github.com/onsi/ginkgo/v2 v2.1.1
+	github.com/onsi/ginkgo/v2 v2.1.3
 	github.com/onsi/gomega v1.17.0
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.0.1
