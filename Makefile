@@ -95,3 +95,6 @@ multiarch-build-small:
 	for file in $(ROOT_DIR)/release/**/* ; do \
 		upx --brute -1 $${file} ; \
 	done
+
+run-tasks: build
+	@cd tests/tasks && lxd-compose a luet-ubuntu --destroy
