@@ -1,6 +1,6 @@
-module github.com/mudler/luet
+module github.com/geaaru/luet
 
-go 1.16
+go 1.17
 
 require (
 	github.com/DataDog/zstd v1.4.5 // indirect
