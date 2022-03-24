@@ -16,8 +16,8 @@
 package installer
 
 import (
-	artifact "github.com/mudler/luet/pkg/compiler/types/artifact"
-	//"github.com/mudler/luet/pkg/solver"
+	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
+	//"github.com/geaaru/luet/pkg/solver"
 )
 
 type Client interface {

@@ -19,7 +19,7 @@ package version_test
 import (
 	"fmt"
 
-	. "github.com/mudler/luet/pkg/versioner"
+	. "github.com/geaaru/luet/pkg/versioner"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

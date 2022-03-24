@@ -27,11 +27,11 @@ import (
 	"strconv"
 	"strings"
 
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 
-	"github.com/mudler/luet/pkg/helpers/docker"
-	"github.com/mudler/luet/pkg/helpers/match"
-	version "github.com/mudler/luet/pkg/versioner"
+	"github.com/geaaru/luet/pkg/helpers/docker"
+	"github.com/geaaru/luet/pkg/helpers/match"
+	version "github.com/geaaru/luet/pkg/versioner"
 
 	gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 	"github.com/crillab/gophersat/bf"

@@ -16,9 +16,9 @@
 package installer
 
 import (
-	"github.com/mudler/luet/pkg/compiler"
-	"github.com/mudler/luet/pkg/config"
-	pkg "github.com/mudler/luet/pkg/package"
+	"github.com/geaaru/luet/pkg/compiler"
+	"github.com/geaaru/luet/pkg/config"
+	pkg "github.com/geaaru/luet/pkg/package"
 )
 
 type RepositoryOption func(cfg *RepositoryConfig) error

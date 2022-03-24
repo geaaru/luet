@@ -15,7 +15,7 @@
 
 package tree
 
-import pkg "github.com/mudler/luet/pkg/package"
+import pkg "github.com/geaaru/luet/pkg/package"
 
 // parses ebuilds (?) and generates data which is readable by the builder
 type Parser interface {

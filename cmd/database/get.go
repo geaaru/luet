@@ -18,11 +18,11 @@ package cmd_database
 import (
 	"fmt"
 
-	helpers "github.com/mudler/luet/cmd/helpers"
-	"github.com/mudler/luet/cmd/util"
+	helpers "github.com/geaaru/luet/cmd/helpers"
+	"github.com/geaaru/luet/cmd/util"
 	"gopkg.in/yaml.v2"
 
-	. "github.com/mudler/luet/pkg/config"
+	. "github.com/geaaru/luet/pkg/config"
 
 	"github.com/spf13/cobra"
 )

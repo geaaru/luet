@@ -17,7 +17,7 @@
 package spectooling
 
 import (
-	pkg "github.com/mudler/luet/pkg/package"
+	pkg "github.com/geaaru/luet/pkg/package"
 
 	"gopkg.in/yaml.v2"
 )

@@ -21,14 +21,14 @@ import (
 	"os"
 	"sort"
 
-	//. "github.com/mudler/luet/pkg/config"
+	//. "github.com/geaaru/luet/pkg/config"
 	"github.com/ghodss/yaml"
-	helpers "github.com/mudler/luet/cmd/helpers"
-	. "github.com/mudler/luet/pkg/config"
-	. "github.com/mudler/luet/pkg/logger"
-	pkg "github.com/mudler/luet/pkg/package"
-	"github.com/mudler/luet/pkg/solver"
-	tree "github.com/mudler/luet/pkg/tree"
+	helpers "github.com/geaaru/luet/cmd/helpers"
+	. "github.com/geaaru/luet/pkg/config"
+	. "github.com/geaaru/luet/pkg/logger"
+	pkg "github.com/geaaru/luet/pkg/package"
+	"github.com/geaaru/luet/pkg/solver"
+	tree "github.com/geaaru/luet/pkg/tree"
 
 	"github.com/spf13/cobra"
 )

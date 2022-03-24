@@ -18,8 +18,8 @@ package helpers_test
 import (
 	"testing"
 
-	. "github.com/mudler/luet/cmd"
-	config "github.com/mudler/luet/pkg/config"
+	. "github.com/geaaru/luet/cmd"
+	config "github.com/geaaru/luet/pkg/config"
 
 	tarf "github.com/geaaru/tar-formers/pkg/executor"
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"

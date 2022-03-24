@@ -22,9 +22,9 @@ import (
 	"os/exec"
 
 	"github.com/ghodss/yaml"
-	box "github.com/mudler/luet/pkg/box"
-	. "github.com/mudler/luet/pkg/config"
-	. "github.com/mudler/luet/pkg/logger"
+	box "github.com/geaaru/luet/pkg/box"
+	. "github.com/geaaru/luet/pkg/config"
+	. "github.com/geaaru/luet/pkg/logger"
 
 	"github.com/pkg/errors"
 )

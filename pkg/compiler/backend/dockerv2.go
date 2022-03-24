@@ -25,12 +25,12 @@ import (
 	"strings"
 	"sync"
 
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 
 	capi "github.com/mudler/docker-companion/api"
-	"github.com/mudler/luet/pkg/config"
-	"github.com/mudler/luet/pkg/helpers"
-	. "github.com/mudler/luet/pkg/logger"
+	"github.com/geaaru/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/helpers"
+	. "github.com/geaaru/luet/pkg/logger"
 
 	tarf "github.com/geaaru/tar-formers/pkg/executor"
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"

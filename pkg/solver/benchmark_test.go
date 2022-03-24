@@ -21,12 +21,12 @@ import (
 	"os"
 	"strconv"
 
-	pkg "github.com/mudler/luet/pkg/package"
-	"github.com/mudler/luet/tests/helpers"
+	pkg "github.com/geaaru/luet/pkg/package"
+	"github.com/geaaru/luet/tests/helpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	. "github.com/mudler/luet/pkg/solver"
+	. "github.com/geaaru/luet/pkg/solver"
 )
 
 var _ = Describe("Solver Benchmarks", func() {

@@ -18,11 +18,11 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/mudler/luet/cmd/util"
-	config "github.com/mudler/luet/pkg/config"
-	"github.com/mudler/luet/pkg/installer"
-	. "github.com/mudler/luet/pkg/logger"
-	"github.com/mudler/luet/pkg/subsets"
+	"github.com/geaaru/luet/cmd/util"
+	config "github.com/geaaru/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/installer"
+	. "github.com/geaaru/luet/pkg/logger"
+	"github.com/geaaru/luet/pkg/subsets"
 
 	"github.com/spf13/cobra"
 )

@@ -18,10 +18,10 @@ package compiler
 import (
 	"fmt"
 
-	compilerspec "github.com/mudler/luet/pkg/compiler/types/spec"
-	"github.com/mudler/luet/pkg/config"
-	pkg "github.com/mudler/luet/pkg/package"
-	"github.com/mudler/luet/pkg/solver"
+	compilerspec "github.com/geaaru/luet/pkg/compiler/types/spec"
+	"github.com/geaaru/luet/pkg/config"
+	pkg "github.com/geaaru/luet/pkg/package"
+	"github.com/geaaru/luet/pkg/solver"
 	"github.com/pkg/errors"
 )
 

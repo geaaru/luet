@@ -16,7 +16,7 @@
 package tree
 
 import (
-	pkg "github.com/mudler/luet/pkg/package"
+	pkg "github.com/geaaru/luet/pkg/package"
 )
 
 // reads a luet tree and generates the package lists

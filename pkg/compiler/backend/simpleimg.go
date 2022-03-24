@@ -20,9 +20,9 @@ import (
 	"os/exec"
 	"strings"
 
-	bus "github.com/mudler/luet/pkg/bus"
+	bus "github.com/geaaru/luet/pkg/bus"
 
-	. "github.com/mudler/luet/pkg/logger"
+	. "github.com/geaaru/luet/pkg/logger"
 
 	"github.com/pkg/errors"
 )

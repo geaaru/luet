@@ -19,12 +19,12 @@ import (
 	"path/filepath"
 	"time"
 
-	helpers "github.com/mudler/luet/cmd/helpers"
-	"github.com/mudler/luet/pkg/compiler/types/artifact"
-	"github.com/mudler/luet/pkg/compiler/types/compression"
-	compilerspec "github.com/mudler/luet/pkg/compiler/types/spec"
-	. "github.com/mudler/luet/pkg/config"
-	. "github.com/mudler/luet/pkg/logger"
+	helpers "github.com/geaaru/luet/cmd/helpers"
+	"github.com/geaaru/luet/pkg/compiler/types/artifact"
+	"github.com/geaaru/luet/pkg/compiler/types/compression"
+	compilerspec "github.com/geaaru/luet/pkg/compiler/types/spec"
+	. "github.com/geaaru/luet/pkg/config"
+	. "github.com/geaaru/luet/pkg/logger"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

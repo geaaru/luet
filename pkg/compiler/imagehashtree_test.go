@@ -18,11 +18,11 @@ package compiler_test
 import (
 	"fmt"
 
-	. "github.com/mudler/luet/pkg/compiler"
-	sd "github.com/mudler/luet/pkg/compiler/backend"
-	"github.com/mudler/luet/pkg/compiler/types/options"
-	pkg "github.com/mudler/luet/pkg/package"
-	"github.com/mudler/luet/pkg/tree"
+	. "github.com/geaaru/luet/pkg/compiler"
+	sd "github.com/geaaru/luet/pkg/compiler/backend"
+	"github.com/geaaru/luet/pkg/compiler/types/options"
+	pkg "github.com/geaaru/luet/pkg/package"
+	"github.com/geaaru/luet/pkg/tree"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

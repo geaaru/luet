@@ -5,7 +5,7 @@ package imgworker
 import (
 	"errors"
 	"fmt"
-	"github.com/mudler/luet/pkg/bus"
+	"github.com/geaaru/luet/pkg/bus"
 	"os"
 
 	"github.com/containerd/containerd/content"

@@ -20,13 +20,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mudler/luet/pkg/compiler/types/artifact"
-	compilerspec "github.com/mudler/luet/pkg/compiler/types/spec"
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
+	"github.com/geaaru/luet/pkg/compiler/types/artifact"
+	compilerspec "github.com/geaaru/luet/pkg/compiler/types/spec"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 
-	pkg "github.com/mudler/luet/pkg/package"
+	pkg "github.com/geaaru/luet/pkg/package"
 
-	. "github.com/mudler/luet/pkg/installer/client"
+	. "github.com/geaaru/luet/pkg/installer/client"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

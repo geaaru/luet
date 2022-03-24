@@ -16,8 +16,8 @@
 package cmd
 
 import (
-	. "github.com/mudler/luet/cmd/query"
-	cfg "github.com/mudler/luet/pkg/config"
+	. "github.com/geaaru/luet/cmd/query"
+	cfg "github.com/geaaru/luet/pkg/config"
 
 	"github.com/spf13/cobra"
 )

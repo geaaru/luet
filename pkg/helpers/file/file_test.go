@@ -20,7 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

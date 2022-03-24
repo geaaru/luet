@@ -19,10 +19,10 @@ package cmd_tree
 import (
 	"fmt"
 
-	. "github.com/mudler/luet/pkg/logger"
-	spectooling "github.com/mudler/luet/pkg/spectooling"
-	tree "github.com/mudler/luet/pkg/tree"
-	version "github.com/mudler/luet/pkg/versioner"
+	. "github.com/geaaru/luet/pkg/logger"
+	spectooling "github.com/geaaru/luet/pkg/spectooling"
+	tree "github.com/geaaru/luet/pkg/tree"
+	version "github.com/geaaru/luet/pkg/versioner"
 
 	"github.com/spf13/cobra"
 )

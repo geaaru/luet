@@ -21,11 +21,11 @@ import (
 	"path/filepath"
 
 	"github.com/mitchellh/hashstructure/v2"
-	options "github.com/mudler/luet/pkg/compiler/types/options"
+	options "github.com/geaaru/luet/pkg/compiler/types/options"
 
 	"github.com/ghodss/yaml"
-	pkg "github.com/mudler/luet/pkg/package"
-	"github.com/mudler/luet/pkg/solver"
+	pkg "github.com/geaaru/luet/pkg/package"
+	"github.com/geaaru/luet/pkg/solver"
 	"github.com/otiai10/copy"
 	dirhash "golang.org/x/mod/sumdb/dirhash"
 )

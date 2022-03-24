@@ -16,8 +16,8 @@
 package compiler_test
 
 import (
-	. "github.com/mudler/luet/pkg/compiler"
-	. "github.com/mudler/luet/pkg/compiler/backend"
+	. "github.com/geaaru/luet/pkg/compiler"
+	. "github.com/geaaru/luet/pkg/compiler/backend"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

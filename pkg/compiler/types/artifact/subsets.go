@@ -18,10 +18,10 @@ package artifact
 import (
 	"fmt"
 
-	. "github.com/mudler/luet/pkg/config"
-	"github.com/mudler/luet/pkg/helpers"
-	. "github.com/mudler/luet/pkg/logger"
-	pkg "github.com/mudler/luet/pkg/package"
+	. "github.com/geaaru/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/helpers"
+	. "github.com/geaaru/luet/pkg/logger"
+	pkg "github.com/geaaru/luet/pkg/package"
 
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
 )

@@ -18,13 +18,13 @@ package cmd_database
 import (
 	"io/ioutil"
 
-	"github.com/mudler/luet/cmd/util"
-	artifact "github.com/mudler/luet/pkg/compiler/types/artifact"
+	"github.com/geaaru/luet/cmd/util"
+	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
 
-	. "github.com/mudler/luet/pkg/logger"
-	pkg "github.com/mudler/luet/pkg/package"
+	. "github.com/geaaru/luet/pkg/logger"
+	pkg "github.com/geaaru/luet/pkg/package"
 
-	. "github.com/mudler/luet/pkg/config"
+	. "github.com/geaaru/luet/pkg/config"
 
 	"github.com/spf13/cobra"
 )

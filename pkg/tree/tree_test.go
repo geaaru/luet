@@ -28,9 +28,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	pkg "github.com/mudler/luet/pkg/package"
-	"github.com/mudler/luet/pkg/solver"
-	. "github.com/mudler/luet/pkg/tree"
+	pkg "github.com/geaaru/luet/pkg/package"
+	"github.com/geaaru/luet/pkg/solver"
+	. "github.com/geaaru/luet/pkg/tree"
 )
 
 var _ = Describe("Tree", func() {

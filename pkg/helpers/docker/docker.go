@@ -23,8 +23,8 @@ import (
 	"strings"
 
 	"github.com/containerd/containerd/images"
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
-	"github.com/mudler/luet/pkg/helpers/imgworker"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	"github.com/geaaru/luet/pkg/helpers/imgworker"
 
 	continerdarchive "github.com/containerd/containerd/archive"
 	"github.com/docker/cli/cli/trust"
@@ -37,7 +37,7 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/mudler/luet/pkg/bus"
+	"github.com/geaaru/luet/pkg/bus"
 	"github.com/opencontainers/go-digest"
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"

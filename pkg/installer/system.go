@@ -4,11 +4,11 @@ import (
 	"sync"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/mudler/luet/pkg/helpers"
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
-	. "github.com/mudler/luet/pkg/logger"
-	pkg "github.com/mudler/luet/pkg/package"
-	"github.com/mudler/luet/pkg/tree"
+	"github.com/geaaru/luet/pkg/helpers"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	. "github.com/geaaru/luet/pkg/logger"
+	pkg "github.com/geaaru/luet/pkg/package"
+	"github.com/geaaru/luet/pkg/tree"
 )
 
 type System struct {

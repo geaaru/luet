@@ -22,9 +22,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mudler/luet/pkg/compiler/types/artifact"
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
-	. "github.com/mudler/luet/pkg/installer/client"
+	"github.com/geaaru/luet/pkg/compiler/types/artifact"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	. "github.com/geaaru/luet/pkg/installer/client"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	artifact "github.com/mudler/luet/pkg/compiler/types/artifact"
+	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
 
-	"github.com/mudler/luet/pkg/compiler/backend"
-	"github.com/mudler/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/compiler/backend"
+	"github.com/geaaru/luet/pkg/config"
 	"github.com/pkg/errors"
 
-	. "github.com/mudler/luet/pkg/logger"
+	. "github.com/geaaru/luet/pkg/logger"
 )
 
 func NewBackend(s string) (CompilerBackend, error) {

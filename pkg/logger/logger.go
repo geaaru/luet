@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"strings"
 
-	. "github.com/mudler/luet/pkg/config"
+	. "github.com/geaaru/luet/pkg/config"
 	"sync"
 
 	"github.com/briandowns/spinner"

@@ -27,9 +27,9 @@ import (
 
 	tarf "github.com/geaaru/tar-formers/pkg/executor"
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 
-	. "github.com/mudler/luet/pkg/helpers"
+	. "github.com/geaaru/luet/pkg/helpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

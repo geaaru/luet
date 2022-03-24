@@ -18,8 +18,8 @@ package backend
 import (
 	"os/exec"
 
-	"github.com/mudler/luet/pkg/config"
-	. "github.com/mudler/luet/pkg/logger"
+	"github.com/geaaru/luet/pkg/config"
+	. "github.com/geaaru/luet/pkg/logger"
 
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/pkg/errors"

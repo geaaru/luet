@@ -18,8 +18,8 @@ package options
 import (
 	"runtime"
 
-	"github.com/mudler/luet/pkg/compiler/types/compression"
-	"github.com/mudler/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/compiler/types/compression"
+	"github.com/geaaru/luet/pkg/config"
 )
 
 type Compiler struct {

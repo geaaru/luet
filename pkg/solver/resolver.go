@@ -26,11 +26,11 @@ import (
 
 	"github.com/crillab/gophersat/bf"
 	"github.com/crillab/gophersat/explain"
-	"github.com/mudler/luet/pkg/helpers"
+	"github.com/geaaru/luet/pkg/helpers"
 	"gopkg.in/yaml.v2"
 
 	"github.com/ecooper/qlearning"
-	pkg "github.com/mudler/luet/pkg/package"
+	pkg "github.com/geaaru/luet/pkg/package"
 	"github.com/pkg/errors"
 )
 

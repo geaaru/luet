@@ -20,7 +20,7 @@ import (
 	"os"
 	"strconv"
 
-	. "github.com/mudler/luet/pkg/package"
+	. "github.com/geaaru/luet/pkg/package"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

@@ -23,9 +23,9 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/go-units"
 
-	config "github.com/mudler/luet/pkg/config"
-	"github.com/mudler/luet/pkg/helpers/docker"
-	. "github.com/mudler/luet/pkg/logger"
+	config "github.com/geaaru/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/helpers/docker"
+	. "github.com/geaaru/luet/pkg/logger"
 
 	"github.com/spf13/cobra"
 )

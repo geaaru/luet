@@ -22,10 +22,10 @@ import (
 	"regexp"
 	"strings"
 
-	. "github.com/mudler/luet/pkg/logger"
+	. "github.com/geaaru/luet/pkg/logger"
 
 	_gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
-	pkg "github.com/mudler/luet/pkg/package"
+	pkg "github.com/geaaru/luet/pkg/package"
 )
 
 func CreateRegexArray(rgx []string) ([]*regexp.Regexp, error) {

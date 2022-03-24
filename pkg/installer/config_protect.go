@@ -24,8 +24,8 @@ import (
 
 	"github.com/ghodss/yaml"
 
-	. "github.com/mudler/luet/pkg/config"
-	. "github.com/mudler/luet/pkg/logger"
+	. "github.com/geaaru/luet/pkg/config"
+	. "github.com/geaaru/luet/pkg/logger"
 )
 
 func LoadConfigProtectConfs(c *LuetConfig) error {

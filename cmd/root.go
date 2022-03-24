@@ -25,16 +25,16 @@ import (
 	"strings"
 
 	"github.com/marcsauter/single"
-	bus "github.com/mudler/luet/pkg/bus"
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
+	bus "github.com/geaaru/luet/pkg/bus"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 
 	tarf "github.com/geaaru/tar-formers/pkg/executor"
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
 	extensions "github.com/mudler/cobra-extensions"
-	config "github.com/mudler/luet/pkg/config"
-	helpers "github.com/mudler/luet/pkg/helpers"
-	. "github.com/mudler/luet/pkg/logger"
-	repo "github.com/mudler/luet/pkg/repository"
+	config "github.com/geaaru/luet/pkg/config"
+	helpers "github.com/geaaru/luet/pkg/helpers"
+	. "github.com/geaaru/luet/pkg/logger"
+	repo "github.com/geaaru/luet/pkg/repository"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

@@ -17,13 +17,13 @@ package solver
 
 import (
 
-	//. "github.com/mudler/luet/pkg/logger"
+	//. "github.com/geaaru/luet/pkg/logger"
 	"fmt"
 
 	"github.com/pkg/errors"
 
 	"github.com/crillab/gophersat/bf"
-	pkg "github.com/mudler/luet/pkg/package"
+	pkg "github.com/geaaru/luet/pkg/package"
 )
 
 // Solver is the default solver for luet

@@ -21,8 +21,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	config "github.com/mudler/luet/pkg/config"
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
+	config "github.com/geaaru/luet/pkg/config"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

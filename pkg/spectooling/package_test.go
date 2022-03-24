@@ -17,8 +17,8 @@
 package spectooling_test
 
 import (
-	pkg "github.com/mudler/luet/pkg/package"
-	. "github.com/mudler/luet/pkg/spectooling"
+	pkg "github.com/geaaru/luet/pkg/package"
+	. "github.com/geaaru/luet/pkg/spectooling"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -39,7 +39,7 @@ var _ = Describe("Spec Tooling", func() {
 		p1.SetDescription("Package1")
 		p1.SetCategory("cat1")
 		p1.SetLicense("GPL")
-		p1.AddURI("https://github.com/mudler/luet")
+		p1.AddURI("https://github.com/geaaru/luet")
 		p1.AddUse("systemd")
 		It("Convert pkg1", func() {
 			res := NewDefaultPackageSanitized(p1)
@@ -76,7 +76,7 @@ var _ = Describe("Spec Tooling", func() {
 				},
 				Description: "Package1",
 				License:     "GPL",
-				Uri:         []string{"https://github.com/mudler/luet"},
+				Uri:         []string{"https://github.com/geaaru/luet"},
 				UseFlags:    []string{"systemd"},
 			}
 

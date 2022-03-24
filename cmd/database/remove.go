@@ -16,11 +16,11 @@
 package cmd_database
 
 import (
-	. "github.com/mudler/luet/pkg/logger"
+	. "github.com/geaaru/luet/pkg/logger"
 
-	helpers "github.com/mudler/luet/cmd/helpers"
-	"github.com/mudler/luet/cmd/util"
-	. "github.com/mudler/luet/pkg/config"
+	helpers "github.com/geaaru/luet/cmd/helpers"
+	"github.com/geaaru/luet/cmd/util"
+	. "github.com/geaaru/luet/pkg/config"
 
 	"github.com/spf13/cobra"
 )

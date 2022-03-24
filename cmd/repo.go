@@ -17,7 +17,7 @@
 package cmd
 
 import (
-	. "github.com/mudler/luet/cmd/repo"
+	. "github.com/geaaru/luet/cmd/repo"
 
 	"github.com/spf13/cobra"
 )

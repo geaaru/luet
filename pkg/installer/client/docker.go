@@ -26,11 +26,11 @@ import (
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
 
-	"github.com/mudler/luet/pkg/compiler/types/artifact"
-	"github.com/mudler/luet/pkg/config"
-	"github.com/mudler/luet/pkg/helpers/docker"
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
-	. "github.com/mudler/luet/pkg/logger"
+	"github.com/geaaru/luet/pkg/compiler/types/artifact"
+	"github.com/geaaru/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/helpers/docker"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	. "github.com/geaaru/luet/pkg/logger"
 )
 
 const (

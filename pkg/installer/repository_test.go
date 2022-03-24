@@ -17,23 +17,23 @@ package installer_test
 
 import (
 
-	//	. "github.com/mudler/luet/pkg/installer"
+	//	. "github.com/geaaru/luet/pkg/installer"
 
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/mudler/luet/pkg/compiler"
-	backend "github.com/mudler/luet/pkg/compiler/backend"
-	artifact "github.com/mudler/luet/pkg/compiler/types/artifact"
-	compilerspec "github.com/mudler/luet/pkg/compiler/types/spec"
-	config "github.com/mudler/luet/pkg/config"
-	"github.com/mudler/luet/pkg/helpers"
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
-	. "github.com/mudler/luet/pkg/installer"
-	pkg "github.com/mudler/luet/pkg/package"
-	"github.com/mudler/luet/pkg/tree"
+	"github.com/geaaru/luet/pkg/compiler"
+	backend "github.com/geaaru/luet/pkg/compiler/backend"
+	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
+	compilerspec "github.com/geaaru/luet/pkg/compiler/types/spec"
+	config "github.com/geaaru/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/helpers"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	. "github.com/geaaru/luet/pkg/installer"
+	pkg "github.com/geaaru/luet/pkg/package"
+	"github.com/geaaru/luet/pkg/tree"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

@@ -21,7 +21,7 @@ import (
 	"sort"
 	"unicode"
 
-	pkg "github.com/mudler/luet/pkg/package"
+	pkg "github.com/geaaru/luet/pkg/package"
 	"github.com/mudler/topsort"
 	toposort "github.com/philopon/go-toposort"
 	"github.com/pkg/errors"

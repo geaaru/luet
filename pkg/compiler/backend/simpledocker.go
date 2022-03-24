@@ -23,14 +23,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	bus "github.com/mudler/luet/pkg/bus"
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
+	bus "github.com/geaaru/luet/pkg/bus"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 
 	docker "github.com/fsouza/go-dockerclient"
 	capi "github.com/mudler/docker-companion/api"
 
-	"github.com/mudler/luet/pkg/helpers"
-	. "github.com/mudler/luet/pkg/logger"
+	"github.com/geaaru/luet/pkg/helpers"
+	. "github.com/geaaru/luet/pkg/logger"
 
 	"github.com/pkg/errors"
 )

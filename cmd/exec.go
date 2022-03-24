@@ -20,8 +20,8 @@ import (
 
 	b64 "encoding/base64"
 
-	"github.com/mudler/luet/pkg/box"
-	. "github.com/mudler/luet/pkg/logger"
+	"github.com/geaaru/luet/pkg/box"
+	. "github.com/geaaru/luet/pkg/logger"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

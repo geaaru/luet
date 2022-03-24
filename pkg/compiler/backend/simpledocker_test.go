@@ -16,19 +16,19 @@
 package backend_test
 
 import (
-	"github.com/mudler/luet/pkg/compiler"
-	. "github.com/mudler/luet/pkg/compiler"
-	"github.com/mudler/luet/pkg/compiler/backend"
-	. "github.com/mudler/luet/pkg/compiler/backend"
-	"github.com/mudler/luet/pkg/compiler/types/artifact"
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
+	"github.com/geaaru/luet/pkg/compiler"
+	. "github.com/geaaru/luet/pkg/compiler"
+	"github.com/geaaru/luet/pkg/compiler/backend"
+	. "github.com/geaaru/luet/pkg/compiler/backend"
+	"github.com/geaaru/luet/pkg/compiler/types/artifact"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	pkg "github.com/mudler/luet/pkg/package"
-	"github.com/mudler/luet/pkg/tree"
+	pkg "github.com/geaaru/luet/pkg/package"
+	"github.com/geaaru/luet/pkg/tree"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

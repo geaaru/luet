@@ -18,12 +18,12 @@ package solver_test
 import (
 	"strconv"
 
-	pkg "github.com/mudler/luet/pkg/package"
-	"github.com/mudler/luet/pkg/solver"
+	pkg "github.com/geaaru/luet/pkg/package"
+	"github.com/geaaru/luet/pkg/solver"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	. "github.com/mudler/luet/pkg/solver"
+	. "github.com/geaaru/luet/pkg/solver"
 )
 
 var _ = Describe("Decoder", func() {

@@ -18,7 +18,7 @@ import (
 	"net/http"
 	"os"
 
-	. "github.com/mudler/luet/pkg/logger"
+	. "github.com/geaaru/luet/pkg/logger"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

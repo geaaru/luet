@@ -19,7 +19,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	. "github.com/mudler/luet/pkg/compiler/types/artifact"
+	. "github.com/geaaru/luet/pkg/compiler/types/artifact"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

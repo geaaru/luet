@@ -17,8 +17,8 @@
 package repository_test
 
 import (
-	. "github.com/mudler/luet/pkg/config"
-	. "github.com/mudler/luet/pkg/repository"
+	. "github.com/geaaru/luet/pkg/config"
+	. "github.com/geaaru/luet/pkg/repository"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

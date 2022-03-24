@@ -20,10 +20,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/mudler/luet/cmd/util"
-	cfg "github.com/mudler/luet/pkg/config"
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
-	. "github.com/mudler/luet/pkg/logger"
+	"github.com/geaaru/luet/cmd/util"
+	cfg "github.com/geaaru/luet/pkg/config"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	. "github.com/geaaru/luet/pkg/logger"
 
 	"github.com/spf13/cobra"
 )

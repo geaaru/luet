@@ -15,13 +15,13 @@
 package cmd
 
 import (
-	helpers "github.com/mudler/luet/cmd/helpers"
-	"github.com/mudler/luet/cmd/util"
-	. "github.com/mudler/luet/pkg/config"
-	installer "github.com/mudler/luet/pkg/installer"
-	. "github.com/mudler/luet/pkg/logger"
-	pkg "github.com/mudler/luet/pkg/package"
-	"github.com/mudler/luet/pkg/solver"
+	helpers "github.com/geaaru/luet/cmd/helpers"
+	"github.com/geaaru/luet/cmd/util"
+	. "github.com/geaaru/luet/pkg/config"
+	installer "github.com/geaaru/luet/pkg/installer"
+	. "github.com/geaaru/luet/pkg/logger"
+	pkg "github.com/geaaru/luet/pkg/package"
+	"github.com/geaaru/luet/pkg/solver"
 
 	"github.com/spf13/cobra"
 )

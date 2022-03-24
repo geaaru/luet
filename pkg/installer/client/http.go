@@ -27,12 +27,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mudler/luet/pkg/compiler/types/artifact"
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
-	. "github.com/mudler/luet/pkg/logger"
+	"github.com/geaaru/luet/pkg/compiler/types/artifact"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	. "github.com/geaaru/luet/pkg/logger"
 
 	"github.com/cavaliercoder/grab"
-	"github.com/mudler/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/config"
 
 	"github.com/schollz/progressbar/v3"
 )

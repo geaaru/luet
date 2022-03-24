@@ -18,14 +18,14 @@ import (
 	"os"
 	"path/filepath"
 
-	helpers "github.com/mudler/luet/cmd/helpers"
-	"github.com/mudler/luet/pkg/compiler"
-	"github.com/mudler/luet/pkg/compiler/types/compression"
-	. "github.com/mudler/luet/pkg/config"
-	installer "github.com/mudler/luet/pkg/installer"
+	helpers "github.com/geaaru/luet/cmd/helpers"
+	"github.com/geaaru/luet/pkg/compiler"
+	"github.com/geaaru/luet/pkg/compiler/types/compression"
+	. "github.com/geaaru/luet/pkg/config"
+	installer "github.com/geaaru/luet/pkg/installer"
 
-	//	. "github.com/mudler/luet/pkg/logger"
-	pkg "github.com/mudler/luet/pkg/package"
+	//	. "github.com/geaaru/luet/pkg/logger"
+	pkg "github.com/geaaru/luet/pkg/package"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

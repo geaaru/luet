@@ -21,12 +21,12 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/mudler/luet/pkg/helpers"
+	"github.com/geaaru/luet/pkg/helpers"
 
 	"gopkg.in/yaml.v2"
 
-	. "github.com/mudler/luet/pkg/config"
-	. "github.com/mudler/luet/pkg/logger"
+	. "github.com/geaaru/luet/pkg/config"
+	. "github.com/geaaru/luet/pkg/logger"
 )
 
 func NewLuetSubsetsConfig() *LuetSubsetsConfig {

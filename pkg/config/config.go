@@ -25,8 +25,8 @@ import (
 	"runtime"
 	"time"
 
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
-	pkg "github.com/mudler/luet/pkg/package"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	pkg "github.com/geaaru/luet/pkg/package"
 
 	"github.com/pkg/errors"
 	v "github.com/spf13/viper"

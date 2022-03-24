@@ -1,6 +1,6 @@
 package main
 
-import "github.com/mudler/luet/cmd"
+import "github.com/geaaru/luet/cmd"
 
 var (
 	version string

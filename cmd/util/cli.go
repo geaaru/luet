@@ -22,9 +22,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mudler/luet/pkg/config"
-	. "github.com/mudler/luet/pkg/config"
-	"github.com/mudler/luet/pkg/installer"
+	"github.com/geaaru/luet/pkg/config"
+	. "github.com/geaaru/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/installer"
 )
 
 func BindSystemFlags(cmd *cobra.Command) {

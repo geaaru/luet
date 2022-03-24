@@ -19,7 +19,7 @@ package backend
 import (
 	"bytes"
 
-	. "github.com/mudler/luet/pkg/logger"
+	. "github.com/geaaru/luet/pkg/logger"
 )
 
 type BackendWriter struct {

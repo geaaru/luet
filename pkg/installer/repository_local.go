@@ -24,11 +24,11 @@ import (
 	"strings"
 	"time"
 
-	artifact "github.com/mudler/luet/pkg/compiler/types/artifact"
-	. "github.com/mudler/luet/pkg/logger"
-	pkg "github.com/mudler/luet/pkg/package"
+	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
+	. "github.com/geaaru/luet/pkg/logger"
+	pkg "github.com/geaaru/luet/pkg/package"
 
-	"github.com/mudler/luet/pkg/bus"
+	"github.com/geaaru/luet/pkg/bus"
 	"github.com/pkg/errors"
 )
 

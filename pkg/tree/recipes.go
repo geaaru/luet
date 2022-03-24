@@ -26,9 +26,9 @@ import (
 	"os"
 	"path/filepath"
 
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
-	pkg "github.com/mudler/luet/pkg/package"
-	spectooling "github.com/mudler/luet/pkg/spectooling"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	pkg "github.com/geaaru/luet/pkg/package"
+	spectooling "github.com/geaaru/luet/pkg/spectooling"
 
 	"github.com/pkg/errors"
 )

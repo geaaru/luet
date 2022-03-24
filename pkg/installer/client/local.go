@@ -20,10 +20,10 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/mudler/luet/pkg/compiler/types/artifact"
-	"github.com/mudler/luet/pkg/config"
-	fileHelper "github.com/mudler/luet/pkg/helpers/file"
-	. "github.com/mudler/luet/pkg/logger"
+	"github.com/geaaru/luet/pkg/compiler/types/artifact"
+	"github.com/geaaru/luet/pkg/config"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	. "github.com/geaaru/luet/pkg/logger"
 )
 
 type LocalClient struct {

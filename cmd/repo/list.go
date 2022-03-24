@@ -22,8 +22,8 @@ import (
 	"strconv"
 	"time"
 
-	. "github.com/mudler/luet/pkg/config"
-	installer "github.com/mudler/luet/pkg/installer"
+	. "github.com/geaaru/luet/pkg/config"
+	installer "github.com/geaaru/luet/pkg/installer"
 
 	. "github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
