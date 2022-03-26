@@ -8,15 +8,16 @@ set -ex
 export LUET_NOLOCK=true
 
 GITHUB_USER="${GITHUB_USER:-geaaru}"
-GITHUB_BRANCH="${GITHUB_BRANCH:-master}"
+GITHUB_BRANCH="${GITHUB_BRANCH:-geaaru}"
 
 LUET_VERSION="v0.22.5-${GITHUB_USER}"
 LUET_ROOTFS=${LUET_ROOTFS:-/}
 LUET_DATABASE_PATH=${LUET_DATABASE_PATH:-/var/luet/db}
 LUET_DATABASE_ENGINE=${LUET_DATABASE_ENGINE:-boltdb}
 LUET_CONFIG_PROTECT=${LUET_CONFIG_PROTECT:-1}
+LUET_ARCH=${LUET_ARCH:-amd64}
 
-curl -L https://github.com/${GITHUB_USER}/luet/releases/download/${LUET_VERSION}/luet-${LUET_VERSION}-linux-amd64 --output /usr/bin/luet
+curl -L https://github.com/${GITHUB_USER}/luet/releases/download/${LUET_VERSION}/luet-${LUET_VERSION}-linux-${LUET_ARCH} --output /usr/bin/luet
 chmod +x /usr/bin/luet
 
 mkdir -p /etc/luet/repos.conf.d || true
@@ -39,8 +40,12 @@ system:
   tmpdir_base: "/var/tmp/luet"
 EOF
 
-luet repo update
-luet install -y repository/mottainai-stable repository/geaaru-repo-index --force
-luet install --sync-repos -y system/luet-${GITHUB_USER} --force
+if [ "${LUET_ARCH}" == "amd64" ] ; then
+  luet repo update
+  luet install -y repository/mottainai-stable repository/geaaru-repo-index --force
+  luet install --sync-repos -y system/luet-${GITHUB_USER} --force
+else
+  echo "Luet ARM repositories are not available yet."
+fi
 
 #rm -rf lue
