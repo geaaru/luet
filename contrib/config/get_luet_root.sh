@@ -40,7 +40,7 @@ system:
   tmpdir_base: "/var/tmp/luet"
 EOF
 
-if [ "${LUET_ARCH}" == "amd64" ] ; then
+if [ "${LUET_ARCH}" = "amd64" ] ; then
   luet repo update
   luet install -y repository/mottainai-stable repository/geaaru-repo-index --force
   luet install --sync-repos -y system/luet-${GITHUB_USER} --force
