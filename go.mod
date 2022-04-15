@@ -55,7 +55,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/schollz/progressbar/v3 v3.8.5
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/cobra v1.3.0
+	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
 	github.com/theupdateframework/notary v0.7.0
 	go.etcd.io/bbolt v1.3.6
