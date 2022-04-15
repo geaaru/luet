@@ -19,6 +19,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package gentoo
 
 import (
+	"encoding/base64"
+	b64 "encoding/base64"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -61,6 +63,9 @@ type PortageMetaData struct {
 	Ebuild string `json:"ebuild,omitempty"`
 
 	CONTENTS []PortageContentElem `json:"content,omitempty"`
+
+	// Base64 content
+	EnvironmentBz2 string `json:"environment_bz2,omitempty"`
 }
 
 type PortageContentElem struct {
@@ -72,10 +77,11 @@ type PortageContentElem struct {
 }
 
 type PortageUseParseOpts struct {
-	UseFilters []string `json:"use_filters,omitempty" yaml:"use_filters,omitempty"`
-	Categories []string `json:"categories,omitempty" yaml:"categories,omitempty"`
-	Packages   []string `json:"pkgs_filters,omitempty" yaml:"pkgs_filters,omitempty"`
-	Verbose    bool     `json:"verbose,omitempty" yaml:"verbose,omitempty"`
+	UseFilters      []string `json:"use_filters,omitempty" yaml:"use_filters,omitempty"`
+	Categories      []string `json:"categories,omitempty" yaml:"categories,omitempty"`
+	Packages        []string `json:"pkgs_filters,omitempty" yaml:"pkgs_filters,omitempty"`
+	Verbose         bool     `json:"verbose,omitempty" yaml:"verbose,omitempty"`
+	WithEnvironment bool     `json:"with_environment,omitempty" yaml:"with_environment,omitempty"`
 }
 
 func NewPortageMetaData(pkg *GentooPackage) *PortageMetaData {
@@ -469,6 +475,26 @@ func ParsePackageMetadataDir(dir string, opts *PortageUseParseOpts) (*PortageMet
 	ans.CONTENTS, err = GetCONTENTS(filepath.Join(metaDir, "CONTENTS"))
 	if err != nil {
 		return nil, err
+	}
+
+	if opts.WithEnvironment {
+		f := filepath.Join(metaDir, "environment.bz2")
+		_, err := os.Stat(f)
+		if err != nil {
+			if os.IsNotExist(err) {
+				// Ignoring file if not present
+			} else {
+				return nil, err
+			}
+		} else {
+			data, err := ioutil.ReadFile(f)
+			if err != nil {
+				return nil, err
+			}
+
+			ans.EnvironmentBz2 = b64.StdEncoding.EncodeToString(data)
+		}
+
 	}
 
 	return ans, nil
@@ -936,6 +962,19 @@ func (m *PortageMetaData) WriteMetadata2Dir(dir string, opts *PortageUseParseOpt
 	)
 	if err != nil {
 		return err
+	}
+
+	// Write environment.bz2
+	if opts.WithEnvironment && m.EnvironmentBz2 != "" {
+		f := filepath.Join(metadir, "environment.bz2")
+		decoded, err := base64.StdEncoding.DecodeString(m.EnvironmentBz2)
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile(f, decoded, 0644)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

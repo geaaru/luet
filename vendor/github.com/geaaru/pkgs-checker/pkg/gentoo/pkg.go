@@ -393,7 +393,7 @@ func (p *GentooPackage) GreaterThanOrEqual(i *GentooPackage) (bool, error) {
 		}
 
 	} else {
-		ans = v1.LessThanOrEqual(v2)
+		ans = v1.GreaterThanOrEqual(v2)
 	}
 	return ans, nil
 }
