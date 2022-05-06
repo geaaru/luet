@@ -853,7 +853,7 @@ func (r *LuetSystemRepository) Load(alternativeRepoSpecfile, alternativeTreeFs, 
 	InfoC(
 		aurora.Yellow(":information_source: ").String() +
 			aurora.Magenta("Repository: ").String() +
-			aurora.Green(aurora.Bold(fmt.Sprintf("%20s", repoMeta.GetName())).String()).String() +
+			aurora.Green(aurora.Bold(fmt.Sprintf("%30s", repoMeta.GetName())).String()).String() +
 			aurora.Magenta(" Priority: ").String() +
 			aurora.Bold(aurora.Green(fmt.Sprintf("%3d", repoMeta.GetPriority()))).String() +
 			aurora.Magenta(" Type: ").String() +
@@ -982,7 +982,7 @@ func (r *LuetSystemRepository) Sync(force bool) (*LuetSystemRepository, error) {
 		InfoC(
 			aurora.Magenta(":information_source: Repository: ").String() +
 				aurora.Bold(
-					aurora.Green(fmt.Sprintf("%20s", downloadedRepoMeta.GetName())).String()+
+					aurora.Green(fmt.Sprintf("%30s", downloadedRepoMeta.GetName())).String()+
 						" is already up to date.",
 				).String(),
 		)
