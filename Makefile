@@ -83,8 +83,8 @@ vendor:
 
 .PHONY: test-docker
 test-docker:
-	docker run -v $(ROOT_DIR):/go/src/github.com/mudler/luet \
-				--workdir /go/src/github.com/mudler/luet -ti golang:latest \
+	docker run -v $(ROOT_DIR):/go/src/github.com/geaaru/luet \
+				--workdir /go/src/github.com/geaaru/luet -ti golang:latest \
 				bash -c "make test"
 
 multiarch-build:
