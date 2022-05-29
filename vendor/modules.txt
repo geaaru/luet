@@ -76,8 +76,6 @@ github.com/cespare/xxhash/v2
 # github.com/chuckpreslar/emission v0.0.0-20170206194824-a7ddd980baf9
 ## explicit
 github.com/chuckpreslar/emission
-# github.com/chzyer/readline v1.5.0
-## explicit; go 1.15
 # github.com/containerd/cgroups v1.0.3
 ## explicit; go 1.16
 github.com/containerd/cgroups/stats/v1
@@ -225,8 +223,6 @@ github.com/go-openapi/strfmt
 # github.com/go-stack/stack v1.8.0
 ## explicit
 github.com/go-stack/stack
-# github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0
-## explicit; go 1.13
 # github.com/gobwas/glob v0.2.3
 ## explicit
 github.com/gobwas/glob
@@ -294,8 +290,6 @@ github.com/google/go-containerregistry/pkg/v1/types
 ## explicit; go 1.12
 github.com/google/gofuzz
 github.com/google/gofuzz/bytesource
-# github.com/google/pprof v0.0.0-20220412212628-83db2b799d1f
-## explicit; go 1.17
 # github.com/google/renameio v1.0.0
 ## explicit; go 1.13
 github.com/google/renameio
@@ -338,8 +332,6 @@ github.com/heroku/docker-registry-client/registry
 # github.com/huandu/xstrings v1.3.2
 ## explicit; go 1.12
 github.com/huandu/xstrings
-# github.com/ianlancetaylor/demangle v0.0.0-20220319035150-800ac71e25c2
-## explicit; go 1.12
 # github.com/imdario/mergo v0.3.12
 ## explicit; go 1.13
 github.com/imdario/mergo
@@ -432,9 +424,6 @@ github.com/modern-go/reflect2
 # github.com/morikuni/aec v1.0.0
 ## explicit
 github.com/morikuni/aec
-# github.com/mudler/cobra-extensions v0.0.0-20200612154940-31a47105fe3d
-## explicit; go 1.14
-github.com/mudler/cobra-extensions
 # github.com/mudler/docker-companion v0.4.6-0.20200418093252-41846f112d87
 ## explicit; go 1.12
 github.com/mudler/docker-companion/api
@@ -709,8 +698,6 @@ golang.org/x/text/unicode/norm
 # golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
 ## explicit
 golang.org/x/time/rate
-# golang.org/x/tools v0.1.10
-## explicit; go 1.17
 # google.golang.org/appengine v1.6.7
 ## explicit; go 1.11
 google.golang.org/appengine/internal
