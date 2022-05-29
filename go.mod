@@ -43,7 +43,6 @@ require (
 	github.com/mitchellh/hashstructure/v2 v2.0.1
 	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/mudler/docker-companion v0.4.6-0.20200418093252-41846f112d87
-	github.com/mudler/go-pluggable v0.0.0-20210513155700-54c6443073af
 	github.com/mudler/topsort v0.0.0-20201103161459-db5c7901c290
 	github.com/onsi/ginkgo/v2 v2.1.4
 	github.com/onsi/gomega v1.19.0
@@ -53,7 +52,7 @@ require (
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/errors v0.9.1
 	github.com/schollz/progressbar/v3 v3.8.5
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.11.0
 	github.com/theupdateframework/notary v0.7.0

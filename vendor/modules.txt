@@ -75,7 +75,6 @@ github.com/cavaliercoder/grab/bps
 github.com/cespare/xxhash/v2
 # github.com/chuckpreslar/emission v0.0.0-20170206194824-a7ddd980baf9
 ## explicit
-github.com/chuckpreslar/emission
 # github.com/containerd/cgroups v1.0.3
 ## explicit; go 1.16
 github.com/containerd/cgroups/stats/v1
@@ -427,9 +426,6 @@ github.com/morikuni/aec
 # github.com/mudler/docker-companion v0.4.6-0.20200418093252-41846f112d87
 ## explicit; go 1.12
 github.com/mudler/docker-companion/api
-# github.com/mudler/go-pluggable v0.0.0-20210513155700-54c6443073af
-## explicit; go 1.14
-github.com/mudler/go-pluggable
 # github.com/mudler/topsort v0.0.0-20201103161459-db5c7901c290
 ## explicit
 github.com/mudler/topsort
