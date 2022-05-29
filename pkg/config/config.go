@@ -34,7 +34,15 @@ import (
 )
 
 const (
-	LuetVersion = "0.24.0"
+	LuetVersion     = "0.24.0"
+	LuetEnvPrefix   = "LUET"
+	LuetForkVersion = "geaaru"
+)
+
+var (
+	BuildTime      string
+	BuildCommit    string
+	BuildGoVersion string
 )
 
 var LuetCfg = NewLuetConfig(v.GetViper())

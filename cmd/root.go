@@ -24,17 +24,17 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/marcsauter/single"
 	bus "github.com/geaaru/luet/pkg/bus"
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	"github.com/marcsauter/single"
 
-	tarf "github.com/geaaru/tar-formers/pkg/executor"
-	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
-	extensions "github.com/mudler/cobra-extensions"
 	config "github.com/geaaru/luet/pkg/config"
 	helpers "github.com/geaaru/luet/pkg/helpers"
 	. "github.com/geaaru/luet/pkg/logger"
 	repo "github.com/geaaru/luet/pkg/repository"
+	tarf "github.com/geaaru/tar-formers/pkg/executor"
+	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
+	extensions "github.com/mudler/cobra-extensions"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -43,27 +43,14 @@ var cfgFile string
 var Verbose bool
 var LockedCommands = []string{"install", "uninstall", "upgrade"}
 
-const (
-	LuetEnvPrefix   = "LUET"
-	LuetForkVersion = "geaaru"
-)
-
-// Build time and commit information.
-//
-// ⚠️ WARNING: should only be set by "-ldflags".
-var (
-	BuildTime      string
-	BuildCommit    string
-	BuildGoVersion string
-)
-
 func version() string {
-	if BuildGoVersion != "" {
+	if config.BuildGoVersion != "" {
 		return fmt.Sprintf("%s-%s-g%s %s - %s",
-			config.LuetVersion, LuetForkVersion, BuildCommit, BuildTime,
-			BuildGoVersion)
+			config.LuetVersion, config.LuetForkVersion, config.BuildCommit,
+			config.BuildTime, config.BuildGoVersion)
 	} else {
-		return fmt.Sprintf("%s-%s-g%s %s", config.LuetVersion, LuetForkVersion, BuildCommit, BuildTime)
+		return fmt.Sprintf("%s-%s-g%s %s", config.LuetVersion,
+			config.LuetForkVersion, config.BuildCommit, config.BuildTime)
 	}
 }
 
@@ -304,7 +291,7 @@ func initConfig() {
 	//
 	// Note: currently a single viper instance support only one config name.
 
-	viper.SetEnvPrefix(LuetEnvPrefix)
+	viper.SetEnvPrefix(config.LuetEnvPrefix)
 	viper.SetConfigType("yaml")
 
 	if cfgFile != "" { // enable ability to specify config file via flag

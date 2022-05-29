@@ -13,9 +13,9 @@ builds:
       - CGO_ENABLED=0
     ldflags:
       - -s -w
-      - -X 'github.com/geaaru/luet/cmd.BuildTime={{ time "2006-01-02 15:04:05 MST" }}'
-      - -X 'github.com/geaaru/luet/cmd.BuildCommit={{ .FullCommit }}'
-      - -X 'github.com/geaaru/luet/cmd.BuildGoVersion={{ .Env.GOVERSION }}'
+      - -X 'github.com/geaaru/luet/pkg/config.BuildTime={{ time "2006-01-02 15:04:05 MST" }}'
+      - -X 'github.com/geaaru/luet/pkg/config.BuildCommit={{ .FullCommit }}'
+      - -X 'github.com/geaaru/luet/pkg/config.BuildGoVersion={{ .Env.GOVERSION }}'
     goos:
       - linux
     goarch:

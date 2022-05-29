@@ -1,9 +1,9 @@
 GOLANG_VERSION=$(shell go env GOVERSION)
 
 # go tool nm ./luet | grep Commit
-override LDFLAGS += -X "github.com/geaaru/luet/cmd.BuildTime=$(shell date -u '+%Y-%m-%d %I:%M:%S %Z')"
-override LDFLAGS += -X "github.com/geaaru/luet/cmd.BuildCommit=$(shell git rev-parse HEAD)"
-override LDFLAGS += -X "github.com/geaaru/luet/cmd.BuildGoVersion=$(GOLANG_VERSION)"
+override LDFLAGS += -X "github.com/geaaru/luet/pkg/config.BuildTime=$(shell date -u '+%Y-%m-%d %I:%M:%S %Z')"
+override LDFLAGS += -X "github.com/geaaru/luet/pkg/config.BuildCommit=$(shell git rev-parse HEAD)"
+override LDFLAGS += -X "github.com/geaaru/luet/pkg/config.BuildGoVersion=$(GOLANG_VERSION)"
 
 NAME ?= luet
 PACKAGE_NAME ?= $(NAME)
@@ -63,6 +63,10 @@ deps:
 .PHONY: build
 build:
 	CGO_ENABLED=0 go build -ldflags '$(LDFLAGS)'
+
+.PHONY: build-build
+build-build:
+	CGO_ENABLED=0 go build -ldflags '$(LDFLAGS)' -o ./luet-build/luet-build ./luet-build
 
 .PHONY: build-small
 build-small:
