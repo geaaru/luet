@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	bus "github.com/geaaru/luet/pkg/bus"
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 
 	docker "github.com/fsouza/go-dockerclient"
@@ -44,7 +43,6 @@ func NewSimpleDockerBackend() *SimpleDocker {
 // TODO: Missing still: labels, and build args expansion
 func (*SimpleDocker) BuildImage(opts Options) error {
 	name := opts.ImageName
-	bus.Manager.Publish(bus.EventImagePreBuild, opts)
 
 	buildarg := genBuildCommand(opts)
 	Info(":whale2: Building image " + name)
@@ -75,8 +73,6 @@ func (*SimpleDocker) BuildImage(opts Options) error {
 		Info(":whale: Squashing image " + name + " done")
 	}
 
-	bus.Manager.Publish(bus.EventImagePostBuild, opts)
-
 	return nil
 }
 
@@ -93,7 +89,6 @@ func (*SimpleDocker) CopyImage(src, dst string) error {
 
 func (*SimpleDocker) DownloadImage(opts Options) error {
 	name := opts.ImageName
-	bus.Manager.Publish(bus.EventImagePrePull, opts)
 
 	buildarg := []string{"pull", name}
 	Debug(":whale: Downloading image " + name)
@@ -108,7 +103,6 @@ func (*SimpleDocker) DownloadImage(opts Options) error {
 	}
 
 	Info(":whale: Downloaded image:", name)
-	bus.Manager.Publish(bus.EventImagePostPull, opts)
 
 	return nil
 }
@@ -145,7 +139,6 @@ func (*SimpleDocker) RemoveImage(opts Options) error {
 func (*SimpleDocker) Push(opts Options) error {
 	name := opts.ImageName
 	pusharg := []string{"push", name}
-	bus.Manager.Publish(bus.EventImagePrePush, opts)
 
 	Spinner(22)
 	defer SpinnerStop()
@@ -155,7 +148,6 @@ func (*SimpleDocker) Push(opts Options) error {
 		return errors.Wrap(err, "Failed pushing image: "+string(out))
 	}
 	Info(":whale: Pushed image:", name)
-	bus.Manager.Publish(bus.EventImagePostPush, opts)
 
 	//Info(string(out))
 	return nil

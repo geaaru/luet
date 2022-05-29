@@ -30,7 +30,6 @@ import (
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/registry"
-	"github.com/geaaru/luet/pkg/bus"
 	tarf "github.com/geaaru/tar-formers/pkg/executor"
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
 	"github.com/google/go-containerregistry/pkg/authn"
@@ -124,19 +123,12 @@ func (s staticAuth) Authorization() (*authn.AuthConfig, error) {
 	}, nil
 }
 
-// UnpackEventData is the data structure to pass for the bus events
-type UnpackEventData struct {
-	Image string
-	Dest  string
-}
-
 // UnarchiveLayers extract layers with archive.Untar from docker instead of containerd
 func UnarchiveLayers(temp string, img v1.Image, image, dest string, auth *types.AuthConfig, verify bool) (int64, error) {
 	layers, err := img.Layers()
 	if err != nil {
 		return 0, fmt.Errorf("reading layers from '%s' image failed: %v", image, err)
 	}
-	bus.Manager.Publish(bus.EventImagePreUnPack, UnpackEventData{Image: image, Dest: dest})
 
 	var size int64
 	for _, l := range layers {
@@ -169,7 +161,6 @@ func UnarchiveLayers(temp string, img v1.Image, image, dest string, auth *types.
 			return 0, fmt.Errorf("extracting '%s' image to directory %s failed: %v", image, dest, err)
 		}
 	}
-	bus.Manager.Publish(bus.EventImagePostUnPack, UnpackEventData{Image: image, Dest: dest})
 
 	return size, nil
 }
@@ -219,14 +210,10 @@ func DownloadAndExtractDockerImage(temp, image, dest string, auth *types.AuthCon
 	defer reader.Close()
 	defer os.RemoveAll(temp)
 
-	bus.Manager.Publish(bus.EventImagePreUnPack, UnpackEventData{Image: image, Dest: dest})
-
 	c, err := continerdarchive.Apply(context.TODO(), dest, reader)
 	if err != nil {
 		return nil, err
 	}
-
-	bus.Manager.Publish(bus.EventImagePostUnPack, UnpackEventData{Image: image, Dest: dest})
 
 	return &images.Image{
 		Name:   image,

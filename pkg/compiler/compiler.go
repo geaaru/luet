@@ -30,8 +30,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/imdario/mergo"
-	bus "github.com/geaaru/luet/pkg/bus"
 	"github.com/geaaru/luet/pkg/compiler/backend"
 	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
 	"github.com/geaaru/luet/pkg/compiler/types/options"
@@ -41,6 +39,7 @@ import (
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 	"github.com/geaaru/luet/pkg/solver"
+	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/chart"
@@ -974,16 +973,6 @@ func (cs *LuetCompiler) compile(concurrency int, keepPermissions bool, generateF
 	p.SetSourceAssertion(packageHashTree.Solution)
 	targetAssertion := packageHashTree.Target
 
-	bus.Manager.Publish(bus.EventPackagePreBuild, struct {
-		CompileSpec     *compilerspec.LuetCompilationSpec
-		Assert          solver.PackageAssert
-		PackageHashTree *PackageImageHashTree
-	}{
-		CompileSpec:     p,
-		Assert:          *targetAssertion,
-		PackageHashTree: packageHashTree,
-	})
-
 	// Update compilespec build options - it will be then serialized into the compilation metadata file
 	p.BuildOptions.PushImageRepository = cs.Options.PushImageRepository
 
@@ -1042,14 +1031,6 @@ func (cs *LuetCompiler) compile(concurrency int, keepPermissions bool, generateF
 
 			compileSpec.SetOutputPath(p.GetOutputPath())
 
-			bus.Manager.Publish(bus.EventPackagePreBuild, struct {
-				CompileSpec *compilerspec.LuetCompilationSpec
-				Assert      solver.PackageAssert
-			}{
-				CompileSpec: compileSpec,
-				Assert:      assertion,
-			})
-
 			if err := cs.resolveFinalImages(concurrency, keepPermissions, compileSpec); err != nil {
 				return nil, errors.Wrap(err, "while resolving join images")
 			}
@@ -1097,14 +1078,6 @@ func (cs *LuetCompiler) compile(concurrency int, keepPermissions bool, generateF
 
 			Info(pkgTag, ":white_check_mark: Done")
 
-			bus.Manager.Publish(bus.EventPackagePostBuild, struct {
-				CompileSpec *compilerspec.LuetCompilationSpec
-				Artifact    *artifact.PackageArtifact
-			}{
-				CompileSpec: compileSpec,
-				Artifact:    a,
-			})
-
 			departifacts = append(departifacts, a)
 		}
 	}
@@ -1124,13 +1097,6 @@ func (cs *LuetCompiler) compile(concurrency int, keepPermissions bool, generateF
 		a.Dependencies = departifacts
 		a.SourceAssertion = p.GetSourceAssertion()
 		a.PackageCacheImage = targetAssertion.Hash.PackageHash
-		bus.Manager.Publish(bus.EventPackagePostBuild, struct {
-			CompileSpec *compilerspec.LuetCompilationSpec
-			Artifact    *artifact.PackageArtifact
-		}{
-			CompileSpec: p,
-			Artifact:    a,
-		})
 
 		return a, err
 	} else {

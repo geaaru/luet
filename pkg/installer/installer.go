@@ -26,8 +26,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jedib0t/go-pretty/table"
-	"github.com/geaaru/luet/pkg/bus"
 	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
 	"github.com/geaaru/luet/pkg/config"
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
@@ -35,6 +33,7 @@ import (
 	pkg "github.com/geaaru/luet/pkg/package"
 	"github.com/geaaru/luet/pkg/solver"
 	"github.com/geaaru/luet/pkg/tree"
+	"github.com/jedib0t/go-pretty/table"
 
 	. "github.com/logrusorgru/aurora"
 	"github.com/pkg/errors"
@@ -1094,7 +1093,6 @@ func (l *LuetInstaller) install(o Option, syncedRepos Repositories, toInstall ma
 		if err != nil && !o.Force {
 			return errors.Wrap(err, "Failed creating package")
 		}
-		bus.Manager.Publish(bus.EventPackageInstall, c)
 	}
 	Info(fmt.Sprintf("%d packages added/updated in local db in %d µs.",
 		len(toInstall),
@@ -1333,8 +1331,6 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed removing package from database")
 	}
-
-	bus.Manager.Publish(bus.EventPackageUnInstall, p)
 
 	Info(":recycle: ", fmt.Sprintf("%20s", p.GetFingerPrint()), "Removed :heavy_check_mark:")
 	return nil

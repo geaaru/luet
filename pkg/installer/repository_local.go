@@ -28,7 +28,6 @@ import (
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 
-	"github.com/geaaru/luet/pkg/bus"
 	"github.com/pkg/errors"
 )
 
@@ -103,14 +102,6 @@ func (*localRepositoryGenerator) Generate(r *LuetSystemRepository, dst string, r
 		r.Name, r.Revision, r.LastUpdate,
 	))
 
-	bus.Manager.Publish(bus.EventRepositoryPreBuild, struct {
-		Repo LuetSystemRepository
-		Path string
-	}{
-		Repo: *r,
-		Path: dst,
-	})
-
 	if _, err := r.AddTree(r.GetTree(), dst, REPOFILE_TREE_KEY, NewDefaultTreeRepositoryFile()); err != nil {
 		return errors.Wrap(err, "error met while adding runtime tree to repository")
 	}
@@ -123,12 +114,5 @@ func (*localRepositoryGenerator) Generate(r *LuetSystemRepository, dst string, r
 		return errors.Wrap(err, "failed adding Metadata file to repository")
 	}
 
-	bus.Manager.Publish(bus.EventRepositoryPostBuild, struct {
-		Repo LuetSystemRepository
-		Path string
-	}{
-		Repo: *r,
-		Path: dst,
-	})
 	return nil
 }

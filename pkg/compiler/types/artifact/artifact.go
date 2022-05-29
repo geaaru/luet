@@ -37,9 +37,6 @@ import (
 	"strings"
 	"sync"
 
-	tarf "github.com/geaaru/tar-formers/pkg/executor"
-	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
-	bus "github.com/geaaru/luet/pkg/bus"
 	backend "github.com/geaaru/luet/pkg/compiler/backend"
 	compression "github.com/geaaru/luet/pkg/compiler/types/compression"
 	compilerspec "github.com/geaaru/luet/pkg/compiler/types/spec"
@@ -49,6 +46,8 @@ import (
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 	"github.com/geaaru/luet/pkg/solver"
+	tarf "github.com/geaaru/tar-formers/pkg/executor"
+	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -127,8 +126,6 @@ func (a *PackageArtifact) WriteYaml(dst string) error {
 		return errors.Wrap(err, "While marshalling for PackageArtifact YAML")
 	}
 
-	bus.Manager.Publish(bus.EventPackagePreBuildArtifact, a)
-
 	mangle, err := NewPackageArtifactFromYaml(data)
 	if err != nil {
 		return errors.Wrap(err, "Generated invalid artifact")
@@ -150,8 +147,6 @@ func (a *PackageArtifact) WriteYaml(dst string) error {
 		return errors.Wrap(err, "While writing PackageArtifact YAML")
 	}
 	//a.CompileSpec.GetPackage().SetPath(p)
-	bus.Manager.Publish(bus.EventPackagePostBuildArtifact, a)
-
 	return nil
 }
 

@@ -24,7 +24,6 @@ import (
 	"runtime"
 	"strings"
 
-	bus "github.com/geaaru/luet/pkg/bus"
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 	"github.com/marcsauter/single"
 
@@ -133,17 +132,6 @@ To build a package, from a tree definition:
 			Fatal("failed on init tmp basedir:", err.Error())
 		}
 
-		viper.BindPFlag("plugin", cmd.Flags().Lookup("plugin"))
-
-		plugin := viper.GetStringSlice("plugin")
-
-		bus.Manager.Initialize(plugin...)
-		if len(bus.Manager.Plugins) != 0 {
-			Info(":lollipop:Enabled plugins:")
-			for _, p := range bus.Manager.Plugins {
-				Info("\t:arrow_right:", p.Name)
-			}
-		}
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		// Cleanup all tmp directories used by luet
@@ -238,7 +226,6 @@ func init() {
 		"Disable config protect analysis.")
 	pflags.StringP("logfile", "l", config.LuetCfg.GetLogging().Path,
 		"Logfile path. Empty value disable log to file.")
-	pflags.StringSlice("plugin", []string{}, "A list of runtime plugins to load")
 
 	// os/user doesn't work in from scratch environments.
 	// Check if i can retrieve user informations.
@@ -258,7 +245,6 @@ func init() {
 	config.LuetCfg.Viper.BindPFlag("general.debug", pflags.Lookup("debug"))
 	config.LuetCfg.Viper.BindPFlag("general.fatal_warnings", pflags.Lookup("fatal"))
 	config.LuetCfg.Viper.BindPFlag("general.same_owner", pflags.Lookup("same-owner"))
-	config.LuetCfg.Viper.BindPFlag("plugin", pflags.Lookup("plugin"))
 
 	// Currently I maintain this only from cli.
 	config.LuetCfg.Viper.BindPFlag("no_spinner", pflags.Lookup("no-spinner"))

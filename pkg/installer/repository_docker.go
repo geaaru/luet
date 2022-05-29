@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/geaaru/luet/pkg/bus"
 	compiler "github.com/geaaru/luet/pkg/compiler"
 	"github.com/geaaru/luet/pkg/compiler/backend"
 	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
@@ -212,14 +211,6 @@ func (d *dockerRepositoryGenerator) Generate(r *LuetSystemRepository, imagePrefi
 		r.Name, r.Revision, r.LastUpdate,
 	))
 
-	bus.Manager.Publish(bus.EventRepositoryPreBuild, struct {
-		Repo LuetSystemRepository
-		Path string
-	}{
-		Repo: *r,
-		Path: imageRepository,
-	})
-
 	// Create tree and repository file
 	a, err := r.AddTree(r.GetTree(), repoTemp, REPOFILE_TREE_KEY, NewDefaultTreeRepositoryFile())
 	if err != nil {
@@ -262,12 +253,5 @@ func (d *dockerRepositoryGenerator) Generate(r *LuetSystemRepository, imagePrefi
 		return errors.Wrap(err, "while pushing repository metadata tree")
 	}
 
-	bus.Manager.Publish(bus.EventRepositoryPostBuild, struct {
-		Repo LuetSystemRepository
-		Path string
-	}{
-		Repo: *r,
-		Path: imagePrefix,
-	})
 	return nil
 }

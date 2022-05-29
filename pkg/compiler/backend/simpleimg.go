@@ -20,8 +20,6 @@ import (
 	"os/exec"
 	"strings"
 
-	bus "github.com/geaaru/luet/pkg/bus"
-
 	. "github.com/geaaru/luet/pkg/logger"
 
 	"github.com/pkg/errors"
@@ -36,7 +34,6 @@ func NewSimpleImgBackend() *SimpleImg {
 // TODO: Missing still: labels, and build args expansion
 func (*SimpleImg) BuildImage(opts Options) error {
 	name := opts.ImageName
-	bus.Manager.Publish(bus.EventImagePreBuild, opts)
 
 	buildarg := genBuildCommand(opts)
 
@@ -48,7 +45,6 @@ func (*SimpleImg) BuildImage(opts Options) error {
 	if err != nil {
 		return err
 	}
-	bus.Manager.Publish(bus.EventImagePostBuild, opts)
 
 	Info(":tea: Building image " + name + " done")
 
@@ -71,7 +67,6 @@ func (*SimpleImg) RemoveImage(opts Options) error {
 
 func (*SimpleImg) DownloadImage(opts Options) error {
 	name := opts.ImageName
-	bus.Manager.Publish(bus.EventImagePrePull, opts)
 
 	buildarg := []string{"pull", name}
 	Debug(":tea: Downloading image " + name)
@@ -86,7 +81,6 @@ func (*SimpleImg) DownloadImage(opts Options) error {
 	}
 
 	Info(":tea: Image " + name + " downloaded")
-	bus.Manager.Publish(bus.EventImagePostPull, opts)
 
 	return nil
 }
@@ -181,7 +175,6 @@ func (s *SimpleImg) ExtractRootfs(opts Options, keepPerms bool) error {
 
 func (*SimpleImg) Push(opts Options) error {
 	name := opts.ImageName
-	bus.Manager.Publish(bus.EventImagePrePush, opts)
 
 	pusharg := []string{"push", name}
 	out, err := exec.Command("img", pusharg...).CombinedOutput()
@@ -189,7 +182,6 @@ func (*SimpleImg) Push(opts Options) error {
 		return errors.Wrap(err, "Failed pushing image: "+string(out))
 	}
 	Info(":tea: Pushed image:", name)
-	bus.Manager.Publish(bus.EventImagePostPush, opts)
 
 	//Info(string(out))
 	return nil
