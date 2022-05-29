@@ -34,7 +34,6 @@ import (
 	repo "github.com/geaaru/luet/pkg/repository"
 	tarf "github.com/geaaru/tar-formers/pkg/executor"
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
-	extensions "github.com/mudler/cobra-extensions"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -270,14 +269,6 @@ func init() {
 		newCleanupCommand(config.LuetCfg),
 		newQueryCommand(config.LuetCfg),
 	)
-
-	// Extensions must be binary with the "luet-" prefix to be able to be shown in the help.
-	// we also accept extensions in the relative path where luet is being started, "extensions/"
-	exts := extensions.Discover("luet", "extensions")
-	for _, ex := range exts {
-		cobraCmd := ex.CobraCommand()
-		RootCmd.AddCommand(cobraCmd)
-	}
 
 }
 
