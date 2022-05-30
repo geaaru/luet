@@ -1,5 +1,0 @@
-#!/bin/bash
-echo "$1" >> $EVENT_FILE
-echo "$2" >> $PAYLOAD_FILE
-
-echo "{}"
