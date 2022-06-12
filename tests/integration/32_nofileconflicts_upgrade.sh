@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -12,7 +14,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/nofileconflicts_upgrade" --destination $tmpdir/testbuild --compression gzip --all
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/nofileconflicts_upgrade" --destination $tmpdir/testbuild --compression gzip --all
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create packages' "[ -e '$tmpdir/testbuild/noconflict-test1-1.0.package.tar.gz' ]"
@@ -21,7 +23,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/nofileconflicts_upgrade" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/nofileconflicts_upgrade" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -51,25 +53,25 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    luet install --sync-repos -y --config $tmpdir/luet.yaml test1/noconflict@1.0
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test1/noconflict@1.0
     installst=$?
     #assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"
 }
 
 testUpgrade() {
-    out=$(luet upgrade --sync-repos -y --config $tmpdir/luet.yaml)
+    out=$($LUET upgrade --sync-repos -y --config $tmpdir/luet.yaml)
     installst=$?
     assertEquals 'install test succeeded' "$installst" "0"
     assertNotContains 'does find conflicts' "$out" \
       "Error: file conflict found: found file test1 conflict between package"
 
-    installed=$(luet --config $tmpdir/luet.yaml search --installed)
+    installed=$($LUET --config $tmpdir/luet.yaml search --installed)
     assertContains 'does upgrade' "$installed" "test1/noconflict-1.1"
 
 }

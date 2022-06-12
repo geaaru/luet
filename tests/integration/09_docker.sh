@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -12,7 +14,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/docker" --destination $tmpdir/testbuild --compression gzip --all > /dev/null
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/docker" --destination $tmpdir/testbuild --compression gzip --all > /dev/null
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-seed-1.0.package.tar.gz' ]"
@@ -20,7 +22,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/docker" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/docker" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -50,7 +52,7 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }

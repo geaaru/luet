@@ -1,7 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
-export luetbin="$ROOT_DIR/tests/integration/bin/luet"
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -30,7 +31,7 @@ repos_confdir:
 EOF
 
     mkdir $tmpdir/testbuild
-    ${luetbin} build --config $tmpdir/luet-build.yaml --tree "$ROOT_DIR/tests/fixtures/finalizers_envs" --destination $tmpdir/testbuild --compression gzip --all
+    ${LUET_BUILD} build --config $tmpdir/luet-build.yaml --tree "$ROOT_DIR/tests/fixtures/finalizers_envs" --destination $tmpdir/testbuild --compression gzip --all
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-finalizer-envs-seed-1.0.package.tar.gz' ]"
@@ -38,7 +39,7 @@ EOF
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    ${luetbin} create-repo --tree "$ROOT_DIR/tests/fixtures/finalizers_envs" \
+    ${LUET_BUILD} create-repo --tree "$ROOT_DIR/tests/fixtures/finalizers_envs" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -75,13 +76,13 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    ${luetbin} config --config $tmpdir/luet.yaml
+    ${LUET} config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    ${luetbin} install --sync-repos -y --finalizer-env "CLI_ENV=1" --config $tmpdir/luet.yaml seed/alpine-finalizer-envs@1.0
+    $LUET install --sync-repos -y --finalizer-env "CLI_ENV=1" --config $tmpdir/luet.yaml seed/alpine-finalizer-envs@1.0
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"
@@ -92,7 +93,7 @@ testInstall() {
 
 
 testCleanup() {
-    ${luetbin} cleanup --config $tmpdir/luet.yaml
+    ${LUET} cleanup --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 }

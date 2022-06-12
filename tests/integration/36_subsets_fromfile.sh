@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -28,7 +30,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build \
+    $LUET_BUILD build \
       --config $tmpdir/luet-build.yaml \
       --tree "$ROOT_DIR/tests/fixtures/subsets" \
       --destination $tmpdir/testbuild --compression zstd subset/a
@@ -39,7 +41,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo \
+    $LUET_BUILD create-repo \
       --config $tmpdir/luet-build.yaml \
       --tree "$ROOT_DIR/tests/fixtures/subsets" \
       --output $tmpdir/testbuild \
@@ -100,13 +102,13 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-  luet install --sync-repos -y --config $tmpdir/luet.yaml subset/a
+  $LUET install --sync-repos -y --config $tmpdir/luet.yaml subset/a
   installst=$?
   assertEquals 'install test successfully' "$installst" "0"
 
@@ -121,7 +123,7 @@ testInstall() {
 
 
 testUnInstall() {
-  luet uninstall -y --full --config $tmpdir/luet.yaml subset/a
+  $LUET uninstall -y --full --config $tmpdir/luet.yaml subset/a
   installst=$?
   assertEquals 'uninstall test successfully' "$installst" "0"
   assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
@@ -152,9 +154,9 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-  luet config --config $tmpdir/luet.yaml
+  $LUET config --config $tmpdir/luet.yaml
 
-  LUET_LOGGING__PARANOID="true" luet install --sync-repos -y --config $tmpdir/luet.yaml subset/a
+  LUET_LOGGING__PARANOID="true" $LUET install --sync-repos -y --config $tmpdir/luet.yaml subset/a
   installst=$?
   assertEquals 'install test successfully' "$installst" "0"
 
@@ -168,7 +170,7 @@ EOF
 }
 
 testCleanup() {
-  luet cleanup --config $tmpdir/luet.yaml
+  $LUET cleanup --config $tmpdir/luet.yaml
   installst=$?
   assertEquals 'install test successfully' "$installst" "0"
   assertTrue 'package installed' "[ ! -e '$tmpdir/testrootfs/packages/a-subset-1.0.package.tar.gz' ]"

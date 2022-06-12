@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -28,7 +30,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --config $tmpdir/luet-build.yaml \
+    $LUET_BUILD build --config $tmpdir/luet-build.yaml \
       --tree "$ROOT_DIR/tests/fixtures/versioning" \
       --destination $tmpdir/testbuild \
       --compression gzip \
@@ -36,7 +38,7 @@ testBuild() {
     buildst=$?
     assertEquals 'builds successfully' "0" "$buildst"
 
-    luet build --config $tmpdir/luet-build.yaml \
+    $LUET_BUILD build --config $tmpdir/luet-build.yaml \
       --tree "$ROOT_DIR/tests/fixtures/versioning" \
       --destination $tmpdir/testbuild \
       --compression gzip \
@@ -45,7 +47,7 @@ testBuild() {
     assertEquals 'builds successfully' "0" "$buildst"
 
 
-    luet build --config $tmpdir/luet-build.yaml \
+    $LUET_BUILD build --config $tmpdir/luet-build.yaml \
       --tree "$ROOT_DIR/tests/fixtures/versioning" \
       --destination $tmpdir/testbuild \
       --compression gzip \
@@ -56,7 +58,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo \
+    $LUET_BUILD create-repo \
       --config $tmpdir/luet-build.yaml \
       --tree "$ROOT_DIR/tests/fixtures/versioning" \
       --output $tmpdir/testbuild \
@@ -90,26 +92,26 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "0" "$res"
 }
 
 testInstall() {
-    luet install --sync-repos -y --config $tmpdir/luet.yaml media-libs/libsndfile
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml media-libs/libsndfile
     installst=$?
     assertEquals 'install test successfully' "0" "$installst"
 }
 
 testInstall2() {
-    luet install --sync-repos -y --config $tmpdir/luet.yaml '=dev-libs/libsigc++-2-2.10.1+1'
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml '=dev-libs/libsigc++-2-2.10.1+1'
     installst=$?
     assertEquals 'install test successfully' "0" "$installst"
 }
 
 
 testCleanup() {
-    luet cleanup --config $tmpdir/luet.yaml
+    $LUET cleanup --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'install test successfully' "0" "$installst"
 }

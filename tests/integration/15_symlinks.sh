@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -12,7 +14,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/symlinks" --destination $tmpdir/testbuild --compression gzip --full
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/symlinks" --destination $tmpdir/testbuild --compression gzip --full
     buildst=$?
     assertTrue 'create package pkgAsym 0.1' "[ -e '$tmpdir/testbuild/pkgAsym-test-0.1.package.tar.gz' ]"
     assertEquals 'builds successfully' "$buildst" "0"
@@ -20,7 +22,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/symlinks" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/symlinks" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -50,13 +52,13 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    luet install --sync-repos -y --config $tmpdir/luet.yaml test/pkgAsym test/pkgBsym
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/pkgAsym test/pkgBsym
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     ls -liah $tmpdir/testrootfs/

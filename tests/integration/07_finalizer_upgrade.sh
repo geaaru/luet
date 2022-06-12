@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -12,7 +14,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/finalizers_upgrade" --destination $tmpdir/testbuild --compression gzip --all
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/finalizers_upgrade" --destination $tmpdir/testbuild --compression gzip --all
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-seed-1.0.package.tar.gz' ]"
@@ -21,7 +23,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/finalizers_upgrade" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/finalizers_upgrade" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -51,14 +53,14 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    luet install --sync-repos -y --config $tmpdir/luet.yaml seed/alpine@0.9
-    #luet install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml seed/alpine@0.9
+    #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"
@@ -67,7 +69,7 @@ testInstall() {
 
 
 testUpgrade() {
-    luet upgrade --sync-repos -y --config $tmpdir/luet.yaml 
+    $LUET upgrade --sync-repos -y --config $tmpdir/luet.yaml 
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"
@@ -76,7 +78,7 @@ testUpgrade() {
 }
 
 testCleanup() {
-    luet cleanup --config $tmpdir/luet.yaml
+    $LUET cleanup --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 }

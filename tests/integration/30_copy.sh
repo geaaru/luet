@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
     export tmpdir="$(mktemp -d)"
@@ -19,7 +21,7 @@ extra: "bar"
 foo: "baz"
 EOF
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/copy" \
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/copy" \
                --destination $tmpdir/testbuild --concurrency 1 \
                --compression gzip --values $tmpdir/default.yaml \
                test/c

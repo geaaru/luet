@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -13,7 +15,7 @@ oneTimeTearDown() {
 testBuild() {
     [ "$LUET_BACKEND" == "img" ] && startSkipping
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/owners" --destination $tmpdir/testbuild --compression gzip test/unpack test/delta
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/owners" --destination $tmpdir/testbuild --compression gzip test/unpack test/delta
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package unpack' "[ -e '$tmpdir/testbuild/unpack-test-1.0.package.tar.gz' ]"
@@ -23,7 +25,7 @@ testBuild() {
 testRepo() {
     [ "$LUET_BACKEND" == "img" ] && startSkipping
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/owners" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/owners" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -54,14 +56,14 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
     [ "$LUET_BACKEND" == "img" ] && startSkipping
-    luet install --sync-repos -y --config $tmpdir/luet.yaml test/unpack test/delta
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/unpack test/delta
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     fileUID=$(stat -c "%u" $tmpdir/testrootfs/foo)
@@ -81,7 +83,7 @@ testInstall() {
 
 testCleanup() {
     [ "$LUET_BACKEND" == "img" ] && startSkipping
-    luet cleanup --config $tmpdir/luet.yaml
+    $LUET cleanup --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'cleanup test successfully' "$installst" "0"
 }

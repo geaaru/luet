@@ -1,6 +1,9 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
+
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
 }
@@ -14,7 +17,7 @@ testBuild() {
 bb: "ttt"
 EOF
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/build_values" --values $tmpdir/default.yaml --destination $tmpdir/testbuild --compression gzip --all 
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/build_values" --values $tmpdir/default.yaml --destination $tmpdir/testbuild --compression gzip --all 
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package B' "[ -e '$tmpdir/testbuild/b-distro-0.3.package.tar.gz' ]"
@@ -25,7 +28,7 @@ EOF
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/build_values" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/build_values" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -55,13 +58,13 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    luet install --sync-repos -y --config $tmpdir/luet.yaml distro/a
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml distro/a
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -72,18 +75,18 @@ testInstall() {
     # Finalizers can interpolate only on package field. No extra fields are allowed at this time.
     assertTrue 'finalizer executed on A' "[ -e '$tmpdir/testrootfs/finalize-a' ]"
 
-    installed=$(luet --config $tmpdir/luet.yaml search --installed .)
+    installed=$($LUET --config $tmpdir/luet.yaml search --installed .)
     searchst=$?
     assertEquals 'search exists successfully' "$searchst" "0"
 
     assertContains 'contains distro/a-0.1' "$installed" 'distro/a-0.1'
 
-    luet uninstall -y --config $tmpdir/luet.yaml distro/a
+    $LUET uninstall -y --config $tmpdir/luet.yaml distro/a
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
     # We do the same check for the others
-    luet install -y --sync-repos --config $tmpdir/luet.yaml distro/b
+    $LUET install -y --sync-repos --config $tmpdir/luet.yaml distro/b
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -92,17 +95,17 @@ testInstall() {
     assertTrue 'extra field on B' "[ -e '$tmpdir/testrootfs/build-extra-f' ]"
     assertTrue 'finalizer executed on B' "[ -e '$tmpdir/testrootfs/finalize-b' ]"
 
-    installed=$(luet --config $tmpdir/luet.yaml search --installed .)
+    installed=$($LUET --config $tmpdir/luet.yaml search --installed .)
     searchst=$?
     assertEquals 'search exists successfully' "$searchst" "0"
 
     assertContains 'contains distro/b-0.3' "$installed" 'distro/b-0.3'
 
-    luet uninstall -y --config $tmpdir/luet.yaml distro/b
+    $LUET uninstall -y --config $tmpdir/luet.yaml distro/b
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
-    luet install -y --sync-repos --config $tmpdir/luet.yaml distro/c
+    $LUET install -y --sync-repos --config $tmpdir/luet.yaml distro/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -111,17 +114,17 @@ testInstall() {
     assertTrue 'package installed C interpolated with values' "[ -e '$tmpdir/testrootfs/c-ttt' ]"
     assertTrue 'finalizer executed on C' "[ -e '$tmpdir/testrootfs/finalize-c' ]"
 
-    installed=$(luet --config $tmpdir/luet.yaml search --installed .)
+    installed=$($LUET --config $tmpdir/luet.yaml search --installed .)
     searchst=$?
     assertEquals 'search exists successfully' "$searchst" "0"
 
     assertContains 'contains distro/c-0.3' "$installed" 'distro/c-0.3'
 
-    luet uninstall -y --config $tmpdir/luet.yaml distro/c
+    $LUET uninstall -y --config $tmpdir/luet.yaml distro/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
-    luet install --sync-repos -y --config $tmpdir/luet.yaml test/foo
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/foo
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 

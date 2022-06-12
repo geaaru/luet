@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -12,7 +14,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --all --concurrency 1 --tree "$ROOT_DIR/tests/fixtures/qlearning" --destination $tmpdir/testbuild --compression gzip
+    $LUET build --all --concurrency 1 --tree "$ROOT_DIR/tests/fixtures/qlearning" --destination $tmpdir/testbuild --compression gzip
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package dep B' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
@@ -21,7 +23,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/qlearning" \
+    $LUET create-repo --tree "$ROOT_DIR/tests/fixtures/qlearning" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -51,21 +53,21 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    luet install --sync-repos -y --config $tmpdir/luet.yaml test/c
-    #luet install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/c
+    #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package C installed' "[ -e '$tmpdir/testrootfs/c' ]"
 }
 
 testFullInstall() {
-    output=$(luet install --sync-repos -y --config $tmpdir/luet.yaml test/d test/f test/e test/a)
+    output=$($LUET install --sync-repos -y --config $tmpdir/luet.yaml test/d test/f test/e test/a)
     installst=$?
     assertEquals 'cannot install' "$installst" "1"
     assertTrue 'package D installed' "[ ! -e '$tmpdir/testrootfs/d' ]"
@@ -73,7 +75,7 @@ testFullInstall() {
 }
 
 testInstallAgain() {
-    output=$(luet install --sync-repos -y --solver-type qlearning --config $tmpdir/luet.yaml test/d test/f test/e test/a)
+    output=$($LUET install --sync-repos -y --solver-type qlearning --config $tmpdir/luet.yaml test/d test/f test/e test/a)
     installst=$?
     echo "$output"
     assertEquals 'install test successfully' "0" "$installst"
@@ -85,7 +87,7 @@ testInstallAgain() {
 }
 
 testCleanup() {
-    luet cleanup --config $tmpdir/luet.yaml
+    $LUET cleanup --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ ! -e '$tmpdir/testrootfs/packages/c-test-1.0.package.tar.gz' ]"

@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -12,7 +14,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/buildableseed" --destination $tmpdir/testbuild --compression gzip test/c
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/buildableseed" --destination $tmpdir/testbuild --compression gzip test/c
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package dep B' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
@@ -21,7 +23,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/buildableseed" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/buildableseed" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -50,7 +52,7 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
@@ -58,7 +60,7 @@ EOF
 testBuildWithNoTree() {
     mkdir $tmpdir/testbuild2
     mkdir $tmpdir/emptytree
-    luet build --from-repositories --tree $tmpdir/emptytree --config $tmpdir/luet.yaml test/c --destination $tmpdir/testbuild2
+    $LUET_BUILD build --from-repositories --tree $tmpdir/emptytree --config $tmpdir/luet.yaml test/c --destination $tmpdir/testbuild2
     buildst=$?
     assertEquals 'build test successfully' "$buildst" "0"
     assertTrue 'create package' "[ -e '$tmpdir/testbuild2/c-test-1.0.package.tar' ]"
@@ -66,7 +68,7 @@ testBuildWithNoTree() {
 
 testRepo2() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild2/repository.yaml' ]"
-    luet create-repo --config $tmpdir/luet.yaml --from-repositories --tree $tmpdir/emptytree \
+    $LUET_BUILD create-repo --config $tmpdir/luet.yaml --from-repositories --tree $tmpdir/emptytree \
     --output $tmpdir/testbuild2 \
     --packages $tmpdir/testbuild2 \
     --name "test" \
@@ -80,7 +82,7 @@ testRepo2() {
 }
 
 testCleanup() {
-    luet cleanup --config $tmpdir/luet.yaml
+    $LUET cleanup --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package cleaned' "[ ! -e '$tmpdir/testrootfs/packages/c-test-1.0.package.tar.gz' ]"
@@ -102,7 +104,7 @@ repositories:
      urls:
        - "$tmpdir/testbuild2"
 EOF
-    luet install --sync-repos -y --config $tmpdir/luet2.yaml --system-target $tmpdir/foo test/c
+    $LUET install --sync-repos -y --config $tmpdir/luet2.yaml --system-target $tmpdir/foo test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'db not created' "[ ! -e '$tmpdir/foo/var/cache/luet/luet.db' ]"

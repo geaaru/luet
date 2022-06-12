@@ -31,7 +31,7 @@ repositories:
      urls:
        - "${TEST_DOCKER_IMAGE}"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
@@ -46,7 +46,7 @@ EOF
     mkdir $tmpdir/empty
 
     # With --rebuild, the package gets rebuild with the values applied
-    build_output=$(luet build --pull --rebuild --tree "$tmpdir/empty" \
+    build_output=$($LUET_BUILD build --pull --rebuild --tree "$tmpdir/empty" \
     --config $tmpdir/luet.yaml --values $tmpdir/default.yaml --concurrency 1 \
     --from-repositories --destination $tmpdir/testbuild --compression zstd test/c@1.0 test/z test/interpolated)
     buildst=$?
@@ -63,7 +63,7 @@ testRepo() {
     # Disable tests which require a DOCKER registry
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
-    luet create-repo \
+    $LUET_BUILD create-repo \
     --output "${TEST_DOCKER_IMAGE}-2" \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -98,7 +98,7 @@ repositories:
      urls:
        - "${TEST_DOCKER_IMAGE}-2"
 EOF
-    luet config --config $tmpdir/luet-client.yaml
+    $LUET config --config $tmpdir/luet-client.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
@@ -107,7 +107,7 @@ testInstall() {
     # Disable tests which require a DOCKER registry
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
-    luet install --sync-repos -y --config $tmpdir/luet-client.yaml test/c@1.0 test/z test/interpolated
+    $LUET install --sync-repos -y --config $tmpdir/luet-client.yaml test/c@1.0 test/z test/interpolated
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"
@@ -120,7 +120,7 @@ testReInstall() {
     # Disable tests which require a DOCKER registry
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
-    output=$(luet install --sync-repos -y --config $tmpdir/luet-client.yaml  test/c@1.0)
+    output=$($LUET install --sync-repos -y --config $tmpdir/luet-client.yaml  test/c@1.0)
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertContains 'contains warning' "$output" 'No packages to install'
@@ -130,7 +130,7 @@ testUnInstall() {
     # Disable tests which require a DOCKER registry
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
-    luet uninstall -y --config $tmpdir/luet-client.yaml test/c@1.0
+    $LUET uninstall -y --config $tmpdir/luet-client.yaml test/c@1.0
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
@@ -141,7 +141,7 @@ testInstallAgain() {
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
-    output=$(luet install --sync-repos -y --config $tmpdir/luet-client.yaml test/c@1.0)
+    output=$($LUET install --sync-repos -y --config $tmpdir/luet-client.yaml test/c@1.0)
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertNotContains 'contains warning' "$output" 'No packages to install'
@@ -152,7 +152,7 @@ testInstallAgain() {
 testCleanup() {
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
-    luet cleanup --config $tmpdir/luet-client.yaml
+    $LUET cleanup --config $tmpdir/luet-client.yaml
     installst=$?
     assertEquals 'cleanup test successfully' "$installst" "0"
 }

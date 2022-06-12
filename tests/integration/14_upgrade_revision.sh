@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -12,13 +14,13 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo" --destination $tmpdir/testbuild --compression gzip --full
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo" --destination $tmpdir/testbuild --compression gzip --full
     buildst=$?
     assertTrue 'create package B 1.0' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
     assertEquals 'builds successfully' "$buildst" "0"
 
     mkdir $tmpdir/testbuild_revision
-    luet build --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo_revision" --destination $tmpdir/testbuild_revision --compression gzip --full
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo_revision" --destination $tmpdir/testbuild_revision --compression gzip --full
     buildst=$?
     assertTrue 'create package B 1.0' "[ -e '$tmpdir/testbuild_revision/b-test-1.0.package.tar.gz' ]"
     assertEquals 'builds successfully' "$buildst" "0"
@@ -26,7 +28,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -39,7 +41,7 @@ testRepo() {
     assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
 
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild_revision/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo_revision" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo_revision" \
     --output $tmpdir/testbuild_revision \
     --packages $tmpdir/testbuild_revision \
     --name "test" \
@@ -69,13 +71,13 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testUpgrade() {
-    luet install --sync-repos -y --config $tmpdir/luet.yaml test/b@1.0
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/b@1.0
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed B' "[ -e '$tmpdir/testrootfs/test5' ]"
@@ -95,18 +97,18 @@ repositories:
        - "$tmpdir/testbuild_revision"
 EOF
 
-    luet cleanup --config $tmpdir/luet.yaml
-    luet config --config $tmpdir/luet.yaml
+    $LUET cleanup --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 
-    luet upgrade --sync-repos -y --sync --config $tmpdir/luet.yaml
+    $LUET upgrade --sync-repos -y --sync --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'upgrade test successfully' "$installst" "0"
     assertTrue 'package uninstalled B' "[ ! -e '$tmpdir/testrootfs/test5' ]"
     assertTrue 'package installed B' "[ -e '$tmpdir/testrootfs/newc' ]"
 
-    content=$(luet upgrade --sync-repos -y --sync --config $tmpdir/luet.yaml)
+    content=$($LUET upgrade --sync-repos -y --sync --config $tmpdir/luet.yaml)
     installst=$?
     assertNotContains 'didn not upgrade' "$content" "Uninstalling"
 }

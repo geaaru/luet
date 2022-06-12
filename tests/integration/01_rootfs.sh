@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
   export tmpdir="$(mktemp -d)"
@@ -26,7 +28,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --config $tmpdir/luet-build.yaml \
+    $LUET_BUILD build --config $tmpdir/luet-build.yaml \
       --tree "$ROOT_DIR/tests/fixtures/buildableseed" \
       --destination $tmpdir/testbuild \
       --compression gzip test/c > /dev/null
@@ -38,7 +40,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --config $tmpdir/luet-build.yaml \
+    $LUET_BUILD create-repo --config $tmpdir/luet-build.yaml \
       --tree "$ROOT_DIR/tests/fixtures/buildableseed" \
       --output $tmpdir/testbuild \
       --packages $tmpdir/testbuild \
@@ -70,27 +72,27 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    luet install -y --config $tmpdir/luet.yaml test/c
+    $LUET install -y --config $tmpdir/luet.yaml test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"
 }
 
 testCleanup() {
-    luet cleanup --config $tmpdir/luet.yaml
+    $LUET cleanup --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package cleaned' "[ ! -e '$tmpdir/testrootfs/packages/c-test-1.0.package.tar.gz' ]"
 }
 
 testInstall2() {
-    luet install --sync-repos -y --config $tmpdir/luet.yaml --system-target $tmpdir/foo test/c
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml --system-target $tmpdir/foo test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'db not created' "[ ! -e '$tmpdir/foo/var/cache/luet/luet.db' ]"
@@ -98,7 +100,7 @@ testInstall2() {
 }
 
 testCleanup2() {
-    luet cleanup --config $tmpdir/luet.yaml --system-target $tmpdir/foo
+    $LUET cleanup --config $tmpdir/luet.yaml --system-target $tmpdir/foo
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package cleaned' "[ ! -e '$tmpdir/foo/packages/c-test-1.0.package.tar.gz' ]"
@@ -118,21 +120,21 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet install --sync-repos -y --config $tmpdir/luet2.yaml --system-target $tmpdir/baz test/c
+    $LUET install --sync-repos -y --config $tmpdir/luet2.yaml --system-target $tmpdir/baz test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/baz/c' ]"
 }
 
 testCleanup3() {
-    luet cleanup --config $tmpdir/luet2.yaml --system-target $tmpdir/baz
+    $LUET cleanup --config $tmpdir/luet2.yaml --system-target $tmpdir/baz
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package cleaned' "[ ! -e '$tmpdir/baz/packages/c-test-1.0.package.tar.gz' ]"
 }
 
 testInstall4() {
-    luet install --sync-repos -y --config $tmpdir/luet2.yaml --system-target $tmpdir/bad --system-engine boltdb test/c
+    $LUET install --sync-repos -y --config $tmpdir/luet2.yaml --system-target $tmpdir/bad --system-engine boltdb test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/bad/c' ]"
@@ -140,7 +142,7 @@ testInstall4() {
 }
 
 testCleanup4() {
-    luet cleanup --config $tmpdir/luet2.yaml --system-target $tmpdir/bad --system-engine boltdb
+    $LUET cleanup --config $tmpdir/luet2.yaml --system-target $tmpdir/bad --system-engine boltdb
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package cleaned' "[ ! -e '$tmpdir/bad/packages/c-test-1.0.package.tar.gz' ]"

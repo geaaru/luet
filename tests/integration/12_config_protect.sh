@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -12,7 +14,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testrootfs/testbuild -p
-    luet build --tree "$ROOT_DIR/tests/fixtures/config_protect" \
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/config_protect" \
       --destination $tmpdir/testrootfs/testbuild --compression gzip test/a
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
@@ -21,7 +23,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/config_protect" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/config_protect" \
     --output $tmpdir/testrootfs/testbuild \
     --packages $tmpdir/testrootfs/testbuild \
     --name "test" \
@@ -61,7 +63,7 @@ repositories:
      urls:
        - "/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
@@ -74,7 +76,7 @@ testInstall() {
     mkdir $tmpdir/testrootfs/etc/a -p
     echo "fakeconf" > $tmpdir/testrootfs/etc/a/conf
 
-    luet install --sync-repos -y --config $tmpdir/luet.yaml test/a
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/a
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -86,7 +88,7 @@ testInstall() {
 
 
 testUnInstall() {
-    luet uninstall -y --full --config $tmpdir/luet.yaml test/a
+    $LUET uninstall -y --full --config $tmpdir/luet.yaml test/a
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
@@ -97,7 +99,7 @@ testUnInstall() {
 
 
 testCleanup() {
-    luet cleanup --config $tmpdir/luet.yaml
+    $LUET cleanup --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ ! -e '$tmpdir/testrootfs/packages/a-test-1.0.package.tar.gz' ]"

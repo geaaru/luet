@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export LUET_BUILD=luet-build
+export LUET=luet
 export LUET_NOLOCK=true
 
 oneTimeSetUp() {
@@ -13,7 +15,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/config_protect_annotation" --destination $tmpdir/testbuild --compression gzip test/a
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/config_protect_annotation" --destination $tmpdir/testbuild --compression gzip test/a
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package' "[ -e '$tmpdir/testbuild/a-test-1.0.package.tar.gz' ]"
@@ -21,7 +23,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/config_protect_annotation" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/config_protect_annotation" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -62,7 +64,7 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
@@ -74,7 +76,7 @@ testInstall() {
     mkdir $tmpdir/testrootfs/opt/etc -p
     echo "fakeconf" > $tmpdir/testrootfs/opt/etc/conf
 
-    luet install --sync-repos -y --config $tmpdir/luet.yaml test/a
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/a
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -86,7 +88,7 @@ testInstall() {
 
 
 testUnInstall() {
-    luet uninstall -y --full --keep-protected-files --config $tmpdir/luet.yaml test/a
+    $LUET uninstall -y --full --keep-protected-files --config $tmpdir/luet.yaml test/a
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
@@ -97,7 +99,7 @@ testUnInstall() {
 
 
 testCleanup() {
-    luet cleanup --config $tmpdir/luet.yaml
+    $LUET cleanup --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ ! -e '$tmpdir/testrootfs/packages/a-test-1.0.package.tar.gz' ]"

@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
   export tmpdir="$(mktemp -d)"
@@ -26,7 +28,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --config $tmpdir/luet-build.yaml \
+    $LUET_BUILD build --config $tmpdir/luet-build.yaml \
       --tree "$ROOT_DIR/tests/fixtures/fileconflicts_upgrade" \
       --destination $tmpdir/testbuild --compression gzip --all
     buildst=$?
@@ -37,7 +39,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --config $tmpdir/luet-build.yaml \
+    $LUET_BUILD create-repo --config $tmpdir/luet-build.yaml \
     --tree "$ROOT_DIR/tests/fixtures/fileconflicts_upgrade" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
@@ -73,28 +75,28 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    luet install --sync-repos -y --force --config $tmpdir/luet.yaml test1/conflict@1.0 test2/conflict@1.0
-    #luet install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
+    $LUET install --sync-repos -y --force --config $tmpdir/luet.yaml test1/conflict@1.0 test2/conflict@1.0
+    #$LUET install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
     installst=$?
     assertEquals 'install test succeded' "$installst" "0"
     #assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"
 }
 
 testUpgrade() {
-    out=$(luet upgrade --sync-repos -y --config $tmpdir/luet.yaml)
+    out=$($LUET upgrade --sync-repos -y --config $tmpdir/luet.yaml)
     installst=$?
     assertEquals 'install test succeeded' "$installst" "1"
     assertContains 'does find conflicts' "$out" \
       "Error: file conflict found: file test1 conflict between package"
 
-    luet upgrade --sync-repos -y --config $tmpdir/luet.yaml --force
-    #luet install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
+    $LUET upgrade --sync-repos -y --config $tmpdir/luet.yaml --force
+    #$LUET install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
     installst=$?
     assertEquals 'install test succeeded' "$installst" "0"
 }

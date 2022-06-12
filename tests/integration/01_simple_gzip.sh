@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -12,7 +14,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/buildableseed" --destination $tmpdir/testbuild --compression gzip test/c@1.0 > /dev/null
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/buildableseed" --destination $tmpdir/testbuild --compression gzip test/c@1.0 > /dev/null
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package dep B' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
@@ -21,7 +23,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/buildableseed" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/buildableseed" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -56,28 +58,28 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    luet install --sync-repos -y --config $tmpdir/luet.yaml test/c@1.0
-    #luet install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/c@1.0
+    #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"
 }
 
 testReInstall() {
-    output=$(luet install --sync-repos -y --config $tmpdir/luet.yaml  =test/c-1.0)
+    output=$($LUET install --sync-repos -y --config $tmpdir/luet.yaml  =test/c-1.0)
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertContains 'contains warning' "$output" 'No packages to install'
 }
 
 testUnInstall() {
-    luet uninstall -y --config $tmpdir/luet.yaml =test/c-1.0
+    $LUET uninstall -y --config $tmpdir/luet.yaml =test/c-1.0
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
@@ -85,7 +87,7 @@ testUnInstall() {
 
 testInstallAgain() {
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
-    output=$(luet install --sync-repos -y --config $tmpdir/luet.yaml =test/c-1.0)
+    output=$($LUET install --sync-repos -y --config $tmpdir/luet.yaml =test/c-1.0)
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertNotContains 'contains warning' "$output" 'No packages to install'
@@ -94,7 +96,7 @@ testInstallAgain() {
 }
 
 testCleanup() {
-    luet cleanup --config $tmpdir/luet.yaml
+    $LUET cleanup --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ ! -e '$tmpdir/testrootfs/packages/c-test-1.0.package.tar.gz' ]"

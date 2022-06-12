@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
     export tmpdir="$(mktemp -d)"
@@ -15,7 +17,7 @@ oneTimeTearDown() {
 testBuild() {
     [ "$LUET_BACKEND" == "img" ] && startSkipping
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/join_complex" \
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/join_complex" \
                --destination $tmpdir/testbuild --concurrency 1 \
                --compression gzip \
                test/z test/x

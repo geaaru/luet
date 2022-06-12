@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -13,7 +15,7 @@ oneTimeTearDown() {
 testBuild() {
     [ "$LUET_BACKEND" == "img" ] && startSkipping
     mkdir $tmpdir/testbuild
-    luet build -d --tree "$ROOT_DIR/tests/fixtures/perms" --same-owner=true --destination $tmpdir/testbuild --compression gzip --full
+    $LUET_BUILD build -d --tree "$ROOT_DIR/tests/fixtures/perms" --same-owner=true --destination $tmpdir/testbuild --compression gzip --full
     buildst=$?
     assertTrue 'create package perms 0.1' "[ -e '$tmpdir/testbuild/perms-test-0.1.package.tar.gz' ]"
     assertEquals 'builds successfully' "$buildst" "0"
@@ -22,7 +24,7 @@ testBuild() {
 testRepo() {
     [ "$LUET_BACKEND" == "img" ] && startSkipping
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/perms" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/perms" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -53,14 +55,14 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
     [ "$LUET_BACKEND" == "img" ] && startSkipping
-    $ROOT_DIR/tests/integration/bin/luet install --sync-repos -y --config $tmpdir/luet.yaml test/perms@0.1 test/perms2@0.1
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/perms@0.1 test/perms2@0.1
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
    

@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -13,7 +15,7 @@ oneTimeTearDown() {
 testBuild() {
     mkdir $tmpdir/testbuild
     [ "$LUET_BACKEND" == "img" ] && startSkipping
-    luet build --tree "$ROOT_DIR/tests/fixtures/retrieve-integration" --destination $tmpdir/testbuild --compression gzip test/b
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/retrieve-integration" --destination $tmpdir/testbuild --compression gzip test/b
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package dep B' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
@@ -23,7 +25,7 @@ testBuild() {
 testRepo() {
     [ "$LUET_BACKEND" == "img" ] && startSkipping
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/retrieve-integration" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/retrieve-integration" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -53,7 +55,7 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
@@ -62,8 +64,8 @@ EOF
 
 testInstall() {
     [ "$LUET_BACKEND" == "img" ] && startSkipping
-    luet install --sync-repos -y --config $tmpdir/luet.yaml test/b
-    #luet install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/b
+    #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package B installed' "[ -e '$tmpdir/testrootfs/b' ]"
@@ -75,7 +77,7 @@ testInstall() {
 
 testUnInstall() {
     [ "$LUET_BACKEND" == "img" ] && startSkipping
-    luet uninstall -y --full --config $tmpdir/luet.yaml test/b
+    $LUET uninstall -y --full --config $tmpdir/luet.yaml test/b
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/b' ]"
@@ -85,7 +87,7 @@ testUnInstall() {
 
 testCleanup() {
     [ "$LUET_BACKEND" == "img" ] && startSkipping
-    luet cleanup --config $tmpdir/luet.yaml
+    $LUET cleanup --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ ! -e '$tmpdir/testrootfs/packages/b-test-1.0.package.tar.gz' ]"

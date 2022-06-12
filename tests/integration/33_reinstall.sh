@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -12,7 +14,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    luet build --tree "$ROOT_DIR/tests/fixtures/fileconflicts" --destination $tmpdir/testbuild --compression gzip --all
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/fileconflicts" --destination $tmpdir/testbuild --compression gzip --all
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create packages' "[ -e '$tmpdir/testbuild/conflict-test1-1.0.package.tar.gz' ]"
@@ -21,7 +23,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    luet create-repo --tree "$ROOT_DIR/tests/fixtures/fileconflicts" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/fileconflicts" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -51,16 +53,16 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    luet config --config $tmpdir/luet.yaml
+    $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testReInstall() {
-    luet install --sync-repos -y --config $tmpdir/luet.yaml test1/conflict
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test1/conflict
     installst=$?
     assertEquals 'install test succeeded' "$installst" "0"
-    luet reinstall --sync-repos -y --config $tmpdir/luet.yaml test1/conflict
+    $LUET reinstall --sync-repos -y --config $tmpdir/luet.yaml test1/conflict
     installst=$?
     assertEquals 'reinstall test succeeded' "$installst" "0"
 }

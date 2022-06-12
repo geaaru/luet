@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
+export LUET_BUILD=luet-build
+export LUET=luet
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -12,7 +14,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild1
-    luet build --tree "$ROOT_DIR/tests/fixtures/simple_dep" --destination $tmpdir/testbuild1 test/c
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/simple_dep" --destination $tmpdir/testbuild1 test/c
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package A 1.2' "[ -e '$tmpdir/testbuild1/a-test-1.2.package.tar' ]"
@@ -21,7 +23,7 @@ testBuild() {
 
 testBuildOnlyTarget() {
     mkdir $tmpdir/testbuild2
-    luet build --tree "$ROOT_DIR/tests/fixtures/simple_dep" --destination $tmpdir/testbuild2 --only-target-package test/c
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/simple_dep" --destination $tmpdir/testbuild2 --only-target-package test/c
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package A 1.2' "[ ! -e '$tmpdir/testbuild2/a-test-1.2.package.tar' ]"
