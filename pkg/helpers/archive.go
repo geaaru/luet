@@ -52,9 +52,15 @@ func Tar(src, dest string) error {
 
 func UntarProtect(src, dst string, sameOwner, overwriteDirPerms bool, protectedFiles []string, modifier tarf.TarFileHandlerFunc) error {
 
+	mutex := true
+	mutexEnv := os.Getenv("LUET_UNPACK_MUTEX")
+	if mutexEnv == "false" {
+		mutex = false
+	}
+
 	spec := tarf_specs.NewSpecFile()
 	spec.SameOwner = sameOwner
-	spec.EnableMutex = true
+	spec.EnableMutex = mutex
 	spec.OverwritePerms = overwriteDirPerms
 	spec.IgnoreRegexes = []string{
 		// prevent 'operation not permitted'
