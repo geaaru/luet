@@ -31,6 +31,7 @@ It is written entirely in Golang and where used as package manager, it can run i
 
 * `dockerv2` backend: i begin to rewrite the docker backend and using the [tar-formers](https://github.com/geaaru/tar-formers/) to manage the tar streams.
 
+* drop `extensions` and `plugin` support not used
 
 ## In a glance
 
