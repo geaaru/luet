@@ -6,7 +6,7 @@ export ROOT_DIR="$(git rev-parse --show-toplevel)"
 
 pushd $ROOT_DIR
     CGO_ENABLED=0 go build -o "$ROOT_DIR/tests/integration/bin/luet"
-	  CGO_ENABLED=0 go build -o "$ROOT_DIR/tests/integration/bin/luet-build ./luet-build"
+	  CGO_ENABLED=0 go build -o "$ROOT_DIR/tests/integration/bin/luet-build" ./luet-build
 popd
 
 [ ! -d "$ROOT_DIR/tests/integration/shunit2" ] && git clone https://github.com/kward/shunit2.git "$ROOT_DIR/tests/integration/shunit2" 
