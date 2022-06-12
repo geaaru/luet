@@ -17,7 +17,7 @@
 package cmd
 
 import (
-	. "github.com/geaaru/luet/cmd/tree"
+	. "github.com/geaaru/luet/luet-build/cmd/tree"
 
 	"github.com/spf13/cobra"
 )

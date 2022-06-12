@@ -19,13 +19,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ghodss/yaml"
+	cmd_luet "github.com/geaaru/luet/cmd"
 	helpers "github.com/geaaru/luet/cmd/helpers"
 	"github.com/geaaru/luet/cmd/util"
 	"github.com/geaaru/luet/pkg/compiler"
 	"github.com/geaaru/luet/pkg/compiler/types/artifact"
 	compilerspec "github.com/geaaru/luet/pkg/compiler/types/spec"
 	"github.com/geaaru/luet/pkg/installer"
+	"github.com/ghodss/yaml"
 
 	"github.com/geaaru/luet/pkg/compiler/types/compression"
 	"github.com/geaaru/luet/pkg/compiler/types/options"
@@ -110,7 +111,7 @@ Build packages specifying multiple definition trees:
 		full, _ := cmd.Flags().GetBool("full")
 		rebuild, _ := cmd.Flags().GetBool("rebuild")
 
-		var results Results
+		var results cmd_luet.Results
 		backendArgs := LuetCfg.Viper.GetStringSlice("backend-args")
 
 		out, _ := cmd.Flags().GetString("output")
@@ -235,7 +236,7 @@ Build packages specifying multiple definition trees:
 				}
 				for _, p := range hashTree.Dependencies {
 					results.Packages = append(results.Packages,
-						PackageResult{
+						cmd_luet.PackageResult{
 							Name:       p.Package.GetName(),
 							Version:    p.Package.GetVersion(),
 							Category:   p.Package.GetCategory(),

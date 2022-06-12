@@ -8,7 +8,8 @@ source:
 checksum:
   name_template: '{{ .ProjectName }}-{{ .Tag }}-checksums.txt'
 builds:
-  -
+  - id: luet
+    binary: luet
     env:
       - CGO_ENABLED=0
     ldflags:
@@ -26,9 +27,51 @@ builds:
     goarm:
       - 6
       - 7
+
+  - id: luet-build
+    dir: luet-build
+    binary: luet-build
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w
+      - -X 'github.com/geaaru/luet/pkg/config.BuildTime={{ time "2006-01-02 15:04:05 MST" }}'
+      - -X 'github.com/geaaru/luet/pkg/config.BuildCommit={{ .FullCommit }}'
+      - -X 'github.com/geaaru/luet/pkg/config.BuildGoVersion={{ .Env.GOVERSION }}'
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm
+      - arm64
+      - 386
+    goarm:
+      - 6
+      - 7
+
+
 archives:
-  - format: binary # this removes the tar of the archives, leaving the binaries alone
+  - id: luet
+    builds:
+      - luet
+    replacements:
+      linux: Linux
+      386: i386
+      amd64: x86_64
+
+    format: binary # this removes the tar of the archives, leaving the binaries alone
     name_template: luet-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
+
+  - id: luet-build
+    builds:
+      - luet-build
+    format: binary
+    name_template: luet-build-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
+    replacements:
+      linux: Linux
+      386: i386
+      amd64: x86_64
+
 changelog:
   sort: asc
   filters:
