@@ -14,7 +14,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    $LUET build --all --concurrency 1 --tree "$ROOT_DIR/tests/fixtures/qlearning" --destination $tmpdir/testbuild --compression gzip
+    $LUET_BUILD build --all --concurrency 1 --tree "$ROOT_DIR/tests/fixtures/qlearning" --destination $tmpdir/testbuild --compression gzip
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package dep B' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
@@ -23,7 +23,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET create-repo --tree "$ROOT_DIR/tests/fixtures/qlearning" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/qlearning" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
