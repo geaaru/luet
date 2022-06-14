@@ -36,7 +36,7 @@ testRepo() {
     createst=$?
     assertEquals 'create repo successfully' "$createst" "0"
     assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET serve-repo --dir $tmpdir/testbuild --port $TEST_PORT &
+    $LUET_BUILD serve-repo --dir $tmpdir/testbuild --port $TEST_PORT &
 }
 
 testConfig() {
