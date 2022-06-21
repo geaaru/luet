@@ -252,6 +252,7 @@ func init() {
 
 	// Add main commands
 	RootCmd.AddCommand(
+		newSearchCommand(config.LuetCfg),
 		newCleanupCommand(config.LuetCfg),
 		newQueryCommand(config.LuetCfg),
 	)

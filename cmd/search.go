@@ -15,374 +15,275 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
-	"github.com/ghodss/yaml"
-	"github.com/jedib0t/go-pretty/table"
 	"github.com/geaaru/luet/cmd/util"
-	. "github.com/geaaru/luet/pkg/config"
+	art "github.com/geaaru/luet/pkg/compiler/types/artifact"
+	cfg "github.com/geaaru/luet/pkg/config"
+	config "github.com/geaaru/luet/pkg/config"
 	installer "github.com/geaaru/luet/pkg/installer"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 	"github.com/geaaru/luet/pkg/solver"
+	wagon "github.com/geaaru/luet/pkg/v2/repository"
+
+	tablewriter "github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
-type PackageResult struct {
-	Name       string   `json:"name"`
-	Category   string   `json:"category"`
-	Version    string   `json:"version"`
-	License    string   `json:"License"`
-	Repository string   `json:"repository"`
-	Target     string   `json:"target"`
-	Hidden     bool     `json:"hidden"`
-	Files      []string `json:"files"`
+type ChannelSearchRes struct {
+	Stones *[]*wagon.Stone
+	Error  error
 }
 
-type Results struct {
-	Packages []PackageResult `json:"packages"`
+func ProcessRepository(repo *config.LuetRepository, searchOpts *wagon.StonesSearchOpts, config *cfg.LuetConfig, channel chan ChannelSearchRes) {
+	repobasedir := config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
+	r := wagon.NewWagonRepository(repo)
+	err := r.ReadWagonIdentify(repobasedir)
+	if err != nil {
+		Warning("Error on read repository identity file: " + err.Error())
+	} else {
+		pkgs, err := r.SearchStones(searchOpts)
+		if err != nil {
+			Warning("Error on read repository catalog for repo : " + r.Identity.Name)
+			channel <- ChannelSearchRes{nil, err}
+			return
+		}
+
+		channel <- ChannelSearchRes{pkgs, nil}
+
+		r.ClearCatalog()
+	}
 }
 
-func (r *Results) AddPackage(p *PackageResult) {
-	r.Packages = append(r.Packages, *p)
-}
-
-func (r PackageResult) String() string {
-	return fmt.Sprintf("%s/%s-%s required for %s", r.Category, r.Name, r.Version, r.Target)
-}
-
-func searchLocally(term string, results *Results, label, labelMatch, revdeps, hidden bool) {
-
+func searchInstalled(config *cfg.LuetConfig, searchOpts *wagon.StonesSearchOpts) (*[]*wagon.Stone, error) {
 	system := &installer.System{
-		Database: LuetCfg.GetSystemDB(),
-		Target:   LuetCfg.GetSystem().Rootfs,
+		Database: config.GetSystemDB(),
+		Target:   config.GetSystem().Rootfs,
 	}
+	wagonStones := wagon.NewWagonStones()
+	wagonStones.Catalog = &wagon.StonesCatalog{}
 
-	var err error
-	iMatches := pkg.Packages{}
-	if label {
-		iMatches, err = system.Database.FindPackageLabel(term)
-	} else if labelMatch {
-		iMatches, err = system.Database.FindPackageLabelMatch(term)
-	} else {
-		iMatches, err = system.Database.FindPackageMatch(term)
-	}
-
-	if err != nil {
-		Fatal("Error: " + err.Error())
-	}
-
-	for _, pack := range iMatches {
-		if !revdeps {
-			if !pack.IsHidden() || pack.IsHidden() && hidden {
-				f, _ := system.Database.GetPackageFiles(pack)
-				results.AddPackage(
-					&PackageResult{
-						Name:       pack.GetName(),
-						Version:    pack.GetVersion(),
-						Category:   pack.GetCategory(),
-						License:    pack.GetLicense(),
-						Repository: "system",
-						Hidden:     pack.IsHidden(),
-						Files:      f,
-					},
-				)
-			}
-		} else {
-
-			packs, _ := system.Database.GetRevdeps(pack)
-			for _, revdep := range packs {
-				if !revdep.IsHidden() || revdep.IsHidden() && hidden {
-					f, _ := system.Database.GetPackageFiles(revdep)
-					results.AddPackage(
-						&PackageResult{
-							Name:       revdep.GetName(),
-							Version:    revdep.GetVersion(),
-							Category:   revdep.GetCategory(),
-							License:    revdep.GetLicense(),
-							Repository: "system",
-							Hidden:     revdep.IsHidden(),
-							Files:      f,
-						},
-					)
-				}
-			}
+	pkgs := system.Database.World()
+	fmt.Println("WORLDS ", len(pkgs))
+	for idx, _ := range pkgs {
+		p := pkgs[idx].(*pkg.DefaultPackage)
+		artifact := art.NewPackageArtifact(p.GetPath())
+		artifact.Runtime = p
+		if searchOpts.WithFiles {
+			f, _ := system.Database.GetPackageFiles(pkgs[idx])
+			artifact.Files = f
 		}
+		wagonStones.Catalog.Index = append(wagonStones.Catalog.Index, artifact)
 	}
-
+	return wagonStones.Search(searchOpts, "system")
 }
-func searchOnline(term string, results *Results, label, labelMatch, revdeps, hidden bool) {
-	repos := installer.Repositories{}
-	for _, repo := range LuetCfg.SystemRepositories {
+
+func searchFromRepos(config *cfg.LuetConfig, searchOpts *wagon.StonesSearchOpts) *[]*wagon.Stone {
+	res := []*wagon.Stone{}
+	var ch chan ChannelSearchRes = make(
+		chan ChannelSearchRes,
+		config.GetGeneral().Concurrency,
+	)
+
+	for idx, _ := range config.SystemRepositories {
+		repo := config.SystemRepositories[idx]
 		if !repo.Enable {
 			continue
 		}
-		r := installer.NewSystemRepository(repo)
-		repos = append(repos, r)
+
+		if repo.Cached {
+			go ProcessRepository(&repo, searchOpts, config, ch)
+		}
+
 	}
 
-	inst := installer.NewLuetInstaller(
-		installer.LuetInstallerOptions{
-			Concurrency:   LuetCfg.GetGeneral().Concurrency,
-			SolverOptions: *LuetCfg.GetSolverOptions(),
+	for idx, _ := range config.SystemRepositories {
+		repo := config.SystemRepositories[idx]
+		if repo.Cached {
+			resp := <-ch
+			if resp.Error == nil {
+				res = append(res, *resp.Stones...)
+			}
+		}
+	}
+
+	return &res
+}
+
+func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
+
+	var labels []string
+	var regLabels []string
+	var categories []string
+	var annotations []string
+
+	var searchCmd = &cobra.Command{
+		Use:   "search <term>",
+		Short: "Search packages",
+		Long: `Search for installed and available packages
+		
+	To search a package in the repositories:
+
+		$ luet search <regex1> ... <regexN>
+
+	To search a package and display results in a table (wide screens):
+
+		$ luet search --table <regex>
+
+	To look into the installed packages:
+
+		$ luet search --installed <regex>
+
+	Note: the regex argument is optional, if omitted implies "all"
+
+	To search a package by label:
+
+		$ luet search --label <label1>,<label2>...,<labelN>
+
+	or by regex against the label:
+
+		$ luet search --rlabel <regex-label1>,..,<regex-labelN>
+
+	or by categories:
+
+		$ luet search --category <cat1>,..,<catN>
+
+	or by annotations:
+
+		$ luet search --annotation <annotation1>,..,<annotationN>
+
+	Search can also return results in the terminal in different ways: as terminal output, as json or as yaml.
+
+		$ luet search --json <regex> # JSON output
+		$ luet search --yaml <regex> # YAML output
+	`,
+		Aliases: []string{"s"},
+		PreRun: func(cmd *cobra.Command, args []string) {
+			util.BindSystemFlags(cmd)
+			util.BindSolverFlags(cmd)
+			config.Viper.BindPFlag("installed", cmd.Flags().Lookup("installed"))
 		},
-	)
-	inst.Repositories(repos)
-
-	synced, err := inst.GetRepositoriesInstances(true)
-	if err != nil {
-		Fatal("Error: " + err.Error())
-	}
-
-	matches := []installer.PackageMatch{}
-	if label {
-		matches = synced.SearchLabel(term)
-	} else if labelMatch {
-		matches = synced.SearchLabelMatch(term)
-	} else {
-		matches = synced.Search(term)
-	}
-
-	for _, m := range matches {
-		if !revdeps {
-			if !m.Package.IsHidden() || m.Package.IsHidden() && hidden {
-				r := &PackageResult{
-					Name:       m.Package.GetName(),
-					Version:    m.Package.GetVersion(),
-					Category:   m.Package.GetCategory(),
-					License:    m.Package.GetLicense(),
-					Repository: m.Repo.GetName(),
-					Hidden:     m.Package.IsHidden(),
-				}
-				if m.Artifact != nil {
-					r.Files = m.Artifact.Files
-				}
-				results.AddPackage(r)
+		Run: func(cmd *cobra.Command, args []string) {
+			//var results Results
+			if len(args) == 0 {
+				args = []string{"."}
 			}
-		} else {
-			packs, _ := m.Repo.GetTree().GetDatabase().GetRevdeps(m.Package)
-			for _, revdep := range packs {
-				if !revdep.IsHidden() || revdep.IsHidden() && hidden {
-					r := &PackageResult{
-						Name:       revdep.GetName(),
-						Version:    revdep.GetVersion(),
-						Category:   revdep.GetCategory(),
-						Repository: m.Repo.GetName(),
-						License:    revdep.GetLicense(),
-						Hidden:     revdep.IsHidden(),
-					}
-					if m.Artifact != nil {
-						r.Files = m.Artifact.Files
-					}
-					results.AddPackage(r)
-				}
+			hidden, _ := cmd.Flags().GetBool("hidden")
+			files, _ := cmd.Flags().GetBool("files")
+			andCond, _ := cmd.Flags().GetBool("and-condition")
+			installed := config.Viper.GetBool("installed")
+			tableMode, _ := cmd.Flags().GetBool("table")
+			quiet, _ := cmd.Flags().GetBool("quiet")
+
+			util.SetSystemConfig()
+			util.SetSolverConfig()
+
+			out, _ := cmd.Flags().GetString("output")
+			config.GetLogging().SetLogLevel("error")
+
+			searchOpts := &wagon.StonesSearchOpts{
+				Categories:    categories,
+				Labels:        labels,
+				LabelsMatches: regLabels,
+				Matches:       args,
+				Hidden:        hidden,
+				AndCondition:  andCond,
+				WithFiles:     files,
 			}
-		}
-	}
-}
+			var res *[]*wagon.Stone
+			var err error
 
-func searchLocalFiles(term string, results *Results) {
-	Info("--- Search results (" + term + "): ---")
-
-	matches, _ := LuetCfg.GetSystemDB().FindPackageByFile(term)
-	for _, pack := range matches {
-		f, _ := LuetCfg.GetSystemDB().GetPackageFiles(pack)
-		results.AddPackage(
-			&PackageResult{
-				Name:       pack.GetName(),
-				Version:    pack.GetVersion(),
-				Category:   pack.GetCategory(),
-				Repository: "system",
-				Hidden:     pack.IsHidden(),
-				License:    pack.GetLicense(),
-				Files:      f,
-			},
-		)
-	}
-}
-
-func searchFiles(term string, results *Results) {
-	repos := installer.Repositories{}
-	for _, repo := range LuetCfg.SystemRepositories {
-		if !repo.Enable {
-			continue
-		}
-		r := installer.NewSystemRepository(repo)
-		repos = append(repos, r)
-	}
-
-	inst := installer.NewLuetInstaller(
-		installer.LuetInstallerOptions{
-			Concurrency:   LuetCfg.GetGeneral().Concurrency,
-			SolverOptions: *LuetCfg.GetSolverOptions(),
-		},
-	)
-	inst.Repositories(repos)
-	synced, err := inst.GetRepositoriesInstances(true)
-	if err != nil {
-		Fatal("Error: " + err.Error())
-	}
-
-	matches := []installer.PackageMatch{}
-	matches = synced.SearchPackages(term, installer.FileSearch)
-
-	for _, m := range matches {
-		results.AddPackage(
-			&PackageResult{
-				Name:       m.Package.GetName(),
-				Version:    m.Package.GetVersion(),
-				Category:   m.Package.GetCategory(),
-				Repository: m.Repo.GetName(),
-				Hidden:     m.Package.IsHidden(),
-				Files:      m.Artifact.Files,
-				License:    m.Package.GetLicense(),
-			},
-		)
-	}
-}
-
-var searchCmd = &cobra.Command{
-	Use:   "search <term>",
-	Short: "Search packages",
-	Long: `Search for installed and available packages
-	
-To search a package in the repositories:
-
-	$ luet search <regex>
-
-To search a package and display results in a table (wide screens):
-
-	$ luet search --table <regex>
-
-To look into the installed packages:
-
-	$ luet search --installed <regex>
-
-Note: the regex argument is optional, if omitted implies "all"
-
-To search a package by label:
-
-	$ luet search --by-label <label>
-
-or by regex against the label:
-
-	$ luet search --by-label-regex <label>
-
-It can also show a package revdeps by:
-
-	$ luet search --revdeps <regex>
-
-Search can also return results in the terminal in different ways: as terminal output, as json or as yaml.
-
-	$ luet search --json <regex> # JSON output
-	$ luet search --yaml <regex> # YAML output
-`,
-	Aliases: []string{"s"},
-	PreRun: func(cmd *cobra.Command, args []string) {
-		util.BindSystemFlags(cmd)
-		util.BindSolverFlags(cmd)
-		LuetCfg.Viper.BindPFlag("installed", cmd.Flags().Lookup("installed"))
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		var results Results
-		if len(args) > 1 {
-			Fatal("Wrong number of arguments (expected 1)")
-		} else if len(args) == 0 {
-			args = []string{"."}
-		}
-		hidden, _ := cmd.Flags().GetBool("hidden")
-
-		installed := LuetCfg.Viper.GetBool("installed")
-		searchWithLabel, _ := cmd.Flags().GetBool("by-label")
-		searchWithLabelMatch, _ := cmd.Flags().GetBool("by-label-regex")
-		revdeps, _ := cmd.Flags().GetBool("revdeps")
-		tableMode, _ := cmd.Flags().GetBool("table")
-		files, _ := cmd.Flags().GetBool("files")
-
-		util.SetSystemConfig()
-		util.SetSolverConfig()
-
-		out, _ := cmd.Flags().GetString("output")
-		LuetCfg.GetLogging().SetLogLevel("error")
-
-		switch {
-		case files && installed:
-			searchLocalFiles(args[0], &results)
-		case files && !installed:
-			searchFiles(args[0], &results)
-		case !installed:
-			searchOnline(args[0], &results, searchWithLabel,
-				searchWithLabelMatch, revdeps, hidden)
-		default:
-			searchLocally(args[0], &results, searchWithLabel,
-				searchWithLabelMatch, revdeps, hidden)
-		}
-
-		if out == "json" || out == "yaml" {
-			y, err := yaml.Marshal(results)
-			if err != nil {
-				fmt.Printf("err: %v\n", err)
-				return
-			}
-			switch out {
-			case "yaml":
-				fmt.Println(string(y))
-			case "json":
-				j2, err := yaml.YAMLToJSON(y)
+			if installed {
+				res, err = searchInstalled(config, searchOpts)
 				if err != nil {
-					fmt.Printf("err: %v\n", err)
-					return
+					fmt.Println("Error on retrieve installed packages ", err.Error())
+					os.Exit(1)
 				}
-				fmt.Println(string(j2))
+			} else {
+				res = searchFromRepos(config, searchOpts)
 			}
-		} else if tableMode {
 
-			t := table.NewWriter()
-			t.SetOutputMirror(os.Stdout)
-			t.AppendHeader(
-				table.Row{
-					"Package", "Version", "Repository", "License",
-				},
-			)
+			if out == "json" {
+				pack := wagon.StonesPack{*res}
+				data, err := json.Marshal(pack)
+				if err != nil {
+					fmt.Println("Error on marshal stones ", err.Error())
+					os.Exit(1)
+				}
+				fmt.Println(string(data))
+			} else if out == "yaml" {
+				pack := wagon.StonesPack{*res}
+				data, err := yaml.Marshal(pack)
+				if err != nil {
+					fmt.Println("Error on marshal stones ", err.Error())
+					os.Exit(1)
+				}
+				fmt.Println(string(data))
+			} else {
 
-			for _, p := range results.Packages {
-				t.AppendRow([]interface{}{
-					fmt.Sprintf("%s/%s", p.Category, p.Name),
-					p.Version,
-					p.Repository,
-					p.License,
-				})
+				if tableMode {
+
+					table := tablewriter.NewWriter(os.Stdout)
+					table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
+					table.SetCenterSeparator("|")
+					table.SetAlignment(tablewriter.ALIGN_LEFT)
+					table.SetHeader([]string{
+						"Package", "Version", "Repository",
+					})
+					table.SetAutoWrapText(false)
+
+					for _, s := range *res {
+						table.Append([]string{
+							fmt.Sprintf("%s/%s", s.Category, s.Name),
+							s.Version,
+							s.Repository,
+						})
+					}
+
+					table.Render()
+				} else {
+					for _, s := range *res {
+						if quiet {
+							fmt.Println(fmt.Sprintf("%s/%s", s.Category, s.Name))
+						} else {
+							fmt.Println(fmt.Sprintf("%s/%s-%s", s.Category, s.Name, s.Version))
+						}
+					}
+				}
 			}
-			t.Render()
-		} else {
-			for _, p := range results.Packages {
-				fmt.Println(fmt.Sprintf("%s/%s-%s",
-					p.Category, p.Name, p.Version,
-				))
-			}
-		}
+		},
+	}
 
-	},
-}
-
-func init() {
 	searchCmd.Flags().String("system-dbpath", "", "System db path")
 	searchCmd.Flags().String("system-target", "", "System rootpath")
 	searchCmd.Flags().String("system-engine", "", "System DB engine")
-
-	searchCmd.Flags().Bool("installed", false, "Search between system packages")
 	searchCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
-	searchCmd.Flags().StringP("output", "o", "terminal", "Output format ( Defaults: terminal, available: json,yaml )")
 	searchCmd.Flags().Float32("solver-rate", 0.7, "Solver learning rate")
 	searchCmd.Flags().Float32("solver-discount", 1.0, "Solver discount rate")
 	searchCmd.Flags().Int("solver-attempts", 9000, "Solver maximum attempts")
-	searchCmd.Flags().Bool("by-label", false, "Search packages through label")
-	searchCmd.Flags().Bool("by-label-regex", false, "Search packages through label regex")
-	searchCmd.Flags().Bool("revdeps", false, "Search package reverse dependencies")
-	searchCmd.Flags().Bool("hidden", false, "Include hidden packages")
-	searchCmd.Flags().Bool("table", false, "show output in a table (wider screens)")
-	searchCmd.Flags().Bool("files", false, "Search between packages files")
 
-	RootCmd.AddCommand(searchCmd)
+	searchCmd.Flags().Bool("installed", false, "Search between system packages")
+
+	searchCmd.Flags().StringSliceVar(&labels, "label", []string{},
+		"Search packages through one or more labels.")
+	searchCmd.Flags().StringSliceVar(&regLabels, "rlabel", []string{},
+		"Search packages through one or more labels regex.")
+	searchCmd.Flags().StringSliceVar(&categories, "category", []string{},
+		"Search packages through one or more categories regex.")
+	searchCmd.Flags().StringSliceVarP(&annotations, "annotation", "a", []string{},
+		"Search packages through one or more annotations.")
+	searchCmd.Flags().Bool("condition-and", false,
+		"The searching options are managed in AND between the searching types.")
+
+	searchCmd.Flags().StringP("output", "o", "terminal", "Output format ( Defaults: terminal, available: json,yaml )")
+	searchCmd.Flags().Bool("hidden", false, "Include hidden packages")
+	searchCmd.Flags().Bool("files", false, "Show package files on YAML/JSON output.")
+	searchCmd.Flags().Bool("table", false, "show output in a table (wider screens)")
+	searchCmd.Flags().Bool("quiet", false, "show output as list without version")
+
+	return searchCmd
 }
