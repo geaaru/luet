@@ -18,12 +18,12 @@ package cmd_repo
 
 import (
 	"fmt"
-	"path/filepath"
 	"strconv"
 	"time"
 
 	. "github.com/geaaru/luet/pkg/config"
-	installer "github.com/geaaru/luet/pkg/installer"
+	. "github.com/geaaru/luet/pkg/logger"
+	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
 	. "github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
@@ -43,7 +43,8 @@ func NewRepoListCommand() *cobra.Command {
 			quiet, _ := cmd.Flags().GetBool("quiet")
 			repoType, _ := cmd.Flags().GetString("type")
 
-			for _, repo := range LuetCfg.SystemRepositories {
+			for idx, _ := range LuetCfg.SystemRepositories {
+				repo := LuetCfg.SystemRepositories[idx]
 				if enable && !repo.Enable {
 					continue
 				}
@@ -71,12 +72,13 @@ func NewRepoListCommand() *cobra.Command {
 					repobasedir := LuetCfg.GetSystem().GetRepoDatabaseDirPath(repo.Name)
 					if repo.Cached {
 
-						r := installer.NewSystemRepository(repo)
-						localRepo, _ := r.ReadSpecFile(filepath.Join(repobasedir,
-							installer.REPOSITORY_SPECFILE))
-						if localRepo != nil {
-							tsec, _ := strconv.ParseInt(localRepo.GetLastUpdate(), 10, 64)
-							repoRevision = Bold(Red(localRepo.GetRevision())).String() +
+						r := wagon.NewWagonRepository(&repo)
+						err := r.ReadWagonIdentify(repobasedir)
+						if err != nil {
+							Warning("Error on read repository identity file: " + err.Error())
+						} else {
+							tsec, _ := strconv.ParseInt(r.GetLastUpdate(), 10, 64)
+							repoRevision = Bold(Red(r.GetRevision())).String() +
 								" - " + Bold(Green(time.Unix(tsec, 0).String())).String()
 						}
 					}
