@@ -83,7 +83,7 @@ func LoadRepositories(c *LuetConfig) error {
 				continue
 			}
 
-			c.AddSystemRepository(*r)
+			c.AddSystemRepository(r)
 		}
 	}
 	return nil
