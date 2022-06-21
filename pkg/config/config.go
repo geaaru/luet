@@ -30,7 +30,7 @@ import (
 
 	"github.com/pkg/errors"
 	v "github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -345,8 +345,8 @@ func (c *LuetConfig) GetSystemDB() pkg.PackageDatabase {
 	}
 }
 
-func (c *LuetConfig) AddSystemRepository(r LuetRepository) {
-	c.SystemRepositories = append(c.SystemRepositories, r)
+func (c *LuetConfig) AddSystemRepository(r *LuetRepository) {
+	c.SystemRepositories = append(c.SystemRepositories, *r)
 }
 
 func (c *LuetConfig) GetFinalizerEnvsMap() map[string]string {
