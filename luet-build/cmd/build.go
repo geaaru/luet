@@ -19,7 +19,6 @@ import (
 	"os"
 	"path/filepath"
 
-	cmd_luet "github.com/geaaru/luet/cmd"
 	helpers "github.com/geaaru/luet/cmd/helpers"
 	"github.com/geaaru/luet/cmd/util"
 	"github.com/geaaru/luet/pkg/compiler"
@@ -37,6 +36,29 @@ import (
 
 	"github.com/spf13/cobra"
 )
+
+type PackageResult struct {
+	Name       string   `json:"name"`
+	Category   string   `json:"category"`
+	Version    string   `json:"version"`
+	License    string   `json:"License"`
+	Repository string   `json:"repository"`
+	Target     string   `json:"target"`
+	Hidden     bool     `json:"hidden"`
+	Files      []string `json:"files"`
+}
+
+type Results struct {
+	Packages []PackageResult `json:"packages"`
+}
+
+func (r *Results) AddPackage(p *PackageResult) {
+	r.Packages = append(r.Packages, *p)
+}
+
+func (r PackageResult) String() string {
+	return fmt.Sprintf("%s/%s-%s required for %s", r.Category, r.Name, r.Version, r.Target)
+}
 
 var buildCmd = &cobra.Command{
 	Use:   "build <package name> <package name> <package name> ...",
@@ -111,7 +133,7 @@ Build packages specifying multiple definition trees:
 		full, _ := cmd.Flags().GetBool("full")
 		rebuild, _ := cmd.Flags().GetBool("rebuild")
 
-		var results cmd_luet.Results
+		var results Results
 		backendArgs := LuetCfg.Viper.GetStringSlice("backend-args")
 
 		out, _ := cmd.Flags().GetString("output")
@@ -236,7 +258,7 @@ Build packages specifying multiple definition trees:
 				}
 				for _, p := range hashTree.Dependencies {
 					results.Packages = append(results.Packages,
-						cmd_luet.PackageResult{
+						PackageResult{
 							Name:       p.Package.GetName(),
 							Version:    p.Package.GetVersion(),
 							Category:   p.Package.GetCategory(),
