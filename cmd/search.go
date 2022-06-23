@@ -21,11 +21,8 @@ import (
 
 	helpers "github.com/geaaru/luet/cmd/helpers"
 	"github.com/geaaru/luet/cmd/util"
-	art "github.com/geaaru/luet/pkg/compiler/types/artifact"
 	cfg "github.com/geaaru/luet/pkg/config"
-	installer "github.com/geaaru/luet/pkg/installer"
 	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
 	"github.com/geaaru/luet/pkg/solver"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
@@ -33,28 +30,6 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
-
-func searchInstalled(config *cfg.LuetConfig, searchOpts *wagon.StonesSearchOpts) (*[]*wagon.Stone, error) {
-	system := &installer.System{
-		Database: config.GetSystemDB(),
-		Target:   config.GetSystem().Rootfs,
-	}
-	wagonStones := wagon.NewWagonStones()
-	wagonStones.Catalog = &wagon.StonesCatalog{}
-
-	pkgs := system.Database.World()
-	for idx, _ := range pkgs {
-		p := pkgs[idx].(*pkg.DefaultPackage)
-		artifact := art.NewPackageArtifact(p.GetPath())
-		artifact.Runtime = p
-		if searchOpts.WithFiles {
-			f, _ := system.Database.GetPackageFiles(pkgs[idx])
-			artifact.Files = f
-		}
-		wagonStones.Catalog.Index = append(wagonStones.Catalog.Index, artifact)
-	}
-	return wagonStones.Search(searchOpts, "system")
-}
 
 func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 
@@ -155,7 +130,7 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 			}
 
 			if installed {
-				res, err = searchInstalled(config, searchOpts)
+				res, err = util.SearchInstalled(config, searchOpts)
 				if err != nil {
 					fmt.Println("Error on retrieve installed packages ", err.Error())
 					os.Exit(1)

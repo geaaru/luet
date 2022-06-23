@@ -23,7 +23,6 @@ import (
 
 	"github.com/geaaru/luet/cmd/util"
 	cfg "github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
 	"github.com/olekukonko/tablewriter"
@@ -47,6 +46,7 @@ func NewQueryBelongsCommand(config *cfg.LuetConfig) *cobra.Command {
 			out, _ := cmd.Flags().GetString("output")
 			tableMode, _ := cmd.Flags().GetBool("table")
 			quiet, _ := cmd.Flags().GetBool("quiet")
+			installed := config.Viper.GetBool("installed")
 
 			util.SetSystemConfig()
 			util.SetSolverConfig()
@@ -76,10 +76,21 @@ func NewQueryBelongsCommand(config *cfg.LuetConfig) *cobra.Command {
 				AndCondition:  false,
 				WithFiles:     true,
 			}
+			var res *[]*wagon.Stone
+			var err error
 
-			res, err := util.SearchFromRepos(config, searchOpts)
-			if err != nil {
-				Fatal("Error on retrieve packages ", err.Error())
+			if installed {
+				res, err = util.SearchInstalled(config, searchOpts)
+				if err != nil {
+					fmt.Println("Error on retrieve installed packages ", err.Error())
+					os.Exit(1)
+				}
+			} else {
+				res, err = util.SearchFromRepos(config, searchOpts)
+				if err != nil {
+					fmt.Println("Error on retrieve packages ", err.Error())
+					os.Exit(1)
+				}
 			}
 
 			if out == "json" {
@@ -138,6 +149,7 @@ func NewQueryBelongsCommand(config *cfg.LuetConfig) *cobra.Command {
 		"Output format ( Defaults: terminal, available: json,yaml )")
 	ans.Flags().Bool("table", false, "show output in a table (wider screens)")
 	ans.Flags().Bool("quiet", false, "show output as list without version")
+	ans.Flags().Bool("installed", false, "Search between system packages")
 
 	return ans
 }

@@ -20,10 +20,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	art "github.com/geaaru/luet/pkg/compiler/types/artifact"
 	"github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/config"
 	"github.com/geaaru/luet/pkg/installer"
 	. "github.com/geaaru/luet/pkg/logger"
+	pkg "github.com/geaaru/luet/pkg/package"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
 	"github.com/spf13/cobra"
@@ -179,4 +181,26 @@ func SearchFromRepos(config *LuetConfig, searchOpts *wagon.StonesSearchOpts) (*[
 	}
 
 	return &res, err
+}
+
+func SearchInstalled(config *LuetConfig, searchOpts *wagon.StonesSearchOpts) (*[]*wagon.Stone, error) {
+	system := &installer.System{
+		Database: config.GetSystemDB(),
+		Target:   config.GetSystem().Rootfs,
+	}
+	wagonStones := wagon.NewWagonStones()
+	wagonStones.Catalog = &wagon.StonesCatalog{}
+
+	pkgs := system.Database.World()
+	for idx, _ := range pkgs {
+		p := pkgs[idx].(*pkg.DefaultPackage)
+		artifact := art.NewPackageArtifact(p.GetPath())
+		artifact.Runtime = p
+		if searchOpts.WithFiles {
+			f, _ := system.Database.GetPackageFiles(pkgs[idx])
+			artifact.Files = f
+		}
+		wagonStones.Catalog.Index = append(wagonStones.Catalog.Index, artifact)
+	}
+	return wagonStones.Search(searchOpts, "system")
 }
