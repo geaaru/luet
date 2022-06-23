@@ -20,12 +20,19 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/config"
 	"github.com/geaaru/luet/pkg/installer"
+	. "github.com/geaaru/luet/pkg/logger"
+	wagon "github.com/geaaru/luet/pkg/v2/repository"
+
+	"github.com/spf13/cobra"
 )
+
+type ChannelSearchRes struct {
+	Stones *[]*wagon.Stone
+	Error  error
+}
 
 func BindSystemFlags(cmd *cobra.Command) {
 	LuetCfg.Viper.BindPFlag("system.database_path", cmd.Flags().Lookup("system-dbpath"))
@@ -116,4 +123,60 @@ func TemplateFolders(fromRepo bool, treePaths []string) []string {
 		}
 	}
 	return templateFolders
+}
+
+func ProcessRepository(repo *LuetRepository, searchOpts *wagon.StonesSearchOpts, config *LuetConfig, channel chan ChannelSearchRes) {
+	repobasedir := config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
+	r := wagon.NewWagonRepository(repo)
+	err := r.ReadWagonIdentify(repobasedir)
+	if err != nil {
+		Warning("Error on read repository identity file: " + err.Error())
+	} else {
+		pkgs, err := r.SearchStones(searchOpts)
+		if err != nil {
+			Warning("Error on read repository catalog for repo : " + r.Identity.Name)
+			channel <- ChannelSearchRes{nil, err}
+			return
+		}
+
+		channel <- ChannelSearchRes{pkgs, nil}
+
+		r.ClearCatalog()
+	}
+}
+
+func SearchFromRepos(config *LuetConfig, searchOpts *wagon.StonesSearchOpts) (*[]*wagon.Stone, error) {
+	res := []*wagon.Stone{}
+	var ch chan ChannelSearchRes = make(
+		chan ChannelSearchRes,
+		config.GetGeneral().Concurrency,
+	)
+
+	for idx, _ := range config.SystemRepositories {
+		repo := config.SystemRepositories[idx]
+		if !repo.Enable {
+			continue
+		}
+
+		if repo.Cached {
+			go ProcessRepository(&repo, searchOpts, config, ch)
+		}
+
+	}
+
+	var err error = nil
+
+	for idx, _ := range config.SystemRepositories {
+		repo := config.SystemRepositories[idx]
+		if repo.Cached {
+			resp := <-ch
+			if resp.Error == nil {
+				res = append(res, *resp.Stones...)
+			} else {
+				err = resp.Error
+			}
+		}
+	}
+
+	return &res, err
 }

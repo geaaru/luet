@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"os"
 
+	helpers "github.com/geaaru/luet/cmd/helpers"
 	"github.com/geaaru/luet/cmd/util"
 	art "github.com/geaaru/luet/pkg/compiler/types/artifact"
 	cfg "github.com/geaaru/luet/pkg/config"
-	config "github.com/geaaru/luet/pkg/config"
 	installer "github.com/geaaru/luet/pkg/installer"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
@@ -34,31 +34,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type ChannelSearchRes struct {
-	Stones *[]*wagon.Stone
-	Error  error
-}
-
-func ProcessRepository(repo *config.LuetRepository, searchOpts *wagon.StonesSearchOpts, config *cfg.LuetConfig, channel chan ChannelSearchRes) {
-	repobasedir := config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
-	r := wagon.NewWagonRepository(repo)
-	err := r.ReadWagonIdentify(repobasedir)
-	if err != nil {
-		Warning("Error on read repository identity file: " + err.Error())
-	} else {
-		pkgs, err := r.SearchStones(searchOpts)
-		if err != nil {
-			Warning("Error on read repository catalog for repo : " + r.Identity.Name)
-			channel <- ChannelSearchRes{nil, err}
-			return
-		}
-
-		channel <- ChannelSearchRes{pkgs, nil}
-
-		r.ClearCatalog()
-	}
-}
-
 func searchInstalled(config *cfg.LuetConfig, searchOpts *wagon.StonesSearchOpts) (*[]*wagon.Stone, error) {
 	system := &installer.System{
 		Database: config.GetSystemDB(),
@@ -68,7 +43,6 @@ func searchInstalled(config *cfg.LuetConfig, searchOpts *wagon.StonesSearchOpts)
 	wagonStones.Catalog = &wagon.StonesCatalog{}
 
 	pkgs := system.Database.World()
-	fmt.Println("WORLDS ", len(pkgs))
 	for idx, _ := range pkgs {
 		p := pkgs[idx].(*pkg.DefaultPackage)
 		artifact := art.NewPackageArtifact(p.GetPath())
@@ -82,44 +56,13 @@ func searchInstalled(config *cfg.LuetConfig, searchOpts *wagon.StonesSearchOpts)
 	return wagonStones.Search(searchOpts, "system")
 }
 
-func searchFromRepos(config *cfg.LuetConfig, searchOpts *wagon.StonesSearchOpts) *[]*wagon.Stone {
-	res := []*wagon.Stone{}
-	var ch chan ChannelSearchRes = make(
-		chan ChannelSearchRes,
-		config.GetGeneral().Concurrency,
-	)
-
-	for idx, _ := range config.SystemRepositories {
-		repo := config.SystemRepositories[idx]
-		if !repo.Enable {
-			continue
-		}
-
-		if repo.Cached {
-			go ProcessRepository(&repo, searchOpts, config, ch)
-		}
-
-	}
-
-	for idx, _ := range config.SystemRepositories {
-		repo := config.SystemRepositories[idx]
-		if repo.Cached {
-			resp := <-ch
-			if resp.Error == nil {
-				res = append(res, *resp.Stones...)
-			}
-		}
-	}
-
-	return &res
-}
-
 func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 
 	var labels []string
 	var regLabels []string
 	var categories []string
 	var annotations []string
+	var packages []string
 
 	var searchCmd = &cobra.Command{
 		Use:   "search <term>",
@@ -156,10 +99,14 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 
 		$ luet search --annotation <annotation1>,..,<annotationN>
 
+	or by package (used only category and package name for name in the format cat/foo)
+
+	  $ luet search -p <cat/foo>,<cat/foo2>
+
 	Search can also return results in the terminal in different ways: as terminal output, as json or as yaml.
 
-		$ luet search --json <regex> # JSON output
-		$ luet search --yaml <regex> # YAML output
+		$ luet search -o json <regex> # JSON output
+		$ luet search -o yaml <regex> # YAML output
 	`,
 		Aliases: []string{"s"},
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -169,7 +116,7 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			//var results Results
-			if len(args) == 0 {
+			if len(args) == 0 && len(packages) == 0 {
 				args = []string{"."}
 			}
 			hidden, _ := cmd.Flags().GetBool("hidden")
@@ -197,6 +144,16 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 			var res *[]*wagon.Stone
 			var err error
 
+			if len(packages) > 0 {
+				for _, p := range packages {
+					pack, err := helpers.ParsePackageStr(p)
+					if err != nil {
+						Fatal("Invalid package string ", p, ": ", err.Error())
+					}
+					searchOpts.Packages = append(searchOpts.Packages, pack)
+				}
+			}
+
 			if installed {
 				res, err = searchInstalled(config, searchOpts)
 				if err != nil {
@@ -204,7 +161,11 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 					os.Exit(1)
 				}
 			} else {
-				res = searchFromRepos(config, searchOpts)
+				res, err = util.SearchFromRepos(config, searchOpts)
+				if err != nil {
+					fmt.Println("Error on retrieve installed packages ", err.Error())
+					os.Exit(1)
+				}
 			}
 
 			if out == "json" {
@@ -276,6 +237,8 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 		"Search packages through one or more categories regex.")
 	searchCmd.Flags().StringSliceVarP(&annotations, "annotation", "a", []string{},
 		"Search packages through one or more annotations.")
+	searchCmd.Flags().StringSliceVarP(&packages, "package", "p", []string{},
+		"Search packages matching the package string cat/name.")
 	searchCmd.Flags().Bool("condition-and", false,
 		"The searching options are managed in AND between the searching types.")
 
