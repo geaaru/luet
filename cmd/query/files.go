@@ -23,12 +23,11 @@ import (
 	helpers "github.com/geaaru/luet/cmd/helpers"
 	"github.com/geaaru/luet/cmd/util"
 	cfg "github.com/geaaru/luet/pkg/config"
-	installer "github.com/geaaru/luet/pkg/installer"
 	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
+	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func NewQueryFilesCommand(config *cfg.LuetConfig) *cobra.Command {
@@ -44,74 +43,60 @@ func NewQueryFilesCommand(config *cfg.LuetConfig) *cobra.Command {
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			var pkgs pkg.Packages
-
 			out, _ := cmd.Flags().GetString("output")
+
+			util.SetSystemConfig()
+			util.SetSolverConfig()
+
+			searchOpts := &wagon.StonesSearchOpts{
+				Categories:    []string{},
+				Labels:        []string{},
+				LabelsMatches: []string{},
+				Matches:       []string{},
+				Hidden:        true,
+				AndCondition:  false,
+				WithFiles:     true,
+			}
 
 			for _, a := range args {
 				pack, err := helpers.ParsePackageStr(a)
 				if err != nil {
 					Fatal("Invalid package string ", a, ": ", err.Error())
 				}
-				pkgs = append(pkgs, pack)
+				searchOpts.Packages = append(searchOpts.Packages, pack)
 			}
-
-			util.SetSystemConfig()
-			util.SetSolverConfig()
 
 			config.GetLogging().SetLogLevel("error")
-			Debug("Solver", config.GetSolverOptions().CompactString())
-			repos := installer.SystemRepositories(config)
 
-			inst := installer.NewLuetInstaller(installer.LuetInstallerOptions{
-				Concurrency:                 config.GetGeneral().Concurrency,
-				SolverOptions:               *config.GetSolverOptions(),
-				PreserveSystemEssentialData: true,
-				SyncRepositories:            false,
-			})
-			inst.Repositories(repos)
-
-			synced, err := inst.GetRepositoriesInstances(true)
+			res, err := util.SearchFromRepos(config, searchOpts)
 			if err != nil {
-				Fatal("Error: " + err.Error())
+				Fatal("Error on retrieve packages ", err.Error())
 			}
 
-			pkgs = synced.ResolveSelectors(pkgs)
-			matches := synced.PackageMatches(pkgs)
-
-			if len(matches) > 0 {
-
-				ans := []string{}
-				var data []byte
-
-				for _, m := range matches {
-
-					files := m.Artifact.Files
-
-					for _, f := range files {
-
-						switch out {
-						case "yaml", "json":
-							ans = append(ans, f)
-						default:
-							fmt.Println(f)
-						}
+			if out != "yaml" && out != "json" {
+				for _, s := range *res {
+					for _, f := range s.Files {
+						fmt.Println(f)
 					}
-
+				}
+			} else {
+				ans := []string{}
+				for _, s := range *res {
+					ans = append(ans, s.Files...)
 				}
 
-				if out == "yaml" || out == "json" {
-					switch out {
-					case "yaml":
-						data, err = yaml.Marshal(ans)
-					case "json":
-						data, err = json.Marshal(ans)
-					}
-
+				switch out {
+				case "json":
+					data, err := json.Marshal(ans)
 					if err != nil {
-						Fatal("Error on marshal data:", err.Error())
+						Fatal("Error on marshal data ", err.Error())
 					}
-
+					fmt.Println(string(data))
+				default:
+					data, err := yaml.Marshal(ans)
+					if err != nil {
+						Fatal("Error on marshal data ", err.Error())
+					}
 					fmt.Println(string(data))
 				}
 			}
