@@ -145,6 +145,22 @@ func (s *WagonStones) Search(opts *StonesSearchOpts, repoName string) (*[]*Stone
 
 		match := false
 
+		// For now only match category and name
+		if len(opts.Packages) > 0 {
+			for idx, _ := range opts.Packages {
+				if artifact.Runtime.Category != opts.Packages[idx].GetCategory() {
+					continue
+				}
+
+				if artifact.Runtime.Name != opts.Packages[idx].GetName() {
+					continue
+				}
+
+				match = true
+				break
+			}
+		}
+
 		if len(opts.Matches) > 0 {
 			pstring := artifact.Runtime.PackageName()
 
