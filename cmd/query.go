@@ -32,6 +32,7 @@ func newQueryCommand(config *cfg.LuetConfig) *cobra.Command {
 
 	ans.AddCommand(
 		NewQueryFilesCommand(config),
+		NewQueryBelongsCommand(config),
 	)
 
 	return ans

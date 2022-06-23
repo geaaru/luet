@@ -240,7 +240,7 @@ func (s *WagonStones) Search(opts *StonesSearchOpts, repoName string) (*[]*Stone
 			if len(artifact.Files) > 0 {
 				for _, f := range opts.FilesOwner {
 					for fidx, _ := range artifact.Files {
-						if strings.Index(artifact.Files[fidx], f) > 0 {
+						if strings.Index(artifact.Files[fidx], f) >= 0 {
 							match = true
 							goto matched
 						}
