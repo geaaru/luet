@@ -105,7 +105,7 @@ EOF
 
 
 testSearch() {
-    installed=$($LUET --config $tmpdir/luet.yaml search --files testaa)
+    installed=$($LUET --config $tmpdir/luet.yaml q belongs testaa)
     searchst=$?
     assertEquals 'search exists successfully' "$searchst" "0"
     assertContains 'contains test/a-1.0' "$installed" 'test/a-1.0'
@@ -129,13 +129,13 @@ testGetSearchLocal() {
 
 
 
-    installed=$($LUET --config $tmpdir/luet.yaml search --installed --files testaa)
+    installed=$($LUET --config $tmpdir/luet.yaml q belongs --installed testaa)
     searchst=$?
     assertEquals 'search exists successfully' "$searchst" "0"
 
     assertContains 'contains test/a-1.1' "$installed" 'test/a-1.0'
 
-    installed=$($LUET --config $tmpdir/luet.yaml search --installed --files foo)
+    installed=$($LUET --config $tmpdir/luet.yaml q belongs --installed foo)
     searchst=$?
     assertEquals 'search exists successfully' "$searchst" "0"
 
