@@ -29,6 +29,8 @@ It is written entirely in Golang and where used as package manager, it can run i
 * `luet q files`: following the command `equo q files` from Sabayon entropy tool, this command supply the list
   of the files of a package and in the near future the mapping of the files with the subsets configured.
 
+* `luet q belongs`: following the command `equo q belongs` from Sabayon entropy tool, this command supply the list of the packages that own files in input.
+
 * `dockerv2` backend: i begin to rewrite the docker backend and using the [tar-formers](https://github.com/geaaru/tar-formers/) to manage the tar streams.
 
 * drop `extensions` and `plugin` support not used
