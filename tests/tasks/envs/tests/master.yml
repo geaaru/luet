@@ -97,7 +97,7 @@ projects:
                   - apt-get update
                   - add-apt-repository ${ppa_golang_repo} -y
                   - apt-get update
-                  - apt-get install -y git make pip curl
+                  - apt-get install -y git make pip curl docker.io
                   - apt-get install -y gcc-arm-linux-gnueabi libc6-dev-armel-cross
                   - apt-get install -y libc6-armel-cross libc6-dev golang-${golang_version}-go
                   - apt-get install -y libc6-dev-i386 libc6-dev-armel-cross linux-headers-generic
