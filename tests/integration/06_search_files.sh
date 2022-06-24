@@ -103,7 +103,7 @@ EOF
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 
-    $LUET repo update
+    $LUET --config $tmpdir/luet.yaml repo update
 }
 
 
