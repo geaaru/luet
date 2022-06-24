@@ -73,6 +73,11 @@ build-small:
 	@$(MAKE) LDFLAGS+="-s -w" build
 	upx --brute -1 $(NAME)
 
+.PHONY: build-build-small
+build-build-small:
+	@$(MAKE) LDFLAGS+="-s -w" build-build
+	upx --brute -1 luet-build/$(NAME)-build
+
 .PHONY: image
 image:
 	docker build --rm -t luet/base .
