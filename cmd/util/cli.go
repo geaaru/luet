@@ -162,6 +162,8 @@ func SearchFromRepos(config *LuetConfig, searchOpts *wagon.StonesSearchOpts) (*[
 
 		if repo.Cached {
 			go ProcessRepository(&repo, searchOpts, config, ch)
+		} else {
+			return res, errors.New("Only cached repositories are supported.")
 		}
 
 	}
