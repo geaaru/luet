@@ -17,7 +17,7 @@ LUET_DATABASE_ENGINE=${LUET_DATABASE_ENGINE:-boltdb}
 LUET_CONFIG_PROTECT=${LUET_CONFIG_PROTECT:-1}
 LUET_ARCH=${LUET_ARCH:-amd64}
 
-curl -L https://github.com/${GITHUB_USER}/luet/releases/download/${LUET_VERSION}/luet-${LUET_VERSION}-linux-${LUET_ARCH} --output /usr/bin/luet
+curl -L https://github.com/${GITHUB_USER}/luet/releases/download/${LUET_VERSION}/luet-${LUET_VERSION}-Linux-${LUET_ARCH} --output /usr/bin/luet
 chmod +x /usr/bin/luet
 
 mkdir -p /etc/luet/repos.conf.d || true
