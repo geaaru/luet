@@ -111,10 +111,6 @@ To list all packages installed in the system:
 To show hidden packages:
 
 	$ luet search --hidden package
-
-To build a package, from a tree definition:
-
-	$ luet build --tree tree/path package
 	
 `,
 	Version: version(),
