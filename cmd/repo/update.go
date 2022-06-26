@@ -17,14 +17,41 @@
 package cmd_repo
 
 import (
-	. "github.com/geaaru/luet/pkg/config"
-	installer "github.com/geaaru/luet/pkg/installer"
+	"fmt"
+	"os"
+
+	cmd_util "github.com/geaaru/luet/cmd/util"
+	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
+	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
 	"github.com/spf13/cobra"
 )
 
-func NewRepoUpdateCommand() *cobra.Command {
+func processRepository(repo *cfg.LuetRepository, config *cfg.LuetConfig,
+	channel chan cmd_util.ChannelRepoOpRes, force bool) {
+
+	repobasedir := config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
+
+	r := wagon.NewWagonRepository(repo)
+	if r.HasLocalWagonIdentity(repobasedir) {
+		err := r.ReadWagonIdentify(repobasedir)
+		if err != nil && (!force) {
+			channel <- cmd_util.ChannelRepoOpRes{err, repo}
+			return
+		}
+	}
+
+	err := r.Sync(force)
+	if err != nil {
+		channel <- cmd_util.ChannelRepoOpRes{err, repo}
+	} else {
+		channel <- cmd_util.ChannelRepoOpRes{nil, repo}
+	}
+	r.ClearCatalog()
+}
+
+func NewRepoUpdateCommand(config *cfg.LuetConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "update [repo1] [repo2] [OPTIONS]",
 		Short: "Update a specific cached repository or all cached repositories.",
@@ -42,38 +69,48 @@ $> luet repo update repo1 repo2
 
 			ignore, _ := cmd.Flags().GetBool("ignore-errors")
 			force, _ := cmd.Flags().GetBool("force")
+			nOps := 0
+			var ch chan cmd_util.ChannelRepoOpRes = make(
+				chan cmd_util.ChannelRepoOpRes,
+				config.GetGeneral().Concurrency,
+			)
 
 			if len(args) > 0 {
 				for _, rname := range args {
-					repo, err := LuetCfg.GetSystemRepository(rname)
+					repo, err := config.GetSystemRepository(rname)
 					if err != nil && !ignore {
 						Fatal(err.Error())
 					} else if err != nil {
 						continue
 					}
 
-					r := installer.NewSystemRepository(*repo)
-					//Spinner(3)
-					_, err = r.Sync(force)
-					if err != nil && !ignore {
-						Fatal("Error on sync repository " + rname + ": " + err.Error())
-					}
-					//SpinnerStop()
+					go processRepository(repo, config, ch, force)
+					nOps++
 				}
 
 			} else {
-				for _, repo := range LuetCfg.SystemRepositories {
-					if repo.Cached && repo.Enable {
-						r := installer.NewSystemRepository(repo)
-						//Spinner(32)
-						_, err := r.Sync(force)
-						if err != nil && !ignore {
-							Fatal("Error on sync repository " + r.GetName() + ": " + err.Error())
-						}
-						//SpinnerStop()
+				for idx, repo := range config.SystemRepositories {
+					if repo.Enable {
+						go processRepository(&config.SystemRepositories[idx], config, ch, force)
+						nOps++
 					}
 				}
 			}
+
+			res := 0
+			if nOps > 0 {
+				for i := 0; i < nOps; i++ {
+					resp := <-ch
+					if resp.Error != nil && !ignore {
+						res = 1
+						Error("Error on update repository " + resp.Repo.Name)
+					}
+				}
+			} else {
+				fmt.Println("No repositories candidates found.")
+			}
+
+			os.Exit(res)
 		},
 	}
 

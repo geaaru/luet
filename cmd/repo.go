@@ -18,20 +18,22 @@ package cmd
 
 import (
 	. "github.com/geaaru/luet/cmd/repo"
+	cfg "github.com/geaaru/luet/pkg/config"
 
 	"github.com/spf13/cobra"
 )
 
-var repoGroupCmd = &cobra.Command{
-	Use:   "repo [command] [OPTIONS]",
-	Short: "Manage repositories",
-}
+func newRepoCommand(config *cfg.LuetConfig) *cobra.Command {
 
-func init() {
-	RootCmd.AddCommand(repoGroupCmd)
+	var ans = &cobra.Command{
+		Use:   "repo [command] [OPTIONS]",
+		Short: "Manage repositories",
+	}
 
-	repoGroupCmd.AddCommand(
+	ans.AddCommand(
 		NewRepoListCommand(),
-		NewRepoUpdateCommand(),
+		NewRepoUpdateCommand(config),
 	)
+
+	return ans
 }

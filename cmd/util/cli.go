@@ -36,6 +36,11 @@ type ChannelSearchRes struct {
 	Error  error
 }
 
+type ChannelRepoOpRes struct {
+	Error error
+	Repo  *config.LuetRepository
+}
+
 func BindSystemFlags(cmd *cobra.Command) {
 	LuetCfg.Viper.BindPFlag("system.database_path", cmd.Flags().Lookup("system-dbpath"))
 	LuetCfg.Viper.BindPFlag("system.rootfs", cmd.Flags().Lookup("system-target"))

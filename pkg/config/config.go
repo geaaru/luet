@@ -214,6 +214,16 @@ func NewEmptyLuetRepository() *LuetRepository {
 	}
 }
 
+func (r *LuetRepository) Clone() *LuetRepository {
+	ans := NewLuetRepository(r.Name, r.Type, r.Description, r.Urls, r.Priority, r.Enable, r.Cached)
+	ans.Verify = r.Verify
+	ans.Revision = r.Revision
+	ans.LastUpdate = r.LastUpdate
+	ans.Authentication = r.Authentication
+
+	return ans
+}
+
 func (r *LuetRepository) String() string {
 	return fmt.Sprintf("[%s] prio: %d, type: %s, enable: %t, cached: %t",
 		r.Name, r.Priority, r.Type, r.Enable, r.Cached)

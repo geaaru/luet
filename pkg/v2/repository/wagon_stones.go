@@ -267,7 +267,7 @@ func (s *WagonStones) LoadCatalog(identity *WagonIdentity) (*StonesCatalog, erro
 
 	// TODO: Here we need to handle the new repository style
 	//       when ready.
-	if _, ok := identity.RepositoryFiles["meta"]; ok {
+	if _, ok := identity.RepositoryFiles[REPOFILE_META_KEY]; ok {
 		metafs := filepath.Join(repobasedir, "metafs")
 		metafile := filepath.Join(metafs, REPOSITORY_METAFILE)
 
