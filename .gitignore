@@ -1,6 +1,8 @@
 *.swp
+*.swo
 luet
 luet-build/luet-build
 tests/integration/shunit2
 tests/integration/bin
 release/
+build/
