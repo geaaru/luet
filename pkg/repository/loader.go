@@ -83,6 +83,12 @@ func LoadRepositories(c *LuetConfig) error {
 				continue
 			}
 
+			if !r.Cached {
+				Warning("In memory repositories will be dropped and no more supported.")
+				Warning("The repository " + r.Name + " is forced to caching.")
+				r.Cached = true
+			}
+
 			c.AddSystemRepository(r)
 		}
 	}
