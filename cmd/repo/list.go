@@ -73,14 +73,17 @@ func NewRepoListCommand() *cobra.Command {
 					if repo.Cached {
 
 						r := wagon.NewWagonRepository(&repo)
-						err := r.ReadWagonIdentify(repobasedir)
-						if err != nil {
-							Warning("Error on read repository identity file: " + err.Error())
-						} else {
-							tsec, _ := strconv.ParseInt(r.GetLastUpdate(), 10, 64)
-							repoRevision = Bold(Red(r.GetRevision())).String() +
-								" - " + Bold(Green(time.Unix(tsec, 0).String())).String()
+						if r.HasLocalWagonIdentity(repobasedir) {
+							err := r.ReadWagonIdentify(repobasedir)
+							if err != nil {
+								Warning("Error on read repository identity file: " + err.Error())
+							} else {
+								tsec, _ := strconv.ParseInt(r.GetLastUpdate(), 10, 64)
+								repoRevision = Bold(Red(r.GetRevision())).String() +
+									" - " + Bold(Green(time.Unix(tsec, 0).String())).String()
+							}
 						}
+
 					}
 
 					if repoRevision != "" {
