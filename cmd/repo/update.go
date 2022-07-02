@@ -103,7 +103,7 @@ $> luet repo update repo1 repo2
 					resp := <-ch
 					if resp.Error != nil && !ignore {
 						res = 1
-						Error("Error on update repository " + resp.Repo.Name)
+						Error("Error on update repository " + resp.Repo.Name + ": " + resp.Error.Error())
 					}
 				}
 			} else {
