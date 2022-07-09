@@ -11,11 +11,11 @@ import (
 	"strconv"
 	"time"
 
-	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
 	"github.com/geaaru/luet/pkg/config"
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	"github.com/geaaru/luet/pkg/installer/client"
 	. "github.com/geaaru/luet/pkg/logger"
+	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
+	"github.com/geaaru/luet/pkg/v2/repository/client"
 	"github.com/pkg/errors"
 )
 
@@ -36,7 +36,7 @@ const (
 )
 
 type Client interface {
-	DownloadArtifact(*artifact.PackageArtifact) (*artifact.PackageArtifact, error)
+	DownloadArtifact(*artifact.PackageArtifact) error
 	DownloadFile(string) (string, error)
 }
 
@@ -241,21 +241,11 @@ func (w *WagonRepository) Sync(force bool) error {
 func (w *WagonRepository) Client() Client {
 	switch w.Identity.GetType() {
 	case DiskRepositoryType:
-		return client.NewLocalClient(client.RepoData{Urls: w.Identity.GetUrls()})
+		return client.NewLocalClient(w.Identity.LuetRepository)
 	case HttpRepositoryType:
-		return client.NewHttpClient(
-			client.RepoData{
-				Urls:           w.Identity.GetUrls(),
-				Authentication: w.Identity.GetAuthentication(),
-			})
-
+		return client.NewHttpClient(w.Identity.LuetRepository)
 	case DockerRepositoryType:
-		return client.NewDockerClient(
-			client.RepoData{
-				Urls:           w.Identity.GetUrls(),
-				Authentication: w.Identity.GetAuthentication(),
-				Verify:         w.Identity.Verify,
-			})
+		return client.NewDockerClient(w.Identity.LuetRepository)
 	}
 	return nil
 }

@@ -13,10 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/geaaru/luet/pkg/compiler"
-	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
+	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
@@ -35,8 +34,10 @@ type StonesSearchOpts struct {
 	WithFiles     bool
 }
 
+type ArtifactIndex []*artifact.PackageArtifact
+
 type StonesCatalog struct {
-	Index compiler.ArtifactIndex `json:"index" yaml:"index"`
+	Index ArtifactIndex `json:"index" yaml:"index"`
 }
 
 type Stone struct {

@@ -20,12 +20,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	art "github.com/geaaru/luet/pkg/compiler/types/artifact"
 	"github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/config"
 	"github.com/geaaru/luet/pkg/installer"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
+	art "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
 	"github.com/spf13/cobra"

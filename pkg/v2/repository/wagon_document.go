@@ -5,8 +5,8 @@
 package repository
 
 import (
-	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
-	compression "github.com/geaaru/luet/pkg/compiler/types/compression"
+	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
+	compression "github.com/geaaru/luet/pkg/v2/compiler/types/compression"
 )
 
 // SetFileName sets the name of the repository file.
