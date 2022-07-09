@@ -6,7 +6,7 @@
 # luet-geaaru (fork) - Container-based Package manager
 
 [![codecov](https://codecov.io/gh/geaaru/luet/branch/geaaru/graph/badge.svg?token=LR1IGZKB9X)](https://codecov.io/gh/geaaru/luet)
-[![Github All Releases](https://img.shields.io/github/downloads/geaaru/luet/total.svg?style=for-the-badge)](https://github.com/geaaru/luet/releases)
+[![Github All Releases](https://img.shields.io/github/downloads/geaaru/luet/total.svg)](https://github.com/geaaru/luet/releases)
 
 Luet is a multi-platform Package Manager based off from containers - it uses Docker (and others) to build packages. It has zero dependencies and it is well suitable for "from scratch" environments. It can also version entire rootfs and enables delivery of OTA-alike updates, making it a perfect fit for the Edge computing era and IoT embedded devices.
 
