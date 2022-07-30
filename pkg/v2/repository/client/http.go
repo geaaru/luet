@@ -96,7 +96,10 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) error {
 	var temp string
 
 	artifactName := path.Base(a.Path)
-	cacheFile := filepath.Join(config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath(), artifactName)
+	cacheFile := filepath.Join(
+		config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath(),
+		artifactName,
+	)
 	ok := false
 
 	// Check if file is already in cache

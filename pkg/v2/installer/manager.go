@@ -5,25 +5,49 @@
 package installer
 
 import (
+	"fmt"
+	"path/filepath"
+	"sync"
+	"time"
+
 	cfg "github.com/geaaru/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/helpers"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	. "github.com/geaaru/luet/pkg/logger"
+	pkg "github.com/geaaru/luet/pkg/package"
+	"github.com/geaaru/luet/pkg/tree"
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	repos "github.com/geaaru/luet/pkg/v2/repository"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 )
 
-type ArtifatctsManager struct {
-	Config *cfg.LuetConfig
+type ArtifactsManager struct {
+	Config   *cfg.LuetConfig
+	Database pkg.PackageDatabase
+
+	sync.Mutex
+
+	// Temporary struct to review
+	fileIndex map[string]*pkg.DefaultPackage
 }
 
-func NewArtifactsManager(config *cfg.LuetConfig) *ArtifatctsManager {
-	return &ArtifatctsManager{
-		Config: config,
+func NewArtifactsManager(config *cfg.LuetConfig) *ArtifactsManager {
+	return &ArtifactsManager{
+		Config:    config,
+		Database:  nil,
+		fileIndex: nil,
 	}
 }
 
-func (m *ArtifatctsManager) DownloadPackage(p *artifact.PackageArtifact, r *repos.WagonRepository) error {
+func (m *ArtifactsManager) setup() {
+	if m.Database == nil {
+		m.Database = m.Config.GetSystemDB()
+	}
+}
 
+func (m *ArtifactsManager) DownloadPackage(p *artifact.PackageArtifact, r *repos.WagonRepository) error {
 	c := r.Client()
 	if c == nil {
 		return errors.New("No client could be generated from repository")
@@ -41,4 +65,206 @@ func (m *ArtifatctsManager) DownloadPackage(p *artifact.PackageArtifact, r *repo
 	}
 
 	return nil
+}
+
+func (m *ArtifactsManager) InstallPackage(p *artifact.PackageArtifact, r *repos.WagonRepository, targetRootfs string) error {
+
+	if p.Runtime == nil {
+		return errors.New("Artifact without Runtime package definition")
+	}
+
+	start := time.Now()
+
+	// PRE: the package is already downloaded and available in cache
+	//      directory.
+
+	// TODO: Check if it's needed an option to disable the
+	//       second argument related to subsets feature.
+	//       For now i enable it always.
+	err := p.Unpack(targetRootfs, true)
+	if err != nil {
+		return errors.Wrap(err,
+			fmt.Sprintf("Unpack package %s failed", p.Runtime.HumanReadableString()))
+	}
+
+	Debug(fmt.Sprintf("Unpack package %s completed in %d µs.",
+		p.Runtime.HumanReadableString(),
+		time.Now().Sub(start).Nanoseconds()/1e3))
+
+	return nil
+}
+
+func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos.WagonRepository) error {
+
+	if p.Runtime == nil {
+		return errors.New("Artifact without Runtime package definition")
+	}
+
+	m.setup()
+
+	start := time.Now()
+
+	// Set package files on local database
+	err := m.Database.SetPackageFiles(
+		&pkg.PackageFile{
+			PackageFingerprint: p.Runtime.GetFingerPrint(),
+			Files:              p.Files,
+		},
+	)
+	if err != nil {
+		return errors.Wrap(err, "Register package files on database")
+	}
+
+	// NOTE: for now postpone the registration of the package
+	//       on the database
+
+	_, err = m.Database.CreatePackage(p.Runtime)
+	if err != nil {
+		return errors.Wrap(err, "Failed register package")
+	}
+
+	Debug(fmt.Sprintf("Register package %s completed in %d µs.",
+		p.Runtime.HumanReadableString(),
+		time.Now().Sub(start).Nanoseconds()/1e3))
+
+	return nil
+}
+
+func (m *ArtifactsManager) CheckFileConflicts(
+	toInstall *[]*artifact.PackageArtifact,
+	checkSystem bool,
+	targetRootfs string,
+) error {
+
+	Info("Checking for file conflicts...")
+	start := time.Now()
+
+	filesToInstall := make(map[string]string, 0)
+
+	// NOTE: Instead of load in memory the list
+	//       of the files of every installed package
+	//       and consume high memory I do it only for
+	//       the list of the packages to install.
+	//       The check validate if a package file is present
+	//       on target system or between the list of
+	//       files of the packages to install.
+	for _, a := range *toInstall {
+		for _, f := range a.Files {
+			if pkg, ok := filesToInstall[f]; ok {
+				return fmt.Errorf(
+					"file %s conflict between package %s and %s",
+					f, pkg, a.CompileSpec.Package.HumanReadableString(),
+				)
+			}
+
+			filesToInstall[f] = a.CompileSpec.Package.HumanReadableString()
+
+			if checkSystem {
+				tFile := filepath.Join(targetRootfs, f)
+
+				// Check if the file is present on the target path.
+				if fileHelper.Exists(tFile) {
+					exists, p, err := m.ExistsPackageFile(f)
+					if err != nil {
+						return errors.Wrap(err, "failed checking into system db")
+					}
+					if exists {
+						return fmt.Errorf(
+							"file conflict between '%s' and '%s' ( file: %s )",
+							p.HumanReadableString(),
+							a.Runtime.HumanReadableString(),
+							f,
+						)
+					}
+				}
+			}
+
+		} // end for a.Files
+
+	} // end for toInstall
+
+	Info(fmt.Sprintf("Check for file conflicts completed in %d µs.",
+		time.Now().Sub(start).Nanoseconds()/1e3))
+
+	return nil
+}
+
+func (m *ArtifactsManager) ExecuteFinalizers(
+	toInstall *[]*artifact.PackageArtifact,
+	targetRootfs string,
+) error {
+	var errs error
+
+	// PRE: The list of packages is already sorted by dependencies.
+
+	for _, a := range *toInstall {
+		if fileHelper.Exists(a.Runtime.Rel(tree.FinalizerFile)) {
+			out, err := helpers.RenderFiles(
+				helpers.ChartFile(a.Runtime.Rel(tree.FinalizerFile)),
+				a.Runtime.Rel(pkg.PackageDefinitionFile),
+			)
+			if err != nil {
+				Warning("Failed rendering finalizer for ",
+					a.Runtime.HumanReadableString(), err.Error())
+				errs = multierror.Append(errs, err)
+				continue
+			}
+
+			Info("Executing finalizer for " + a.Runtime.HumanReadableString())
+			finalizer, err := NewLuetFinalizerFromYaml([]byte(out))
+			if err != nil {
+				Warning("Failed reading finalizer for ",
+					a.Runtime.HumanReadableString(), err.Error())
+				errs = multierror.Append(errs, err)
+				continue
+			}
+			err = finalizer.RunInstall(targetRootfs)
+			if err != nil {
+				Warning("Failed running finalizer for ",
+					a.Runtime.HumanReadableString(), err.Error())
+				errs = multierror.Append(errs, err)
+				continue
+			}
+		}
+	}
+	return errs
+
+}
+
+// NOTE: These methods will be replaced soon
+
+func (m *ArtifactsManager) ExistsPackageFile(file string) (bool, *pkg.DefaultPackage, error) {
+	Debug("Checking if file ", file, "belongs to any package")
+	m.buildIndexFiles()
+	m.Lock()
+	defer m.Unlock()
+	if p, exists := m.fileIndex[file]; exists {
+		Debug(file, "belongs already to", p.HumanReadableString())
+
+		return exists, p, nil
+	}
+	Debug(file, "doesn't belong to any package")
+	return false, nil, nil
+}
+
+func (m *ArtifactsManager) buildIndexFiles() {
+	m.Lock()
+	defer m.Unlock()
+
+	Debug("Building index files...")
+	start := time.Now()
+
+	// Check if cache is empty or if it got modified
+	if m.fileIndex == nil { //|| len(s.Database.GetPackages()) != len(s.fileIndex) {
+		m.fileIndex = make(map[string]*pkg.DefaultPackage)
+		for _, p := range m.Database.World() {
+			files, _ := m.Database.GetPackageFiles(p)
+			for _, f := range files {
+				m.fileIndex[f] = p.(*pkg.DefaultPackage)
+			}
+		}
+	}
+
+	Debug(fmt.Sprintf("Build index files completed in %d µs.",
+		time.Now().Sub(start).Nanoseconds()/1e3))
 }
