@@ -24,7 +24,7 @@ func NewDownload(config *cfg.LuetConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:     "download <repository-name> <pkg1> <pkg2> ... <pkgN>",
 		Short:   "Download a package from a specified repository.",
-		Aliases: []string{"s"},
+		Aliases: []string{"d"},
 		PreRun: func(cmd *cobra.Command, args []string) {
 			if len(args) < 2 {
 				fmt.Println("Missing arguments.")
