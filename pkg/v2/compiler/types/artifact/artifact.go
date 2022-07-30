@@ -88,6 +88,12 @@ func NewPackageArtifactFromYaml(data []byte) (*PackageArtifact, error) {
 	return p, err
 }
 
+func (a *PackageArtifact) ResolveCachePath() {
+	artifactName := path.Base(a.Path)
+	cacheFile := filepath.Join(LuetCfg.GetSystem().GetSystemPkgsCacheDirPath(), artifactName)
+	a.CachePath = cacheFile
+}
+
 func (a *PackageArtifact) Hash() error {
 	return a.Checksums.Generate(a)
 }
