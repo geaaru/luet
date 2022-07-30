@@ -65,6 +65,19 @@ func (w *WagonRepository) SearchStones(opts *StonesSearchOpts) (*[]*Stone, error
 	return w.Stones.Search(opts, w.Identity.Name)
 }
 
+func (w *WagonRepository) SearchArtifacts(opts *StonesSearchOpts) (*[]*artifact.PackageArtifact, error) {
+
+	// Load catalog if not loaded yet
+	if w.Stones.Catalog == nil {
+		_, err := w.Stones.LoadCatalog(w.Identity)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return w.Stones.SearchArtifacts(opts, w.Identity.Name)
+}
+
 func (w *WagonRepository) HasLocalWagonIdentity(wdir string) bool {
 	file := filepath.Join(wdir, REPOSITORY_SPECFILE)
 	if fileHelper.Exists(file) {

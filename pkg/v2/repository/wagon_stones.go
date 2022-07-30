@@ -22,7 +22,7 @@ import (
 )
 
 type StonesSearchOpts struct {
-	Packages      pkg.Packages
+	Packages      pkg.DefaultPackages
 	Categories    []string
 	Labels        []string
 	LabelsMatches []string
@@ -85,8 +85,8 @@ func NewStone(p *artifact.PackageArtifact, repo string, withFiles bool) *Stone {
 	return ans
 }
 
-func (s *WagonStones) Search(opts *StonesSearchOpts, repoName string) (*[]*Stone, error) {
-	ans := []*Stone{}
+func (s *WagonStones) SearchArtifacts(opts *StonesSearchOpts, repoName string) (*[]*artifact.PackageArtifact, error) {
+	ans := []*artifact.PackageArtifact{}
 
 	if s.Catalog == nil {
 		return &ans, nil
@@ -252,7 +252,27 @@ func (s *WagonStones) Search(opts *StonesSearchOpts, repoName string) (*[]*Stone
 
 	matched:
 		if match {
-			ans = append(ans, NewStone(artifact, repoName, opts.WithFiles))
+			ans = append(ans, artifact)
+		}
+	}
+
+	return &ans, nil
+
+}
+
+func (s *WagonStones) Search(opts *StonesSearchOpts, repoName string) (*[]*Stone, error) {
+	ans := []*Stone{}
+
+	artifactsMatched, err := s.SearchArtifacts(opts, repoName)
+	if err != nil {
+		return nil, err
+	}
+
+	matches := *artifactsMatched
+
+	if len(matches) > 0 {
+		for idx, _ := range matches {
+			ans = append(ans, NewStone(matches[idx], repoName, opts.WithFiles))
 		}
 	}
 
