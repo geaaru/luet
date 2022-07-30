@@ -20,6 +20,7 @@ import (
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 	. "github.com/geaaru/luet/pkg/logger"
 	"github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
+	"github.com/pkg/errors"
 
 	"github.com/cavaliercoder/grab"
 	"github.com/schollz/progressbar/v3"
@@ -182,6 +183,11 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) error {
 
 			Debug("\nCopying file ", filepath.Join(temp, artifactName), "to", cacheFile)
 			err = fileHelper.CopyFile(filepath.Join(temp, artifactName), cacheFile)
+			if err != nil {
+				return errors.Wrap(err,
+					fmt.Sprintf("Copying file %s to %s", filepath.Join(temp, artifactName),
+						cacheFile))
+			}
 
 			ok = true
 			break
