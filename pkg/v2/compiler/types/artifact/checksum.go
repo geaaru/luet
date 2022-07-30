@@ -16,9 +16,6 @@
 package artifact
 
 import (
-
-	//"strconv"
-
 	"crypto/sha256"
 	"fmt"
 	"hash"

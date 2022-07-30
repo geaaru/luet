@@ -24,5 +24,3 @@ type Client interface {
 	DownloadArtifact(*artifact.PackageArtifact) error
 	DownloadFile(string) (string, error)
 }
-
-type Repositories []*LuetSystemRepository
