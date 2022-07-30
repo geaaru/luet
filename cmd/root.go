@@ -252,6 +252,7 @@ func init() {
 		newSearchCommand(config.LuetCfg),
 		newCleanupCommand(config.LuetCfg),
 		newQueryCommand(config.LuetCfg),
+		newMinerCommand(config.LuetCfg),
 	)
 
 }
