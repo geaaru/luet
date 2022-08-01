@@ -70,7 +70,7 @@ projects:
 {{ range $i, $gv := $gversions }}
           - name: luet-test{{ $i }}
             # ARM images or AMD64
-            image_source: "ubuntu/21.10"
+            image_source: "ubuntu/22.04"
             # By deafult it use remote images"
             image_remote_server: "images"
 
@@ -90,7 +90,7 @@ projects:
                   # DHCP seems slow
                   - sleep 5
                   - echo "Testing Golang ${golang_version}"
-                  - echo "deb http://archive.ubuntu.com/ubuntu hirsute-backports main universe multiverse restricted" >> /etc/apt/sources.list
+                  - echo "deb http://archive.ubuntu.com/ubuntu jammy-backports main universe multiverse restricted" >> /etc/apt/sources.list
                   - apt-get update
                   - apt-get upgrade -y
                   - apt-get install -y software-properties-common
@@ -111,6 +111,20 @@ projects:
                 flags:
                   - test
                 commands:
+                  - |
+                    cd /gopath/src/github.com/geaaru/luet && \
+                    GOROOT="/usr/lib/go-${golang_version}" \
+                    GOTOOLDIR="/usr/lib/go-${golang_version}'/pkg/tool/linux_amd64" \
+                    GOPATH=/gopath \
+                    GOBIN=$GOPATH/bin \
+                    PATH=/usr/lib/go-${golang_version}/bin:$PATH:$GOBIN \
+                    echo "
+                    GOROOT    = ${GOROOT}
+                    GOTOOLDIR = ${GOTOOLDIR}
+                    GOPATH    = ${GOPATH}
+                    GOBIN     = ${GOBIN}
+                    PATH      = ${PATH}
+                    "
                   - |
                     cd /gopath/src/github.com/geaaru/luet && \
                     GOROOT="/usr/lib/go-${golang_version}" \
