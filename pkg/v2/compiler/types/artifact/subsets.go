@@ -29,7 +29,9 @@ import (
 func (a *PackageArtifact) GetTarFormersSpec(enableSubsets bool) *tarf_specs.SpecFile {
 	spec := tarf_specs.NewSpecFile()
 	spec.SameOwner = LuetCfg.GetGeneral().SameOwner
-	spec.EnableMutex = true
+	spec.EnableMutex = LuetCfg.GetTarFlows().Mutex4Dirs
+	spec.MaxOpenFiles = LuetCfg.GetTarFlows().MaxOpenFiles
+	spec.BufferSize = LuetCfg.GetTarFlows().CopyBufferSize
 	spec.OverwritePerms = LuetCfg.GetGeneral().OverwriteDirPerms
 	spec.IgnoreRegexes = []string{
 		// prevent 'operation not permitted'

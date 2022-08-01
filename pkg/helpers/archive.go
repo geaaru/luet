@@ -20,6 +20,8 @@ import (
 	"io"
 	"os"
 
+	. "github.com/geaaru/luet/pkg/config"
+
 	"github.com/docker/docker/pkg/archive"
 	tarf "github.com/geaaru/tar-formers/pkg/executor"
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
@@ -52,21 +54,17 @@ func Tar(src, dest string) error {
 
 func UntarProtect(src, dst string, sameOwner, overwriteDirPerms bool, protectedFiles []string, modifier tarf.TarFileHandlerFunc) error {
 
-	mutex := true
-	mutexEnv := os.Getenv("LUET_UNPACK_MUTEX")
-	if mutexEnv == "false" {
-		mutex = false
-	}
-
 	spec := tarf_specs.NewSpecFile()
 	spec.SameOwner = sameOwner
-	spec.EnableMutex = mutex
 	spec.OverwritePerms = overwriteDirPerms
 	spec.IgnoreRegexes = []string{
 		// prevent 'operation not permitted'
 		//"^/dev/",
 	}
 	spec.IgnoreFiles = []string{}
+	spec.EnableMutex = LuetCfg.GetTarFlows().Mutex4Dirs
+	spec.MaxOpenFiles = LuetCfg.GetTarFlows().MaxOpenFiles
+	spec.BufferSize = LuetCfg.GetTarFlows().CopyBufferSize
 
 	return UntarProtectSpec(
 		src, dst, protectedFiles, modifier, spec,
