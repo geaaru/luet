@@ -56,8 +56,39 @@ type StonesPack struct {
 	Stones []*Stone `json:"stones" yaml:"stones"`
 }
 
+type StonesMap struct {
+	Stones map[string][]*Stone `json:"stones" yaml:"stones"`
+}
+
 type WagonStones struct {
 	Catalog *StonesCatalog
+}
+
+func (sp *StonesPack) ToMap() *StonesMap {
+
+	ans := &StonesMap{
+		Stones: make(map[string][]*Stone, 1),
+	}
+
+	for idx, _ := range sp.Stones {
+		ans.Add(sp.Stones[idx])
+	}
+
+	return ans
+}
+
+func (sm *StonesMap) Add(s *Stone) {
+	if val, ok := sm.Stones[s.GetName()]; ok {
+		sm.Stones[s.GetName()] = append(val, s)
+	} else {
+		sm.Stones[s.GetName()] = []*Stone{s}
+	}
+}
+
+func (sm *StonesMap) AddPack(sp *StonesPack) {
+	for idx, _ := range sp.Stones {
+		sm.Add(sp.Stones[idx])
+	}
 }
 
 func NewWagonStones() *WagonStones {
@@ -83,6 +114,32 @@ func NewStone(p *artifact.PackageArtifact, repo string, withFiles bool) *Stone {
 	}
 
 	return ans
+}
+
+func (s *Stone) ToPackage() *pkg.DefaultPackage {
+	ans := pkg.NewPackage(s.Name, s.Version, []*pkg.DefaultPackage{}, []*pkg.DefaultPackage{})
+	ans.Labels = s.Labels
+	ans.Annotations = s.Annotations
+	ans.Hidden = s.Hidden
+	ans.Category = s.Category
+	ans.License = s.License
+	ans.Repository = s.Repository
+
+	return ans
+}
+
+func (s *Stone) HumanReadableString() string {
+	return fmt.Sprintf("%s/%s-%s", s.Category, s.Name, s.Version)
+}
+
+func (s *Stone) GetName() string {
+	if s.Category != "" && s.Name != "" {
+		return fmt.Sprintf("%s/%s", s.Category, s.Name)
+	} else if s.Category != "" {
+		return s.Category
+	} else {
+		return s.Name
+	}
 }
 
 func (s *WagonStones) SearchArtifacts(opts *StonesSearchOpts, repoName string) (*[]*artifact.PackageArtifact, error) {
@@ -252,6 +309,13 @@ func (s *WagonStones) SearchArtifacts(opts *StonesSearchOpts, repoName string) (
 
 	matched:
 		if match {
+			// Propagate repository information
+			if artifact.Runtime != nil {
+				artifact.Runtime.Repository = repoName
+			} else if artifact.CompileSpec != nil && artifact.CompileSpec.Package != nil {
+				artifact.CompileSpec.Package.Repository = repoName
+			}
+
 			ans = append(ans, artifact)
 		}
 	}
