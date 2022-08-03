@@ -111,7 +111,7 @@ func (a *PackageArtifact) unmarshalSubsets() *LuetSubsetsDefinition {
 		string(pkg.SubsetsAnnotation),
 	)
 
-	obj, ok := subsets.(map[interface{}]interface{})
+	obj, ok := subsets.(map[string]interface{})
 
 	if !ok {
 		Warning(fmt.Sprintf("[%s] Wrong format on %s annotation.",
@@ -122,34 +122,26 @@ func (a *PackageArtifact) unmarshalSubsets() *LuetSubsetsDefinition {
 
 	for k, v := range obj {
 
-		krules, kok := k.(string)
-		if !kok {
-			Warning(fmt.Sprintf("[%s] Invalid key on subset %s.",
-				a.Runtime.HumanReadableString(), k,
-			))
-			continue
-		}
-
+		krules := k
 		if krules != "rules" {
 			continue
 		}
 
-		mrules, ok := v.(map[interface{}]interface{})
+		mrules, ok := v.(map[string]interface{})
 		if !ok {
-			Warning(fmt.Sprintf("[%s] Wrong rules on subset %s.",
-				a.Runtime.HumanReadableString(), k,
+			Warning(fmt.Sprintf("[%s] Wrong rules on subset %s (%T).",
+				a.Runtime.HumanReadableString(), k, v,
 			))
 			continue
 		}
 
-		for mk, vrules := range mrules {
+		for kk, vrules := range mrules {
 
-			kk := mk.(string)
 			rules := []string{}
 			irules, ok := vrules.([]interface{})
 			if !ok {
-				Warning(fmt.Sprintf("[%s] For subset %s value is not an array.",
-					a.Runtime.HumanReadableString(), kk,
+				Warning(fmt.Sprintf("[%s] For subset %s value is not an array. (%T)",
+					a.Runtime.HumanReadableString(), kk, vrules,
 				))
 				continue
 			}
