@@ -12,7 +12,6 @@ import (
 	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
-	"github.com/geaaru/luet/pkg/solver"
 	installer "github.com/geaaru/luet/pkg/v2/installer"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
@@ -81,6 +80,7 @@ func NewDownload(config *cfg.LuetConfig) *cobra.Command {
 			r.ClearCatalog()
 
 			aManager := installer.NewArtifactsManager(config)
+			defer aManager.Close()
 
 			fail := false
 
@@ -118,10 +118,6 @@ func NewDownload(config *cfg.LuetConfig) *cobra.Command {
 	flags.String("system-dbpath", "", "System db path")
 	flags.String("system-target", "", "System rootpath")
 	flags.String("system-engine", "", "System DB engine")
-	flags.String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
-	flags.Float32("solver-rate", 0.7, "Solver learning rate")
-	flags.Float32("solver-discount", 1.0, "Solver discount rate")
-	flags.Int("solver-attempts", 9000, "Solver maximum attempts")
 
 	return ans
 }
