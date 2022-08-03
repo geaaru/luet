@@ -6,7 +6,11 @@ package installer
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -47,6 +51,12 @@ func (m *ArtifactsManager) setup() {
 	}
 }
 
+func (m *ArtifactsManager) Close() {
+	if m.Database != nil {
+		m.Database.Close()
+	}
+}
+
 func (m *ArtifactsManager) DownloadPackage(p *artifact.PackageArtifact, r *repos.WagonRepository) error {
 	c := r.Client()
 	if c == nil {
@@ -65,6 +75,186 @@ func (m *ArtifactsManager) DownloadPackage(p *artifact.PackageArtifact, r *repos
 	}
 
 	return nil
+}
+
+func (m *ArtifactsManager) removePackageFiles(s *repos.Stone, targetRootfs string, preserveSystemEssentialData bool) error {
+	var cp *cfg.ConfigProtect
+	var err error
+	annotationDir := ""
+
+	p := s.ToPackage()
+
+	if !m.Config.ConfigProtectSkip {
+		if p.HasAnnotation(string(pkg.ConfigProtectAnnnotation)) {
+			dir, ok := p.GetAnnotations()[string(pkg.ConfigProtectAnnnotation)].(string)
+			if ok {
+				annotationDir = dir
+			}
+		}
+
+		cp = cfg.NewConfigProtect(annotationDir)
+		cp.Map(s.Files)
+	}
+
+	toRemove, dirs2Remove, notPresent := fileHelper.OrderFiles(targetRootfs, s.Files)
+
+	mapDirs := make(map[string]int, 0)
+	for _, d := range dirs2Remove {
+		mapDirs[d] = 1
+	}
+
+	// Remove from target
+	for _, f := range toRemove {
+		target := filepath.Join(targetRootfs, f)
+
+		if !m.Config.ConfigProtectSkip && cp.Protected(f) {
+			Debug("Preserving protected file:", f)
+			continue
+		}
+
+		Debug("Removing", target)
+		if preserveSystemEssentialData &&
+			strings.HasPrefix(f, m.Config.GetSystem().GetSystemPkgsCacheDirPath()) ||
+			strings.HasPrefix(f, m.Config.GetSystem().GetSystemRepoDatabaseDirPath()) {
+			Warning("Preserve ", f,
+				" which is required by luet ( you have to delete it manually if you really need to)")
+			continue
+		}
+
+		fi, err := os.Lstat(target)
+		if err != nil {
+			Warning("File not found (it was before?)", err.Error())
+			continue
+		}
+		switch mode := fi.Mode(); {
+		case mode.IsDir():
+			files, err := ioutil.ReadDir(target)
+			if err != nil {
+				Warning("Failed reading folder", target, err.Error())
+			}
+			if len(files) != 0 {
+				Info("DROPPED = Preserving not-empty folder", target)
+				continue
+			}
+		}
+
+		if err = os.Remove(target); err != nil {
+			Warning("Failed removing file (maybe not present in the system target anymore ?)", target, err.Error())
+		}
+
+		// Add subpaths of the file to ensure that all dirs
+		// are injected for the prune phase. (NOTE: i'm not sure about this)
+		dirname := filepath.Dir(target)
+		words := strings.Split(dirname, string(os.PathSeparator))
+
+		for i := len(words); i > 1; i-- {
+			cpath := strings.Join(words[0:i], string(os.PathSeparator))
+			if _, ok := mapDirs[cpath]; !ok {
+				mapDirs[cpath] = 1
+			}
+		}
+	}
+
+	for _, f := range notPresent {
+		target := filepath.Join(targetRootfs, f)
+
+		if !m.Config.ConfigProtectSkip && cp.Protected(f) {
+			Debug("Preserving protected file:", f)
+			continue
+		}
+
+		if err = os.Remove(target); err != nil {
+			Debug("Failed removing file (not present in the system target)", target, err.Error())
+		}
+	}
+
+	// Sorting the dirs from the mapDirs keys
+	dirs2Remove = []string{}
+	for k, _ := range mapDirs {
+		dirs2Remove = append(dirs2Remove, k)
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(dirs2Remove)))
+
+	Debug("Directories tagged for the check and remove", len(dirs2Remove))
+
+	// Check if directories could be removed.
+	for _, f := range dirs2Remove {
+		target := filepath.Join(targetRootfs, f)
+
+		if preserveSystemEssentialData &&
+			strings.HasPrefix(f, m.Config.GetSystem().GetSystemPkgsCacheDirPath()) ||
+			strings.HasPrefix(f, m.Config.GetSystem().GetSystemRepoDatabaseDirPath()) {
+			Warning("Preserve ", f,
+				" which is required by luet ( you have to delete it manually if you really need to)")
+			continue
+		}
+
+		if !m.Config.ConfigProtectSkip && cp.Protected(f) {
+			Debug("Preserving protected file:", f)
+			continue
+		}
+
+		files, err := ioutil.ReadDir(target)
+		if err != nil {
+			Warning("Failed reading folder", target, err.Error())
+		}
+		Debug("Removing dir", target, "if empty: files ", len(files), ".")
+
+		if len(files) != 0 {
+			Debug("Preserving not-empty folder", target)
+			continue
+		}
+
+		if err = os.Remove(target); err != nil {
+			Debug("Failed removing file (not present in the system target)", target, err.Error())
+		}
+	}
+
+	return nil
+}
+
+func (m *ArtifactsManager) RemovePackage(s *repos.Stone, targetRootfs string, preserveSystemEssentialData bool) error {
+	m.setup()
+
+	err := m.removePackageFiles(s, targetRootfs, preserveSystemEssentialData)
+	if err != nil {
+		return err
+	}
+
+	p := s.ToPackage()
+
+	err = m.Database.RemovePackageFiles(p)
+	if err != nil {
+		return errors.Wrap(err, "Failed removing package files from database")
+	}
+	err = m.Database.RemovePackage(p)
+	if err != nil {
+		return errors.Wrap(err, "Failed removing package from database")
+	}
+
+	Info(":recycle: ", fmt.Sprintf("%20s", p.GetFingerPrint()), "Removed :heavy_check_mark:")
+	return nil
+}
+
+func (m *ArtifactsManager) ReinstallPackage(
+	s *repos.Stone,
+	p *artifact.PackageArtifact,
+	r *repos.WagonRepository,
+	targetRootfs string,
+	preserveSystemEssentialData bool) error {
+
+	if p.Runtime == nil {
+		return errors.New("Artifact without Runtime package definition")
+	}
+
+	m.setup()
+
+	err := m.removePackageFiles(s, targetRootfs, preserveSystemEssentialData)
+	if err != nil {
+		return err
+	}
+
+	return m.InstallPackage(p, r, targetRootfs)
 }
 
 func (m *ArtifactsManager) InstallPackage(p *artifact.PackageArtifact, r *repos.WagonRepository, targetRootfs string) error {
@@ -135,6 +325,8 @@ func (m *ArtifactsManager) CheckFileConflicts(
 	checkSystem bool,
 	targetRootfs string,
 ) error {
+
+	m.setup()
 
 	Info("Checking for file conflicts...")
 	start := time.Now()
