@@ -33,8 +33,8 @@ import (
 	"github.com/geaaru/luet/pkg/helpers/match"
 	version "github.com/geaaru/luet/pkg/versioner"
 
-	gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 	"github.com/crillab/gophersat/bf"
+	gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 	"github.com/ghodss/yaml"
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"

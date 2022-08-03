@@ -21,6 +21,8 @@ func newMinerCommand(config *cfg.LuetConfig) *cobra.Command {
 	ans.AddCommand(
 		NewDownload(config),
 		NewInstallPackage(config),
+		NewRemovePackage(config),
+		NewReinstallPackage(config),
 	)
 
 	return ans
