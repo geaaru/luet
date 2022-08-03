@@ -32,8 +32,10 @@ import (
 )
 
 type ChannelSearchRes struct {
-	Stones *[]*wagon.Stone
-	Error  error
+	Stones    *[]*wagon.Stone
+	Artifacts *[]*art.PackageArtifact
+
+	Error error
 }
 
 type ChannelRepoOpRes struct {
@@ -132,27 +134,47 @@ func TemplateFolders(fromRepo bool, treePaths []string) []string {
 	return templateFolders
 }
 
-func ProcessRepository(repo *LuetRepository, searchOpts *wagon.StonesSearchOpts, config *LuetConfig, channel chan ChannelSearchRes) {
+func ProcessRepository(
+	repo *LuetRepository,
+	searchOpts *wagon.StonesSearchOpts,
+	config *LuetConfig,
+	channel chan ChannelSearchRes,
+	artifactsRes bool) {
+
 	repobasedir := config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
 	r := wagon.NewWagonRepository(repo)
 	err := r.ReadWagonIdentify(repobasedir)
 	if err != nil {
 		Warning("Error on read repository identity file: " + err.Error())
 	} else {
-		pkgs, err := r.SearchStones(searchOpts)
-		if err != nil {
-			Warning("Error on read repository catalog for repo : " + r.Identity.Name)
-			channel <- ChannelSearchRes{nil, err}
-			return
-		}
+		if artifactsRes {
+			artifacts, err := r.SearchArtifacts(searchOpts)
+			if err != nil {
+				Warning("Error on read repository catalog for repo : " + r.Identity.Name)
+				channel <- ChannelSearchRes{nil, nil, err}
+				return
+			}
 
-		channel <- ChannelSearchRes{pkgs, nil}
+			channel <- ChannelSearchRes{nil, artifacts, nil}
+		} else {
+			pkgs, err := r.SearchStones(searchOpts)
+			if err != nil {
+				Warning("Error on read repository catalog for repo : " + r.Identity.Name)
+				channel <- ChannelSearchRes{nil, nil, err}
+				return
+			}
+
+			channel <- ChannelSearchRes{pkgs, nil, nil}
+		}
 
 		r.ClearCatalog()
 	}
 }
 
-func SearchFromRepos(config *LuetConfig, searchOpts *wagon.StonesSearchOpts) (*[]*wagon.Stone, error) {
+func SearchFromRepos(
+	config *LuetConfig,
+	searchOpts *wagon.StonesSearchOpts) (*[]*wagon.Stone, error) {
+
 	res := []*wagon.Stone{}
 	var ch chan ChannelSearchRes = make(
 		chan ChannelSearchRes,
@@ -166,7 +188,7 @@ func SearchFromRepos(config *LuetConfig, searchOpts *wagon.StonesSearchOpts) (*[
 		}
 
 		if repo.Cached {
-			go ProcessRepository(&repo, searchOpts, config, ch)
+			go ProcessRepository(&repo, searchOpts, config, ch, false)
 		} else {
 			return &res, errors.New("Only cached repositories are supported.")
 		}
@@ -190,11 +212,53 @@ func SearchFromRepos(config *LuetConfig, searchOpts *wagon.StonesSearchOpts) (*[
 	return &res, err
 }
 
+func SearchArtifactsFromRepos(
+	config *LuetConfig,
+	searchOpts *wagon.StonesSearchOpts) (*[]*art.PackageArtifact, error) {
+
+	res := []*art.PackageArtifact{}
+	var ch chan ChannelSearchRes = make(
+		chan ChannelSearchRes,
+		config.GetGeneral().Concurrency,
+	)
+
+	for idx, _ := range config.SystemRepositories {
+		repo := config.SystemRepositories[idx]
+		if !repo.Enable {
+			continue
+		}
+
+		if repo.Cached {
+			go ProcessRepository(&repo, searchOpts, config, ch, true)
+		} else {
+			return &res, errors.New("Only cached repositories are supported.")
+		}
+
+	}
+
+	var err error = nil
+
+	for idx, _ := range config.SystemRepositories {
+		repo := config.SystemRepositories[idx]
+		if repo.Cached {
+			resp := <-ch
+			if resp.Error == nil {
+				res = append(res, *resp.Artifacts...)
+			} else {
+				err = resp.Error
+			}
+		}
+	}
+
+	return &res, err
+}
+
 func SearchInstalled(config *LuetConfig, searchOpts *wagon.StonesSearchOpts) (*[]*wagon.Stone, error) {
 	system := &installer.System{
 		Database: config.GetSystemDB(),
 		Target:   config.GetSystem().Rootfs,
 	}
+	defer system.Database.Close()
 	wagonStones := wagon.NewWagonStones()
 	wagonStones.Catalog = &wagon.StonesCatalog{}
 
