@@ -111,6 +111,34 @@ func (a *PackageArtifact) Verify() error {
 	return nil
 }
 
+func (a *PackageArtifact) GetRepository() string {
+	ans := ""
+
+	if a.Runtime != nil {
+		ans = a.Runtime.Repository
+	}
+
+	if ans == "" && a.CompileSpec != nil && a.CompileSpec.Package != nil {
+		ans = a.CompileSpec.Package.Repository
+	}
+
+	return ans
+}
+
+func (a *PackageArtifact) GetVersion() string {
+	ans := ""
+
+	if a.Runtime != nil {
+		ans = a.Runtime.Version
+	}
+
+	if ans == "" && a.CompileSpec != nil && a.CompileSpec.Package != nil {
+		ans = a.CompileSpec.Package.Version
+	}
+
+	return ans
+}
+
 func (a *PackageArtifact) WriteYaml(dst string) error {
 	// First compute checksum of artifact. When we write the yaml we want to write up-to-date informations.
 	err := a.Hash()
