@@ -12,7 +12,8 @@ import (
 	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
-	"github.com/geaaru/luet/pkg/solver"
+	"github.com/geaaru/luet/pkg/subsets"
+	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	installer "github.com/geaaru/luet/pkg/v2/installer"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
@@ -34,6 +35,7 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			rname := args[0]
+			checkConflicts, _ := cmd.Flags().GetBool("check-conflicts")
 			pkgs := []*pkg.DefaultPackage{}
 
 			repo, err := config.GetSystemRepository(rname)
@@ -81,22 +83,31 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 			r.ClearCatalog()
 
 			aManager := installer.NewArtifactsManager(config)
+			defer aManager.Close()
 
 			fail := false
 
 			artifacts := *artifactsRef
 
-			// TODO: to add on options
-			checkSystem := true
-
 			// Check for file conflicts
+			// NOTE: checkConflicts avoid to
+			//       exclude installed packages.
 			err = aManager.CheckFileConflicts(
-				artifactsRef, checkSystem,
+				artifactsRef, checkConflicts,
 				config.GetSystem().Rootfs,
 			)
 			if err != nil {
 				Fatal(err.Error())
 			}
+
+			// Load config protect configs
+			installer.LoadConfigProtectConfs(config)
+			// Load subsets defintions
+			subsets.LoadSubsetsDefintions(config)
+			// Load subsets config
+			subsets.LoadSubsetsConfig(config)
+
+			toFinalize := []*artifact.PackageArtifact{}
 
 			for _, a := range artifacts {
 				a.ResolveCachePath()
@@ -120,6 +131,17 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 						"Error on register artifact %s: %s",
 						a.Runtime.HumanReadableString(),
 						err.Error()))
+				} else {
+					toFinalize = append(toFinalize, a)
+				}
+
+			}
+
+			// Run finalizer of the installed packages
+			if len(toFinalize) > 0 {
+				err = aManager.ExecuteFinalizers(&toFinalize, config.GetSystem().Rootfs)
+				if err != nil {
+					Error("Error on execute finalizer: " + err.Error())
 				}
 			}
 
@@ -142,10 +164,8 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 	flags.String("system-dbpath", "", "System db path")
 	flags.String("system-target", "", "System rootpath")
 	flags.String("system-engine", "", "System DB engine")
-	flags.String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
-	flags.Float32("solver-rate", 0.7, "Solver learning rate")
-	flags.Float32("solver-discount", 1.0, "Solver discount rate")
-	flags.Int("solver-attempts", 9000, "Solver maximum attempts")
+	flags.Bool("check-conflicts", true,
+		"Enable check of conflicts with installed packages. Normally leave this to true.")
 
 	return ans
 }
