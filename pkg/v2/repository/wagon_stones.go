@@ -189,12 +189,14 @@ func (s *WagonStones) SearchArtifacts(opts *StonesSearchOpts, repoName string) (
 		artifact := s.Catalog.Index[idx]
 		if artifact.Runtime == nil {
 			//fmt.Println("ARTIFACT ", artifact, repoName)
-			Warning(fmt.Sprintf("[%s/%s-%s] Skipping artifact without runtime pkg.",
+			Warning(fmt.Sprintf(
+				"[%s/%s-%s] Found artifact without runtime pkg. Using compile spec package.",
 				artifact.CompileSpec.Package.Category,
 				artifact.CompileSpec.Package.Name,
 				artifact.CompileSpec.Package.Version,
 			))
-			continue
+
+			artifact.Runtime = artifact.CompileSpec.Package
 		}
 		if !opts.Hidden && artifact.Runtime.Hidden {
 			// Exclude hidden packages
