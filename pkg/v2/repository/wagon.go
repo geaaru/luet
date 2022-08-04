@@ -251,6 +251,27 @@ func (w *WagonRepository) Sync(force bool) error {
 	return nil
 }
 
+func (w *WagonRepository) GetTreePath(repobasedir string) string {
+	if w.Identity.GetTreePath() == "" {
+
+		// NOTE: repobasedir must be the value of
+		//       LuetCfg.GetSystem().GetSystemReposDirPath
+		repobase := filepath.Join(repobasedir, w.Identity.GetName())
+		return filepath.Join(repobase, "treefs")
+	}
+	return w.Identity.GetTreePath()
+}
+
+func (w *WagonRepository) GetMetaPath(repobasedir string) string {
+	if w.Identity.GetTreePath() == "" {
+		// NOTE: repobasedir must be the value of
+		//       LuetCfg.GetSystem().GetSystemReposDirPath
+		repobase := filepath.Join(repobasedir, w.Identity.GetName())
+		return filepath.Join(repobase, "metafs")
+	}
+	return w.Identity.GetTreePath()
+}
+
 func (w *WagonRepository) Client() Client {
 	switch w.Identity.GetType() {
 	case DiskRepositoryType:
