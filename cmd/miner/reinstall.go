@@ -210,10 +210,20 @@ func NewReinstallPackage(config *cfg.LuetConfig) *cobra.Command {
 
 			// Run finalizer of the installed packages
 			if len(toFinalize) > 0 {
-				fmt.Println("EXECUTE FINALIZERS", len(toFinalize))
-				err = aManager.ExecuteFinalizers(&toFinalize, config.GetSystem().Rootfs)
-				if err != nil {
-					Error("Error on execute finalizer: " + err.Error())
+				for idx, _ := range toFinalize {
+					r := mapRepos[toFinalize[idx].GetRepository()]
+					err = aManager.ExecuteFinalizer(
+						toFinalize[idx], r,
+						config.GetSystem().Rootfs)
+					if err != nil {
+						fail = true
+					}
+				}
+			}
+
+			if len(errQueue) > 0 {
+				for _, e := range errQueue {
+					Warning(e)
 				}
 			}
 

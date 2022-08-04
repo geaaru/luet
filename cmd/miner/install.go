@@ -139,9 +139,11 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 
 			// Run finalizer of the installed packages
 			if len(toFinalize) > 0 {
-				err = aManager.ExecuteFinalizers(&toFinalize, config.GetSystem().Rootfs)
-				if err != nil {
-					Error("Error on execute finalizer: " + err.Error())
+				for idx, _ := range toFinalize {
+					err = aManager.ExecuteFinalizer(toFinalize[idx], r, config.GetSystem().Rootfs)
+					if err != nil {
+						fail = true
+					}
 				}
 			}
 
