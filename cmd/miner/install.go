@@ -9,6 +9,7 @@ import (
 	"os"
 
 	helpers "github.com/geaaru/luet/cmd/helpers"
+	util "github.com/geaaru/luet/cmd/util"
 	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
@@ -35,8 +36,11 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			rname := args[0]
-			checkConflicts, _ := cmd.Flags().GetBool("check-conflicts")
 			pkgs := []*pkg.DefaultPackage{}
+
+			checkConflicts, _ := cmd.Flags().GetBool("check-conflicts")
+			finalizerEnvs, _ := cmd.Flags().GetStringArray("finalizer-env")
+			skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
 
 			repo, err := config.GetSystemRepository(rname)
 			if err != nil {
@@ -54,6 +58,12 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 				}
 
 				pkgs = append(pkgs, p)
+			}
+
+			// Load finalizer runtime environments
+			err = util.SetCliFinalizerEnvs(finalizerEnvs)
+			if err != nil {
+				Fatal(err.Error())
 			}
 
 			searchOpts := &wagon.StonesSearchOpts{
@@ -131,7 +141,7 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 						"Error on register artifact %s: %s",
 						a.Runtime.HumanReadableString(),
 						err.Error()))
-				} else {
+				} else if !skipFinalizers {
 					toFinalize = append(toFinalize, a)
 				}
 
@@ -169,5 +179,9 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 	flags.Bool("check-conflicts", true,
 		"Enable check of conflicts with installed packages. Normally leave this to true.")
 
+	flags.StringArray("finalizer-env", []string{},
+		"Set finalizer environment in the format key=value.")
+	flags.Bool("skip-finalizers", false,
+		"Skip the execution of the finalizers.")
 	return ans
 }

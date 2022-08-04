@@ -41,7 +41,10 @@ func NewReinstallPackage(config *cfg.LuetConfig) *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			pkgs := []*pkg.DefaultPackage{}
+
 			preserveSystem, _ := cmd.Flags().GetBool("preserve-system-essentials")
+			finalizerEnvs, _ := cmd.Flags().GetStringArray("finalizer-env")
+			skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
 
 			for _, pstr := range args {
 				p, err := helpers.ParsePackageStr(pstr)
@@ -52,6 +55,12 @@ func NewReinstallPackage(config *cfg.LuetConfig) *cobra.Command {
 				}
 
 				pkgs = append(pkgs, p)
+			}
+
+			// Load finalizer runtime environments
+			err := util.SetCliFinalizerEnvs(finalizerEnvs)
+			if err != nil {
+				Fatal(err.Error())
 			}
 
 			searchOpts := &wagon.StonesSearchOpts{
@@ -196,7 +205,10 @@ func NewReinstallPackage(config *cfg.LuetConfig) *cobra.Command {
 
 				} else {
 					Info(fmt.Sprintf("[%40s] reinstalled :check_mark:", s.HumanReadableString()))
-					toFinalize = append(toFinalize, a)
+
+					if !skipFinalizers {
+						toFinalize = append(toFinalize, a)
+					}
 				}
 			}
 
@@ -239,6 +251,11 @@ func NewReinstallPackage(config *cfg.LuetConfig) *cobra.Command {
 	flags.String("system-target", "", "System rootpath")
 	flags.String("system-engine", "", "System DB engine")
 	flags.Bool("preserve-system-essentials", true, "Preserve system essentials files.")
+
+	flags.StringArray("finalizer-env", []string{},
+		"Set finalizer environment in the format key=value.")
+	flags.Bool("skip-finalizers", false,
+		"Skip the execution of the finalizers.")
 
 	return ans
 }
