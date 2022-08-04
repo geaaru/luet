@@ -48,8 +48,10 @@ func (am *ArtifactsMap) MatchVersion(p *PackageArtifact) (*PackageArtifact, erro
 				break
 			}
 		}
-	} else {
-		return ans, errors.New(fmt.Sprintf("Package %s not found", key))
+	}
+
+	if ans == nil {
+		return ans, errors.New(fmt.Sprintf("Package %s-%s not found", key, p.GetVersion()))
 	}
 
 	return ans, nil
