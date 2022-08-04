@@ -87,7 +87,7 @@ func (a *PackageArtifact) GetPackageTreePath(treefs string) string {
 	} else if a.CompileSpec != nil && a.CompileSpec.Package != nil {
 		pkg = a.CompileSpec.Package
 	} else {
-		panic(fmt.Sprintf("Unexpected status of the artifact %s", a))
+		panic(fmt.Sprintf("Unexpected status of the artifact %s", a.Path))
 	}
 	ans = filepath.Join(treefs, pkg.GetCategory(), pkg.GetName(), pkg.GetVersion())
 
