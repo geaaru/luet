@@ -20,10 +20,10 @@ import (
 type LuetFinalizer struct {
 	Shell     []string `json:"shell"`
 	Install   []string `json:"install"`
-	Uninstall []string `json:"uninstall"` // TODO: Where to store?
+	Uninstall []string `json:"uninstall"`
 }
 
-func (f *LuetFinalizer) RunInstall(targetRootfs string) error {
+func (f *LuetFinalizer) getShell() (string, []string) {
 	var cmd string
 	var args []string
 	if len(f.Shell) == 0 {
@@ -37,6 +37,34 @@ func (f *LuetFinalizer) RunInstall(targetRootfs string) error {
 		}
 	}
 
+	return cmd, args
+}
+
+func (f *LuetFinalizer) runCommand(cmd string, args, envs []string, script, targetRootfs string) error {
+	toRun := append(args, script)
+	Info(":shell: Executing finalizer on ", targetRootfs, cmd, toRun)
+	if targetRootfs == string(os.PathSeparator) {
+		cmd := exec.Command(cmd, toRun...)
+		cmd.Env = envs
+		stdoutStderr, err := cmd.CombinedOutput()
+		if err != nil {
+			return errors.Wrap(err, "Failed running command: "+string(stdoutStderr))
+		}
+		Info(string(stdoutStderr))
+	} else {
+		b := box.NewBox(cmd, toRun, []string{}, envs, targetRootfs, false, true, true)
+		err := b.Run()
+		if err != nil {
+			return errors.Wrap(err, "Failed running command: ")
+		}
+	}
+
+	return nil
+}
+
+func (f *LuetFinalizer) RunInstall(targetRootfs string) error {
+	cmd, args := f.getShell()
+
 	envs := LuetCfg.GetFinalizerEnvs()
 	// Add LUET_VERSION env so finalizer are able to know
 	// what is the luet version and that the script is running
@@ -44,37 +72,28 @@ func (f *LuetFinalizer) RunInstall(targetRootfs string) error {
 	envs = append(envs, fmt.Sprintf("LUET_VERSION=%s", LuetVersion))
 
 	for _, c := range f.Install {
-		toRun := append(args, c)
-		Info(":shell: Executing finalizer on ", targetRootfs, cmd, toRun)
-		if targetRootfs == string(os.PathSeparator) {
-			cmd := exec.Command(cmd, toRun...)
-			cmd.Env = envs
-			stdoutStderr, err := cmd.CombinedOutput()
-			if err != nil {
-				return errors.Wrap(err, "Failed running command: "+string(stdoutStderr))
-			}
-			Info(string(stdoutStderr))
-		} else {
-			b := box.NewBox(cmd, toRun, []string{}, envs, targetRootfs, false, true, true)
-			err := b.Run()
-			if err != nil {
-				return errors.Wrap(err, "Failed running command: ")
-			}
+		err := f.runCommand(cmd, args, envs, c, targetRootfs)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
-// TODO: We don't store uninstall finalizers ?!
-func (f *LuetFinalizer) RunUnInstall() error {
+func (f *LuetFinalizer) RunUninstall(targetRootfs string) error {
+	cmd, args := f.getShell()
+
+	envs := LuetCfg.GetFinalizerEnvs()
+	// Add LUET_VERSION env so finalizer are able to know
+	// what is the luet version and that the script is running
+	// inside the luet command.
+	envs = append(envs, fmt.Sprintf("LUET_VERSION=%s", LuetVersion))
+
 	for _, c := range f.Uninstall {
-		Debug("finalizer:", "sh", "-c", c)
-		cmd := exec.Command("sh", "-c", c)
-		stdoutStderr, err := cmd.CombinedOutput()
+		err := f.runCommand(cmd, args, envs, c, targetRootfs)
 		if err != nil {
-			return errors.Wrap(err, "Failed running command: "+string(stdoutStderr))
+			return err
 		}
-		Info(string(stdoutStderr))
 	}
 	return nil
 }
