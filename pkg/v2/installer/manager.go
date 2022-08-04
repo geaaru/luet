@@ -23,7 +23,6 @@ import (
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	repos "github.com/geaaru/luet/pkg/v2/repository"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 )
 
@@ -381,46 +380,52 @@ func (m *ArtifactsManager) CheckFileConflicts(
 	return nil
 }
 
-func (m *ArtifactsManager) ExecuteFinalizers(
-	toInstall *[]*artifact.PackageArtifact,
-	targetRootfs string,
-) error {
-	var errs error
+func (m *ArtifactsManager) ExecuteFinalizer(
+	a *artifact.PackageArtifact,
+	r *repos.WagonRepository,
+	targetRootfs string) error {
 
-	// PRE: The list of packages is already sorted by dependencies.
+	repoTreefs := r.GetTreePath(m.Config.GetSystem().GetSystemReposDirPath())
+	pkgdir := a.GetPackageTreePath(repoTreefs)
+	finalizeFile := filepath.Join(pkgdir, tree.FinalizerFile)
+	defFile := filepath.Join(pkgdir, pkg.PackageDefinitionFile)
 
-	for _, a := range *toInstall {
-		if fileHelper.Exists(a.Runtime.Rel(tree.FinalizerFile)) {
-			out, err := helpers.RenderFiles(
-				helpers.ChartFile(a.Runtime.Rel(tree.FinalizerFile)),
-				a.Runtime.Rel(pkg.PackageDefinitionFile),
-			)
-			if err != nil {
-				Warning("Failed rendering finalizer for ",
-					a.Runtime.HumanReadableString(), err.Error())
-				errs = multierror.Append(errs, err)
-				continue
-			}
+	if a.Runtime == nil && a.CompileSpec.Package == nil {
+		return errors.New("Invalid artifact without Package metadata")
+	}
 
-			Info("Executing finalizer for " + a.Runtime.HumanReadableString())
-			finalizer, err := NewLuetFinalizerFromYaml([]byte(out))
-			if err != nil {
-				Warning("Failed reading finalizer for ",
-					a.Runtime.HumanReadableString(), err.Error())
-				errs = multierror.Append(errs, err)
-				continue
-			}
-			err = finalizer.RunInstall(targetRootfs)
-			if err != nil {
-				Warning("Failed running finalizer for ",
-					a.Runtime.HumanReadableString(), err.Error())
-				errs = multierror.Append(errs, err)
-				continue
-			}
+	p := a.Runtime
+	if a.Runtime == nil {
+		p = a.CompileSpec.Package
+	}
+
+	if fileHelper.Exists(finalizeFile) {
+		out, err := helpers.RenderFiles(
+			helpers.ChartFile(finalizeFile),
+			defFile,
+		)
+		if err != nil {
+			Warning("Failed rendering finalizer for ",
+				p.HumanReadableString(), err.Error())
+			return err
+		}
+
+		Info("Executing finalizer for " + p.HumanReadableString())
+		finalizer, err := NewLuetFinalizerFromYaml([]byte(out))
+		if err != nil {
+			Warning("Failed reading finalizer for ",
+				p.HumanReadableString(), err.Error())
+			return err
+		}
+		err = finalizer.RunInstall(targetRootfs)
+		if err != nil {
+			Warning("Failed running finalizer for ",
+				p.HumanReadableString(), err.Error())
+			return err
 		}
 	}
-	return errs
 
+	return nil
 }
 
 // NOTE: These methods will be replaced soon
