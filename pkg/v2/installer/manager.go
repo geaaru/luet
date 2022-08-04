@@ -383,6 +383,7 @@ func (m *ArtifactsManager) CheckFileConflicts(
 func (m *ArtifactsManager) ExecuteFinalizer(
 	a *artifact.PackageArtifact,
 	r *repos.WagonRepository,
+	postInstall bool,
 	targetRootfs string) error {
 
 	repoTreefs := r.GetTreePath(m.Config.GetSystem().GetSystemReposDirPath())
@@ -417,7 +418,12 @@ func (m *ArtifactsManager) ExecuteFinalizer(
 				p.HumanReadableString(), err.Error())
 			return err
 		}
-		err = finalizer.RunInstall(targetRootfs)
+
+		if postInstall {
+			err = finalizer.RunInstall(targetRootfs)
+		} else {
+			err = finalizer.RunUninstall(targetRootfs)
+		}
 		if err != nil {
 			Warning("Failed running finalizer for ",
 				p.HumanReadableString(), err.Error())

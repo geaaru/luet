@@ -226,6 +226,7 @@ func NewReinstallPackage(config *cfg.LuetConfig) *cobra.Command {
 					r := mapRepos[toFinalize[idx].GetRepository()]
 					err = aManager.ExecuteFinalizer(
 						toFinalize[idx], r,
+						true,
 						config.GetSystem().Rootfs)
 					if err != nil {
 						fail = true
