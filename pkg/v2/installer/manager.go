@@ -322,6 +322,7 @@ func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos
 func (m *ArtifactsManager) CheckFileConflicts(
 	toInstall *[]*artifact.PackageArtifact,
 	checkSystem bool,
+	safeCheck bool,
 	targetRootfs string,
 ) error {
 
@@ -342,10 +343,17 @@ func (m *ArtifactsManager) CheckFileConflicts(
 	for _, a := range *toInstall {
 		for _, f := range a.Files {
 			if pkg, ok := filesToInstall[f]; ok {
-				return fmt.Errorf(
-					"file %s conflict between package %s and %s",
-					f, pkg, a.CompileSpec.Package.HumanReadableString(),
-				)
+				if safeCheck {
+					Warning(fmt.Errorf(
+						"file %s conflict between package %s and %s",
+						f, pkg, a.CompileSpec.Package.HumanReadableString(),
+					))
+				} else {
+					return fmt.Errorf(
+						"file %s conflict between package %s and %s",
+						f, pkg, a.CompileSpec.Package.HumanReadableString(),
+					)
+				}
 			}
 
 			filesToInstall[f] = a.CompileSpec.Package.HumanReadableString()
@@ -360,12 +368,22 @@ func (m *ArtifactsManager) CheckFileConflicts(
 						return errors.Wrap(err, "failed checking into system db")
 					}
 					if exists {
-						return fmt.Errorf(
-							"file conflict between '%s' and '%s' ( file: %s )",
-							p.HumanReadableString(),
-							a.Runtime.HumanReadableString(),
-							f,
-						)
+						if safeCheck {
+
+							Warning(fmt.Errorf(
+								"file conflict between '%s' and '%s' ( file: %s )",
+								p.HumanReadableString(),
+								a.Runtime.HumanReadableString(),
+								f,
+							))
+						} else {
+							return fmt.Errorf(
+								"file conflict between '%s' and '%s' ( file: %s )",
+								p.HumanReadableString(),
+								a.Runtime.HumanReadableString(),
+								f,
+							)
+						}
 					}
 				}
 			}

@@ -41,6 +41,7 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 			checkConflicts, _ := cmd.Flags().GetBool("check-conflicts")
 			finalizerEnvs, _ := cmd.Flags().GetStringArray("finalizer-env")
 			skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
+			force, _ := cmd.Flags().GetBool("force")
 
 			repo, err := config.GetSystemRepository(rname)
 			if err != nil {
@@ -103,7 +104,7 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 			// NOTE: checkConflicts avoid to
 			//       exclude installed packages.
 			err = aManager.CheckFileConflicts(
-				artifactsRef, checkConflicts,
+				artifactsRef, checkConflicts, force,
 				config.GetSystem().Rootfs,
 			)
 			if err != nil {
@@ -130,6 +131,7 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 						a.Runtime.HumanReadableString(),
 						err.Error()))
 					Error(fmt.Sprintf("[%40s] install failed - :fire:", a.Runtime.HumanReadableString()))
+					continue
 				} else {
 					Info(fmt.Sprintf("[%40s] installed - :heavy_check_mark:", a.Runtime.HumanReadableString()))
 				}
@@ -184,5 +186,7 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 		"Set finalizer environment in the format key=value.")
 	flags.Bool("skip-finalizers", false,
 		"Skip the execution of the finalizers.")
+	flags.Bool("force", false,
+		"Ignoring conflicts and errors.")
 	return ans
 }
