@@ -44,7 +44,7 @@ func NewArtifactsManager(config *cfg.LuetConfig) *ArtifactsManager {
 	}
 }
 
-func (m *ArtifactsManager) setup() {
+func (m *ArtifactsManager) Setup() {
 	if m.Database == nil {
 		m.Database = m.Config.GetSystemDB()
 	}
@@ -79,9 +79,20 @@ func (m *ArtifactsManager) DownloadPackage(p *artifact.PackageArtifact, r *repos
 func (m *ArtifactsManager) removePackageFiles(s *repos.Stone, targetRootfs string, preserveSystemEssentialData bool) error {
 	var cp *cfg.ConfigProtect
 	var err error
+	var files []string = []string{}
 	annotationDir := ""
 
 	p := s.ToPackage()
+
+	if len(s.Files) > 0 {
+		files = s.Files
+	} else {
+		// Retrieve files from database
+		files, err = m.Database.GetPackageFiles(p)
+		if err != nil {
+			return err
+		}
+	}
 
 	if !m.Config.ConfigProtectSkip {
 		if p.HasAnnotation(string(pkg.ConfigProtectAnnnotation)) {
@@ -92,10 +103,10 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone, targetRootfs strin
 		}
 
 		cp = cfg.NewConfigProtect(annotationDir)
-		cp.Map(s.Files)
+		cp.Map(files)
 	}
 
-	toRemove, dirs2Remove, notPresent := fileHelper.OrderFiles(targetRootfs, s.Files)
+	toRemove, dirs2Remove, notPresent := fileHelper.OrderFiles(targetRootfs, files)
 
 	mapDirs := make(map[string]int, 0)
 	for _, d := range dirs2Remove {
@@ -213,7 +224,7 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone, targetRootfs strin
 }
 
 func (m *ArtifactsManager) RemovePackage(s *repos.Stone, targetRootfs string, preserveSystemEssentialData bool) error {
-	m.setup()
+	m.Setup()
 
 	err := m.removePackageFiles(s, targetRootfs, preserveSystemEssentialData)
 	if err != nil {
@@ -246,7 +257,7 @@ func (m *ArtifactsManager) ReinstallPackage(
 		return errors.New("Artifact without Runtime package definition")
 	}
 
-	m.setup()
+	m.Setup()
 
 	err := m.removePackageFiles(s, targetRootfs, preserveSystemEssentialData)
 	if err != nil {
@@ -289,7 +300,7 @@ func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos
 		return errors.New("Artifact without Runtime package definition")
 	}
 
-	m.setup()
+	m.Setup()
 
 	start := time.Now()
 
@@ -326,7 +337,7 @@ func (m *ArtifactsManager) CheckFileConflicts(
 	targetRootfs string,
 ) error {
 
-	m.setup()
+	m.Setup()
 
 	Info("Checking for file conflicts...")
 	start := time.Now()

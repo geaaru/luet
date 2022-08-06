@@ -55,7 +55,7 @@ func NewRemovePackage(config *cfg.LuetConfig) *cobra.Command {
 				FilesOwner:    []string{},
 				Hidden:        true,
 				AndCondition:  false,
-				WithFiles:     true,
+				WithFiles:     false,
 			}
 
 			stones, err := util.SearchInstalled(config, searchOpts)
