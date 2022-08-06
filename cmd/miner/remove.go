@@ -34,6 +34,7 @@ func NewRemovePackage(config *cfg.LuetConfig) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			pkgs := []*pkg.DefaultPackage{}
 			preserveSystem, _ := cmd.Flags().GetBool("preserve-system-essentials")
+			force, _ := cmd.Flags().GetBool("force")
 
 			for _, pstr := range args {
 				p, err := helpers.ParsePackageStr(pstr)
@@ -72,12 +73,12 @@ func NewRemovePackage(config *cfg.LuetConfig) *cobra.Command {
 			for _, s := range *stones {
 				err = aManager.RemovePackage(
 					s, config.GetSystem().Rootfs,
-					preserveSystem,
+					preserveSystem, force,
 				)
 				if err != nil {
 					fail = true
 					fmt.Println(fmt.Sprintf(
-						"Error on install artifact %s: %s",
+						"Error on uninstall artifact %s: %s",
 						s.HumanReadableString(),
 						err.Error()))
 					Error(fmt.Sprintf("[%40s] uninstall failed - :fire:", s.HumanReadableString()))
@@ -105,6 +106,7 @@ func NewRemovePackage(config *cfg.LuetConfig) *cobra.Command {
 	flags.String("system-target", "", "System rootpath")
 	flags.String("system-engine", "", "System DB engine")
 	flags.Bool("preserve-system-essentials", true, "Preserve system essentials files.")
+	flags.Bool("force", false, "Force removing and ignore errors.")
 
 	return ans
 }
