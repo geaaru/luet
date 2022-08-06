@@ -76,6 +76,28 @@ func (m *ArtifactsManager) DownloadPackage(p *artifact.PackageArtifact, r *repos
 	return nil
 }
 
+func (m *ArtifactsManager) loadFinalizer(f, defFile string, p *pkg.DefaultPackage) (*repos.LuetFinalizer, error) {
+
+	out, err := helpers.RenderFiles(
+		helpers.ChartFile(f),
+		defFile,
+	)
+	if err != nil {
+		Warning("Failed rendering finalizer for ",
+			p.HumanReadableString(), err.Error())
+		return nil, err
+	}
+
+	finalizer, err := repos.NewLuetFinalizerFromYaml([]byte(out))
+	if err != nil {
+		Warning("Failed reading finalizer for ",
+			p.HumanReadableString(), err.Error())
+		return nil, err
+	}
+
+	return finalizer, nil
+}
+
 func (m *ArtifactsManager) removePackageFiles(s *repos.Stone, targetRootfs string, preserveSystemEssentialData bool) error {
 	var cp *cfg.ConfigProtect
 	var err error
@@ -223,22 +245,47 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone, targetRootfs strin
 	return nil
 }
 
-func (m *ArtifactsManager) RemovePackage(s *repos.Stone, targetRootfs string, preserveSystemEssentialData bool) error {
+func (m *ArtifactsManager) RemovePackage(s *repos.Stone, targetRootfs string, preserveSystemEssentialData, force bool) error {
 	m.Setup()
 
 	err := m.removePackageFiles(s, targetRootfs, preserveSystemEssentialData)
-	if err != nil {
+	if err != nil && !force {
 		return err
 	}
 
 	p := s.ToPackage()
 
 	err = m.Database.RemovePackageFiles(p)
-	if err != nil {
+	if err != nil && !force {
 		return errors.Wrap(err, "Failed removing package files from database")
 	}
+
+	pf, err := m.Database.GetPackageFinalizer(p)
+	if err != nil && !force {
+		return errors.Wrap(err, "Error on retrieve package finalizer")
+	}
+	if pf != nil {
+
+		// TODO: check if return the object insted of run uninstall
+		finalizer := &repos.LuetFinalizer{
+			Shell:     pf.Shell,
+			Uninstall: pf.Uninstall,
+		}
+
+		err = finalizer.RunUninstall(targetRootfs)
+		if err != nil && !force {
+			Warning("Failed running finalizer for ",
+				p.HumanReadableString(), err.Error())
+			return err
+		}
+	}
+
+	err = m.Database.RemovePackageFinalizer(p)
+	if err != nil && !force {
+		return errors.Wrap(err, "Failed removing package finalizer from database")
+	}
 	err = m.Database.RemovePackage(p)
-	if err != nil {
+	if err != nil && !force {
 		return errors.Wrap(err, "Failed removing package from database")
 	}
 
@@ -296,7 +343,8 @@ func (m *ArtifactsManager) InstallPackage(p *artifact.PackageArtifact, r *repos.
 
 func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos.WagonRepository) error {
 
-	if p.Runtime == nil {
+	pp := p.GetPackage()
+	if pp == nil {
 		return errors.New("Artifact without Runtime package definition")
 	}
 
@@ -307,7 +355,7 @@ func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos
 	// Set package files on local database
 	err := m.Database.SetPackageFiles(
 		&pkg.PackageFile{
-			PackageFingerprint: p.Runtime.GetFingerPrint(),
+			PackageFingerprint: pp.GetFingerPrint(),
 			Files:              p.Files,
 		},
 	)
@@ -315,16 +363,42 @@ func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos
 		return errors.Wrap(err, "Register package files on database")
 	}
 
+	// Set finalizer if present
+	repoTreefs := r.GetTreePath(m.Config.GetSystem().GetSystemReposDirPath())
+	pkgdir := p.GetPackageTreePath(repoTreefs)
+	finalizeFile := filepath.Join(pkgdir, tree.FinalizerFile)
+	defFile := filepath.Join(pkgdir, pkg.PackageDefinitionFile)
+
+	if fileHelper.Exists(finalizeFile) {
+		finalizer, err := m.loadFinalizer(finalizeFile, defFile, pp)
+		if err != nil {
+			return err
+		}
+
+		err = m.Database.SetPackageFinalizer(
+			&pkg.PackageFinalizer{
+				PackageFingerprint: pp.GetFingerPrint(),
+				Shell:              finalizer.Shell,
+				Install:            finalizer.Install,
+				Uninstall:          finalizer.Uninstall,
+			},
+		)
+		if err != nil {
+			return errors.Wrap(err,
+				fmt.Sprintf("Register package %s", pp.HumanReadableString()))
+		}
+	}
+
 	// NOTE: for now postpone the registration of the package
 	//       on the database
 
-	_, err = m.Database.CreatePackage(p.Runtime)
+	_, err = m.Database.CreatePackage(pp)
 	if err != nil {
 		return errors.Wrap(err, "Failed register package")
 	}
 
 	Debug(fmt.Sprintf("Register package %s completed in %d µs.",
-		p.Runtime.HumanReadableString(),
+		pp.HumanReadableString(),
 		time.Now().Sub(start).Nanoseconds()/1e3))
 
 	return nil
@@ -352,22 +426,24 @@ func (m *ArtifactsManager) CheckFileConflicts(
 	//       on target system or between the list of
 	//       files of the packages to install.
 	for _, a := range *toInstall {
+		pp := a.GetPackage()
+
 		for _, f := range a.Files {
 			if pkg, ok := filesToInstall[f]; ok {
 				if safeCheck {
 					Warning(fmt.Errorf(
 						"file %s conflict between package %s and %s",
-						f, pkg, a.CompileSpec.Package.HumanReadableString(),
+						f, pkg, pp.HumanReadableString(),
 					))
 				} else {
 					return fmt.Errorf(
 						"file %s conflict between package %s and %s",
-						f, pkg, a.CompileSpec.Package.HumanReadableString(),
+						f, pkg, pp.HumanReadableString(),
 					)
 				}
 			}
 
-			filesToInstall[f] = a.CompileSpec.Package.HumanReadableString()
+			filesToInstall[f] = pp.HumanReadableString()
 
 			if checkSystem {
 				tFile := filepath.Join(targetRootfs, f)
@@ -384,14 +460,14 @@ func (m *ArtifactsManager) CheckFileConflicts(
 							Warning(fmt.Errorf(
 								"file conflict between '%s' and '%s' ( file: %s )",
 								p.HumanReadableString(),
-								a.Runtime.HumanReadableString(),
+								pp.HumanReadableString(),
 								f,
 							))
 						} else {
 							return fmt.Errorf(
 								"file conflict between '%s' and '%s' ( file: %s )",
 								p.HumanReadableString(),
-								a.Runtime.HumanReadableString(),
+								pp.HumanReadableString(),
 								f,
 							)
 						}
@@ -424,30 +500,16 @@ func (m *ArtifactsManager) ExecuteFinalizer(
 		return errors.New("Invalid artifact without Package metadata")
 	}
 
-	p := a.Runtime
-	if a.Runtime == nil {
-		p = a.CompileSpec.Package
-	}
+	p := a.GetPackage()
 
 	if fileHelper.Exists(finalizeFile) {
-		out, err := helpers.RenderFiles(
-			helpers.ChartFile(finalizeFile),
-			defFile,
-		)
+
+		finalizer, err := m.loadFinalizer(finalizeFile, defFile, p)
 		if err != nil {
-			Warning("Failed rendering finalizer for ",
-				p.HumanReadableString(), err.Error())
 			return err
 		}
 
 		Info("Executing finalizer for " + p.HumanReadableString())
-		finalizer, err := NewLuetFinalizerFromYaml([]byte(out))
-		if err != nil {
-			Warning("Failed reading finalizer for ",
-				p.HumanReadableString(), err.Error())
-			return err
-		}
-
 		if postInstall {
 			err = finalizer.RunInstall(targetRootfs)
 		} else {
