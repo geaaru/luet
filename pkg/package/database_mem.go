@@ -26,23 +26,25 @@ import (
 )
 
 var DBInMemoryInstance = &InMemoryDatabase{
-	Mutex:            &sync.Mutex{},
-	FileDatabase:     map[string][]string{},
-	Database:         map[string]string{},
-	CacheNoVersion:   map[string]map[string]interface{}{},
-	ProvidesDatabase: map[string]map[string]Package{},
-	RevDepsDatabase:  map[string]map[string]Package{},
-	cached:           map[string]interface{}{},
+	Mutex:             &sync.Mutex{},
+	FileDatabase:      map[string][]string{},
+	FinalizerDatabase: map[string]*PackageFinalizer{},
+	Database:          map[string]string{},
+	CacheNoVersion:    map[string]map[string]interface{}{},
+	ProvidesDatabase:  map[string]map[string]Package{},
+	RevDepsDatabase:   map[string]map[string]Package{},
+	cached:            map[string]interface{}{},
 }
 
 type InMemoryDatabase struct {
 	*sync.Mutex
-	Database         map[string]string
-	FileDatabase     map[string][]string
-	CacheNoVersion   map[string]map[string]interface{}
-	ProvidesDatabase map[string]map[string]Package
-	RevDepsDatabase  map[string]map[string]Package
-	cached           map[string]interface{}
+	Database          map[string]string
+	FileDatabase      map[string][]string
+	FinalizerDatabase map[string]*PackageFinalizer
+	CacheNoVersion    map[string]map[string]interface{}
+	ProvidesDatabase  map[string]map[string]Package
+	RevDepsDatabase   map[string]map[string]Package
+	cached            map[string]interface{}
 }
 
 func NewInMemoryDatabase(singleton bool) PackageDatabase {
@@ -425,6 +427,33 @@ func (db *InMemoryDatabase) GetPackages() []string {
 
 func (db *InMemoryDatabase) Clean() error {
 	db.Database = map[string]string{}
+	return nil
+}
+
+func (db *InMemoryDatabase) GetPackageFinalizer(p Package) (*PackageFinalizer, error) {
+
+	db.Lock()
+	defer db.Unlock()
+
+	pa, ok := db.FinalizerDatabase[p.GetFingerPrint()]
+	if !ok {
+		return pa, errors.New(fmt.Sprintf("No key found for: %s", p.HumanReadableString()))
+	}
+
+	return pa, nil
+}
+
+func (db *InMemoryDatabase) SetPackageFinalizer(p *PackageFinalizer) error {
+	db.Lock()
+	defer db.Unlock()
+	db.FinalizerDatabase[p.PackageFingerprint] = p
+	return nil
+}
+
+func (db *InMemoryDatabase) RemovePackageFinalizer(p Package) error {
+	db.Lock()
+	defer db.Unlock()
+	delete(db.FinalizerDatabase, p.GetFingerPrint())
 	return nil
 }
 
