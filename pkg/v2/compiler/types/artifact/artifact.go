@@ -76,6 +76,15 @@ func NewPackageArtifactFromYaml(data []byte) (*PackageArtifact, error) {
 	return p, err
 }
 
+func (a *PackageArtifact) GetPackage() *pkg.DefaultPackage {
+	if a.Runtime != nil {
+		return a.Runtime
+	} else if a.CompileSpec != nil && a.CompileSpec.Package != nil {
+		return a.CompileSpec.Package
+	}
+	return nil
+}
+
 func (a *PackageArtifact) GetPackageTreePath(treefs string) string {
 	// NOTE: treefs is the directory of the tree of the local repository.
 	//       Normally /var/cache/luet/<repo>/treefs
