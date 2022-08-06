@@ -2,7 +2,7 @@
 	Copyright © 2022 Macaroni OS Linux
 	See AUTHORS and LICENSE for the license details and contributors.
 */
-package installer
+package repository
 
 import (
 	"fmt"
@@ -12,15 +12,15 @@ import (
 	box "github.com/geaaru/luet/pkg/box"
 	. "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
-	"github.com/ghodss/yaml"
+	"gopkg.in/yaml.v3"
 
 	"github.com/pkg/errors"
 )
 
 type LuetFinalizer struct {
-	Shell     []string `json:"shell"`
-	Install   []string `json:"install"`
-	Uninstall []string `json:"uninstall"`
+	Shell     []string `json:"shell,omitempty" yaml:"shell,omitempty"`
+	Install   []string `json:"install,omitempty" yaml:"install,omitempty"`
+	Uninstall []string `json:"uninstall,omitempty" yaml:"uninstall,omitempty"`
 }
 
 func (f *LuetFinalizer) getShell() (string, []string) {
