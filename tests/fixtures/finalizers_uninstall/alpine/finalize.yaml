@@ -1,0 +1,4 @@
+install:
+- echo "$0" > /tmp/foo
+uninstall:
+- rm /tmp/foo
