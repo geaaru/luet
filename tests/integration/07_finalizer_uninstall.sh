@@ -59,6 +59,7 @@ EOF
 
 testInstall() {
     $LUET repo update --config $tmpdir/luet.yaml
+    $LUET miner d --config $tmpdir/luet.yaml main seed/alpine-1.0
     $LUET miner i --config $tmpdir/luet.yaml main seed/alpine-1.0
     #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
     installst=$?
