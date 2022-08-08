@@ -133,6 +133,11 @@ func (w *WagonRepository) ClearCatalog() {
 // * if there is a new revision download the meta and tree file
 //   and unpack them to the local cache.
 //
+// NOTE:
+//   Until I will implement the new metadata tarball
+//   i need process metadata and write under the treefs
+//   the artifacts information.
+//
 // If force is true the download of the meta and tree files are done always.
 func (w *WagonRepository) Sync(force bool) error {
 	var treefs, metafs string
@@ -201,7 +206,8 @@ func (w *WagonRepository) Sync(force bool) error {
 		Debug("Metadata tarball for the repository " + w.Identity.GetName() + " downloaded correctly.")
 
 		// Copy updated repository.yaml file to repo dir now that the tree is synced.
-		err = fileHelper.CopyFile(file, filepath.Join(repobasedir, REPOSITORY_SPECFILE))
+		newIdentity.IdentityFile = filepath.Join(repobasedir, REPOSITORY_SPECFILE)
+		err = fileHelper.CopyFile(file, newIdentity.IdentityFile)
 		if err != nil {
 			return errors.Wrap(err, "Error on update "+REPOSITORY_SPECFILE)
 		}
@@ -238,6 +244,19 @@ func (w *WagonRepository) Sync(force bool) error {
 
 		w.Identity = newIdentity
 
+		// Build metadata for package. This will be handled from a new tarball
+		// in the near future. In particolar, i will write a metadata.yaml file
+		// under <cache_dir>/repos/treefs/<cat>/<name>/<version>/metadata.yaml
+		// to avoid the parsing of metadata stream every time. It's something
+		// that consume too memory when i have more of >2k packages on a repo.
+
+		err = w.ExplodeMetadata()
+		if err != nil {
+			return err
+		}
+
+		w.ClearCatalog()
+
 	} else {
 		InfoC(
 			aurora.Magenta(":information_source: Repository: ").String() +
@@ -246,6 +265,58 @@ func (w *WagonRepository) Sync(force bool) error {
 						" is already up to date.",
 				).String(),
 		)
+	}
+
+	return nil
+}
+
+func (w *WagonRepository) ExplodeMetadata() error {
+	w.ClearCatalog()
+
+	Debug(
+		fmt.Sprintf(
+			"\n:house:Repository: %30s unpacking metadata. ",
+			w.Identity.GetName()),
+	)
+
+	_, err := w.Stones.LoadCatalog(w.Identity)
+	if err != nil {
+		return err
+	}
+
+	catalog := *w.Stones.Catalog
+	for idx, _ := range catalog.Index {
+		pkg := catalog.Index[idx].GetPackage()
+		if pkg == nil {
+			return errors.New(
+				fmt.Sprintf("Unexpected status on parse stone at pos %d", idx))
+		}
+
+		metaFile := filepath.Join(w.Identity.LuetRepository.TreePath,
+			pkg.Category,
+			pkg.Name,
+			pkg.Version,
+			"metadata.yaml",
+		)
+		pkgDir := filepath.Dir(metaFile)
+
+		// TODO: On ArtifactIndex provides are insert in the index!
+		//       For now just ignoring the artifacts if the directory is not
+		//       present.
+		if fileHelper.Exists(pkgDir) {
+			//Debug(fmt.Sprintf("Creating file %s", metaFile))
+
+			err = catalog.Index[idx].WriteMetadataYaml(metaFile)
+			if err != nil {
+				Warning(fmt.Sprintf(
+					"[%s] Error on creating metadata file for package %s: %s",
+					w.Identity.Name,
+					pkg.HumanReadableString(),
+					err.Error()),
+				)
+			}
+		}
+
 	}
 
 	return nil
