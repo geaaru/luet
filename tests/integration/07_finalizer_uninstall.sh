@@ -22,7 +22,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/finalizers_upgrade" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/finalizers_uninstall" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -42,7 +42,7 @@ general:
   debug: true
 system:
   rootfs: $tmpdir/testrootfs
-  database_path: "/"
+  database_path: "/var/cache/luet"
   database_engine: "boltdb"
 config_from_host: true
 repositories:
@@ -52,6 +52,7 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
+    $LUET --version
     $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
