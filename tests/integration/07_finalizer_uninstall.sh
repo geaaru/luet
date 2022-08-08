@@ -18,6 +18,7 @@ testBuild() {
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-seed-1.0.package.tar.gz' ]"
+    assertTrue 'create package' "[ -e '$tmpdir/testbuild/pkg1-app-1.0.package.tar.gz' ]"
 }
 
 testRepo() {
@@ -61,7 +62,7 @@ EOF
 testInstall() {
     $LUET repo update --config $tmpdir/luet.yaml
     $LUET miner d --config $tmpdir/luet.yaml main seed/alpine-1.0
-    $LUET miner i --config $tmpdir/luet.yaml main seed/alpine-1.0
+    $LUET miner i --config $tmpdir/luet.yaml main seed/alpine-1.0 app/pkg1
     #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
@@ -71,7 +72,7 @@ testInstall() {
 
 
 testUninstall() {
-    $LUET miner rm seed/alpine --config $tmpdir/luet.yaml
+    $LUET miner rm app/pkg1 --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/bin/busybox' ]"
