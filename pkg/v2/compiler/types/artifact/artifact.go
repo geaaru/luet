@@ -17,11 +17,6 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-
-	zstd "github.com/klauspost/compress/zstd"
-	gzip "github.com/klauspost/pgzip"
-
-	//"strconv"
 	"strings"
 	"sync"
 
@@ -34,8 +29,11 @@ import (
 	pkg "github.com/geaaru/luet/pkg/package"
 	"github.com/geaaru/luet/pkg/solver"
 	compression "github.com/geaaru/luet/pkg/v2/compiler/types/compression"
+
 	tarf "github.com/geaaru/tar-formers/pkg/executor"
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
+	zstd "github.com/klauspost/compress/zstd"
+	gzip "github.com/klauspost/pgzip"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v3"
 )
@@ -47,13 +45,13 @@ type PackageArtifact struct {
 	Path      string `json:"path" yaml:"path"`
 	CachePath string `json:"cache_path,omitempty" yaml:"cache_path,omitempty"`
 
-	Dependencies      []*PackageArtifact                `json:"dependencies" yaml:"dependencies"`
-	CompileSpec       *compilerspec.LuetCompilationSpec `json:"compilespec" yaml:"compilespec"`
+	Dependencies      []*PackageArtifact                `json:"dependencies,omitempty" yaml:"dependencies,omitempty"`
+	CompileSpec       *compilerspec.LuetCompilationSpec `json:"compilespec,omitempty" yaml:"compilespec,omitempty"`
 	Checksums         Checksums                         `json:"checksums" yaml:"checksums"`
 	SourceAssertion   solver.PackagesAssertions         `json:"-" yaml:"-"`
 	CompressionType   compression.Implementation        `json:"compressiontype" yaml:"compressiontype"`
 	Files             []string                          `json:"files" yaml:"files"`
-	PackageCacheImage string                            `json:"package_cacheimage" yaml:"package_cacheimage"`
+	PackageCacheImage string                            `json:"package_cacheimage,omitempty" yaml:"package_cacheimage,omitempty"`
 	Runtime           *pkg.DefaultPackage               `json:"runtime,omitempty" yaml:"runtime,omitempty"`
 }
 
@@ -152,6 +150,27 @@ func (a *PackageArtifact) GetVersion() string {
 	}
 
 	return ans
+}
+
+func (a *PackageArtifact) WriteMetadataYaml(dst string) error {
+	// Update runtime package information
+	if a.Runtime == nil && a.CompileSpec != nil && a.CompileSpec.Package != nil {
+		a.Runtime = a.CompileSpec.Package
+	}
+
+	// TODO: probably to reduce using of memory it's better create a writer/reader?
+
+	data, err := yaml.Marshal(a)
+	if err != nil {
+		return errors.Wrap(err, "While marshalling for PackageArtifact YAML")
+	}
+
+	err = ioutil.WriteFile(dst, data, os.ModePerm)
+	if err != nil {
+		return errors.Wrap(err, "While writing PackageArtifact YAML")
+	}
+
+	return nil
 }
 
 func (a *PackageArtifact) WriteYaml(dst string) error {
