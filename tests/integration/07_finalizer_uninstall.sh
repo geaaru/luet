@@ -1,8 +1,8 @@
 #!/bin/bash
 
 export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+export LUET_BUILD=${LUET_BUILD:-luet-build}
+export LUET=${LUET:-luet}
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -65,7 +65,7 @@ testInstall() {
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"
-    assertTrue 'finalizer does not run' "[ ! -e '$tmpdir/testrootfs/tmp/foo' ]"
+    assertTrue 'finalizer does not run' "[ -e '$tmpdir/testrootfs/tmp/foo' ]"
 }
 
 
