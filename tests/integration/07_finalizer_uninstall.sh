@@ -5,7 +5,7 @@ export LUET_BUILD=${LUET_BUILD:-luet-build}
 export LUET=${LUET:-luet}
 
 oneTimeSetUp() {
-export tmpdir="$(mktemp -d)"
+  export tmpdir="$(mktemp -d)"
 }
 
 oneTimeTearDown() {
@@ -61,7 +61,7 @@ EOF
 
 testInstall() {
     $LUET repo update --config $tmpdir/luet.yaml
-    $LUET miner d --config $tmpdir/luet.yaml main seed/alpine-1.0
+    $LUET miner d --config $tmpdir/luet.yaml main seed/alpine-1.0 app/pkg1
     $LUET miner i --config $tmpdir/luet.yaml main seed/alpine-1.0 app/pkg1
     #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
     installst=$?
@@ -75,8 +75,7 @@ testUninstall() {
     $LUET miner rm app/pkg1 --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
-    assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/bin/busybox' ]"
-    assertTrue 'finalizer runs' "[ ! -e '$tmpdir/testrootfs/tmp/foo' ]"
+    assertTrue 'finalizer uninstall not runs' "[ ! -e '$tmpdir/testrootfs/tmp/foo' ]"
 }
 
 testCleanup() {
