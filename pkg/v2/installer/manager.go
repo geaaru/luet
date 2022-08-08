@@ -146,8 +146,8 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone, targetRootfs strin
 
 		Debug("Removing", target)
 		if preserveSystemEssentialData &&
-			strings.HasPrefix(f, m.Config.GetSystem().GetSystemPkgsCacheDirPath()) ||
-			strings.HasPrefix(f, m.Config.GetSystem().GetSystemRepoDatabaseDirPath()) {
+			(strings.HasPrefix(f, m.Config.GetSystem().GetSystemPkgsCacheDirPath()) ||
+				strings.HasPrefix(f, m.Config.GetSystem().GetSystemRepoDatabaseDirPath())) {
 			Warning("Preserve ", f,
 				" which is required by luet ( you have to delete it manually if you really need to)")
 			continue
@@ -181,6 +181,11 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone, targetRootfs strin
 
 		for i := len(words); i > 1; i-- {
 			cpath := strings.Join(words[0:i], string(os.PathSeparator))
+			if cpath == targetRootfs {
+				// Avoid to add on mapDirs systemd directory outside
+				// the rootfs when rootfs != /
+				break
+			}
 			if _, ok := mapDirs[cpath]; !ok {
 				mapDirs[cpath] = 1
 			}

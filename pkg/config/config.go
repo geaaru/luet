@@ -124,8 +124,7 @@ func (sc *LuetSystemConfig) GetRepoDatabaseDirPath(name string) string {
 }
 
 func (sc *LuetSystemConfig) GetSystemRepoDatabaseDirPath() string {
-	dbpath := filepath.Join(sc.Rootfs,
-		sc.DatabasePath)
+	dbpath := filepath.Join(sc.Rootfs, sc.DatabasePath)
 	err := os.MkdirAll(dbpath, os.ModePerm)
 	if err != nil {
 		panic(err)
