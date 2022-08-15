@@ -39,7 +39,7 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 	var annotations []string
 	var packages []string
 
-	var searchCmd = &cobra.Command{
+	var ans = &cobra.Command{
 		Use:   "search <term>",
 		Short: "Search packages",
 		Long: `Search for installed and available packages
@@ -84,11 +84,6 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 		$ luet search -o yaml <regex> # YAML output
 	`,
 		Aliases: []string{"s"},
-		PreRun: func(cmd *cobra.Command, args []string) {
-			util.BindSystemFlags(cmd)
-			util.BindSolverFlags(cmd)
-			config.Viper.BindPFlag("installed", cmd.Flags().Lookup("installed"))
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			//var results Results
 			if len(args) == 0 && len(packages) == 0 {
@@ -96,10 +91,12 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 			}
 			hidden, _ := cmd.Flags().GetBool("hidden")
 			files, _ := cmd.Flags().GetBool("files")
-			andCond, _ := cmd.Flags().GetBool("and-condition")
-			installed := config.Viper.GetBool("installed")
+			orCond, _ := cmd.Flags().GetBool("condition-or")
+			installed, _ := cmd.Flags().GetBool("installed")
 			tableMode, _ := cmd.Flags().GetBool("table")
 			quiet, _ := cmd.Flags().GetBool("quiet")
+			mode2, _ := cmd.Flags().GetBool("mode2")
+			full, _ := cmd.Flags().GetBool("full")
 
 			util.SetSystemConfig()
 			util.SetSolverConfig()
@@ -113,8 +110,10 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 				LabelsMatches: regLabels,
 				Matches:       args,
 				Hidden:        hidden,
-				AndCondition:  andCond,
+				AndCondition:  !orCond,
 				WithFiles:     files,
+				Modev2:        mode2,
+				Full:          full,
 			}
 			var res *[]*wagon.Stone
 			var err error
@@ -194,34 +193,40 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 		},
 	}
 
-	searchCmd.Flags().String("system-dbpath", "", "System db path")
-	searchCmd.Flags().String("system-target", "", "System rootpath")
-	searchCmd.Flags().String("system-engine", "", "System DB engine")
-	searchCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
-	searchCmd.Flags().Float32("solver-rate", 0.7, "Solver learning rate")
-	searchCmd.Flags().Float32("solver-discount", 1.0, "Solver discount rate")
-	searchCmd.Flags().Int("solver-attempts", 9000, "Solver maximum attempts")
+	flags := ans.Flags()
 
-	searchCmd.Flags().Bool("installed", false, "Search between system packages")
+	flags.String("system-dbpath", "", "System db path")
+	flags.String("system-target", "", "System rootpath")
+	flags.String("system-engine", "", "System DB engine")
+	flags.String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
+	flags.Float32("solver-rate", 0.7, "Solver learning rate")
+	flags.Float32("solver-discount", 1.0, "Solver discount rate")
+	flags.Int("solver-attempts", 9000, "Solver maximum attempts")
 
-	searchCmd.Flags().StringSliceVar(&labels, "label", []string{},
+	flags.Bool("installed", false, "Search between system packages")
+
+	flags.StringSliceVar(&labels, "label", []string{},
 		"Search packages through one or more labels.")
-	searchCmd.Flags().StringSliceVar(&regLabels, "rlabel", []string{},
+	flags.StringSliceVar(&regLabels, "rlabel", []string{},
 		"Search packages through one or more labels regex.")
-	searchCmd.Flags().StringSliceVar(&categories, "category", []string{},
+	flags.StringSliceVar(&categories, "category", []string{},
 		"Search packages through one or more categories regex.")
-	searchCmd.Flags().StringSliceVarP(&annotations, "annotation", "a", []string{},
+	flags.StringSliceVarP(&annotations, "annotation", "a", []string{},
 		"Search packages through one or more annotations.")
-	searchCmd.Flags().StringSliceVarP(&packages, "package", "p", []string{},
+	flags.StringSliceVarP(&packages, "package", "p", []string{},
 		"Search packages matching the package string cat/name.")
-	searchCmd.Flags().Bool("condition-and", false,
-		"The searching options are managed in AND between the searching types.")
+	flags.Bool("condition-or", false,
+		"The searching options are managed in OR between the searching types.")
 
-	searchCmd.Flags().StringP("output", "o", "terminal", "Output format ( Defaults: terminal, available: json,yaml )")
-	searchCmd.Flags().Bool("hidden", false, "Include hidden packages")
-	searchCmd.Flags().Bool("files", false, "Show package files on YAML/JSON output.")
-	searchCmd.Flags().Bool("table", false, "show output in a table (wider screens)")
-	searchCmd.Flags().Bool("quiet", false, "show output as list without version")
+	flags.StringP("output", "o", "terminal",
+		"Output format ( Defaults: terminal, available: json,yaml )")
+	flags.Bool("hidden", false, "Include hidden packages")
+	flags.Bool("files", false, "Show package files on YAML/JSON output.")
+	flags.Bool("table", false, "show output in a table (wider screens)")
+	flags.Bool("quiet", false, "show output as list without version")
+	flags.Bool("full", false, "Show full informations.")
 
-	return searchCmd
+	flags.Bool("mode2", true, "Using searching v2.")
+
+	return ans
 }

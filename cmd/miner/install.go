@@ -91,8 +91,6 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 				os.Exit(1)
 			}
 
-			r.ClearCatalog()
-
 			aManager := installer.NewArtifactsManager(config)
 			defer aManager.Close()
 

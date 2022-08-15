@@ -53,6 +53,11 @@ func NewWagonRepository(l *config.LuetRepository) *WagonRepository {
 }
 
 func (w *WagonRepository) SearchStones(opts *StonesSearchOpts) (*[]*Stone, error) {
+	repobasedir := config.LuetCfg.GetSystem().GetRepoDatabaseDirPath(w.Identity.Name)
+	return w.Stones.Search(opts, w.Identity.Name, repobasedir)
+}
+
+func (w *WagonRepository) SearchStonesFromCatalog(opts *StonesSearchOpts) (*[]*Stone, error) {
 
 	// Load catalog if not loaded yet
 	if w.Stones.Catalog == nil {
@@ -62,20 +67,16 @@ func (w *WagonRepository) SearchStones(opts *StonesSearchOpts) (*[]*Stone, error
 		}
 	}
 
-	return w.Stones.Search(opts, w.Identity.Name)
+	return w.Stones.SearchFromCatalog(opts, w.Identity.Name)
 }
 
 func (w *WagonRepository) SearchArtifacts(opts *StonesSearchOpts) (*[]*artifact.PackageArtifact, error) {
+	repobasedir := config.LuetCfg.GetSystem().GetRepoDatabaseDirPath(w.Identity.Name)
+	return w.Stones.SearchArtifacts(opts, w.Identity.Name, repobasedir)
+}
 
-	// Load catalog if not loaded yet
-	if w.Stones.Catalog == nil {
-		_, err := w.Stones.LoadCatalog(w.Identity)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return w.Stones.SearchArtifacts(opts, w.Identity.Name)
+func (w *WagonRepository) SearchArtifactsFromCatalog(opts *StonesSearchOpts) (*[]*artifact.PackageArtifact, error) {
+	return w.Stones.SearchArtifactsFromCatalog(opts, w.Identity.Name)
 }
 
 func (w *WagonRepository) HasLocalWagonIdentity(wdir string) bool {

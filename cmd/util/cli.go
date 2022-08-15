@@ -31,13 +31,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type ChannelSearchRes struct {
-	Stones    *[]*wagon.Stone
-	Artifacts *[]*art.PackageArtifact
-
-	Error error
-}
-
 type ChannelRepoOpRes struct {
 	Error error
 	Repo  *config.LuetRepository
@@ -138,7 +131,7 @@ func ProcessRepository(
 	repo *LuetRepository,
 	searchOpts *wagon.StonesSearchOpts,
 	config *LuetConfig,
-	channel chan ChannelSearchRes,
+	channel chan wagon.ChannelSearchRes,
 	artifactsRes bool) {
 
 	repobasedir := config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
@@ -151,20 +144,23 @@ func ProcessRepository(
 			artifacts, err := r.SearchArtifacts(searchOpts)
 			if err != nil {
 				Warning("Error on read repository catalog for repo : " + r.Identity.Name)
-				channel <- ChannelSearchRes{nil, nil, err}
+				channel <- wagon.ChannelSearchRes{nil, nil, err}
 				return
 			}
 
-			channel <- ChannelSearchRes{nil, artifacts, nil}
+			channel <- wagon.ChannelSearchRes{nil, artifacts, nil}
 		} else {
-			pkgs, err := r.SearchStones(searchOpts)
+			var pkgs *[]*wagon.Stone
+			var err error
+
+			pkgs, err = r.SearchStones(searchOpts)
 			if err != nil {
 				Warning("Error on read repository catalog for repo : " + r.Identity.Name)
-				channel <- ChannelSearchRes{nil, nil, err}
+				channel <- wagon.ChannelSearchRes{nil, nil, err}
 				return
 			}
 
-			channel <- ChannelSearchRes{pkgs, nil, nil}
+			channel <- wagon.ChannelSearchRes{pkgs, nil, nil}
 		}
 
 		r.ClearCatalog()
@@ -176,8 +172,8 @@ func SearchFromRepos(
 	searchOpts *wagon.StonesSearchOpts) (*[]*wagon.Stone, error) {
 
 	res := []*wagon.Stone{}
-	var ch chan ChannelSearchRes = make(
-		chan ChannelSearchRes,
+	var ch chan wagon.ChannelSearchRes = make(
+		chan wagon.ChannelSearchRes,
 		config.GetGeneral().Concurrency,
 	)
 
@@ -199,6 +195,10 @@ func SearchFromRepos(
 
 	for idx, _ := range config.SystemRepositories {
 		repo := config.SystemRepositories[idx]
+		if !repo.Enable {
+			continue
+		}
+
 		if repo.Cached {
 			resp := <-ch
 			if resp.Error == nil {
@@ -217,8 +217,8 @@ func SearchArtifactsFromRepos(
 	searchOpts *wagon.StonesSearchOpts) (*[]*art.PackageArtifact, error) {
 
 	res := []*art.PackageArtifact{}
-	var ch chan ChannelSearchRes = make(
-		chan ChannelSearchRes,
+	var ch chan wagon.ChannelSearchRes = make(
+		chan wagon.ChannelSearchRes,
 		config.GetGeneral().Concurrency,
 	)
 
@@ -273,5 +273,5 @@ func SearchInstalled(config *LuetConfig, searchOpts *wagon.StonesSearchOpts) (*[
 		}
 		wagonStones.Catalog.Index = append(wagonStones.Catalog.Index, artifact)
 	}
-	return wagonStones.Search(searchOpts, "system")
+	return wagonStones.SearchFromCatalog(searchOpts, "system")
 }
