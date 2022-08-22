@@ -57,33 +57,53 @@ func (t *TarFormers) CreateFile(dir, name string, mode os.FileMode, reader io.Re
 		}
 	}
 
+	err = t.semaphore.Acquire(*t.Ctx, 1)
+	if err != nil {
+		return errors.New("Error on acquire sem on processing file " + file)
+	}
+
 	f, err := os.OpenFile(file, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, mode)
 	if err != nil {
 		return errors.New(
 			fmt.Sprintf("Error on open file %s: %s", file, err.Error()))
 	}
-	defer f.Close()
 
 	// Copy file content
-	nb, err := io.Copy(f, reader)
+	copyBuffer := make([]byte, t.Task.BufferSize*1024)
+	nb, err := io.CopyBuffer(f, reader, copyBuffer)
 	if err != nil {
+		f.Close()
 		return errors.New(
 			fmt.Sprintf("Error on write file %s: %s", file, err.Error()))
 	}
 	if nb != header.Size {
+		f.Close()
 		return errors.New(
 			fmt.Sprintf("For file %s written file are different %d - %d",
 				file, nb, header.Size))
 	}
 
-	t.Logger.Debug(fmt.Sprintf(
-		"Created file %s (size %d).", file, nb))
+	if t.Config.GetLogging().Level == "debug" {
+		t.Logger.Debug(fmt.Sprintf(
+			"Created file %s (size %d).", file, nb))
+	}
 
 	// Ensure flushing of the file to disk. It seems that
 	// some file is missing else.
-	if err := f.Sync(); err != nil {
-		return err
-	}
+	t.waitGroup.Add(1)
+	go func() {
+
+		defer f.Close()
+		defer t.waitGroup.Done()
+		defer t.semaphore.Release(1)
+
+		if err := f.Sync(); err != nil {
+
+			t.flushMutex.Lock()
+			defer t.flushMutex.Unlock()
+			t.FlushErrs = append(t.FlushErrs, err)
+		}
+	}()
 
 	return nil
 }
@@ -153,6 +173,37 @@ func (t *TarFormers) SetFileProps(path string, meta *specs.FileMeta, link bool) 
 	}
 
 	return nil
+}
+
+func (t *TarFormers) GetXattr(path string) (map[string]string, error) {
+	attr := "security.capability"
+	ans := make(map[string]string, 0)
+
+	// Start with a 128 length byte array
+	dest := make([]byte, 128)
+	sz, errno := unix.Lgetxattr(path, attr, dest)
+
+	for errno == unix.ERANGE {
+		// Buffer too small, use zero-sized buffer to get the actual size
+		sz, errno = unix.Lgetxattr(path, attr, []byte{})
+		if errno != nil {
+			return ans, errno
+		}
+		dest = make([]byte, sz)
+		sz, errno = unix.Lgetxattr(path, attr, dest)
+	}
+
+	switch {
+	case errno == unix.ENODATA:
+		return ans, nil
+	case errno != nil:
+		return ans, errno
+	}
+
+	ans[attr] = string(dest[:sz])
+
+	return ans, nil
+
 }
 
 func (t *TarFormers) SetXattrAttr(path, k, v string, flag int) error {

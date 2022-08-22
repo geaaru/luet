@@ -20,6 +20,7 @@ package executor
 
 import (
 	"archive/tar"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -29,6 +30,8 @@ import (
 
 	log "github.com/geaaru/tar-formers/pkg/logger"
 	specs "github.com/geaaru/tar-formers/pkg/specs"
+
+	"golang.org/x/sync/semaphore"
 )
 
 // Mutex must be global to ensure mutual exclusion
@@ -53,11 +56,22 @@ type TarFormers struct {
 	Config *specs.Config `yaml:"config" json:"config"`
 	Logger *log.Logger   `yaml:"-" json:"-"`
 
+	writer      io.Writer          `yaml:"-" json:"-"`
 	reader      io.Reader          `yaml:"-" json:"-"`
 	fileHandler TarFileHandlerFunc `yaml:"-" json:"-"`
 
-	Task      *specs.SpecFile `yaml:"task,omitempty" json:"task,omitempty"`
-	ExportDir string          `yaml:"export_dir,omitempty" json:"export_dir,omitempty"`
+	Task       *specs.SpecFile `yaml:"task,omitempty" json:"task,omitempty"`
+	TaskWriter *specs.SpecFile `yaml:"task_writer,omitempty" json:"task_writer,omitempty"`
+	ExportDir  string          `yaml:"export_dir,omitempty" json:"export_dir,omitempty"`
+
+	// Using wait group to run f.Sync in parallel
+	// Run f.Sync kills time processing.
+	waitGroup *sync.WaitGroup
+	Ctx       *context.Context
+	semaphore *semaphore.Weighted
+
+	flushMutex sync.Mutex
+	FlushErrs  []error
 }
 
 func SetDefaultTarFormers(t *TarFormers) {
@@ -78,6 +92,7 @@ func NewTarFormersWithLog(config *specs.Config, defLog bool) *TarFormers {
 		Logger:    log.NewLogger(config),
 		Task:      nil,
 		ExportDir: "",
+		waitGroup: &sync.WaitGroup{},
 	}
 
 	// Initialize logging
@@ -96,6 +111,10 @@ func NewTarFormersWithLog(config *specs.Config, defLog bool) *TarFormers {
 
 func (t *TarFormers) SetReader(reader io.Reader) {
 	t.reader = reader
+}
+
+func (t *TarFormers) SetWriter(writer io.Writer) {
+	t.writer = writer
 }
 
 func (t *TarFormers) HasFileHandler() bool {
@@ -126,11 +145,32 @@ func (t *TarFormers) RunTask(task *specs.SpecFile, dir string) error {
 		return err
 	}
 
+	// Setup parallel context and semaphore
+	context := context.TODO()
+	t.Ctx = &context
+	if task.MaxOpenFiles <= 0 {
+		task.MaxOpenFiles = 10
+	}
+	if task.BufferSize <= 0 {
+		task.BufferSize = 16
+	}
+	t.FlushErrs = []error{}
+	t.semaphore = semaphore.NewWeighted(task.MaxOpenFiles)
+
 	tarReader := tar.NewReader(t.reader)
+
+	defer t.waitGroup.Wait()
 
 	err = t.HandleTarFlow(tarReader, dir)
 	if err != nil {
 		return err
+	}
+
+	if len(t.FlushErrs) > 0 {
+		for _, e := range t.FlushErrs {
+			t.Logger.Error(e)
+		}
+		return errors.New("Received errors on flush files")
 	}
 
 	return nil
@@ -202,8 +242,10 @@ func (t *TarFormers) HandleTarFlow(tarReader *tar.Reader, dir string) error {
 
 		info := header.FileInfo()
 
-		t.Logger.Debug(fmt.Sprintf("Parsing file %s [%s - %d, %s - %d] %s (%s).",
-			name, header.Uname, header.Uid, header.Gname, header.Gid, info.Mode(), header.Linkname))
+		if t.Config.GetLogging().Level == "debug" {
+			t.Logger.Debug(fmt.Sprintf("Parsing file %s [%s - %d, %s - %d] %s (%s).",
+				name, header.Uname, header.Uid, header.Gname, header.Gid, info.Mode(), header.Linkname))
+		}
 
 		switch header.Typeflag {
 		case tar.TypeDir:

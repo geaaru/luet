@@ -1,0 +1,4 @@
+install:
+- >-
+  set -x &&
+  echo "$0" > /etc/foo

@@ -1,0 +1,10 @@
+requires:
+- category: seed
+  name: alpine
+  version: ">=0"
+package_dir: /pkg1
+prelude:
+- >-
+  mkdir -p /pkg1/tmp &&
+  mkdir -p /pkg1/etc &&
+  echo "pkg1" > /pkg1/etc/pkg1

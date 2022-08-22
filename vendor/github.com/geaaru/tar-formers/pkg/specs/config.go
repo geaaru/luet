@@ -1,6 +1,6 @@
 /*
 
-Copyright (C) 2021  Daniele Rondina <geaaru@sabayonlinux.org>
+Copyright (C) 2021-2022  Daniele Rondina <geaaru@funtoo.org>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ package specs
 import (
 	v "github.com/spf13/viper"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const (

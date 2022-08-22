@@ -33,6 +33,11 @@ import (
 
 //var BoltInstance PackageDatabase
 
+const (
+	boltdbCollFiles     = "files"
+	boltdbCollFinalizer = "finalizers"
+)
+
 type BoltDatabase struct {
 	sync.Mutex
 	Path             string
@@ -293,13 +298,58 @@ func (db *BoltDatabase) Clean() error {
 	return os.RemoveAll(db.Path)
 }
 
+func (db *BoltDatabase) GetPackageFinalizer(p Package) (*PackageFinalizer, error) {
+	bolt, err := db.open()
+	if err != nil {
+		return nil, errors.Wrap(err, "Error opening boltdb "+db.Path)
+	}
+
+	finalizers := bolt.From(boltdbCollFinalizer)
+	var pf PackageFinalizer
+	err = finalizers.One("PackageFingerprint", p.GetFingerPrint(), &pf)
+	if err != nil {
+		if err.Error() == "not found" {
+			return nil, nil
+		}
+		return nil, errors.Wrap(err, "While finding finalizer")
+	}
+	return &pf, nil
+}
+func (db *BoltDatabase) SetPackageFinalizer(p *PackageFinalizer) error {
+	bolt, err := db.open()
+	if err != nil {
+		return errors.Wrap(err, "Error opening boltdb "+db.Path)
+	}
+
+	finalizers := bolt.From(boltdbCollFinalizer)
+	return finalizers.Save(p)
+}
+
+func (db *BoltDatabase) RemovePackageFinalizer(p Package) error {
+	bolt, err := db.open()
+	if err != nil {
+		return errors.Wrap(err, "Error opening boltdb "+db.Path)
+	}
+
+	finalizer := bolt.From(boltdbCollFinalizer)
+	var pf PackageFinalizer
+	err = finalizer.One("PackageFingerprint", p.GetFingerPrint(), &pf)
+	if err != nil {
+		if err.Error() == "not found" {
+			return nil
+		}
+		return errors.Wrap(err, "While finding finalizer")
+	}
+	return finalizer.DeleteStruct(&pf)
+}
+
 func (db *BoltDatabase) GetPackageFiles(p Package) ([]string, error) {
 	bolt, err := db.open()
 	if err != nil {
 		return []string{}, errors.Wrap(err, "Error opening boltdb "+db.Path)
 	}
 
-	files := bolt.From("files")
+	files := bolt.From(boltdbCollFiles)
 	var pf PackageFile
 	err = files.One("PackageFingerprint", p.GetFingerPrint(), &pf)
 	if err != nil {
@@ -313,7 +363,7 @@ func (db *BoltDatabase) SetPackageFiles(p *PackageFile) error {
 		return errors.Wrap(err, "Error opening boltdb "+db.Path)
 	}
 
-	files := bolt.From("files")
+	files := bolt.From(boltdbCollFiles)
 	return files.Save(p)
 }
 func (db *BoltDatabase) RemovePackageFiles(p Package) error {
@@ -322,7 +372,7 @@ func (db *BoltDatabase) RemovePackageFiles(p Package) error {
 		return errors.Wrap(err, "Error opening boltdb "+db.Path)
 	}
 
-	files := bolt.From("files")
+	files := bolt.From(boltdbCollFiles)
 	var pf PackageFile
 	err = files.One("PackageFingerprint", p.GetFingerPrint(), &pf)
 	if err != nil {

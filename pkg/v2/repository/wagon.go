@@ -11,11 +11,11 @@ import (
 	"strconv"
 	"time"
 
-	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
 	"github.com/geaaru/luet/pkg/config"
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	"github.com/geaaru/luet/pkg/installer/client"
 	. "github.com/geaaru/luet/pkg/logger"
+	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
+	"github.com/geaaru/luet/pkg/v2/repository/client"
 	"github.com/pkg/errors"
 )
 
@@ -36,7 +36,7 @@ const (
 )
 
 type Client interface {
-	DownloadArtifact(*artifact.PackageArtifact) (*artifact.PackageArtifact, error)
+	DownloadArtifact(*artifact.PackageArtifact) error
 	DownloadFile(string) (string, error)
 }
 
@@ -53,6 +53,11 @@ func NewWagonRepository(l *config.LuetRepository) *WagonRepository {
 }
 
 func (w *WagonRepository) SearchStones(opts *StonesSearchOpts) (*[]*Stone, error) {
+	repobasedir := config.LuetCfg.GetSystem().GetRepoDatabaseDirPath(w.Identity.Name)
+	return w.Stones.Search(opts, w.Identity.Name, repobasedir)
+}
+
+func (w *WagonRepository) SearchStonesFromCatalog(opts *StonesSearchOpts) (*[]*Stone, error) {
 
 	// Load catalog if not loaded yet
 	if w.Stones.Catalog == nil {
@@ -62,7 +67,16 @@ func (w *WagonRepository) SearchStones(opts *StonesSearchOpts) (*[]*Stone, error
 		}
 	}
 
-	return w.Stones.Search(opts, w.Identity.Name)
+	return w.Stones.SearchFromCatalog(opts, w.Identity.Name)
+}
+
+func (w *WagonRepository) SearchArtifacts(opts *StonesSearchOpts) (*[]*artifact.PackageArtifact, error) {
+	repobasedir := config.LuetCfg.GetSystem().GetRepoDatabaseDirPath(w.Identity.Name)
+	return w.Stones.SearchArtifacts(opts, w.Identity.Name, repobasedir)
+}
+
+func (w *WagonRepository) SearchArtifactsFromCatalog(opts *StonesSearchOpts) (*[]*artifact.PackageArtifact, error) {
+	return w.Stones.SearchArtifactsFromCatalog(opts, w.Identity.Name)
 }
 
 func (w *WagonRepository) HasLocalWagonIdentity(wdir string) bool {
@@ -119,6 +133,11 @@ func (w *WagonRepository) ClearCatalog() {
 //   and last update date with the current status.
 // * if there is a new revision download the meta and tree file
 //   and unpack them to the local cache.
+//
+// NOTE:
+//   Until I will implement the new metadata tarball
+//   i need process metadata and write under the treefs
+//   the artifacts information.
 //
 // If force is true the download of the meta and tree files are done always.
 func (w *WagonRepository) Sync(force bool) error {
@@ -188,7 +207,8 @@ func (w *WagonRepository) Sync(force bool) error {
 		Debug("Metadata tarball for the repository " + w.Identity.GetName() + " downloaded correctly.")
 
 		// Copy updated repository.yaml file to repo dir now that the tree is synced.
-		err = fileHelper.CopyFile(file, filepath.Join(repobasedir, REPOSITORY_SPECFILE))
+		newIdentity.IdentityFile = filepath.Join(repobasedir, REPOSITORY_SPECFILE)
+		err = fileHelper.CopyFile(file, newIdentity.IdentityFile)
 		if err != nil {
 			return errors.Wrap(err, "Error on update "+REPOSITORY_SPECFILE)
 		}
@@ -225,6 +245,19 @@ func (w *WagonRepository) Sync(force bool) error {
 
 		w.Identity = newIdentity
 
+		// Build metadata for package. This will be handled from a new tarball
+		// in the near future. In particolar, i will write a metadata.yaml file
+		// under <cache_dir>/repos/treefs/<cat>/<name>/<version>/metadata.yaml
+		// to avoid the parsing of metadata stream every time. It's something
+		// that consume too memory when i have more of >2k packages on a repo.
+
+		err = w.ExplodeMetadata()
+		if err != nil {
+			return err
+		}
+
+		w.ClearCatalog()
+
 	} else {
 		InfoC(
 			aurora.Magenta(":information_source: Repository: ").String() +
@@ -238,24 +271,87 @@ func (w *WagonRepository) Sync(force bool) error {
 	return nil
 }
 
+func (w *WagonRepository) ExplodeMetadata() error {
+	w.ClearCatalog()
+
+	Debug(
+		fmt.Sprintf(
+			"\n:house:Repository: %30s unpacking metadata. ",
+			w.Identity.GetName()),
+	)
+
+	_, err := w.Stones.LoadCatalog(w.Identity)
+	if err != nil {
+		return err
+	}
+
+	catalog := *w.Stones.Catalog
+	for idx, _ := range catalog.Index {
+		pkg := catalog.Index[idx].GetPackage()
+		if pkg == nil {
+			return errors.New(
+				fmt.Sprintf("Unexpected status on parse stone at pos %d", idx))
+		}
+
+		metaFile := filepath.Join(w.Identity.LuetRepository.TreePath,
+			pkg.Category,
+			pkg.Name,
+			pkg.Version,
+			"metadata.yaml",
+		)
+		pkgDir := filepath.Dir(metaFile)
+
+		// TODO: On ArtifactIndex provides are insert in the index!
+		//       For now just ignoring the artifacts if the directory is not
+		//       present.
+		if fileHelper.Exists(pkgDir) {
+			//Debug(fmt.Sprintf("Creating file %s", metaFile))
+
+			err = catalog.Index[idx].WriteMetadataYaml(metaFile)
+			if err != nil {
+				Warning(fmt.Sprintf(
+					"[%s] Error on creating metadata file for package %s: %s",
+					w.Identity.Name,
+					pkg.HumanReadableString(),
+					err.Error()),
+				)
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (w *WagonRepository) GetTreePath(repobasedir string) string {
+	if w.Identity.GetTreePath() == "" {
+
+		// NOTE: repobasedir must be the value of
+		//       LuetCfg.GetSystem().GetSystemReposDirPath
+		repobase := filepath.Join(repobasedir, w.Identity.GetName())
+		return filepath.Join(repobase, "treefs")
+	}
+	return w.Identity.GetTreePath()
+}
+
+func (w *WagonRepository) GetMetaPath(repobasedir string) string {
+	if w.Identity.GetTreePath() == "" {
+		// NOTE: repobasedir must be the value of
+		//       LuetCfg.GetSystem().GetSystemReposDirPath
+		repobase := filepath.Join(repobasedir, w.Identity.GetName())
+		return filepath.Join(repobase, "metafs")
+	}
+	return w.Identity.GetTreePath()
+}
+
 func (w *WagonRepository) Client() Client {
 	switch w.Identity.GetType() {
 	case DiskRepositoryType:
-		return client.NewLocalClient(client.RepoData{Urls: w.Identity.GetUrls()})
+		return client.NewLocalClient(w.Identity.LuetRepository)
 	case HttpRepositoryType:
-		return client.NewHttpClient(
-			client.RepoData{
-				Urls:           w.Identity.GetUrls(),
-				Authentication: w.Identity.GetAuthentication(),
-			})
-
+		return client.NewHttpClient(w.Identity.LuetRepository)
 	case DockerRepositoryType:
-		return client.NewDockerClient(
-			client.RepoData{
-				Urls:           w.Identity.GetUrls(),
-				Authentication: w.Identity.GetAuthentication(),
-				Verify:         w.Identity.Verify,
-			})
+		return client.NewDockerClient(w.Identity.LuetRepository)
 	}
 	return nil
 }

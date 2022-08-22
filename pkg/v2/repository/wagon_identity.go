@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
-	compression "github.com/geaaru/luet/pkg/compiler/types/compression"
 	"github.com/geaaru/luet/pkg/config"
+	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
+	compression "github.com/geaaru/luet/pkg/v2/compiler/types/compression"
 
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
@@ -111,12 +111,13 @@ func (w *WagonIdentity) DownloadDocument(c Client, key string) (*artifact.Packag
 	}
 
 	docArtifact := artifact.NewPackageArtifact(downloadedFile)
+	docArtifact.CachePath = downloadedFile
 	docArtifact.Checksums = docFile.GetChecksums()
 	docArtifact.CompressionType = docFile.GetCompressionType()
 
 	err = docArtifact.Verify()
 	if err != nil {
-		return nil, errors.Wrap(err, "file integrity check failure")
+		return nil, errors.Wrap(err, "file integrity check failure for repository "+w.GetName())
 	}
 
 	return docArtifact, nil

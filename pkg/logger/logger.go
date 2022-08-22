@@ -8,8 +8,9 @@ import (
 	"runtime"
 	"strings"
 
-	. "github.com/geaaru/luet/pkg/config"
 	"sync"
+
+	. "github.com/geaaru/luet/pkg/config"
 
 	"github.com/briandowns/spinner"
 	"github.com/kyokomi/emoji"
@@ -216,7 +217,7 @@ func Msg(level string, withoutColor, ln bool, msg ...interface{}) {
 	} else {
 		switch level {
 		case "warning":
-			levelMsg = Yellow(":construction: warning" + message).BgBlack().String()
+			levelMsg = Yellow(":construction: warning " + message).BgBlack().String()
 		case "debug":
 			levelMsg = White(message).BgBlack().String()
 		case "info":

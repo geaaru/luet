@@ -1,6 +1,6 @@
-before:
-  hooks:
-    - go mod tidy
+#before:
+#  hooks:
+#    - go mod tidy
 dist: release
 source:
   enabled: true

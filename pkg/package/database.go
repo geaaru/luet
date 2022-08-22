@@ -50,6 +50,11 @@ type PackageSet interface {
 	FindPackageVersions(p Package) (Packages, error)
 	World() Packages
 
+	// Finalizers
+	GetPackageFinalizer(Package) (*PackageFinalizer, error)
+	SetPackageFinalizer(*PackageFinalizer) error
+	RemovePackageFinalizer(Package) error
+
 	FindPackageCandidate(p Package) (Package, error)
 	FindPackageLabel(labelKey string) (Packages, error)
 	FindPackageLabelMatch(pattern string) (Packages, error)
@@ -58,7 +63,15 @@ type PackageSet interface {
 }
 
 type PackageFile struct {
-	ID                 int `storm:"id,increment"` // primary key with auto increment
-	PackageFingerprint string
+	ID                 int    `storm:"id,increment"` // primary key with auto increment
+	PackageFingerprint string `storm:"unique"`
 	Files              []string
+}
+
+type PackageFinalizer struct {
+	ID                 int      `storm:"id,increment"` // primary key with auto increment
+	PackageFingerprint string   `storm:"unique"`
+	Shell              []string `json:"shell,omitempty" yaml:"shell,omitempty"`
+	Install            []string `json:"install,omitempty" yaml:"install,omitempty"`
+	Uninstall          []string `json:"uninstall,omitempty" yaml:"uninstall,omitempty"`
 }
