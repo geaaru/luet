@@ -51,55 +51,15 @@ func version() string {
 	}
 }
 
-// RootCmd represents the base command when called without any subcommands
-var RootCmd = &cobra.Command{
-	Use:   "luet-build",
-	Short: "Container based package manager",
-	Long: `Luet build is the build module of the luset package manager based on containers to build packages.
-	
-To build a package, from a tree definition:
-
-	$ luet build --tree tree/path package
-	
-`,
-	Version: version(),
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-
-		err := LoadConfig(config.LuetCfg)
-		if err != nil {
-			Fatal("failed to load configuration:", err.Error())
-		}
-		// Initialize tmpdir prefix. TODO: Move this with LoadConfig
-		// directly on sub command to ensure the creation only when it's
-		// needed.
-		err = config.LuetCfg.GetSystem().InitTmpDir()
-		if err != nil {
-			Fatal("failed on init tmp basedir:", err.Error())
-		}
-
-	},
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		// Cleanup all tmp directories used by luet
-		err := config.LuetCfg.GetSystem().CleanupTmpDir()
-		if err != nil {
-			Warning("failed on cleanup tmpdir:", err.Error())
-		}
-
-		systemDB := config.LuetCfg.GetSystemDB()
-		err = systemDB.Close()
-		if err != nil {
-			Warning("failed on close database:", err.Error())
-		}
-
-	},
-	SilenceErrors: true,
-}
-
 func LoadConfig(c *config.LuetConfig) error {
 	// If a config file is found, read it in.
-	c.Viper.ReadInConfig()
+	err := c.Viper.ReadInConfig()
+	if err != nil {
+		Debug(fmt.Sprintf("Error on reading file %s: %s",
+			c.Viper.ConfigFileUsed(), err.Error()))
+	}
 
-	err := c.Viper.Unmarshal(&config.LuetCfg)
+	err = c.Viper.Unmarshal(&c)
 	if err != nil {
 		return err
 	}
@@ -147,6 +107,81 @@ func LoadConfig(c *config.LuetConfig) error {
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	var cfg *config.LuetConfig = config.NewLuetConfig(nil)
+	config.LuetCfg = cfg
+
+	initConfig(cfg)
+
+	// RootCmd represents the base command when called without any subcommands
+	var RootCmd = &cobra.Command{
+		Use:   "luet-build",
+		Short: "Container based package manager",
+		Long: `Luet build is the build module of the luset package manager based on containers to build packages.
+		
+	To build a package, from a tree definition:
+
+		$ luet build --tree tree/path package
+		
+	`,
+		Version: version(),
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+
+			cfg.Viper.SetConfigType("yaml")
+
+			if cfgFile != "" { // enable ability to specify config file via flag
+				viper.SetConfigFile(cfgFile)
+			} else {
+				// Retrieve pwd directory
+				pwdDir, err := os.Getwd()
+				if err != nil {
+					Error(err)
+					os.Exit(1)
+				}
+				homeDir := helpers.GetHomeDir()
+
+				if fileHelper.Exists(filepath.Join(pwdDir, ".luet.yaml")) || (homeDir != "" && fileHelper.Exists(filepath.Join(homeDir, ".luet.yaml"))) {
+					cfg.Viper.AddConfigPath(".")
+					if homeDir != "" {
+						cfg.Viper.AddConfigPath(homeDir)
+					}
+					cfg.Viper.SetConfigName(".luet")
+				} else {
+					cfg.Viper.SetConfigName("luet")
+					cfg.Viper.AddConfigPath("/etc/luet")
+				}
+			}
+
+			err := LoadConfig(cfg)
+			if err != nil {
+				Fatal("failed to load configuration:", err.Error())
+			}
+			// Initialize tmpdir prefix. TODO: Move this with LoadConfig
+			// directly on sub command to ensure the creation only when it's
+			// needed.
+			err = cfg.GetSystem().InitTmpDir()
+			if err != nil {
+				Fatal("failed on init tmp basedir:", err.Error())
+			}
+
+		},
+		PersistentPostRun: func(cmd *cobra.Command, args []string) {
+			// Cleanup all tmp directories used by luet
+			err := cfg.GetSystem().CleanupTmpDir()
+			if err != nil {
+				Warning("failed on cleanup tmpdir:", err.Error())
+			}
+
+			systemDB := cfg.GetSystemDB()
+			err = systemDB.Close()
+			if err != nil {
+				Warning("failed on close database:", err.Error())
+			}
+
+		},
+		SilenceErrors: true,
+	}
+
+	initCommand(RootCmd, cfg)
 
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -154,21 +189,23 @@ func Execute() {
 	}
 }
 
-func init() {
-	cobra.OnInitialize(initConfig)
-	pflags := RootCmd.PersistentFlags()
+func initCommand(rootCmd *cobra.Command, cfg *config.LuetConfig) {
+
+	pflags := rootCmd.PersistentFlags()
 	pflags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.luet.yaml)")
 	pflags.BoolP("debug", "d", false, "verbose output")
 	pflags.Bool("fatal", false, "Enables Warnings to exit")
 	pflags.Bool("enable-logfile", false, "Enable log to file")
 	pflags.Bool("no-spinner", false, "Disable spinner.")
-	pflags.Bool("color", config.LuetCfg.GetLogging().Color, "Enable/Disable color.")
-	pflags.Bool("emoji", config.LuetCfg.GetLogging().EnableEmoji, "Enable/Disable emoji.")
-	pflags.Bool("skip-config-protect", config.LuetCfg.ConfigProtectSkip,
+	pflags.Bool("color", cfg.Viper.GetBool("logging.color"), "Enable/Disable color.")
+	pflags.Bool("skip-config-protect", cfg.Viper.GetBool("config_protect_skip"),
 		"Disable config protect analysis.")
-	pflags.StringP("logfile", "l", config.LuetCfg.GetLogging().Path,
+	pflags.StringP("logfile", "l", cfg.Viper.GetString("logging.path"),
 		"Logfile path. Empty value disable log to file.")
-	pflags.StringSlice("plugin", []string{}, "A list of runtime plugins to load")
+
+	pflags.String("system-dbpath", "", "System db path")
+	pflags.String("system-target", "", "System rootpath")
+	pflags.String("system-engine", "", "System DB engine")
 
 	// os/user doesn't work in from scratch environments.
 	// Check if i can retrieve user informations.
@@ -176,30 +213,41 @@ func init() {
 	if err != nil {
 		Warning("failed to retrieve user identity:", err.Error())
 	}
-	pflags.Bool("same-owner", config.LuetCfg.GetGeneral().SameOwner, "Maintain same owner on uncompress.")
+	pflags.Bool("same-owner", cfg.Viper.GetBool("general.same_owner"),
+		"Maintain same owner on uncompress.")
 	pflags.Int("concurrency", runtime.NumCPU(), "Concurrency")
 
-	config.LuetCfg.Viper.BindPFlag("logging.color", pflags.Lookup("color"))
-	config.LuetCfg.Viper.BindPFlag("logging.enable_emoji", pflags.Lookup("emoji"))
-	config.LuetCfg.Viper.BindPFlag("logging.enable_logfile", pflags.Lookup("enable-logfile"))
-	config.LuetCfg.Viper.BindPFlag("logging.path", pflags.Lookup("logfile"))
+	cfg.Viper.BindPFlag("logging.color", pflags.Lookup("color"))
+	cfg.Viper.BindPFlag("logging.enable_emoji", pflags.Lookup("emoji"))
+	cfg.Viper.BindPFlag("logging.enable_logfile", pflags.Lookup("enable-logfile"))
+	cfg.Viper.BindPFlag("logging.path", pflags.Lookup("logfile"))
 
-	config.LuetCfg.Viper.BindPFlag("general.concurrency", pflags.Lookup("concurrency"))
-	config.LuetCfg.Viper.BindPFlag("general.debug", pflags.Lookup("debug"))
-	config.LuetCfg.Viper.BindPFlag("general.fatal_warnings", pflags.Lookup("fatal"))
-	config.LuetCfg.Viper.BindPFlag("general.same_owner", pflags.Lookup("same-owner"))
-	config.LuetCfg.Viper.BindPFlag("plugin", pflags.Lookup("plugin"))
+	cfg.Viper.BindPFlag("general.concurrency", pflags.Lookup("concurrency"))
+	cfg.Viper.BindPFlag("general.debug", pflags.Lookup("debug"))
+	cfg.Viper.BindPFlag("general.fatal_warnings", pflags.Lookup("fatal"))
+	cfg.Viper.BindPFlag("general.same_owner", pflags.Lookup("same-owner"))
+	cfg.Viper.BindPFlag("plugin", pflags.Lookup("plugin"))
 
 	// Currently I maintain this only from cli.
-	config.LuetCfg.Viper.BindPFlag("no_spinner", pflags.Lookup("no-spinner"))
-	config.LuetCfg.Viper.BindPFlag("config_protect_skip", pflags.Lookup("skip-config-protect"))
+	cfg.Viper.BindPFlag("no_spinner", pflags.Lookup("no-spinner"))
+	cfg.Viper.BindPFlag("config_protect_skip", pflags.Lookup("skip-config-protect"))
+
+	cfg.Viper.BindPFlag("system.database_path", pflags.Lookup("system-dbpath"))
+	cfg.Viper.BindPFlag("system.rootfs", pflags.Lookup("system-target"))
+	cfg.Viper.BindPFlag("system.database_engine", pflags.Lookup("system-engine"))
 
 	// Add main commands
-	RootCmd.AddCommand()
+	rootCmd.AddCommand(
+		newCreateRepoCommand(cfg),
+		newPackCommand(cfg),
+		newServerRepoCommand(cfg),
+		newTreeCommand(cfg),
+		newBuildCommand(cfg),
+	)
 }
 
 // initConfig reads in config file and ENV variables if set.
-func initConfig() {
+func initConfig(cfg *config.LuetConfig) {
 	// Luet support these priorities on read configuration file:
 	// - command line option (if available)
 	// - $PWD/.luet.yaml
@@ -208,37 +256,17 @@ func initConfig() {
 	//
 	// Note: currently a single viper instance support only one config name.
 
-	viper.SetEnvPrefix(config.LuetEnvPrefix)
-	viper.SetConfigType("yaml")
+	cfg.Viper.SetEnvPrefix(config.LuetEnvPrefix)
 
-	if cfgFile != "" { // enable ability to specify config file via flag
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Retrieve pwd directory
-		pwdDir, err := os.Getwd()
-		if err != nil {
-			Error(err)
-			os.Exit(1)
-		}
-		homeDir := helpers.GetHomeDir()
+	cfg.Viper.BindEnv("config")
+	cfg.Viper.SetDefault("config", "")
+	cfg.Viper.SetDefault("etcd-config", false)
 
-		if fileHelper.Exists(filepath.Join(pwdDir, ".luet.yaml")) || (homeDir != "" && fileHelper.Exists(filepath.Join(homeDir, ".luet.yaml"))) {
-			viper.AddConfigPath(".")
-			if homeDir != "" {
-				viper.AddConfigPath(homeDir)
-			}
-			viper.SetConfigName(".luet")
-		} else {
-			viper.SetConfigName("luet")
-			viper.AddConfigPath("/etc/luet")
-		}
-	}
-
-	viper.AutomaticEnv() // read in environment variables that match
+	cfg.Viper.AutomaticEnv() // read in environment variables that match
 
 	// Create EnvKey Replacer for handle complex structure
 	replacer := strings.NewReplacer(".", "__")
-	viper.SetEnvKeyReplacer(replacer)
-	viper.SetTypeByDefaultValue(true)
+	cfg.Viper.SetEnvKeyReplacer(replacer)
 
+	cfg.Viper.SetTypeByDefaultValue(true)
 }

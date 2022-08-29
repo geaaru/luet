@@ -23,71 +23,72 @@ import (
 	"github.com/geaaru/luet/pkg/compiler/types/artifact"
 	"github.com/geaaru/luet/pkg/compiler/types/compression"
 	compilerspec "github.com/geaaru/luet/pkg/compiler/types/spec"
-	. "github.com/geaaru/luet/pkg/config"
+	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-var packCmd = &cobra.Command{
-	Use:   "pack <package name>",
-	Short: "pack a custom package",
-	Long: `Pack creates a package from a directory, generating the metadata required from a tree to generate a repository.
+func newPackCommand(config *cfg.LuetConfig) *cobra.Command {
 
-Pack can be used to manually replace what "luet build" does automatically by reading the packages build.yaml files.
+	var packCmd = &cobra.Command{
+		Use:   "pack <package name>",
+		Short: "pack a custom package",
+		Long: `Pack creates a package from a directory, generating the metadata required from a tree to generate a repository.
 
-	$ mkdir -p output/etc/foo
-	$ echo "my config" > output/etc/foo
-	$ luet pack foo/bar@1.1 --source output
+	Pack can be used to manually replace what "luet build" does automatically by reading the packages build.yaml files.
 
-Afterwards, you can use the content generated and associate it with a tree and a corresponding definition.yaml file with "luet create-repo".
-`,
-	PreRun: func(cmd *cobra.Command, args []string) {
-		viper.BindPFlag("destination", cmd.Flags().Lookup("destination"))
-		viper.BindPFlag("compression", cmd.Flags().Lookup("compression"))
-		viper.BindPFlag("source", cmd.Flags().Lookup("source"))
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		sourcePath := viper.GetString("source")
+		$ mkdir -p output/etc/foo
+		$ echo "my config" > output/etc/foo
+		$ luet pack foo/bar@1.1 --source output
 
-		dst := viper.GetString("destination")
-		compressionType := viper.GetString("compression")
-		concurrency := LuetCfg.GetGeneral().Concurrency
+	Afterwards, you can use the content generated and associate it with a tree and a corresponding definition.yaml file with "luet create-repo".
+	`,
 
-		if len(args) != 1 {
-			Fatal("You must specify a package name")
-		}
+		PreRun: func(cmd *cobra.Command, args []string) {
+			config.Viper.BindPFlag("destination", cmd.Flags().Lookup("destination"))
+			config.Viper.BindPFlag("compression", cmd.Flags().Lookup("compression"))
+			config.Viper.BindPFlag("source", cmd.Flags().Lookup("source"))
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			sourcePath := config.Viper.GetString("source")
 
-		packageName := args[0]
+			dst := config.Viper.GetString("destination")
+			compressionType := config.Viper.GetString("compression")
+			concurrency := config.GetGeneral().Concurrency
 
-		p, err := helpers.ParsePackageStr(packageName)
-		if err != nil {
-			Fatal("Invalid package string ", packageName, ": ", err.Error())
-		}
+			if len(args) != 1 {
+				Fatal("You must specify a package name")
+			}
 
-		spec := &compilerspec.LuetCompilationSpec{Package: p}
-		a := artifact.NewPackageArtifact(filepath.Join(dst, p.GetFingerPrint()+".package.tar"))
-		a.CompressionType = compression.Implementation(compressionType)
-		err = a.Compress(sourcePath, concurrency)
-		if err != nil {
-			Fatal("failed compressing ", packageName, ": ", err.Error())
-		}
-		a.CompileSpec = spec
-		filelist, err := a.FileList()
-		if err != nil {
-			Fatal("failed generating file list for ", packageName, ": ", err.Error())
-		}
-		a.Files = filelist
-		a.CompileSpec.GetPackage().SetBuildTimestamp(time.Now().String())
-		err = a.WriteYaml(dst)
-		if err != nil {
-			Fatal("failed writing metadata yaml file for ", packageName, ": ", err.Error())
-		}
-	},
-}
+			packageName := args[0]
 
-func init() {
+			p, err := helpers.ParsePackageStr(packageName)
+			if err != nil {
+				Fatal("Invalid package string ", packageName, ": ", err.Error())
+			}
+
+			spec := &compilerspec.LuetCompilationSpec{Package: p}
+			a := artifact.NewPackageArtifact(filepath.Join(dst, p.GetFingerPrint()+".package.tar"))
+			a.CompressionType = compression.Implementation(compressionType)
+			err = a.Compress(sourcePath, concurrency)
+			if err != nil {
+				Fatal("failed compressing ", packageName, ": ", err.Error())
+			}
+			a.CompileSpec = spec
+			filelist, err := a.FileList()
+			if err != nil {
+				Fatal("failed generating file list for ", packageName, ": ", err.Error())
+			}
+			a.Files = filelist
+			a.CompileSpec.GetPackage().SetBuildTimestamp(time.Now().String())
+			err = a.WriteYaml(dst)
+			if err != nil {
+				Fatal("failed writing metadata yaml file for ", packageName, ": ", err.Error())
+			}
+		},
+	}
+
 	path, err := os.Getwd()
 	if err != nil {
 		Fatal(err)
@@ -96,5 +97,5 @@ func init() {
 	packCmd.Flags().String("destination", path, "Destination folder")
 	packCmd.Flags().String("compression", "gzip", "Compression alg: none, gzip")
 
-	RootCmd.AddCommand(packCmd)
+	return packCmd
 }

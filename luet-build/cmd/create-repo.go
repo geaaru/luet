@@ -1,17 +1,7 @@
-// Copyright © 2019 Ettore Di Giacinto <mudler@gentoo.org>
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, see <http://www.gnu.org/licenses/>.
+/*
+	Copyright © 2022 Macaroni OS Linux
+	See AUTHORS and LICENSE for the license details and contributors.
+*/
 package cmd
 
 import (
@@ -21,182 +11,180 @@ import (
 	helpers "github.com/geaaru/luet/cmd/helpers"
 	"github.com/geaaru/luet/pkg/compiler"
 	"github.com/geaaru/luet/pkg/compiler/types/compression"
-	. "github.com/geaaru/luet/pkg/config"
+	cfg "github.com/geaaru/luet/pkg/config"
 	installer "github.com/geaaru/luet/pkg/installer"
-
-	//	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-var createrepoCmd = &cobra.Command{
-	Use:   "create-repo",
-	Short: "Create a luet repository from a build",
-	Long: `Builds tree metadata from a set of packages and a tree definition:
+func newCreateRepoCommand(config *cfg.LuetConfig) *cobra.Command {
 
-	$ luet create-repo
+	var createrepoCmd = &cobra.Command{
+		Use:   "create-repo",
+		Short: "Create a luet repository from a build",
+		Long: `Builds tree metadata from a set of packages and a tree definition:
 
-Provide specific paths for packages, tree, and metadata output which is generated:
+		$ luet create-repo
 
-	$ luet create-repo --packages my/packages/path --tree my/tree/path --output my/packages/path ...
+	Provide specific paths for packages, tree, and metadata output which is generated:
 
-Provide name and description of the repository:
+		$ luet create-repo --packages my/packages/path --tree my/tree/path --output my/packages/path ...
 
-	$ luet create-repo --name "foo" --description "bar" ...
+	Provide name and description of the repository:
 
-Change compression method:
-	
-	$ luet create-repo --tree-compression gzip --meta-compression gzip
+		$ luet create-repo --name "foo" --description "bar" ...
 
-Create a repository from the metadata description defined in the luet.yaml config file:
+	Change compression method:
+		
+		$ luet create-repo --tree-compression gzip --meta-compression gzip
 
-	$ luet create-repo --repo repository1
-`,
-	PreRun: func(cmd *cobra.Command, args []string) {
-		viper.BindPFlag("packages", cmd.Flags().Lookup("packages"))
-		viper.BindPFlag("tree", cmd.Flags().Lookup("tree"))
-		viper.BindPFlag("output", cmd.Flags().Lookup("output"))
-		viper.BindPFlag("backend", cmd.Flags().Lookup("backend"))
-		viper.BindPFlag("name", cmd.Flags().Lookup("name"))
-		viper.BindPFlag("descr", cmd.Flags().Lookup("descr"))
-		viper.BindPFlag("urls", cmd.Flags().Lookup("urls"))
-		viper.BindPFlag("type", cmd.Flags().Lookup("type"))
-		viper.BindPFlag("tree-compression", cmd.Flags().Lookup("tree-compression"))
-		viper.BindPFlag("tree-filename", cmd.Flags().Lookup("tree-filename"))
-		viper.BindPFlag("meta-compression", cmd.Flags().Lookup("meta-compression"))
-		viper.BindPFlag("meta-filename", cmd.Flags().Lookup("meta-filename"))
-		viper.BindPFlag("reset-revision", cmd.Flags().Lookup("reset-revision"))
-		viper.BindPFlag("repo", cmd.Flags().Lookup("repo"))
-		viper.BindPFlag("from-metadata", cmd.Flags().Lookup("from-metadata"))
-		viper.BindPFlag("force-push", cmd.Flags().Lookup("force-push"))
-		viper.BindPFlag("push-images", cmd.Flags().Lookup("push-images"))
+	Create a repository from the metadata description defined in the luet.yaml config file:
 
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		var err error
-		var repo *installer.LuetSystemRepository
+		$ luet create-repo --repo repository1
+	`,
+		PreRun: func(cmd *cobra.Command, args []string) {
+			config.Viper.BindPFlag("packages", cmd.Flags().Lookup("packages"))
+			config.Viper.BindPFlag("tree", cmd.Flags().Lookup("tree"))
+			config.Viper.BindPFlag("output", cmd.Flags().Lookup("output"))
+			config.Viper.BindPFlag("backend", cmd.Flags().Lookup("backend"))
+			config.Viper.BindPFlag("name", cmd.Flags().Lookup("name"))
+			config.Viper.BindPFlag("descr", cmd.Flags().Lookup("descr"))
+			config.Viper.BindPFlag("urls", cmd.Flags().Lookup("urls"))
+			config.Viper.BindPFlag("type", cmd.Flags().Lookup("type"))
+			config.Viper.BindPFlag("tree-compression", cmd.Flags().Lookup("tree-compression"))
+			config.Viper.BindPFlag("tree-filename", cmd.Flags().Lookup("tree-filename"))
+			config.Viper.BindPFlag("meta-compression", cmd.Flags().Lookup("meta-compression"))
+			config.Viper.BindPFlag("meta-filename", cmd.Flags().Lookup("meta-filename"))
+			config.Viper.BindPFlag("reset-revision", cmd.Flags().Lookup("reset-revision"))
+			config.Viper.BindPFlag("repo", cmd.Flags().Lookup("repo"))
+			config.Viper.BindPFlag("from-metadata", cmd.Flags().Lookup("from-metadata"))
+			config.Viper.BindPFlag("force-push", cmd.Flags().Lookup("force-push"))
+			config.Viper.BindPFlag("push-images", cmd.Flags().Lookup("push-images"))
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			var err error
+			var repo *installer.LuetSystemRepository
 
-		treePaths := viper.GetStringSlice("tree")
-		dst := viper.GetString("output")
+			treePaths := config.Viper.GetStringSlice("tree")
+			dst := config.Viper.GetString("output")
 
-		name := viper.GetString("name")
-		descr := viper.GetString("descr")
-		urls := viper.GetStringSlice("urls")
-		t := viper.GetString("type")
-		reset := viper.GetBool("reset-revision")
-		treetype := viper.GetString("tree-compression")
-		treeName := viper.GetString("tree-filename")
-		metatype := viper.GetString("meta-compression")
-		metaName := viper.GetString("meta-filename")
-		source_repo := viper.GetString("repo")
-		backendType := viper.GetString("backend")
-		fromRepo, _ := cmd.Flags().GetBool("from-repositories")
+			name := config.Viper.GetString("name")
+			descr := config.Viper.GetString("descr")
+			urls := config.Viper.GetStringSlice("urls")
+			t := config.Viper.GetString("type")
+			reset := config.Viper.GetBool("reset-revision")
+			treetype := config.Viper.GetString("tree-compression")
+			treeName := config.Viper.GetString("tree-filename")
+			metatype := config.Viper.GetString("meta-compression")
+			metaName := config.Viper.GetString("meta-filename")
+			source_repo := config.Viper.GetString("repo")
+			backendType := config.Viper.GetString("backend")
+			fromRepo, _ := cmd.Flags().GetBool("from-repositories")
 
-		treeFile := installer.NewDefaultTreeRepositoryFile()
-		metaFile := installer.NewDefaultMetaRepositoryFile()
-		compilerBackend, err := compiler.NewBackend(backendType)
-		helpers.CheckErr(err)
-		force := viper.GetBool("force-push")
-		imagePush := viper.GetBool("push-images")
+			treeFile := installer.NewDefaultTreeRepositoryFile()
+			metaFile := installer.NewDefaultMetaRepositoryFile()
+			compilerBackend, err := compiler.NewBackend(backendType)
+			helpers.CheckErr(err)
+			force := config.Viper.GetBool("force-push")
+			imagePush := config.Viper.GetBool("push-images")
 
-		opts := []installer.RepositoryOption{
-			installer.WithSource(viper.GetString("packages")),
-			installer.WithPushImages(imagePush),
-			installer.WithForce(force),
-			installer.FromRepository(fromRepo),
-			installer.WithConfig(LuetCfg),
-			installer.WithImagePrefix(dst),
-			installer.WithDatabase(pkg.NewInMemoryDatabase(false)),
-			installer.WithCompilerBackend(compilerBackend),
-			installer.FromMetadata(viper.GetBool("from-metadata")),
-		}
+			opts := []installer.RepositoryOption{
+				installer.WithSource(config.Viper.GetString("packages")),
+				installer.WithPushImages(imagePush),
+				installer.WithForce(force),
+				installer.FromRepository(fromRepo),
+				installer.WithConfig(config),
+				installer.WithImagePrefix(dst),
+				installer.WithDatabase(pkg.NewInMemoryDatabase(false)),
+				installer.WithCompilerBackend(compilerBackend),
+				installer.FromMetadata(config.Viper.GetBool("from-metadata")),
+			}
 
-		if source_repo != "" {
-			// Search for system repository
-			lrepo, err := LuetCfg.GetSystemRepository(source_repo)
+			if source_repo != "" {
+				// Search for system repository
+				lrepo, err := config.GetSystemRepository(source_repo)
+				helpers.CheckErr(err)
+
+				if len(treePaths) <= 0 {
+					treePaths = []string{lrepo.TreePath}
+				}
+
+				if t == "" {
+					t = lrepo.Type
+				}
+
+				opts = append(opts,
+					installer.WithName(lrepo.Name),
+					installer.WithDescription(lrepo.Description),
+					installer.WithType(t),
+					installer.WithUrls(lrepo.Urls...),
+					installer.WithPriority(lrepo.Priority),
+					installer.WithTree(treePaths...),
+				)
+
+			} else {
+				opts = append(opts,
+					installer.WithName(name),
+					installer.WithDescription(descr),
+					installer.WithType(t),
+					installer.WithUrls(urls...),
+					installer.WithTree(treePaths...),
+				)
+			}
+
+			repo, err = installer.GenerateRepository(opts...)
 			helpers.CheckErr(err)
 
-			if len(treePaths) <= 0 {
-				treePaths = []string{lrepo.TreePath}
+			if treetype != "" {
+				treeFile.SetCompressionType(compression.Implementation(treetype))
 			}
 
-			if t == "" {
-				t = lrepo.Type
+			if treeName != "" {
+				treeFile.SetFileName(treeName)
 			}
 
-			opts = append(opts,
-				installer.WithName(lrepo.Name),
-				installer.WithDescription(lrepo.Description),
-				installer.WithType(t),
-				installer.WithUrls(lrepo.Urls...),
-				installer.WithPriority(lrepo.Priority),
-				installer.WithTree(treePaths...),
-			)
+			if metatype != "" {
+				metaFile.SetCompressionType(compression.Implementation(metatype))
+			}
 
-		} else {
-			opts = append(opts,
-				installer.WithName(name),
-				installer.WithDescription(descr),
-				installer.WithType(t),
-				installer.WithUrls(urls...),
-				installer.WithTree(treePaths...),
-			)
-		}
+			if metaName != "" {
+				metaFile.SetFileName(metaName)
+			}
 
-		repo, err = installer.GenerateRepository(opts...)
-		helpers.CheckErr(err)
+			repo.SetRepositoryFile(installer.REPOFILE_TREE_KEY, treeFile)
+			repo.SetRepositoryFile(installer.REPOFILE_META_KEY, metaFile)
 
-		if treetype != "" {
-			treeFile.SetCompressionType(compression.Implementation(treetype))
-		}
+			err = repo.Write(dst, reset, true)
+			helpers.CheckErr(err)
 
-		if treeName != "" {
-			treeFile.SetFileName(treeName)
-		}
+		},
+	}
 
-		if metatype != "" {
-			metaFile.SetCompressionType(compression.Implementation(metatype))
-		}
-
-		if metaName != "" {
-			metaFile.SetFileName(metaName)
-		}
-
-		repo.SetRepositoryFile(installer.REPOFILE_TREE_KEY, treeFile)
-		repo.SetRepositoryFile(installer.REPOFILE_META_KEY, metaFile)
-
-		err = repo.Write(dst, reset, true)
-		helpers.CheckErr(err)
-
-	},
-}
-
-func init() {
 	path, err := os.Getwd()
 	helpers.CheckErr(err)
 
-	createrepoCmd.Flags().String("packages", filepath.Join(path, "build"), "Packages folder (output from build)")
-	createrepoCmd.Flags().StringSliceP("tree", "t", []string{path}, "Path of the source trees to use.")
-	createrepoCmd.Flags().String("output", filepath.Join(path, "build"), "Destination for generated archives. With 'docker' repository type, it should be an image reference (e.g 'foo/bar')")
-	createrepoCmd.Flags().String("name", "luet", "Repository name")
-	createrepoCmd.Flags().String("descr", "luet", "Repository description")
-	createrepoCmd.Flags().StringSlice("urls", []string{}, "Repository URLs")
-	createrepoCmd.Flags().String("type", "disk", "Repository type (disk, http, docker)")
-	createrepoCmd.Flags().Bool("reset-revision", false, "Reset repository revision.")
-	createrepoCmd.Flags().String("repo", "", "Use repository defined in configuration.")
-	createrepoCmd.Flags().String("backend", "docker", "backend used (docker,img)")
+	flags := createrepoCmd.Flags()
+	flags.String("packages", filepath.Join(path, "build"), "Packages folder (output from build)")
+	flags.StringSliceP("tree", "t", []string{path}, "Path of the source trees to use.")
+	flags.String("output", filepath.Join(path, "build"), "Destination for generated archives. With 'docker' repository type, it should be an image reference (e.g 'foo/bar')")
+	flags.String("name", "luet", "Repository name")
+	flags.String("descr", "luet", "Repository description")
+	flags.StringSlice("urls", []string{}, "Repository URLs")
+	flags.String("type", "disk", "Repository type (disk, http, docker)")
+	flags.Bool("reset-revision", false, "Reset repository revision.")
+	flags.String("repo", "", "Use repository defined in configuration.")
+	flags.String("backend", "docker", "backend used (docker,img)")
 
-	createrepoCmd.Flags().Bool("force-push", false, "Force overwrite of docker images if already present online")
-	createrepoCmd.Flags().Bool("push-images", false, "Enable/Disable docker image push for docker repositories")
-	createrepoCmd.Flags().Bool("from-metadata", false, "Consider metadata files from the packages folder while indexing the new tree")
+	flags.Bool("force-push", false, "Force overwrite of docker images if already present online")
+	flags.Bool("push-images", false, "Enable/Disable docker image push for docker repositories")
+	flags.Bool("from-metadata", false, "Consider metadata files from the packages folder while indexing the new tree")
 
-	createrepoCmd.Flags().String("tree-compression", "gzip", "Compression alg: none, gzip, zstd")
-	createrepoCmd.Flags().String("tree-filename", installer.TREE_TARBALL, "Repository tree filename")
-	createrepoCmd.Flags().String("meta-compression", "none", "Compression alg: none, gzip, zstd")
-	createrepoCmd.Flags().String("meta-filename", installer.REPOSITORY_METAFILE+".tar", "Repository metadata filename")
-	createrepoCmd.Flags().Bool("from-repositories", false, "Consume the user-defined repositories to pull specfiles from")
+	flags.String("tree-compression", "gzip", "Compression alg: none, gzip, zstd")
+	flags.String("tree-filename", installer.TREE_TARBALL, "Repository tree filename")
+	flags.String("meta-compression", "none", "Compression alg: none, gzip, zstd")
+	flags.String("meta-filename", installer.REPOSITORY_METAFILE+".tar", "Repository metadata filename")
+	flags.Bool("from-repositories", false, "Consume the user-defined repositories to pull specfiles from")
 
-	RootCmd.AddCommand(createrepoCmd)
+	return createrepoCmd
 }
