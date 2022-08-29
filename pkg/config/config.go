@@ -45,7 +45,7 @@ var (
 	BuildGoVersion string
 )
 
-var LuetCfg *LuetConfig
+var LuetCfg *LuetConfig = NewLuetConfig(nil)
 
 type LuetLoggingConfig struct {
 	// Path of the logfile
