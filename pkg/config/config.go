@@ -45,7 +45,7 @@ var (
 	BuildGoVersion string
 )
 
-var LuetCfg = NewLuetConfig(v.GetViper())
+var LuetCfg *LuetConfig
 
 type LuetLoggingConfig struct {
 	// Path of the logfile

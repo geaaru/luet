@@ -18,6 +18,7 @@ package cmd
 
 import (
 	. "github.com/geaaru/luet/cmd/box"
+	config "github.com/geaaru/luet/pkg/config"
 
 	"github.com/spf13/cobra"
 )
@@ -27,10 +28,16 @@ var boxGroupCmd = &cobra.Command{
 	Short: "Manage luet boxes",
 }
 
-func init() {
-	RootCmd.AddCommand(boxGroupCmd)
+func newBoxCommand(cfg *config.LuetConfig) *cobra.Command {
 
-	boxGroupCmd.AddCommand(
-		NewBoxExecCommand(),
+	var ans = &cobra.Command{
+		Use:   "box [command] [OPTIONS]",
+		Short: "Manage Box/Sandbox",
+	}
+
+	ans.AddCommand(
+		NewBoxExecCommand(cfg),
 	)
+
+	return ans
 }

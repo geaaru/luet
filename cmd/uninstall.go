@@ -17,7 +17,7 @@ package cmd
 import (
 	helpers "github.com/geaaru/luet/cmd/helpers"
 	"github.com/geaaru/luet/cmd/util"
-	. "github.com/geaaru/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/config"
 	installer "github.com/geaaru/luet/pkg/installer"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
@@ -26,72 +26,69 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var uninstallCmd = &cobra.Command{
-	Use:     "uninstall <pkg> <pkg2> ...",
-	Short:   "Uninstall a package or a list of packages",
-	Long:    `Uninstall packages`,
-	Aliases: []string{"rm", "un"},
-	PreRun: func(cmd *cobra.Command, args []string) {
-		util.BindSystemFlags(cmd)
-		util.BindSolverFlags(cmd)
-		LuetCfg.Viper.BindPFlag("nodeps", cmd.Flags().Lookup("nodeps"))
-		LuetCfg.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
-		LuetCfg.Viper.BindPFlag("yes", cmd.Flags().Lookup("yes"))
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		toRemove := []pkg.Package{}
-		for _, a := range args {
+func newUninstallCommand(cfg *config.LuetConfig) *cobra.Command {
 
-			pack, err := helpers.ParsePackageStr(a)
-			if err != nil {
-				Fatal("Invalid package string ", a, ": ", err.Error())
+	var uninstallCmd = &cobra.Command{
+		Use:     "uninstall <pkg> <pkg2> ...",
+		Short:   "Uninstall a package or a list of packages",
+		Long:    `Uninstall packages`,
+		Aliases: []string{"rm", "un"},
+		PreRun: func(cmd *cobra.Command, args []string) {
+			util.BindSolverFlags(cmd)
+			cfg.Viper.BindPFlag("nodeps", cmd.Flags().Lookup("nodeps"))
+			cfg.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
+			cfg.Viper.BindPFlag("yes", cmd.Flags().Lookup("yes"))
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			toRemove := []pkg.Package{}
+			for _, a := range args {
+
+				pack, err := helpers.ParsePackageStr(a)
+				if err != nil {
+					Fatal("Invalid package string ", a, ": ", err.Error())
+				}
+				toRemove = append(toRemove, pack)
 			}
-			toRemove = append(toRemove, pack)
-		}
 
-		force := LuetCfg.Viper.GetBool("force")
-		nodeps, _ := cmd.Flags().GetBool("nodeps")
-		full, _ := cmd.Flags().GetBool("full")
-		checkconflicts, _ := cmd.Flags().GetBool("conflictscheck")
-		fullClean, _ := cmd.Flags().GetBool("full-clean")
-		yes := LuetCfg.Viper.GetBool("yes")
-		keepProtected, _ := cmd.Flags().GetBool("keep-protected-files")
+			force := cfg.Viper.GetBool("force")
+			nodeps, _ := cmd.Flags().GetBool("nodeps")
+			full, _ := cmd.Flags().GetBool("full")
+			checkconflicts, _ := cmd.Flags().GetBool("conflictscheck")
+			fullClean, _ := cmd.Flags().GetBool("full-clean")
+			yes := cfg.Viper.GetBool("yes")
+			keepProtected, _ := cmd.Flags().GetBool("keep-protected-files")
 
-		util.SetSystemConfig()
-		util.SetSolverConfig()
+			util.SetSolverConfig()
 
-		LuetCfg.ConfigProtectSkip = !keepProtected
+			cfg.ConfigProtectSkip = !keepProtected
 
-		Debug("Solver", LuetCfg.GetSolverOptions().CompactString())
+			Debug("Solver", cfg.GetSolverOptions().CompactString())
 
-		// Load config protect configs
-		installer.LoadConfigProtectConfs(LuetCfg)
+			// Load config protect configs
+			installer.LoadConfigProtectConfs(cfg)
 
-		inst := installer.NewLuetInstaller(installer.LuetInstallerOptions{
-			Concurrency:                 LuetCfg.GetGeneral().Concurrency,
-			SolverOptions:               *LuetCfg.GetSolverOptions(),
-			NoDeps:                      nodeps,
-			Force:                       force,
-			FullUninstall:               full,
-			FullCleanUninstall:          fullClean,
-			CheckConflicts:              checkconflicts,
-			Ask:                         !yes,
-			PreserveSystemEssentialData: true,
-		})
+			inst := installer.NewLuetInstaller(installer.LuetInstallerOptions{
+				Concurrency:                 cfg.GetGeneral().Concurrency,
+				SolverOptions:               *cfg.GetSolverOptions(),
+				NoDeps:                      nodeps,
+				Force:                       force,
+				FullUninstall:               full,
+				FullCleanUninstall:          fullClean,
+				CheckConflicts:              checkconflicts,
+				Ask:                         !yes,
+				PreserveSystemEssentialData: true,
+			})
 
-		system := &installer.System{Database: LuetCfg.GetSystemDB(), Target: LuetCfg.GetSystem().Rootfs}
+			system := &installer.System{
+				Database: cfg.GetSystemDB(),
+				Target:   cfg.GetSystem().Rootfs,
+			}
 
-		if err := inst.Uninstall(system, toRemove...); err != nil {
-			Fatal("Error: " + err.Error())
-		}
-	},
-}
-
-func init() {
-
-	uninstallCmd.Flags().String("system-dbpath", "", "System db path")
-	uninstallCmd.Flags().String("system-target", "", "System rootpath")
-	uninstallCmd.Flags().String("system-engine", "", "System DB engine")
+			if err := inst.Uninstall(system, toRemove...); err != nil {
+				Fatal("Error: " + err.Error())
+			}
+		},
+	}
 
 	uninstallCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
 	uninstallCmd.Flags().Float32("solver-rate", 0.7, "Solver learning rate")
@@ -106,5 +103,5 @@ func init() {
 	uninstallCmd.Flags().BoolP("yes", "y", false, "Don't ask questions")
 	uninstallCmd.Flags().BoolP("keep-protected-files", "k", false, "Keep package protected files around")
 
-	RootCmd.AddCommand(uninstallCmd)
+	return uninstallCmd
 }

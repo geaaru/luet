@@ -28,7 +28,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func processRepository(repo *cfg.LuetRepository, config *cfg.LuetConfig,
+func ProcessRepository(repo *cfg.LuetRepository, config *cfg.LuetConfig,
 	channel chan cmd_util.ChannelRepoOpRes, force bool) {
 
 	repobasedir := config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
@@ -84,14 +84,14 @@ $> luet repo update repo1 repo2
 						continue
 					}
 
-					go processRepository(repo, config, ch, force)
+					go ProcessRepository(repo, config, ch, force)
 					nOps++
 				}
 
 			} else {
 				for idx, repo := range config.SystemRepositories {
 					if repo.Enable {
-						go processRepository(&config.SystemRepositories[idx], config, ch, force)
+						go ProcessRepository(&config.SystemRepositories[idx], config, ch, force)
 						nOps++
 					}
 				}

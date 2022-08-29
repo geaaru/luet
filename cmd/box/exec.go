@@ -22,18 +22,17 @@ import (
 	b64 "encoding/base64"
 
 	"github.com/geaaru/luet/pkg/box"
+	"github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 
 	"github.com/spf13/cobra"
 )
 
-func NewBoxExecCommand() *cobra.Command {
+func NewBoxExecCommand(cfg *config.LuetConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "exec [OPTIONS]",
 		Short: "Execute a binary in a box",
 		Args:  cobra.OnlyValidArgs,
-		PreRun: func(cmd *cobra.Command, args []string) {
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			stdin, _ := cmd.Flags().GetBool("stdin")
 			stdout, _ := cmd.Flags().GetBool("stdout")

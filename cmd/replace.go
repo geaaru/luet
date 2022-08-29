@@ -16,107 +16,104 @@
 package cmd
 
 import (
+	config "github.com/geaaru/luet/pkg/config"
 	installer "github.com/geaaru/luet/pkg/installer"
 	"github.com/geaaru/luet/pkg/solver"
 
 	helpers "github.com/geaaru/luet/cmd/helpers"
 	"github.com/geaaru/luet/cmd/util"
-	. "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 
 	"github.com/spf13/cobra"
 )
 
-var replaceCmd = &cobra.Command{
-	Use:     "replace <pkg1> <pkg2> --for <pkg3> --for <pkg4> ...",
-	Short:   "replace a set of packages",
-	Aliases: []string{"r"},
-	Long: `Replaces one or a group of packages without asking questions:
+func newReplaceCommand(cfg *config.LuetConfig) *cobra.Command {
 
-	$ luet replace -y system/busybox ... --for shells/bash --for system/coreutils ...
-`,
-	PreRun: func(cmd *cobra.Command, args []string) {
-		util.BindSystemFlags(cmd)
-		util.BindSolverFlags(cmd)
-		LuetCfg.Viper.BindPFlag("onlydeps", cmd.Flags().Lookup("onlydeps"))
-		LuetCfg.Viper.BindPFlag("nodeps", cmd.Flags().Lookup("nodeps"))
-		LuetCfg.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
-		LuetCfg.Viper.BindPFlag("for", cmd.Flags().Lookup("for"))
+	var replaceCmd = &cobra.Command{
+		Use:     "replace <pkg1> <pkg2> --for <pkg3> --for <pkg4> ...",
+		Short:   "replace a set of packages",
+		Aliases: []string{"r"},
+		Long: `Replaces one or a group of packages without asking questions:
 
-		LuetCfg.Viper.BindPFlag("yes", cmd.Flags().Lookup("yes"))
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		var toUninstall pkg.Packages
-		var toAdd pkg.Packages
+		$ luet replace -y system/busybox ... --for shells/bash --for system/coreutils ...
+	`,
+		PreRun: func(cmd *cobra.Command, args []string) {
+			util.BindSolverFlags(cmd)
+			cfg.Viper.BindPFlag("onlydeps", cmd.Flags().Lookup("onlydeps"))
+			cfg.Viper.BindPFlag("nodeps", cmd.Flags().Lookup("nodeps"))
+			cfg.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
+			cfg.Viper.BindPFlag("for", cmd.Flags().Lookup("for"))
 
-		f := LuetCfg.Viper.GetStringSlice("for")
-		force := LuetCfg.Viper.GetBool("force")
-		nodeps := LuetCfg.Viper.GetBool("nodeps")
-		onlydeps := LuetCfg.Viper.GetBool("onlydeps")
-		yes := LuetCfg.Viper.GetBool("yes")
-		downloadOnly, _ := cmd.Flags().GetBool("download-only")
-		syncRepos, _ := cmd.Flags().GetBool("sync-repos")
+			cfg.Viper.BindPFlag("yes", cmd.Flags().Lookup("yes"))
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			var toUninstall pkg.Packages
+			var toAdd pkg.Packages
 
-		util.SetSystemConfig()
-		util.SetSolverConfig()
-		for _, a := range args {
-			pack, err := helpers.ParsePackageStr(a)
+			f := cfg.Viper.GetStringSlice("for")
+			force := cfg.Viper.GetBool("force")
+			nodeps := cfg.Viper.GetBool("nodeps")
+			onlydeps := cfg.Viper.GetBool("onlydeps")
+			yes := cfg.Viper.GetBool("yes")
+			downloadOnly, _ := cmd.Flags().GetBool("download-only")
+			syncRepos, _ := cmd.Flags().GetBool("sync-repos")
+
+			util.SetSolverConfig()
+			for _, a := range args {
+				pack, err := helpers.ParsePackageStr(a)
+				if err != nil {
+					Fatal("Invalid package string ", a, ": ", err.Error())
+				}
+				toUninstall = append(toUninstall, pack)
+			}
+
+			for _, a := range f {
+				pack, err := helpers.ParsePackageStr(a)
+				if err != nil {
+					Fatal("Invalid package string ", a, ": ", err.Error())
+				}
+				toAdd = append(toAdd, pack)
+			}
+
+			// This shouldn't be necessary, but we need to unmarshal the repositories to a concrete struct, thus we need to port them back to the Repositories type
+			repos := installer.Repositories{}
+			for _, repo := range cfg.SystemRepositories {
+				if !repo.Enable {
+					continue
+				}
+				r := installer.NewSystemRepository(repo)
+				repos = append(repos, r)
+			}
+
+			Debug("Solver", cfg.GetSolverOptions().CompactString())
+
+			// Load config protect configs
+			installer.LoadConfigProtectConfs(cfg)
+
+			inst := installer.NewLuetInstaller(installer.LuetInstallerOptions{
+				Concurrency:                 cfg.GetGeneral().Concurrency,
+				SolverOptions:               *cfg.GetSolverOptions(),
+				NoDeps:                      nodeps,
+				Force:                       force,
+				OnlyDeps:                    onlydeps,
+				PreserveSystemEssentialData: true,
+				Ask:                         !yes,
+				DownloadOnly:                downloadOnly,
+				SyncRepositories:            syncRepos,
+			})
+			inst.Repositories(repos)
+
+			system := &installer.System{
+				Database: cfg.GetSystemDB(),
+				Target:   cfg.GetSystem().Rootfs,
+			}
+			err := inst.Swap(toUninstall, toAdd, system)
 			if err != nil {
-				Fatal("Invalid package string ", a, ": ", err.Error())
+				Fatal("Error: " + err.Error())
 			}
-			toUninstall = append(toUninstall, pack)
-		}
-
-		for _, a := range f {
-			pack, err := helpers.ParsePackageStr(a)
-			if err != nil {
-				Fatal("Invalid package string ", a, ": ", err.Error())
-			}
-			toAdd = append(toAdd, pack)
-		}
-
-		// This shouldn't be necessary, but we need to unmarshal the repositories to a concrete struct, thus we need to port them back to the Repositories type
-		repos := installer.Repositories{}
-		for _, repo := range LuetCfg.SystemRepositories {
-			if !repo.Enable {
-				continue
-			}
-			r := installer.NewSystemRepository(repo)
-			repos = append(repos, r)
-		}
-
-		Debug("Solver", LuetCfg.GetSolverOptions().CompactString())
-
-		// Load config protect configs
-		installer.LoadConfigProtectConfs(LuetCfg)
-
-		inst := installer.NewLuetInstaller(installer.LuetInstallerOptions{
-			Concurrency:                 LuetCfg.GetGeneral().Concurrency,
-			SolverOptions:               *LuetCfg.GetSolverOptions(),
-			NoDeps:                      nodeps,
-			Force:                       force,
-			OnlyDeps:                    onlydeps,
-			PreserveSystemEssentialData: true,
-			Ask:                         !yes,
-			DownloadOnly:                downloadOnly,
-			SyncRepositories:            syncRepos,
-		})
-		inst.Repositories(repos)
-
-		system := &installer.System{Database: LuetCfg.GetSystemDB(), Target: LuetCfg.GetSystem().Rootfs}
-		err := inst.Swap(toUninstall, toAdd, system)
-		if err != nil {
-			Fatal("Error: " + err.Error())
-		}
-	},
-}
-
-func init() {
-
-	replaceCmd.Flags().String("system-dbpath", "", "System db path")
-	replaceCmd.Flags().String("system-target", "", "System rootpath")
-	replaceCmd.Flags().String("system-engine", "", "System DB engine")
+		},
+	}
 
 	replaceCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
 	replaceCmd.Flags().Float32("solver-rate", 0.7, "Solver learning rate")
@@ -131,6 +128,5 @@ func init() {
 	replaceCmd.Flags().Bool("download-only", false, "Download only")
 	replaceCmd.Flags().Bool("sync-repos", false,
 		"Sync repositories before replace. Note: If there are in memory repositories then the sync is done always.")
-
-	RootCmd.AddCommand(replaceCmd)
+	return replaceCmd
 }

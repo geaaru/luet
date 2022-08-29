@@ -21,51 +21,52 @@ import (
 	b64 "encoding/base64"
 
 	"github.com/geaaru/luet/pkg/box"
+	config "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
-var execCmd = &cobra.Command{
-	Use:   "exec --rootfs /path [command]",
-	Short: "Execute a command in the rootfs context",
-	Long:  `Uses unshare technique and pivot root to execute a command inside a folder containing a valid rootfs`,
-	PreRun: func(cmd *cobra.Command, args []string) {
-	},
-	// If you change this, look at pkg/box/exec that runs this command and adapt
-	Run: func(cmd *cobra.Command, args []string) {
+func newExecCommand(cfg *config.LuetConfig) *cobra.Command {
+	var execCmd = &cobra.Command{
+		Use:   "exec --rootfs /path [command]",
+		Short: "Execute a command in the rootfs context",
+		Long:  `Uses unshare technique and pivot root to execute a command inside a folder containing a valid rootfs`,
+		PreRun: func(cmd *cobra.Command, args []string) {
+		},
+		// If you change this, look at pkg/box/exec that runs this command and adapt
+		Run: func(cmd *cobra.Command, args []string) {
 
-		stdin, _ := cmd.Flags().GetBool("stdin")
-		stdout, _ := cmd.Flags().GetBool("stdout")
-		stderr, _ := cmd.Flags().GetBool("stderr")
-		rootfs, _ := cmd.Flags().GetString("rootfs")
-		base, _ := cmd.Flags().GetBool("decode")
+			stdin, _ := cmd.Flags().GetBool("stdin")
+			stdout, _ := cmd.Flags().GetBool("stdout")
+			stderr, _ := cmd.Flags().GetBool("stderr")
+			rootfs, _ := cmd.Flags().GetString("rootfs")
+			base, _ := cmd.Flags().GetBool("decode")
 
-		entrypoint, _ := cmd.Flags().GetString("entrypoint")
-		envs, _ := cmd.Flags().GetStringArray("env")
-		mounts, _ := cmd.Flags().GetStringArray("mount")
+			entrypoint, _ := cmd.Flags().GetString("entrypoint")
+			envs, _ := cmd.Flags().GetStringArray("env")
+			mounts, _ := cmd.Flags().GetStringArray("mount")
 
-		if base {
-			var ss []string
-			for _, a := range args {
-				sDec, _ := b64.StdEncoding.DecodeString(a)
-				ss = append(ss, string(sDec))
+			if base {
+				var ss []string
+				for _, a := range args {
+					sDec, _ := b64.StdEncoding.DecodeString(a)
+					ss = append(ss, string(sDec))
+				}
+				//If the command to run is complex,using base64 to avoid bad input
+
+				args = ss
 			}
-			//If the command to run is complex,using base64 to avoid bad input
+			Info("Executing", args, "in", rootfs)
 
-			args = ss
-		}
-		Info("Executing", args, "in", rootfs)
+			b := box.NewBox(entrypoint, args, mounts, envs, rootfs, stdin, stdout, stderr)
+			err := b.Exec()
+			if err != nil {
+				Fatal(errors.Wrap(err, fmt.Sprintf("entrypoint: %s rootfs: %s", entrypoint, rootfs)))
+			}
+		},
+	}
 
-		b := box.NewBox(entrypoint, args, mounts, envs, rootfs, stdin, stdout, stderr)
-		err := b.Exec()
-		if err != nil {
-			Fatal(errors.Wrap(err, fmt.Sprintf("entrypoint: %s rootfs: %s", entrypoint, rootfs)))
-		}
-	},
-}
-
-func init() {
 	path, err := os.Getwd()
 	if err != nil {
 		Fatal(err)
@@ -82,5 +83,5 @@ func init() {
 
 	execCmd.Flags().String("entrypoint", "/bin/sh", "Entrypoint command (/bin/sh)")
 
-	RootCmd.AddCommand(execCmd)
+	return execCmd
 }

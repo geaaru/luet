@@ -18,7 +18,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/geaaru/luet/cmd/util"
 	config "github.com/geaaru/luet/pkg/config"
 	"github.com/geaaru/luet/pkg/installer"
 	. "github.com/geaaru/luet/pkg/logger"
@@ -27,31 +26,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var configCmd = &cobra.Command{
-	Use:     "config",
-	Short:   "Print config",
-	Long:    `Show luet configuration`,
-	Aliases: []string{"c"},
-	Run: func(cmd *cobra.Command, args []string) {
-		util.SetSystemConfig()
-		util.SetSolverConfig()
+func newConfigCommand(cfg *config.LuetConfig) *cobra.Command {
+	var ans = &cobra.Command{
+		Use:     "config",
+		Short:   "Print config",
+		Long:    `Show luet configuration`,
+		Aliases: []string{"c"},
+		Run: func(cmd *cobra.Command, args []string) {
+			//util.SetSolverConfig()
 
-		// Load config protect configs
-		installer.LoadConfigProtectConfs(config.LuetCfg)
-		// Load subsets defintions
-		subsets.LoadSubsetsDefintions(config.LuetCfg)
-		// Load subsets config
-		subsets.LoadSubsetsConfig(config.LuetCfg)
+			// Load config protect configs
+			installer.LoadConfigProtectConfs(cfg)
+			// Load subsets defintions
+			subsets.LoadSubsetsDefintions(cfg)
+			// Load subsets config
+			subsets.LoadSubsetsConfig(cfg)
 
-		data, err := config.LuetCfg.YAML()
-		if err != nil {
-			Fatal(err.Error())
-		}
+			data, err := cfg.YAML()
+			if err != nil {
+				Fatal(err.Error())
+			}
 
-		fmt.Println(string(data))
-	},
-}
+			fmt.Println(string(data))
+		},
+	}
 
-func init() {
-	RootCmd.AddCommand(configCmd)
+	return ans
 }

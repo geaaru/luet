@@ -15,74 +15,106 @@
 package cmd
 
 import (
-	"github.com/geaaru/luet/cmd/util"
-	installer "github.com/geaaru/luet/pkg/installer"
+	"fmt"
+	"os"
 
-	. "github.com/geaaru/luet/pkg/config"
+	cmdrepo "github.com/geaaru/luet/cmd/repo"
+	"github.com/geaaru/luet/cmd/util"
+	config "github.com/geaaru/luet/pkg/config"
+	installer "github.com/geaaru/luet/pkg/installer"
 	. "github.com/geaaru/luet/pkg/logger"
 
 	"github.com/spf13/cobra"
 )
 
-var reclaimCmd = &cobra.Command{
-	Use:   "reclaim",
-	Short: "Reclaim packages to Luet database from available repositories",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		util.BindSystemFlags(cmd)
-		LuetCfg.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
-	},
-	Long: `Reclaim tries to find association between packages in the online repositories and the system one.
+func newReclaimCommand(cfg *config.LuetConfig) *cobra.Command {
 
-	$ luet reclaim
+	var reclaimCmd = &cobra.Command{
+		Use:   "reclaim",
+		Short: "Reclaim packages to Luet database from available repositories",
+		PreRun: func(cmd *cobra.Command, args []string) {
+			util.BindSystemFlags(cmd)
+			cfg.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
+		},
+		Long: `Reclaim tries to find association between packages in the online repositories and the system one.
 
-It scans the target file system, and if finds a match with a package available in the repositories, it marks as installed in the system database.
-`,
-	Run: func(cmd *cobra.Command, args []string) {
-		util.SetSystemConfig()
+		$ luet reclaim
 
-		// This shouldn't be necessary, but we need to unmarshal the repositories to a concrete struct, thus we need to port them back to the Repositories type
-		repos := installer.Repositories{}
-		for _, repo := range LuetCfg.SystemRepositories {
-			if !repo.Enable {
-				continue
+	It scans the target file system, and if finds a match with a package available in the repositories, it marks as installed in the system database.
+	`,
+		Run: func(cmd *cobra.Command, args []string) {
+			// This shouldn't be necessary, but we need to unmarshal the repositories to a concrete struct, thus we need to port them back to the Repositories type
+			repos := installer.Repositories{}
+			for _, repo := range cfg.SystemRepositories {
+				if !repo.Enable {
+					continue
+				}
+				r := installer.NewSystemRepository(repo)
+				repos = append(repos, r)
 			}
-			r := installer.NewSystemRepository(repo)
-			repos = append(repos, r)
-		}
 
-		force := LuetCfg.Viper.GetBool("force")
-		syncRepos, _ := cmd.Flags().GetBool("sync-repos")
+			force := cfg.Viper.GetBool("force")
+			syncRepos, _ := cmd.Flags().GetBool("sync-repos")
 
-		Debug("Solver", LuetCfg.GetSolverOptions().CompactString())
+			Debug("Solver", cfg.GetSolverOptions().CompactString())
 
-		inst := installer.NewLuetInstaller(installer.LuetInstallerOptions{
-			Concurrency:                 LuetCfg.GetGeneral().Concurrency,
-			Force:                       force,
-			PreserveSystemEssentialData: true,
-			SyncRepositories:            syncRepos,
-		})
-		inst.Repositories(repos)
+			if syncRepos {
 
-		system := &installer.System{
-			Database: LuetCfg.GetSystemDB(),
-			Target:   LuetCfg.GetSystem().Rootfs,
-		}
-		err := inst.Reclaim(system)
-		if err != nil {
-			Fatal("Error: " + err.Error())
-		}
-	},
-}
+				var ch chan util.ChannelRepoOpRes = make(
+					chan util.ChannelRepoOpRes,
+					cfg.GetGeneral().Concurrency,
+				)
+				// Using new way
+				nOps := 0
 
-func init() {
+				for idx, repo := range cfg.SystemRepositories {
+					if repo.Enable {
+						go cmdrepo.ProcessRepository(&cfg.SystemRepositories[idx], cfg, ch, force)
+						nOps++
+					}
+				}
 
-	reclaimCmd.Flags().String("system-dbpath", "", "System db path")
-	reclaimCmd.Flags().String("system-target", "", "System rootpath")
-	reclaimCmd.Flags().String("system-engine", "", "System DB engine")
+				res := 0
+				if nOps > 0 {
+					for i := 0; i < nOps; i++ {
+						resp := <-ch
+						if resp.Error != nil && !force {
+							res = 1
+							Error("Error on update repository " + resp.Repo.Name + ": " + resp.Error.Error())
+						}
+					}
+				} else {
+					fmt.Println("No repositories candidates found.")
+				}
+
+				if res != 0 {
+					os.Exit(res)
+				}
+
+			}
+
+			inst := installer.NewLuetInstaller(installer.LuetInstallerOptions{
+				Concurrency:                 cfg.GetGeneral().Concurrency,
+				Force:                       force,
+				PreserveSystemEssentialData: true,
+				SyncRepositories:            false,
+			})
+			inst.Repositories(repos)
+
+			system := &installer.System{
+				Database: cfg.GetSystemDB(),
+				Target:   cfg.GetSystem().Rootfs,
+			}
+			err := inst.Reclaim(system)
+			if err != nil {
+				Fatal("Error: " + err.Error())
+			}
+		},
+	}
 
 	reclaimCmd.Flags().Bool("force", false, "Skip errors and keep going (potentially harmful)")
 
 	reclaimCmd.Flags().Bool("sync-repos", false,
 		"Sync repositories before reclaim. Note: If there are in memory repositories then the sync is done always.")
-	RootCmd.AddCommand(reclaimCmd)
+	return reclaimCmd
 }

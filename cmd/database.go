@@ -18,25 +18,26 @@ package cmd
 
 import (
 	. "github.com/geaaru/luet/cmd/database"
+	config "github.com/geaaru/luet/pkg/config"
 
 	"github.com/spf13/cobra"
 )
 
-var databaseGroupCmd = &cobra.Command{
-	Use:   "database [command] [OPTIONS]",
-	Short: "Manage system database (dangerous commands ahead!)",
-	Long: `Allows to manipulate Luet internal database of installed packages. Use with caution!
+func newDatabaseCommand(cfg *config.LuetConfig) *cobra.Command {
+	var ans = &cobra.Command{
+		Use:   "database [command] [OPTIONS]",
+		Short: "Manage system database (dangerous commands ahead!)",
+		Long: `Allows to manipulate Luet internal database of installed packages. Use with caution!
 
-Removing packages by hand from the database can result in a broken system, and thus it's not reccomended.
-`,
-}
+	Removing packages by hand from the database can result in a broken system, and thus it's not reccomended.
+	`,
+	}
 
-func init() {
-	RootCmd.AddCommand(databaseGroupCmd)
-
-	databaseGroupCmd.AddCommand(
+	ans.AddCommand(
 		NewDatabaseCreateCommand(),
 		NewDatabaseGetCommand(),
 		NewDatabaseRemoveCommand(),
 	)
+
+	return ans
 }

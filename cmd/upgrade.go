@@ -18,6 +18,7 @@ package cmd
 import (
 	"github.com/geaaru/luet/cmd/util"
 	. "github.com/geaaru/luet/pkg/config"
+	config "github.com/geaaru/luet/pkg/config"
 	installer "github.com/geaaru/luet/pkg/installer"
 	. "github.com/geaaru/luet/pkg/logger"
 	"github.com/geaaru/luet/pkg/solver"
@@ -25,79 +26,75 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var upgradeCmd = &cobra.Command{
-	Use:     "upgrade",
-	Short:   "Upgrades the system",
-	Aliases: []string{"u"},
-	PreRun: func(cmd *cobra.Command, args []string) {
-		util.BindSystemFlags(cmd)
-		util.BindSolverFlags(cmd)
-		LuetCfg.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
-		LuetCfg.Viper.BindPFlag("yes", cmd.Flags().Lookup("yes"))
-	},
-	Long: `Upgrades packages in parallel`,
-	Run: func(cmd *cobra.Command, args []string) {
+func newUpgradeCommand(cfg *config.LuetConfig) *cobra.Command {
 
-		repos := installer.Repositories{}
-		for _, repo := range LuetCfg.SystemRepositories {
-			if !repo.Enable {
-				continue
+	var upgradeCmd = &cobra.Command{
+		Use:     "upgrade",
+		Short:   "Upgrades the system",
+		Aliases: []string{"u"},
+		PreRun: func(cmd *cobra.Command, args []string) {
+			util.BindSolverFlags(cmd)
+			cfg.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
+			cfg.Viper.BindPFlag("yes", cmd.Flags().Lookup("yes"))
+		},
+		Long: `Upgrades packages in parallel`,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			repos := installer.Repositories{}
+			for _, repo := range LuetCfg.SystemRepositories {
+				if !repo.Enable {
+					continue
+				}
+
+				r := installer.NewSystemRepository(repo)
+				repos = append(repos, r)
 			}
 
-			r := installer.NewSystemRepository(repo)
-			repos = append(repos, r)
-		}
+			force := LuetCfg.Viper.GetBool("force")
+			nodeps, _ := cmd.Flags().GetBool("nodeps")
+			full, _ := cmd.Flags().GetBool("full")
+			universe, _ := cmd.Flags().GetBool("universe")
+			clean, _ := cmd.Flags().GetBool("clean")
+			sync, _ := cmd.Flags().GetBool("sync")
+			yes := LuetCfg.Viper.GetBool("yes")
+			downloadOnly, _ := cmd.Flags().GetBool("download-only")
+			skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
+			syncRepos, _ := cmd.Flags().GetBool("sync-repos")
 
-		force := LuetCfg.Viper.GetBool("force")
-		nodeps, _ := cmd.Flags().GetBool("nodeps")
-		full, _ := cmd.Flags().GetBool("full")
-		universe, _ := cmd.Flags().GetBool("universe")
-		clean, _ := cmd.Flags().GetBool("clean")
-		sync, _ := cmd.Flags().GetBool("sync")
-		yes := LuetCfg.Viper.GetBool("yes")
-		downloadOnly, _ := cmd.Flags().GetBool("download-only")
-		skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
-		syncRepos, _ := cmd.Flags().GetBool("sync-repos")
+			util.SetSystemConfig()
+			opts := util.SetSolverConfig()
 
-		util.SetSystemConfig()
-		opts := util.SetSolverConfig()
+			Debug("Solver", opts.CompactString())
 
-		Debug("Solver", opts.CompactString())
+			// Load config protect configs
+			installer.LoadConfigProtectConfs(LuetCfg)
 
-		// Load config protect configs
-		installer.LoadConfigProtectConfs(LuetCfg)
+			inst := installer.NewLuetInstaller(installer.LuetInstallerOptions{
+				Concurrency:                 LuetCfg.GetGeneral().Concurrency,
+				SolverOptions:               *LuetCfg.GetSolverOptions(),
+				Force:                       force,
+				FullUninstall:               full,
+				NoDeps:                      nodeps,
+				SolverUpgrade:               universe,
+				RemoveUnavailableOnUpgrade:  clean,
+				UpgradeNewRevisions:         sync,
+				PreserveSystemEssentialData: true,
+				Ask:                         !yes,
+				DownloadOnly:                downloadOnly,
+				SkipFinalizers:              skipFinalizers,
+				SyncRepositories:            syncRepos,
+			})
+			inst.Repositories(repos)
 
-		inst := installer.NewLuetInstaller(installer.LuetInstallerOptions{
-			Concurrency:                 LuetCfg.GetGeneral().Concurrency,
-			SolverOptions:               *LuetCfg.GetSolverOptions(),
-			Force:                       force,
-			FullUninstall:               full,
-			NoDeps:                      nodeps,
-			SolverUpgrade:               universe,
-			RemoveUnavailableOnUpgrade:  clean,
-			UpgradeNewRevisions:         sync,
-			PreserveSystemEssentialData: true,
-			Ask:                         !yes,
-			DownloadOnly:                downloadOnly,
-			SkipFinalizers:              skipFinalizers,
-			SyncRepositories:            syncRepos,
-		})
-		inst.Repositories(repos)
-
-		system := &installer.System{
-			Database: LuetCfg.GetSystemDB(),
-			Target:   LuetCfg.GetSystem().Rootfs,
-		}
-		if err := inst.Upgrade(system); err != nil {
-			Fatal("Error: " + err.Error())
-		}
-	},
-}
-
-func init() {
-	upgradeCmd.Flags().String("system-dbpath", "", "System db path")
-	upgradeCmd.Flags().String("system-target", "", "System rootpath")
-	upgradeCmd.Flags().String("system-engine", "", "System DB engine")
+			system := &installer.System{
+				Database: LuetCfg.GetSystemDB(),
+				Target:   LuetCfg.GetSystem().Rootfs,
+			}
+			if err := inst.Upgrade(system); err != nil {
+				Fatal("Error: " + err.Error())
+			}
+		},
+	}
 
 	upgradeCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
 	upgradeCmd.Flags().Float32("solver-rate", 0.7, "Solver learning rate")
@@ -117,5 +114,5 @@ func init() {
 	upgradeCmd.Flags().Bool("sync-repos", false,
 		"Sync repositories before upgrade. Note: If there are in memory repositories then the sync is done always.")
 
-	RootCmd.AddCommand(upgradeCmd)
+	return upgradeCmd
 }
