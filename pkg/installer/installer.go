@@ -1180,7 +1180,7 @@ func (l *LuetInstaller) installerWorker(i int, wg *sync.WaitGroup, c <-chan Arti
 		if err == nil {
 			Info(":package: Package ", p.Package.HumanReadableString(), "installed")
 		} else if err != nil && l.Options.Force {
-			Info(":package: Package ", p.Package.HumanReadableString(), "installed with failures (forced install)")
+			Info(":package: Package ", p.Package.HumanReadableString(), "installed with failures (forced install)", err.Error())
 		}
 	}
 
