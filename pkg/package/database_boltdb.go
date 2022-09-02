@@ -149,7 +149,10 @@ func (db *BoltDatabase) FindPackage(tofind Package) (Package, error) {
 		return nil, err
 	}
 
-	err = bolt.Select(q.Eq("Name", tofind.GetName()), q.Eq("Category", tofind.GetCategory()), q.Eq("Version", tofind.GetVersion())).Limit(1).First(p)
+	err = bolt.Select(
+		q.Eq("Name", tofind.GetName()),
+		q.Eq("Category", tofind.GetCategory()),
+		q.Eq("Version", tofind.GetVersion())).Limit(1).First(p)
 	if err != nil {
 		return nil, err
 	}

@@ -1,46 +1,48 @@
-// Copyright © 2019 Ettore Di Giacinto <mudler@gentoo.org>
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, see <http://www.gnu.org/licenses/>.
+/*
+	Copyright © 2022 Macaroni OS Linux
+	See AUTHORS and LICENSE for the license details and contributors.
+*/
 package cmd
 
 import (
 	helpers "github.com/geaaru/luet/cmd/helpers"
-	"github.com/geaaru/luet/cmd/util"
-	"github.com/geaaru/luet/pkg/config"
-	installer "github.com/geaaru/luet/pkg/installer"
+	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
-	"github.com/geaaru/luet/pkg/solver"
+	installer "github.com/geaaru/luet/pkg/v2/installer"
 
 	"github.com/spf13/cobra"
 )
 
-func newUninstallCommand(cfg *config.LuetConfig) *cobra.Command {
+func newUninstallCommand(config *cfg.LuetConfig) *cobra.Command {
+	var ans = &cobra.Command{
+		Use:   "uninstall <pkg> <pkg2> ...",
+		Short: "Uninstall a package or a list of packages",
+		Long: `
+Remove one or more package and his dependencies recursively
 
-	var uninstallCmd = &cobra.Command{
-		Use:     "uninstall <pkg> <pkg2> ...",
-		Short:   "Uninstall a package or a list of packages",
-		Long:    `Uninstall packages`,
+	$ luet uninstall cat/foo1 ... cat/foo2
+
+Remove one or more packages without dependencies
+
+	$ luet uninstall cat/foo1 ... --nodeps
+
+Remove one or more packages and skip errors
+
+	$ luet uninstall cat/foo1 ... --force
+
+Remove one or more packages without ask confirm
+
+	$ luet uninstall cat/foo1 ... --yes
+`,
 		Aliases: []string{"rm", "un"},
 		PreRun: func(cmd *cobra.Command, args []string) {
-			util.BindSolverFlags(cmd)
-			cfg.Viper.BindPFlag("nodeps", cmd.Flags().Lookup("nodeps"))
-			cfg.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
-			cfg.Viper.BindPFlag("yes", cmd.Flags().Lookup("yes"))
+			config.Viper.BindPFlag("nodeps", cmd.Flags().Lookup("nodeps"))
+			config.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
+			config.Viper.BindPFlag("yes", cmd.Flags().Lookup("yes"))
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			toRemove := []pkg.Package{}
+			toRemove := []*pkg.DefaultPackage{}
 			for _, a := range args {
 
 				pack, err := helpers.ParsePackageStr(a)
@@ -50,58 +52,37 @@ func newUninstallCommand(cfg *config.LuetConfig) *cobra.Command {
 				toRemove = append(toRemove, pack)
 			}
 
-			force := cfg.Viper.GetBool("force")
+			force := config.Viper.GetBool("force")
 			nodeps, _ := cmd.Flags().GetBool("nodeps")
-			full, _ := cmd.Flags().GetBool("full")
-			checkconflicts, _ := cmd.Flags().GetBool("conflictscheck")
-			fullClean, _ := cmd.Flags().GetBool("full-clean")
-			yes := cfg.Viper.GetBool("yes")
+			yes := config.Viper.GetBool("yes")
 			keepProtected, _ := cmd.Flags().GetBool("keep-protected-files")
 
-			util.SetSolverConfig()
+			config.ConfigProtectSkip = !keepProtected
 
-			cfg.ConfigProtectSkip = !keepProtected
+			aManager := installer.NewArtifactsManager(config)
+			defer aManager.Close()
 
-			Debug("Solver", cfg.GetSolverOptions().CompactString())
-
-			// Load config protect configs
-			installer.LoadConfigProtectConfs(cfg)
-
-			inst := installer.NewLuetInstaller(installer.LuetInstallerOptions{
-				Concurrency:                 cfg.GetGeneral().Concurrency,
-				SolverOptions:               *cfg.GetSolverOptions(),
-				NoDeps:                      nodeps,
+			opts := &installer.UninstallOpts{
 				Force:                       force,
-				FullUninstall:               full,
-				FullCleanUninstall:          fullClean,
-				CheckConflicts:              checkconflicts,
+				NoDeps:                      nodeps,
+				PreserveSystemEssentialData: keepProtected,
 				Ask:                         !yes,
-				PreserveSystemEssentialData: true,
-			})
-
-			system := &installer.System{
-				Database: cfg.GetSystemDB(),
-				Target:   cfg.GetSystem().Rootfs,
 			}
 
-			if err := inst.Uninstall(system, toRemove...); err != nil {
+			if err := aManager.Uninstall(opts, config.GetSystem().Rootfs,
+				toRemove...,
+			); err != nil {
 				Fatal("Error: " + err.Error())
 			}
 		},
 	}
 
-	uninstallCmd.Flags().String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
-	uninstallCmd.Flags().Float32("solver-rate", 0.7, "Solver learning rate")
-	uninstallCmd.Flags().Float32("solver-discount", 1.0, "Solver discount rate")
-	uninstallCmd.Flags().Int("solver-attempts", 9000, "Solver maximum attempts")
-	uninstallCmd.Flags().Bool("nodeps", false, "Don't consider package dependencies (harmful! overrides checkconflicts and full!)")
-	uninstallCmd.Flags().Bool("force", false, "Force uninstall")
-	uninstallCmd.Flags().Bool("full", false, "Attempts to remove as much packages as possible which aren't required (slow)")
-	uninstallCmd.Flags().Bool("conflictscheck", true, "Check if the package marked for deletion is required by other packages")
-	uninstallCmd.Flags().Bool("full-clean", false, "(experimental) Uninstall packages and all the other deps/revdeps of it.")
-	uninstallCmd.Flags().Bool("solver-concurrent", false, "Use concurrent solver (experimental)")
-	uninstallCmd.Flags().BoolP("yes", "y", false, "Don't ask questions")
-	uninstallCmd.Flags().BoolP("keep-protected-files", "k", false, "Keep package protected files around")
+	flags := ans.Flags()
 
-	return uninstallCmd
+	flags.Bool("nodeps", false, "Don't consider package dependencies (harmful! overrides checkconflicts and full!)")
+	flags.Bool("force", false, "Force uninstall")
+	flags.BoolP("yes", "y", false, "Don't ask questions")
+	flags.BoolP("keep-protected-files", "k", false, "Keep package protected files around")
+
+	return ans
 }
