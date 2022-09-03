@@ -17,7 +17,7 @@ export PATH=$ROOT_DIR/tests/integration/bin/:$PATH
 
 if [ -z "$SINGLE_TEST" ]; then
 
-  for script in $(ls "$ROOT_DIR/tests/integration/" | grep '^[0-9]*_.*.sh'); do
+  for script in $(ls "$ROOT_DIR/tests/integration/" | grep '^[0-9]_*.*.sh'); do
     echo "Executing test '$script'."
     $ROOT_DIR/tests/integration/$script
   done
