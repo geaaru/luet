@@ -78,7 +78,7 @@ testInstall() {
 
 testUnInstall() {
     [ "$LUET_BACKEND" == "img" ] && startSkipping
-    $LUET uninstall -y --config $tmpdir/luet.yaml test/b
+    $LUET uninstall -y --config $tmpdir/luet.yaml test/a
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/b' ]"
