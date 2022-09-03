@@ -1,16 +1,16 @@
 #!/bin/bash
 
-export LUET_BUILD=luet-build
-export LUET=luet
-export LUET_NOLOCK=true
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
-export tmpdir="$(mktemp -d)"
+  export tmpdir="${TEST_TMPDIR:-$(mktemp -d)}"
 }
 
-
 oneTimeTearDown() {
+  if [ -z "${SKIP_CLEAN}" ] ; then
     rm -rf "$tmpdir"
+  fi
 }
 
 testBuild() {
@@ -88,7 +88,7 @@ testInstall() {
 
 
 testUnInstall() {
-    $LUET uninstall -y --full --keep-protected-files --config $tmpdir/luet.yaml test/a
+    $LUET uninstall -y --keep-protected-files --config $tmpdir/luet.yaml test/a
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
