@@ -6,9 +6,11 @@ package cmd
 
 import (
 	helpers "github.com/geaaru/luet/cmd/helpers"
+	"github.com/geaaru/luet/cmd/util"
 	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
+	"github.com/geaaru/luet/pkg/subsets"
 	installer "github.com/geaaru/luet/pkg/v2/installer"
 
 	"github.com/spf13/cobra"
@@ -56,8 +58,23 @@ Remove one or more packages without ask confirm
 			nodeps, _ := cmd.Flags().GetBool("nodeps")
 			yes := config.Viper.GetBool("yes")
 			keepProtected, _ := cmd.Flags().GetBool("keep-protected-files")
+			preserveSystem, _ := cmd.Flags().GetBool("preserve-system-essentials")
+			finalizerEnvs, _ := cmd.Flags().GetStringArray("finalizer-env")
 
 			config.ConfigProtectSkip = !keepProtected
+
+			// Load config protect configs
+			installer.LoadConfigProtectConfs(config)
+			// Load subsets defintions
+			subsets.LoadSubsetsDefintions(config)
+			// Load subsets config
+			subsets.LoadSubsetsConfig(config)
+
+			// Load finalizer runtime environments
+			err := util.SetCliFinalizerEnvs(finalizerEnvs)
+			if err != nil {
+				Fatal(err.Error())
+			}
 
 			aManager := installer.NewArtifactsManager(config)
 			defer aManager.Close()
@@ -65,7 +82,7 @@ Remove one or more packages without ask confirm
 			opts := &installer.UninstallOpts{
 				Force:                       force,
 				NoDeps:                      nodeps,
-				PreserveSystemEssentialData: keepProtected,
+				PreserveSystemEssentialData: preserveSystem,
 				Ask:                         !yes,
 			}
 
@@ -83,6 +100,9 @@ Remove one or more packages without ask confirm
 	flags.Bool("force", false, "Force uninstall")
 	flags.BoolP("yes", "y", false, "Don't ask questions")
 	flags.BoolP("keep-protected-files", "k", false, "Keep package protected files around")
+	flags.Bool("preserve-system-essentials", true, "Preserve system luet files")
+	ans.Flags().StringArray("finalizer-env", []string{},
+		"Set finalizer environment in the format key=value.")
 
 	return ans
 }
