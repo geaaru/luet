@@ -1,15 +1,16 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
-export tmpdir="$(mktemp -d)"
+  export tmpdir="${TEST_TMPDIR:-$(mktemp -d)}"
 }
 
 oneTimeTearDown() {
+  if [ -z "${SKIP_CLEAN}" ] ; then
     rm -rf "$tmpdir"
+  fi
 }
 
 testBuild() {
@@ -51,7 +52,7 @@ general:
   debug: true
 system:
   rootfs: $tmpdir/testrootfs
-  database_path: "/"
+  database_path: "/var/cache/luet"
   database_engine: "boltdb"
 config_protect_confdir:
     - /etc/luet/config.protect.d
@@ -89,7 +90,7 @@ testInstall() {
 
 
 testUnInstall() {
-    $LUET uninstall -y --full --keep-protected-files --config $tmpdir/luet.yaml test/a
+    $LUET uninstall -y --keep-protected-files --config $tmpdir/luet.yaml test/a
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
@@ -98,7 +99,7 @@ testUnInstall() {
 
 
 testCleanup() {
-    $LUET cleanup --config $tmpdir/luet.yaml
+    $LUET cleanup --config $tmpdir/luet.yaml --purge-repos
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ ! -e '$tmpdir/testrootfs/packages/a-test-1.0.package.tar.gz' ]"

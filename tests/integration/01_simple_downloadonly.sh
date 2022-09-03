@@ -1,8 +1,7 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -51,6 +50,12 @@ repositories:
      enable: true
      urls:
        - "$tmpdir/testbuild"
+repos_confdir:
+  - "$tmpdir/etc/luet/repos.conf.d"
+config_protect_confdir:
+  - "$tmpdir/etc/luet/config.protect.d"
+subsets_defdir:
+  - "$tmpdir/etc/luet/subsets.conf.d"
 EOF
     $LUET config --config $tmpdir/luet.yaml
     res=$?

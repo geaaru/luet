@@ -1,12 +1,12 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
+
 TEST_PORT="${TEST_PORT:-9090}"
 
 oneTimeSetUp() {
-export tmpdir="$(mktemp -d)"
+  export tmpdir="${TEST_TMPDIR:-$(mktemp -d)}"
 }
 
 oneTimeTearDown() {
@@ -39,7 +39,7 @@ testRepo() {
     createst=$?
     assertEquals 'create repo successfully' "$createst" "0"
 
-    $LUET_BUILD serve-repo --dir $tmpdir/testbuild --port $TEST_PORT &
+    $LUET_BUILD serve-repo --dir $tmpdir/testbuild --port $TEST_PORT -d &
 }
 
 testConfig() {
@@ -52,6 +52,12 @@ system:
   database_path: "/"
   database_engine: "boltdb"
 config_from_host: true
+repos_confdir:
+  - "$tmpdir/etc/luet/repos.conf.d"
+config_protect_confdir:
+  - "$tmpdir/etc/luet/config.protect.d"
+subsets_defdir:
+  - "$tmpdir/etc/luet/subsets.conf.d"
 repositories:
    - name: "main"
      type: "http"

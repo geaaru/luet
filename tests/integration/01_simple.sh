@@ -1,8 +1,7 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -14,7 +13,7 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/buildableseed" --destination $tmpdir/testbuild --compression gzip test/c > /dev/null
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/buildableseed" --destination $tmpdir/testbuild --compression gzip test/c > ${OUTPUT}
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package dep B' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
@@ -29,7 +28,7 @@ testRepo() {
     --name "test" \
     --descr "Test Repo" \
     --urls $tmpdir/testrootfs \
-    --type disk > /dev/null
+    --type disk > ${OUTPUT}
 
     createst=$?
     assertEquals 'create repo successfully' "$createst" "0"
@@ -46,6 +45,13 @@ system:
   database_path: "/"
   database_engine: "boltdb"
 config_from_host: true
+repos_confdir:
+  - "$tmpdir/etc/luet/repos.conf.d"
+config_protect_confdir:
+  - "$tmpdir/etc/luet/config.protect.d"
+subsets_defdir:
+  - "$tmpdir/etc/luet/subsets.conf.d"
+
 repositories:
    - name: "main"
      type: "disk"

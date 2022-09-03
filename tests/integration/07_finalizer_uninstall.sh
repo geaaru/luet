@@ -1,15 +1,16 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=${LUET_BUILD:-luet-build}
-export LUET=${LUET:-luet}
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
-  export tmpdir="$(mktemp -d)"
+  export tmpdir="${TEST_TMPDIR:-$(mktemp -d)}"
 }
 
 oneTimeTearDown() {
+  if [ -z "${SKIP_CLEAN}" ] ; then
     rm -rf "$tmpdir"
+  fi
 }
 
 testBuild() {
@@ -46,6 +47,12 @@ system:
   database_path: "/var/cache/luet"
   database_engine: "boltdb"
 config_from_host: true
+repos_confdir:
+  - "$tmpdir/etc/luet/repos.conf.d"
+config_protect_confdir:
+  - "$tmpdir/etc/luet/config.protect.d"
+subsets_defdir:
+  - "$tmpdir/etc/luet/subsets.conf.d"
 repositories:
    - name: "main"
      type: "disk"
@@ -73,6 +80,25 @@ testInstall() {
 
 testUninstall() {
     $LUET miner rm app/pkg1 --config $tmpdir/luet.yaml
+    installst=$?
+    assertEquals 'uninstall test successfully' "$installst" "0"
+    assertTrue 'finalizer uninstall not runs' "[ ! -e '$tmpdir/testrootfs/tmp/foo' ]"
+}
+
+testInstall2() {
+  echo "Running luet miner i again..."
+    $LUET miner i --config $tmpdir/luet.yaml main app/pkg1
+    #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
+    installst=$?
+    assertEquals 'install test successfully' "$installst" "0"
+    assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"
+    assertTrue 'finalizer does not run' "[ -e '$tmpdir/testrootfs/tmp/foo' ]"
+}
+
+testUninstall2() {
+  echo "Running luet uninstall..."
+  $LUET s --installed . --config $tmpdir/luet.yaml
+    $LUET uninstall app/pkg1 --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'finalizer uninstall not runs' "[ ! -e '$tmpdir/testrootfs/tmp/foo' ]"
