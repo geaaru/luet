@@ -236,6 +236,7 @@ func initCommand(rootCmd *cobra.Command, cfg *config.LuetConfig) {
 	// Add main commands
 	rootCmd.AddCommand(
 		newCreateRepoCommand(cfg),
+		newConfigCommand(cfg),
 		newPackCommand(cfg),
 		newServerRepoCommand(cfg),
 		newTreeCommand(cfg),
