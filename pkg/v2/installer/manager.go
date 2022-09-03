@@ -182,7 +182,7 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone, targetRootfs strin
 		for i := len(words); i > 1; i-- {
 			cpath := strings.Join(words[0:i], string(os.PathSeparator))
 			if cpath == targetRootfs {
-				// Avoid to add on mapDirs systemd directory outside
+				// Avoid to add on mapDirs system directory outside
 				// the rootfs when rootfs != /
 				break
 			}
@@ -216,7 +216,6 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone, targetRootfs strin
 
 	// Check if directories could be removed.
 	for _, f := range dirs2Remove {
-		target := filepath.Join(targetRootfs, f)
 
 		if preserveSystemEssentialData &&
 			strings.HasPrefix(f, m.Config.GetSystem().GetSystemPkgsCacheDirPath()) ||
@@ -231,19 +230,19 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone, targetRootfs strin
 			continue
 		}
 
-		files, err := ioutil.ReadDir(target)
+		files, err := ioutil.ReadDir(f)
 		if err != nil {
-			Warning("Failed reading folder", target, err.Error())
+			Warning("Failed reading folder", f, err.Error())
 		}
-		Debug("Removing dir", target, "if empty: files ", len(files), ".")
+		Debug("Removing dir", f, "if empty: files ", len(files), ".")
 
 		if len(files) != 0 {
-			Debug("Preserving not-empty folder", target)
+			Debug("Preserving not-empty folder", f)
 			continue
 		}
 
-		if err = os.Remove(target); err != nil {
-			Debug("Failed removing file (not present in the system target)", target, err.Error())
+		if err = os.Remove(f); err != nil {
+			Debug("Failed removing file (not present in the system target)", f, err.Error())
 		}
 	}
 
