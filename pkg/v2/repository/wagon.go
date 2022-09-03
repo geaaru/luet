@@ -94,6 +94,7 @@ func (w *WagonRepository) ReadWagonIdentify(wdir string) error {
 	repoUrls := w.Identity.Urls
 	repoPriority := w.Identity.Priority
 	repoAuthentication := w.Identity.Authentication
+	repoType := w.Identity.GetType()
 
 	err := w.Identity.Load(file)
 	if err != nil {
@@ -104,6 +105,7 @@ func (w *WagonRepository) ReadWagonIdentify(wdir string) error {
 	w.Identity.Urls = repoUrls
 	w.Identity.Priority = repoPriority
 	w.Identity.Authentication = repoAuthentication
+	w.Identity.Type = repoType
 
 	return nil
 }
