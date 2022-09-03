@@ -24,17 +24,15 @@ import (
 	"runtime"
 	"strings"
 
-	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-
 	config "github.com/geaaru/luet/pkg/config"
 	helpers "github.com/geaaru/luet/pkg/helpers"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 	. "github.com/geaaru/luet/pkg/logger"
 	repo "github.com/geaaru/luet/pkg/repository"
 
 	tarf "github.com/geaaru/tar-formers/pkg/executor"
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var cfgFile string
@@ -128,7 +126,7 @@ func Execute() {
 			cfg.Viper.SetConfigType("yaml")
 
 			if cfgFile != "" { // enable ability to specify config file via flag
-				viper.SetConfigFile(cfgFile)
+				cfg.Viper.SetConfigFile(cfgFile)
 			} else {
 				// Retrieve pwd directory
 				pwdDir, err := os.Getwd()
