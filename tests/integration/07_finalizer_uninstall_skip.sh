@@ -81,29 +81,10 @@ testInstall() {
 
 
 testUninstall() {
-    $LUET miner rm app/pkg1 --config $tmpdir/luet.yaml
+    $LUET uninstall app/pkg1 --config $tmpdir/luet.yaml --skip-finalizers
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
-    assertTrue 'finalizer uninstall not runs' "[ ! -e '$tmpdir/testrootfs/tmp/foo' ]"
-}
-
-testInstall2() {
-  echo "Running luet miner i again..."
-    $LUET miner i --config $tmpdir/luet.yaml main app/pkg1
-    #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
-    installst=$?
-    assertEquals 'install test successfully' "$installst" "0"
-    assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"
-    assertTrue 'finalizer does not run' "[ -e '$tmpdir/testrootfs/tmp/foo' ]"
-}
-
-testUninstall2() {
-  echo "Running luet uninstall..."
-  $LUET s --installed . --config $tmpdir/luet.yaml
-    $LUET uninstall app/pkg1 --config $tmpdir/luet.yaml
-    installst=$?
-    assertEquals 'uninstall test successfully' "$installst" "0"
-    assertTrue 'finalizer uninstall not runs' "[ ! -e '$tmpdir/testrootfs/tmp/foo' ]"
+    assertTrue 'finalizer uninstall not runs' "[ -e '$tmpdir/testrootfs/tmp/foo' ]"
 }
 
 testCleanup() {
