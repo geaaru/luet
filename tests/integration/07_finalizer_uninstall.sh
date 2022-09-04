@@ -17,7 +17,7 @@ testBuild() {
     mkdir $tmpdir/testbuild
     export LUET_TAR_FLOWS__MAX_OPENFILES=10
     export LUET_TAR_FLOWS__COPY_BUFFER_SIZE=64
-    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/finalizers_uninstall" --destination $tmpdir/testbuild --compression gzip --all
+    $LUET_BUILD build --concurrency 1 --tree "$ROOT_DIR/tests/fixtures/finalizers_uninstall" --destination $tmpdir/testbuild --compression gzip --all
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"
     assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-seed-1.0.package.tar.gz' ]"
