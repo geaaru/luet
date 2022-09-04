@@ -15,6 +15,8 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
+    export LUET_TAR_FLOWS__MAX_OPENFILES=40
+    export LUET_TAR_FLOWS__COPY_BUFFER_SIZE=64
     $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/finalizers_uninstall" --destination $tmpdir/testbuild --compression gzip --all
     buildst=$?
     assertEquals 'builds successfully' "$buildst" "0"

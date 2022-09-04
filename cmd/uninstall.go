@@ -59,6 +59,7 @@ Remove one or more packages without ask confirm
 			yes := config.Viper.GetBool("yes")
 			keepProtected, _ := cmd.Flags().GetBool("keep-protected-files")
 			preserveSystem, _ := cmd.Flags().GetBool("preserve-system-essentials")
+			skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
 			finalizerEnvs, _ := cmd.Flags().GetStringArray("finalizer-env")
 
 			config.ConfigProtectSkip = !keepProtected
@@ -84,6 +85,7 @@ Remove one or more packages without ask confirm
 				NoDeps:                      nodeps,
 				PreserveSystemEssentialData: preserveSystem,
 				Ask:                         !yes,
+				SkipFinalizers:              skipFinalizers,
 			}
 
 			if err := aManager.Uninstall(opts, config.GetSystem().Rootfs,
@@ -103,6 +105,8 @@ Remove one or more packages without ask confirm
 	flags.Bool("preserve-system-essentials", true, "Preserve system luet files")
 	ans.Flags().StringArray("finalizer-env", []string{},
 		"Set finalizer environment in the format key=value.")
+	ans.Flags().Bool("skip-finalizers", false,
+		"Skip the execution of the finalizers.")
 
 	return ans
 }

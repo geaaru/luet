@@ -35,6 +35,7 @@ func NewRemovePackage(config *cfg.LuetConfig) *cobra.Command {
 			pkgs := []*pkg.DefaultPackage{}
 			preserveSystem, _ := cmd.Flags().GetBool("preserve-system-essentials")
 			force, _ := cmd.Flags().GetBool("force")
+			skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
 
 			for _, pstr := range args {
 				p, err := helpers.ParsePackageStr(pstr)
@@ -73,7 +74,9 @@ func NewRemovePackage(config *cfg.LuetConfig) *cobra.Command {
 			for _, s := range *stones {
 				err = aManager.RemovePackage(
 					s, config.GetSystem().Rootfs,
-					preserveSystem, force,
+					preserveSystem,
+					skipFinalizers,
+					force,
 				)
 				if err != nil {
 					fail = true
@@ -107,6 +110,8 @@ func NewRemovePackage(config *cfg.LuetConfig) *cobra.Command {
 	flags.String("system-engine", "", "System DB engine")
 	flags.Bool("preserve-system-essentials", true, "Preserve system essentials files.")
 	flags.Bool("force", false, "Force removing and ignore errors.")
+	ans.Flags().Bool("skip-finalizers", false,
+		"Skip the execution of the finalizers.")
 
 	return ans
 }

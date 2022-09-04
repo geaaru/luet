@@ -98,7 +98,10 @@ func (m *ArtifactsManager) loadFinalizer(f, defFile string, p *pkg.DefaultPackag
 	return finalizer, nil
 }
 
-func (m *ArtifactsManager) removePackageFiles(s *repos.Stone, targetRootfs string, preserveSystemEssentialData bool) error {
+func (m *ArtifactsManager) removePackageFiles(s *repos.Stone,
+	targetRootfs string,
+	preserveSystemEssentialData bool) error {
+
 	var cp *cfg.ConfigProtect
 	var err error
 	var files []string = []string{}
@@ -249,7 +252,12 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone, targetRootfs strin
 	return nil
 }
 
-func (m *ArtifactsManager) RemovePackage(s *repos.Stone, targetRootfs string, preserveSystemEssentialData, force bool) error {
+func (m *ArtifactsManager) RemovePackage(s *repos.Stone,
+	targetRootfs string,
+	preserveSystemEssentialData,
+	skipFinalizer bool,
+	force bool) error {
+
 	m.Setup()
 
 	err := m.removePackageFiles(s, targetRootfs, preserveSystemEssentialData)
@@ -264,23 +272,25 @@ func (m *ArtifactsManager) RemovePackage(s *repos.Stone, targetRootfs string, pr
 		return errors.Wrap(err, "Failed removing package files from database")
 	}
 
-	pf, err := m.Database.GetPackageFinalizer(p)
-	if err != nil && !force {
-		return errors.Wrap(err, "Error on retrieve package finalizer")
-	}
-	if pf != nil {
-
-		// TODO: check if return the object insted of run uninstall
-		finalizer := &repos.LuetFinalizer{
-			Shell:     pf.Shell,
-			Uninstall: pf.Uninstall,
-		}
-
-		err = finalizer.RunUninstall(targetRootfs)
+	if !skipFinalizer {
+		pf, err := m.Database.GetPackageFinalizer(p)
 		if err != nil && !force {
-			Warning("Failed running finalizer for ",
-				p.HumanReadableString(), err.Error())
-			return err
+			return errors.Wrap(err, "Error on retrieve package finalizer")
+		}
+		if pf != nil {
+
+			// TODO: check if return the object insted of run uninstall
+			finalizer := &repos.LuetFinalizer{
+				Shell:     pf.Shell,
+				Uninstall: pf.Uninstall,
+			}
+
+			err = finalizer.RunUninstall(targetRootfs)
+			if err != nil && !force {
+				Warning("Failed running finalizer for ",
+					p.HumanReadableString(), err.Error())
+				return err
+			}
 		}
 	}
 
@@ -294,6 +304,7 @@ func (m *ArtifactsManager) RemovePackage(s *repos.Stone, targetRootfs string, pr
 	}
 
 	Info(":recycle: ", fmt.Sprintf("%20s", p.GetFingerPrint()), "Removed :heavy_check_mark:")
+
 	return nil
 }
 

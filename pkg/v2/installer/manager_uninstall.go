@@ -21,6 +21,7 @@ type UninstallOpts struct {
 	NoDeps                      bool
 	PreserveSystemEssentialData bool
 	Ask                         bool
+	SkipFinalizers              bool
 }
 
 func (m *ArtifactsManager) showRemovePkgsTable(list *[]*pkg.DefaultPackage) {
@@ -121,6 +122,7 @@ func (m *ArtifactsManager) Uninstall(opts *UninstallOpts, targetRootfs string, p
 		}
 		err := m.RemovePackage(stone, targetRootfs,
 			opts.PreserveSystemEssentialData,
+			opts.SkipFinalizers,
 			opts.Force,
 		)
 
