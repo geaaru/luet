@@ -674,7 +674,6 @@ func (a *PackageArtifact) FileList() ([]string, error) {
 		if err != nil {
 			return []string{}, err
 		}
-		defer os.RemoveAll(a.CachePath + ".uncompressed")
 		defer archive.Close()
 
 		original, err := os.Open(a.CachePath)
