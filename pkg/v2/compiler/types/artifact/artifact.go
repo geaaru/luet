@@ -312,6 +312,12 @@ func (a *PackageArtifact) GenerateFinalImage(imageName string, b ImageBuilder, k
 // It accepts a source path, which is the content to be archived/compressed
 // and a concurrency parameter.
 func (a *PackageArtifact) Compress(src string, concurrency int) error {
+	var tarFile string
+
+	cleanup := func() {
+		os.RemoveAll(tarFile) // Remove original
+		Debug("Removed artifact", tarFile)
+	}
 	switch a.CompressionType {
 
 	case compression.Zstandard:
@@ -347,8 +353,8 @@ func (a *PackageArtifact) Compress(src string, concurrency int) error {
 			return err
 		}
 
-		os.RemoveAll(a.Path) // Remove original
-		Debug("Removed artifact", a.Path)
+		tarFile = a.Path
+		defer cleanup()
 
 		a.Path = zstdFile
 		return nil
@@ -380,9 +386,12 @@ func (a *PackageArtifact) Compress(src string, concurrency int) error {
 		if err != nil {
 			return err
 		}
-		w.Close()
-		os.RemoveAll(a.Path) // Remove original
-		Debug("Removed artifact", a.Path)
+		if err := w.Close(); err != nil {
+			return err
+		}
+
+		tarFile = a.Path
+		defer cleanup()
 		//	a.CompressedPath = gzipfile
 		a.Path = gzipfile
 		return nil
@@ -626,13 +635,23 @@ func (a *PackageArtifact) Unpack(dst string, enableSubsets bool) error {
 // FileList generates the list of file of a package from the local archive
 func (a *PackageArtifact) FileList() ([]string, error) {
 	var tr *tar.Reader
+	archiveDir, err := LuetCfg.GetSystem().TempDir(
+		fmt.Sprintf("%s", filepath.Base(a.Path)))
+	if err != nil {
+		return []string{}, err
+	}
+	cleandir := func() {
+		os.RemoveAll(archiveDir)
+	}
+	defer cleandir()
+
 	switch a.CompressionType {
 	case compression.Zstandard:
-		archive, err := os.Create(a.CachePath + ".uncompressed")
+		archive, err := os.Create(filepath.Join(archiveDir,
+			filepath.Base(a.CachePath)+".uncompressed"))
 		if err != nil {
 			return []string{}, err
 		}
-		defer os.RemoveAll(a.CachePath + ".uncompressed")
 		defer archive.Close()
 
 		original, err := os.Open(a.CachePath)
@@ -650,7 +669,8 @@ func (a *PackageArtifact) FileList() ([]string, error) {
 		tr = tar.NewReader(r)
 	case compression.GZip:
 		// Create the uncompressed archive
-		archive, err := os.Create(a.CachePath + ".uncompressed")
+		archive, err := os.Create(filepath.Join(archiveDir,
+			filepath.Base(a.CachePath)+".uncompressed"))
 		if err != nil {
 			return []string{}, err
 		}
