@@ -255,7 +255,8 @@ func (cs *LuetCompiler) unpackFs(concurrency int, keepPermissions bool, p *compi
 		// strip from excludes
 		cs.stripFromRootfs(p.GetExcludes(), rootfs, false)
 	}
-	a := artifact.NewPackageArtifact(p.Rel(p.GetPackage().GetFingerPrint() + ".package.tar"))
+	tarFile := p.Rel(p.GetPackage().GetFingerPrint() + ".package.tar")
+	a := artifact.NewPackageArtifact(tarFile)
 	a.CompressionType = cs.Options.CompressionType
 
 	if err := a.Compress(rootfs, concurrency); err != nil {
