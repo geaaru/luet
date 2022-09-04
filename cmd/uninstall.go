@@ -36,13 +36,13 @@ Remove one or more packages and skip errors
 Remove one or more packages without ask confirm
 
 	$ luet uninstall cat/foo1 ... --yes
+
+Remove one or more packages without ask confirm and skip execution
+of the finalizers.
+
+	$ luet uninstall cat/foo1 ... --yes --skip-finalizers
 `,
 		Aliases: []string{"rm", "un"},
-		PreRun: func(cmd *cobra.Command, args []string) {
-			config.Viper.BindPFlag("nodeps", cmd.Flags().Lookup("nodeps"))
-			config.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
-			config.Viper.BindPFlag("yes", cmd.Flags().Lookup("yes"))
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			toRemove := []*pkg.DefaultPackage{}
 			for _, a := range args {
@@ -107,6 +107,10 @@ Remove one or more packages without ask confirm
 		"Set finalizer environment in the format key=value.")
 	ans.Flags().Bool("skip-finalizers", false,
 		"Skip the execution of the finalizers.")
+
+	config.Viper.BindPFlag("nodeps", flags.Lookup("nodeps"))
+	config.Viper.BindPFlag("force", flags.Lookup("force"))
+	config.Viper.BindPFlag("yes", flags.Lookup("yes"))
 
 	return ans
 }

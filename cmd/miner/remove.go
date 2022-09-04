@@ -105,9 +105,6 @@ func NewRemovePackage(config *cfg.LuetConfig) *cobra.Command {
 
 	flags := ans.Flags()
 
-	flags.String("system-dbpath", "", "System db path")
-	flags.String("system-target", "", "System rootpath")
-	flags.String("system-engine", "", "System DB engine")
 	flags.Bool("preserve-system-essentials", true, "Preserve system essentials files.")
 	flags.Bool("force", false, "Force removing and ignore errors.")
 	ans.Flags().Bool("skip-finalizers", false,
