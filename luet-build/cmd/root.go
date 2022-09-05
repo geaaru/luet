@@ -195,6 +195,7 @@ func initCommand(rootCmd *cobra.Command, cfg *config.LuetConfig) {
 	pflags.Bool("enable-logfile", false, "Enable log to file")
 	pflags.Bool("no-spinner", false, "Disable spinner.")
 	pflags.Bool("color", cfg.Viper.GetBool("logging.color"), "Enable/Disable color.")
+	pflags.Bool("emoji", cfg.Viper.GetBool("logging.enable_emoji"), "Enable/Disable emoji.")
 	pflags.Bool("skip-config-protect", cfg.Viper.GetBool("config_protect_skip"),
 		"Disable config protect analysis.")
 	pflags.StringP("logfile", "l", cfg.Viper.GetString("logging.path"),
