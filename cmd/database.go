@@ -34,9 +34,10 @@ func newDatabaseCommand(cfg *config.LuetConfig) *cobra.Command {
 	}
 
 	ans.AddCommand(
-		NewDatabaseCreateCommand(),
-		NewDatabaseGetCommand(),
-		NewDatabaseRemoveCommand(),
+		NewDatabaseCreateCommand(cfg),
+		NewDatabaseGetCommand(cfg),
+		NewDatabaseRemoveCommand(cfg),
+		NewDatabaseReindexCommand(cfg),
 	)
 
 	return ans
