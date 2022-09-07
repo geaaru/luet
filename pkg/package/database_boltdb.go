@@ -62,6 +62,24 @@ func (db *BoltDatabase) Copy() (PackageDatabase, error) {
 	return copy(db)
 }
 
+func (db *BoltDatabase) RebuildIndexes() error {
+	bolt, err := db.open()
+	if err != nil {
+		return err
+	}
+
+	// Rebuild DefaultPackage index
+	bolt.ReIndex(&DefaultPackage{})
+
+	finalizers := bolt.From(boltdbCollFinalizer)
+	finalizers.ReIndex(&PackageFinalizer{})
+
+	files := bolt.From(boltdbCollFiles)
+	files.ReIndex(&PackageFile{})
+
+	return nil
+}
+
 func (db *BoltDatabase) Close() error {
 	db.Lock()
 	defer db.Unlock()

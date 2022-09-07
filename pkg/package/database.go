@@ -60,6 +60,8 @@ type PackageSet interface {
 	FindPackageLabelMatch(pattern string) (Packages, error)
 	FindPackageMatch(pattern string) (Packages, error)
 	FindPackageByFile(pattern string) (Packages, error)
+
+	RebuildIndexes() error
 }
 
 type PackageFile struct {

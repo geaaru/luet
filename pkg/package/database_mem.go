@@ -67,6 +67,10 @@ func (db *InMemoryDatabase) Close() error {
 	return nil
 }
 
+func (db *InMemoryDatabase) RebuildIndexes() error {
+	return nil
+}
+
 func (db *InMemoryDatabase) Get(s string) (string, error) {
 	db.Lock()
 	defer db.Unlock()
