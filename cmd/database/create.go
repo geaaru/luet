@@ -1,35 +1,22 @@
-// Copyright © 2020 Ettore Di Giacinto <mudler@gentoo.org>
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, see <http://www.gnu.org/licenses/>.
-
+/*
+	Copyright © 2022 Macaroni OS Linux
+	See AUTHORS and LICENSE for the license details and contributors.
+*/
 package cmd_database
 
 import (
 	"io/ioutil"
 
-	"github.com/geaaru/luet/cmd/util"
-	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
-
+	"github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
-
-	. "github.com/geaaru/luet/pkg/config"
+	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
+	installer "github.com/geaaru/luet/pkg/v2/installer"
 
 	"github.com/spf13/cobra"
 )
 
-func NewDatabaseCreateCommand() *cobra.Command {
+func NewDatabaseCreateCommand(cfg *config.LuetConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "create <artifact_metadata1.yaml> <artifact_metadata1.yaml>",
 		Short: "Insert a package in the system DB",
@@ -45,13 +32,13 @@ The yaml must contain the package definition, and the file list at least.
 
 For reference, inspect a "metadata.yaml" file generated while running "luet build"`,
 		Args: cobra.OnlyValidArgs,
-		PreRun: func(cmd *cobra.Command, args []string) {
-			util.BindSystemFlags(cmd)
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 
-			util.SetSystemConfig()
-			systemDB := LuetCfg.GetSystemDB()
+			aManager := installer.NewArtifactsManager(cfg)
+			defer aManager.Close()
+
+			aManager.Setup()
+			systemDB := aManager.Database
 
 			for _, a := range args {
 				dat, err := ioutil.ReadFile(a)
@@ -83,10 +70,6 @@ For reference, inspect a "metadata.yaml" file generated while running "luet buil
 
 		},
 	}
-
-	ans.Flags().String("system-dbpath", "", "System db path")
-	ans.Flags().String("system-target", "", "System rootpath")
-	ans.Flags().String("system-engine", "", "System DB engine")
 
 	return ans
 }

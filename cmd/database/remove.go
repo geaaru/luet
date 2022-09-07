@@ -1,31 +1,19 @@
-// Copyright © 2020 Ettore Di Giacinto <mudler@gentoo.org>
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, see <http://www.gnu.org/licenses/>.
-
+/*
+	Copyright © 2022 Macaroni OS Linux
+	See AUTHORS and LICENSE for the license details and contributors.
+*/
 package cmd_database
 
 import (
-	. "github.com/geaaru/luet/pkg/logger"
-
 	helpers "github.com/geaaru/luet/cmd/helpers"
-	"github.com/geaaru/luet/cmd/util"
-	. "github.com/geaaru/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/config"
+	. "github.com/geaaru/luet/pkg/logger"
+	installer "github.com/geaaru/luet/pkg/v2/installer"
 
 	"github.com/spf13/cobra"
 )
 
-func NewDatabaseRemoveCommand() *cobra.Command {
+func NewDatabaseRemoveCommand(cfg *config.LuetConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "remove [package1] [package2] ...",
 		Short: "Remove a package from the system DB (forcefully - you normally don't want to do that)",
@@ -36,13 +24,10 @@ func NewDatabaseRemoveCommand() *cobra.Command {
 This commands takes multiple packages as arguments and prunes their entries from the system database.
 `,
 		Args: cobra.OnlyValidArgs,
-		PreRun: func(cmd *cobra.Command, args []string) {
-			util.BindSystemFlags(cmd)
-		},
 		Run: func(cmd *cobra.Command, args []string) {
-			util.SetSystemConfig()
 
-			systemDB := LuetCfg.GetSystemDB()
+			aManager := installer.NewArtifactsManager(cfg)
+			defer aManager.Close()
 
 			for _, a := range args {
 				pack, err := helpers.ParsePackageStr(a)
@@ -50,20 +35,21 @@ This commands takes multiple packages as arguments and prunes their entries from
 					Fatal("Invalid package string ", a, ": ", err.Error())
 				}
 
-				if err := systemDB.RemovePackage(pack); err != nil {
+				if err := aManager.Database.RemovePackage(pack); err != nil {
 					Fatal("Failed removing ", a, ": ", err.Error())
 				}
 
-				if err := systemDB.RemovePackageFiles(pack); err != nil {
+				if err := aManager.Database.RemovePackageFiles(pack); err != nil {
 					Fatal("Failed removing files for ", a, ": ", err.Error())
 				}
+				if err := aManager.Database.RemovePackageFinalizer(pack); err != nil {
+					Warning("Failed removing finalizer for ", a, ": ", err.Error())
+				}
+
 			}
 
 		},
 	}
-	ans.Flags().String("system-dbpath", "", "System db path")
-	ans.Flags().String("system-target", "", "System rootpath")
-	ans.Flags().String("system-engine", "", "System DB engine")
 
 	return ans
 }
