@@ -29,6 +29,8 @@ This commands takes multiple packages as arguments and prunes their entries from
 			aManager := installer.NewArtifactsManager(cfg)
 			defer aManager.Close()
 
+			aManager.Setup()
+
 			for _, a := range args {
 				pack, err := helpers.ParsePackageStr(a)
 				if err != nil {
