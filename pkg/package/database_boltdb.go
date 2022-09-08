@@ -71,7 +71,23 @@ func (db *BoltDatabase) RebuildIndexes() error {
 	// Rebuild DefaultPackage index
 	bolt.ReIndex(&DefaultPackage{})
 
+	// Reindex a new collections goes in SIGSEGV.
+	// The workaround is to add always a temporary object
+	// before reindex and remove it.
+	p := &DefaultPackage{
+		Category: "maintenance",
+		Name:     "macaronifinalizer",
+		Version:  "1.0",
+	}
+	pf := &PackageFinalizer{
+		PackageFingerprint: p.GetFingerPrint(),
+		Shell:              []string{"/bin/bash", "-c"},
+		Install:            []string{},
+		Uninstall:          []string{},
+	}
 	finalizers := bolt.From(boltdbCollFinalizer)
+	finalizers.Save(pf)
+	finalizers.DeleteStruct(pf)
 	finalizers.ReIndex(&PackageFinalizer{})
 
 	files := bolt.From(boltdbCollFiles)
