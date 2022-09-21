@@ -21,6 +21,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/ghodss/yaml"
 
@@ -59,6 +60,11 @@ func LoadRepositories(c *LuetConfig) error {
 			}
 
 			if !regexRepo.MatchString(file.Name()) {
+				Debug("File", file.Name(), "skipped.")
+				continue
+			}
+
+			if strings.HasPrefix(file.Name(), "._cfg") {
 				Debug("File", file.Name(), "skipped.")
 				continue
 			}
