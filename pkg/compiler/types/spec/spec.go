@@ -16,16 +16,17 @@
 package compilerspec
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/mitchellh/hashstructure/v2"
 	options "github.com/geaaru/luet/pkg/compiler/types/options"
+	"github.com/mitchellh/hashstructure/v2"
 
-	"github.com/ghodss/yaml"
 	pkg "github.com/geaaru/luet/pkg/package"
 	"github.com/geaaru/luet/pkg/solver"
+	"github.com/ghodss/yaml"
 	"github.com/otiai10/copy"
 	dirhash "golang.org/x/mod/sumdb/dirhash"
 )
@@ -189,6 +190,20 @@ func (cs *LuetCompilationSpec) GetSourceAssertion() solver.PackagesAssertions {
 
 func (cs *LuetCompilationSpec) SetBuildOptions(b options.Compiler) {
 	cs.BuildOptions = &b
+}
+
+func (cs *LuetCompilationSpec) IsValid() (bool, error) {
+
+	if !cs.IsVirtual() {
+		if cs.Image == "" {
+			if len(cs.Package.GetRequires()) == 0 && len(cs.Copy) == 0 {
+				return false,
+					errors.New("No requires, image or layer to join found")
+			}
+		}
+	}
+
+	return true, nil
 }
 
 func (cs *LuetCompilationSpec) SetSourceAssertion(as solver.PackagesAssertions) {
