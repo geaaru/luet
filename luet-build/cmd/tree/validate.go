@@ -26,6 +26,9 @@ import (
 	"sync"
 
 	helpers "github.com/geaaru/luet/cmd/helpers"
+	compiler "github.com/geaaru/luet/pkg/compiler"
+	sd "github.com/geaaru/luet/pkg/compiler/backend"
+	"github.com/geaaru/luet/pkg/compiler/types/options"
 	. "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
@@ -170,6 +173,39 @@ func validatePackage(p pkg.Package, checkType string, opts *ValidateOpts, recipe
 
 		if excluded {
 			return nil
+		}
+	}
+
+	if checkType == "buildtime" {
+
+		// Retrieve the build specs
+		c := compiler.NewLuetCompiler(
+			sd.NewSimpleDockerBackend(),
+			reciper.GetDatabase(),
+			options.Concurrency(2),
+		)
+
+		spec, err := c.FromPackage(p)
+		if err != nil {
+			return errors.New(
+				fmt.Sprintf(
+					"Error on retrieve build specs for package %s: %s",
+					p.HumanReadableString(), err.Error()))
+			Error(err.Error())
+		}
+
+		valid, err := spec.IsValid()
+		if !valid {
+			errstr := fmt.Sprintf(
+				"For package %s/%s-%s found invalid build.yaml: %s",
+				p.GetCategory(), p.GetName(), p.GetVersion(),
+				err.Error())
+
+			Error(errstr)
+
+			opts.AddError(errors.New(errstr))
+
+			validpkg = false
 		}
 	}
 
@@ -456,10 +492,7 @@ func NewTreeValidateCommand() *cobra.Command {
 			}
 			close(all)
 
-			// Wait separately and once done close the channel
-			go func() {
-				wg.Wait()
-			}()
+			wg.Wait()
 
 			stringerrs := []string{}
 			for _, e := range opts.Errors {
