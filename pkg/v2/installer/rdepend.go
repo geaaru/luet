@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package installer
 
@@ -77,7 +77,7 @@ func (m *ArtifactsManager) ResolveRuntime(task *ResolveRdependsTask) error {
 		if len(provides) > 0 {
 			for idx, _ := range provides {
 				Debug(fmt.Sprintf("[%s] Add provide %s",
-					p.HumanReadableString(), requires[idx].HumanReadableString()))
+					p.HumanReadableString(), provides[idx].HumanReadableString()))
 				task.AddRdep2Map(p.(*pkg.DefaultPackage), provides[idx])
 			}
 		}
