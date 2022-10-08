@@ -1,23 +1,12 @@
-// Copyright © 2019 Ettore Di Giacinto <mudler@gentoo.org>
-//                  Daniele Rondina <geaaru@sabayonlinux.org>
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, see <http://www.gnu.org/licenses/>.
-
+/*
+Copyright © 2021-2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
+*/
 package cmd_repo
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -35,17 +24,29 @@ func NewRepoListCommand() *cobra.Command {
 		Short: "List of the configured repositories.",
 		Args:  cobra.OnlyValidArgs,
 		PreRun: func(cmd *cobra.Command, args []string) {
+			enable, _ := cmd.Flags().GetBool("enabled")
+			disable, _ := cmd.Flags().GetBool("disable")
+			if enable && disable {
+				Error(
+					"Used both --enable and --disabled options.\nOnly one admitted.",
+				)
+				os.Exit(1)
+			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			var repoColor, repoText, repoRevision string
 
 			enable, _ := cmd.Flags().GetBool("enabled")
+			disable, _ := cmd.Flags().GetBool("disabled")
 			quiet, _ := cmd.Flags().GetBool("quiet")
 			repoType, _ := cmd.Flags().GetString("type")
 
 			for idx, _ := range LuetCfg.SystemRepositories {
 				repo := LuetCfg.SystemRepositories[idx]
 				if enable && !repo.Enable {
+					continue
+				}
+				if disable && repo.Enable {
 					continue
 				}
 
@@ -79,8 +80,10 @@ func NewRepoListCommand() *cobra.Command {
 								Warning("Error on read repository identity file: " + err.Error())
 							} else {
 								tsec, _ := strconv.ParseInt(r.GetLastUpdate(), 10, 64)
-								repoRevision = Bold(Red(r.GetRevision())).String() +
-									" - " + Bold(Green(time.Unix(tsec, 0).String())).String()
+								repoRevision = fmt.Sprintf(
+									"%s - %s",
+									Bold(Red(fmt.Sprintf("%5d", r.GetRevision()))).String(),
+									Bold(Green(time.Unix(tsec, 0).String())).String())
 							}
 						}
 
@@ -98,7 +101,8 @@ func NewRepoListCommand() *cobra.Command {
 		},
 	}
 
-	ans.Flags().Bool("enabled", false, "Show only enable repositories.")
+	ans.Flags().Bool("enabled", false, "Show only enabled repositories.")
+	ans.Flags().Bool("disabled", false, "Show only disabled repositories.")
 	ans.Flags().BoolP("quiet", "q", false, "Show only name of the repositories.")
 	ans.Flags().StringP("type", "t", "", "Filter repositories of a specific type")
 
