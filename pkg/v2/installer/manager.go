@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package installer
 
@@ -379,28 +379,32 @@ func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos
 	}
 
 	// Set finalizer if present
-	repoTreefs := r.GetTreePath(m.Config.GetSystem().GetSystemReposDirPath())
-	pkgdir := p.GetPackageTreePath(repoTreefs)
-	finalizeFile := filepath.Join(pkgdir, tree.FinalizerFile)
-	defFile := filepath.Join(pkgdir, pkg.PackageDefinitionFile)
+	if r != nil {
+		// NOTE: r is nil when the package is sync from luet-portage-converter.
 
-	if fileHelper.Exists(finalizeFile) {
-		finalizer, err := m.loadFinalizer(finalizeFile, defFile, pp)
-		if err != nil {
-			return err
-		}
+		repoTreefs := r.GetTreePath(m.Config.GetSystem().GetSystemReposDirPath())
+		pkgdir := p.GetPackageTreePath(repoTreefs)
+		finalizeFile := filepath.Join(pkgdir, tree.FinalizerFile)
+		defFile := filepath.Join(pkgdir, pkg.PackageDefinitionFile)
 
-		err = m.Database.SetPackageFinalizer(
-			&pkg.PackageFinalizer{
-				PackageFingerprint: pp.GetFingerPrint(),
-				Shell:              finalizer.Shell,
-				Install:            finalizer.Install,
-				Uninstall:          finalizer.Uninstall,
-			},
-		)
-		if err != nil {
-			return errors.Wrap(err,
-				fmt.Sprintf("Register package %s", pp.HumanReadableString()))
+		if fileHelper.Exists(finalizeFile) {
+			finalizer, err := m.loadFinalizer(finalizeFile, defFile, pp)
+			if err != nil {
+				return err
+			}
+
+			err = m.Database.SetPackageFinalizer(
+				&pkg.PackageFinalizer{
+					PackageFingerprint: pp.GetFingerPrint(),
+					Shell:              finalizer.Shell,
+					Install:            finalizer.Install,
+					Uninstall:          finalizer.Uninstall,
+				},
+			)
+			if err != nil {
+				return errors.Wrap(err,
+					fmt.Sprintf("Register package %s", pp.HumanReadableString()))
+			}
 		}
 	}
 
@@ -541,7 +545,6 @@ func (m *ArtifactsManager) ExecuteFinalizer(
 }
 
 // NOTE: These methods will be replaced soon
-
 func (m *ArtifactsManager) ExistsPackageFile(file string) (bool, *pkg.DefaultPackage, error) {
 	Debug("Checking if file ", file, "belongs to any package")
 	m.buildIndexFiles()
