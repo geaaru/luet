@@ -69,7 +69,9 @@ func LoadRepositories(c *LuetConfig) error {
 				continue
 			}
 
-			content, err := ioutil.ReadFile(path.Join(rdir, file.Name()))
+			repoFile := path.Join(rdir, file.Name())
+
+			content, err := ioutil.ReadFile(repoFile)
 			if err != nil {
 				Warning("On read file", file.Name(), ":", err.Error())
 				Warning("File", file.Name(), "skipped.")
@@ -94,6 +96,8 @@ func LoadRepositories(c *LuetConfig) error {
 				Warning("The repository " + r.Name + " is forced to caching.")
 				r.Cached = true
 			}
+
+			r.File = repoFile
 
 			c.AddSystemRepository(r)
 		}

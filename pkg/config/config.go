@@ -1,19 +1,7 @@
-// Copyright © 2019-2022 Ettore Di Giacinto <mudler@gentoo.org>
-//                       Daniele Rondina <geaaru@sabayonlinux.org>
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, see <http://www.gnu.org/licenses/>.
-
+/*
+Copyright © 2021-2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
+*/
 package config
 
 import (
@@ -34,7 +22,7 @@ import (
 )
 
 const (
-	LuetVersion     = "0.29.3"
+	LuetVersion     = "0.29.4"
 	LuetEnvPrefix   = "LUET"
 	LuetForkVersion = "geaaru"
 )
@@ -179,6 +167,8 @@ type LuetRepository struct {
 	Revision int `json:"revision,omitempty" yaml:"revision,omitempty" mapstructure:"-"`
 	// Epoch time in seconds
 	LastUpdate string `json:"last_update,omitempty" yaml:"last_update,omitempty" mapstructure:"-"`
+
+	File string `json:"-" yaml:"-" mapstructure:"-"`
 }
 
 func NewLuetRepository(name, t, descr string, urls []string, priority int, enable, cached bool) *LuetRepository {
@@ -226,6 +216,10 @@ func (r *LuetRepository) Clone() *LuetRepository {
 func (r *LuetRepository) String() string {
 	return fmt.Sprintf("[%s] prio: %d, type: %s, enable: %t, cached: %t",
 		r.Name, r.Priority, r.Type, r.Enable, r.Cached)
+}
+
+func (r *LuetRepository) YAML() ([]byte, error) {
+	return yaml.Marshal(r)
 }
 
 type LuetKV struct {

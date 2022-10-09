@@ -47,6 +47,7 @@ func NewQueryFilesCommand(config *cfg.LuetConfig) *cobra.Command {
 
 			util.SetSystemConfig()
 			util.SetSolverConfig()
+			installed, _ := cmd.Flags().GetBool("installed")
 
 			searchOpts := &wagon.StonesSearchOpts{
 				Categories:    []string{},
@@ -68,7 +69,14 @@ func NewQueryFilesCommand(config *cfg.LuetConfig) *cobra.Command {
 
 			config.GetLogging().SetLogLevel("error")
 
-			res, err := util.SearchFromRepos(config, searchOpts)
+			var res *[]*wagon.Stone
+			var err error
+
+			if installed {
+				res, err = util.SearchInstalled(config, searchOpts)
+			} else {
+				res, err = util.SearchFromRepos(config, searchOpts)
+			}
 			if err != nil {
 				Fatal("Error on retrieve packages ", err.Error())
 			}
@@ -106,5 +114,6 @@ func NewQueryFilesCommand(config *cfg.LuetConfig) *cobra.Command {
 
 	ans.Flags().StringP("output", "o", "terminal",
 		"Output format ( Defaults: terminal, available: json,yaml )")
+	ans.Flags().Bool("installed", false, "Search between system packages")
 	return ans
 }

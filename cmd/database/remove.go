@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd_database
 
@@ -26,6 +26,8 @@ This commands takes multiple packages as arguments and prunes their entries from
 		Args: cobra.OnlyValidArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 
+			force, _ := cmd.Flags().GetBool("force")
+
 			aManager := installer.NewArtifactsManager(cfg)
 			defer aManager.Close()
 
@@ -38,11 +40,19 @@ This commands takes multiple packages as arguments and prunes their entries from
 				}
 
 				if err := aManager.Database.RemovePackage(pack); err != nil {
-					Fatal("Failed removing ", a, ": ", err.Error())
+					if force {
+						Warning("Failed removing ", a, ": ", err.Error())
+					} else {
+						Fatal("Failed removing ", a, ": ", err.Error())
+					}
 				}
 
 				if err := aManager.Database.RemovePackageFiles(pack); err != nil {
-					Fatal("Failed removing files for ", a, ": ", err.Error())
+					if force {
+						Warning("Failed removing files for ", a, ": ", err.Error())
+					} else {
+						Fatal("Failed removing files for ", a, ": ", err.Error())
+					}
 				}
 				if err := aManager.Database.RemovePackageFinalizer(pack); err != nil {
 					Warning("Failed removing finalizer for ", a, ": ", err.Error())
@@ -52,6 +62,8 @@ This commands takes multiple packages as arguments and prunes their entries from
 
 		},
 	}
+
+	ans.Flags().Bool("force", false, "Force uninstall")
 
 	return ans
 }
