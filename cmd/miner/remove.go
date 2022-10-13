@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package miner
 
@@ -13,6 +13,7 @@ import (
 	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
+	"github.com/geaaru/luet/pkg/subsets"
 	installer "github.com/geaaru/luet/pkg/v2/installer"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
@@ -47,6 +48,13 @@ func NewRemovePackage(config *cfg.LuetConfig) *cobra.Command {
 
 				pkgs = append(pkgs, p)
 			}
+
+			// Load config protect configs
+			installer.LoadConfigProtectConfs(config)
+			// Load subsets defintions
+			subsets.LoadSubsetsDefintions(config)
+			// Load subsets config
+			subsets.LoadSubsetsConfig(config)
 
 			searchOpts := &wagon.StonesSearchOpts{
 				Packages:      pkgs,
