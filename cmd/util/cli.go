@@ -138,7 +138,16 @@ func ProcessRepository(
 	r := wagon.NewWagonRepository(repo)
 	err := r.ReadWagonIdentify(repobasedir)
 	if err != nil {
+
 		Warning("Error on read repository identity file: " + err.Error())
+		if artifactsRes {
+			ansArts := []*art.PackageArtifact{}
+			channel <- wagon.ChannelSearchRes{nil, &ansArts, nil}
+		} else {
+			ansStones := []*wagon.Stone{}
+			channel <- wagon.ChannelSearchRes{&ansStones, nil, nil}
+		}
+
 	} else {
 		if artifactsRes {
 			artifacts, err := r.SearchArtifacts(searchOpts)
@@ -240,6 +249,10 @@ func SearchArtifactsFromRepos(
 
 	for idx, _ := range config.SystemRepositories {
 		repo := config.SystemRepositories[idx]
+		if !repo.Enable {
+			continue
+		}
+
 		if repo.Cached {
 			resp := <-ch
 			if resp.Error == nil {
