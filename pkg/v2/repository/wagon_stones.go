@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package repository
 
@@ -40,17 +40,18 @@ type StonesSearchTask struct {
 }
 
 type StonesSearchOpts struct {
-	Packages      pkg.DefaultPackages
-	Categories    []string
-	Labels        []string
-	LabelsMatches []string
-	Matches       []string
-	FilesOwner    []string
-	Annotations   []string
-	Hidden        bool
-	AndCondition  bool
-	WithFiles     bool
-	Full          bool
+	Packages         pkg.DefaultPackages
+	Categories       []string
+	Labels           []string
+	LabelsMatches    []string
+	Matches          []string
+	FilesOwner       []string
+	Annotations      []string
+	Hidden           bool
+	AndCondition     bool
+	WithFiles        bool
+	WithRootfsPrefix bool
+	Full             bool
 
 	Modev2 bool
 }

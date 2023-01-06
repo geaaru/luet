@@ -48,15 +48,17 @@ func NewQueryFilesCommand(config *cfg.LuetConfig) *cobra.Command {
 			util.SetSystemConfig()
 			util.SetSolverConfig()
 			installed, _ := cmd.Flags().GetBool("installed")
+			withRootfsPrefix, _ := cmd.Flags().GetBool("with-rootfs-prefix")
 
 			searchOpts := &wagon.StonesSearchOpts{
-				Categories:    []string{},
-				Labels:        []string{},
-				LabelsMatches: []string{},
-				Matches:       []string{},
-				Hidden:        true,
-				AndCondition:  false,
-				WithFiles:     true,
+				Categories:       []string{},
+				Labels:           []string{},
+				LabelsMatches:    []string{},
+				Matches:          []string{},
+				Hidden:           true,
+				AndCondition:     false,
+				WithFiles:        true,
+				WithRootfsPrefix: withRootfsPrefix,
 			}
 
 			for _, a := range args {
@@ -72,10 +74,13 @@ func NewQueryFilesCommand(config *cfg.LuetConfig) *cobra.Command {
 			var res *[]*wagon.Stone
 			var err error
 
+			searcher := wagon.NewSearcherSimple(config)
+			defer searcher.Close()
+
 			if installed {
-				res, err = util.SearchInstalled(config, searchOpts)
+				res, err = searcher.SearchInstalled(searchOpts)
 			} else {
-				res, err = util.SearchFromRepos(config, searchOpts)
+				res, err = searcher.SearchStones(searchOpts)
 			}
 			if err != nil {
 				Fatal("Error on retrieve packages ", err.Error())
@@ -112,8 +117,11 @@ func NewQueryFilesCommand(config *cfg.LuetConfig) *cobra.Command {
 		},
 	}
 
-	ans.Flags().StringP("output", "o", "terminal",
+	flags := ans.Flags()
+
+	flags.StringP("output", "o", "terminal",
 		"Output format ( Defaults: terminal, available: json,yaml )")
-	ans.Flags().Bool("installed", false, "Search between system packages")
+	flags.Bool("installed", false, "Search between system packages")
+	flags.Bool("with-rootfs-prefix", true, "Add prefix of the configured rootfs path.")
 	return ans
 }

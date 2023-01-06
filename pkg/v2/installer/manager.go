@@ -313,7 +313,8 @@ func (m *ArtifactsManager) ReinstallPackage(
 	p *artifact.PackageArtifact,
 	r *repos.WagonRepository,
 	targetRootfs string,
-	preserveSystemEssentialData bool) error {
+	preserveSystemEssentialData bool,
+	force bool) error {
 
 	if p.Runtime == nil {
 		return errors.New("Artifact without Runtime package definition")
@@ -322,8 +323,21 @@ func (m *ArtifactsManager) ReinstallPackage(
 	m.Setup()
 
 	err := m.removePackageFiles(s, targetRootfs, preserveSystemEssentialData)
-	if err != nil {
+	if err != nil && !force {
 		return err
+	}
+
+	if force {
+		pkg := s.ToPackage()
+		// With force i reinstall also database files
+		m.Database.RemovePackageFiles(pkg)
+		m.Database.RemovePackageFinalizer(pkg)
+		m.Database.RemovePackage(pkg)
+
+		err = m.RegisterPackage(p, r)
+		if err != nil {
+			return err
+		}
 	}
 
 	return m.InstallPackage(p, r, targetRootfs)

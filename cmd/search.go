@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd
 
@@ -81,6 +81,7 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 			}
 			hidden, _ := cmd.Flags().GetBool("hidden")
 			files, _ := cmd.Flags().GetBool("files")
+			withRootfsPrefix, _ := cmd.Flags().GetBool("with-rootfs-prefix")
 			orCond, _ := cmd.Flags().GetBool("condition-or")
 			installed, _ := cmd.Flags().GetBool("installed")
 			tableMode, _ := cmd.Flags().GetBool("table")
@@ -95,15 +96,16 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 			config.GetLogging().SetLogLevel("error")
 
 			searchOpts := &wagon.StonesSearchOpts{
-				Categories:    categories,
-				Labels:        labels,
-				LabelsMatches: regLabels,
-				Matches:       args,
-				Hidden:        hidden,
-				AndCondition:  !orCond,
-				WithFiles:     files,
-				Modev2:        mode2,
-				Full:          full,
+				Categories:       categories,
+				Labels:           labels,
+				LabelsMatches:    regLabels,
+				Matches:          args,
+				Hidden:           hidden,
+				AndCondition:     !orCond,
+				WithFiles:        files,
+				WithRootfsPrefix: withRootfsPrefix,
+				Modev2:           mode2,
+				Full:             full,
 			}
 			var res *[]*wagon.Stone
 			var err error
@@ -118,14 +120,18 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 				}
 			}
 
+			searcher := wagon.NewSearcherSimple(config)
+			defer searcher.Close()
+
 			if installed {
-				res, err = util.SearchInstalled(config, searchOpts)
+				res, err = searcher.SearchInstalled(searchOpts)
 				if err != nil {
 					fmt.Println("Error on retrieve installed packages ", err.Error())
 					os.Exit(1)
 				}
 			} else {
-				res, err = util.SearchFromRepos(config, searchOpts)
+
+				res, err = searcher.SearchStones(searchOpts)
 				if err != nil {
 					fmt.Println("Error on retrieve installed packages ", err.Error())
 					os.Exit(1)
@@ -212,6 +218,7 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 		"Output format ( Defaults: terminal, available: json,yaml )")
 	flags.Bool("hidden", false, "Include hidden packages")
 	flags.Bool("files", false, "Show package files on YAML/JSON output.")
+	flags.Bool("with-rootfs-prefix", true, "Add prefix of the configured rootfs path.")
 	flags.Bool("table", false, "show output in a table (wider screens)")
 	flags.Bool("quiet", false, "show output as list without version")
 	flags.Bool("full", false, "Show full informations.")

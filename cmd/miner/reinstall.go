@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package miner
 
@@ -45,6 +45,7 @@ func NewReinstallPackage(config *cfg.LuetConfig) *cobra.Command {
 			preserveSystem, _ := cmd.Flags().GetBool("preserve-system-essentials")
 			finalizerEnvs, _ := cmd.Flags().GetStringArray("finalizer-env")
 			skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
+			force, _ := cmd.Flags().GetBool("force")
 
 			for _, pstr := range args {
 				p, err := helpers.ParsePackageStr(pstr)
@@ -73,18 +74,23 @@ func NewReinstallPackage(config *cfg.LuetConfig) *cobra.Command {
 				Hidden:        true,
 				AndCondition:  false,
 				// Needed for the uninstall
-				WithFiles: true,
+				WithFiles:        true,
+				WithRootfsPrefix: false,
 			}
 
-			stones, err := util.SearchInstalled(config, searchOpts)
+			searcher := wagon.NewSearcherSimple(config)
+			stones, err := searcher.SearchInstalled(searchOpts)
 			if err != nil {
+				searcher.Close()
 				Error(err.Error())
 				os.Exit(1)
 			}
+			searcher.Close()
 
-			// Searching the packages over the existing repos
-			reposArtifacts, err := util.SearchArtifactsFromRepos(config, searchOpts)
+			// Searching the packages over the existing repos.
+			reposArtifacts, err := searcher.SearchArtifacts(searchOpts)
 			if err != nil {
+				defer searcher.Close()
 				Error(err.Error())
 				os.Exit(1)
 			}
@@ -192,9 +198,17 @@ func NewReinstallPackage(config *cfg.LuetConfig) *cobra.Command {
 				a := pkgsQueue[idx].Artifact
 				s := pkgsQueue[idx].Stone
 
+				// When local database is broken could be with
+				// empty list on array list. In this case, I using
+				// from artifact the list if stone files list is empty.
+				if len(s.Files) == 0 {
+					s.Files = a.Files
+				}
+
 				err = aManager.ReinstallPackage(
 					s, a, r, config.GetSystem().Rootfs,
 					preserveSystem,
+					force,
 				)
 				if err != nil {
 					fail = true
@@ -257,6 +271,7 @@ func NewReinstallPackage(config *cfg.LuetConfig) *cobra.Command {
 		"Set finalizer environment in the format key=value.")
 	flags.Bool("skip-finalizers", false,
 		"Skip the execution of the finalizers.")
+	flags.Bool("force", false, "Skip errors and force reinstall.")
 
 	return ans
 }
