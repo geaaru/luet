@@ -86,7 +86,6 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 			installed, _ := cmd.Flags().GetBool("installed")
 			tableMode, _ := cmd.Flags().GetBool("table")
 			quiet, _ := cmd.Flags().GetBool("quiet")
-			mode2, _ := cmd.Flags().GetBool("mode2")
 			full, _ := cmd.Flags().GetBool("full")
 
 			util.SetSystemConfig()
@@ -104,7 +103,6 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 				AndCondition:     !orCond,
 				WithFiles:        files,
 				WithRootfsPrefix: withRootfsPrefix,
-				Modev2:           mode2,
 				Full:             full,
 			}
 			var res *[]*wagon.Stone
@@ -118,6 +116,12 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 					}
 					searchOpts.Packages = append(searchOpts.Packages, pack)
 				}
+
+				if len(categories) == 0 && len(labels) == 0 &&
+					len(regLabels) == 0 && len(args) == 0 {
+					searchOpts.OnlyPackages = true
+				}
+
 			}
 
 			searcher := wagon.NewSearcherSimple(config)
@@ -222,8 +226,6 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 	flags.Bool("table", false, "show output in a table (wider screens)")
 	flags.Bool("quiet", false, "show output as list without version")
 	flags.Bool("full", false, "Show full informations.")
-
-	flags.Bool("mode2", true, "Using searching v2.")
 
 	return ans
 }
