@@ -80,17 +80,15 @@ func NewReinstallPackage(config *cfg.LuetConfig) *cobra.Command {
 
 			searcher := wagon.NewSearcherSimple(config)
 			stones, err := searcher.SearchInstalled(searchOpts)
+			searcher.Close()
 			if err != nil {
-				searcher.Close()
 				Error(err.Error())
 				os.Exit(1)
 			}
-			searcher.Close()
 
 			// Searching the packages over the existing repos.
 			reposArtifacts, err := searcher.SearchArtifacts(searchOpts)
 			if err != nil {
-				defer searcher.Close()
 				Error(err.Error())
 				os.Exit(1)
 			}
