@@ -58,6 +58,7 @@ type Package interface {
 
 	GetProvides() []*DefaultPackage
 	SetProvides([]*DefaultPackage) Package
+	HasProvides() bool
 
 	GetRequires() []*DefaultPackage
 	GetConflicts() []*DefaultPackage
@@ -172,6 +173,14 @@ func (d DefaultPackages) Hash(salt string) string {
 	h := md5.New()
 	io.WriteString(h, fmt.Sprintf("%s-%s", overallFp, salt))
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func NewDefaultPackageFromYaml(data []byte) (*DefaultPackage, error) {
+	ans, err := DefaultPackageFromYaml(data)
+	if err != nil {
+		return nil, err
+	}
+	return &ans, nil
 }
 
 // >> Unmarshallers
@@ -308,6 +317,30 @@ func NewPackage(name, version string, requires []*DefaultPackage, conflicts []*D
 		Version:          version,
 		PackageRequires:  requires,
 		PackageConflicts: conflicts,
+		Labels:           nil,
+	}
+}
+
+// TODO: Permit to create a new package also with category.
+func NewPackageWithCat(category, name, version string,
+	requires []*DefaultPackage, conflicts []*DefaultPackage) *DefaultPackage {
+	return &DefaultPackage{
+		Name:             name,
+		Category:         category,
+		Version:          version,
+		PackageRequires:  requires,
+		PackageConflicts: conflicts,
+		Labels:           nil,
+	}
+}
+
+func NewPackageWithCatThin(category, name, version string) *DefaultPackage {
+	return &DefaultPackage{
+		Name:             name,
+		Category:         category,
+		Version:          version,
+		PackageRequires:  []*DefaultPackage{},
+		PackageConflicts: []*DefaultPackage{},
 		Labels:           nil,
 	}
 }
@@ -538,6 +571,12 @@ func (p *DefaultPackage) SetProvides(req []*DefaultPackage) Package {
 	p.Provides = req
 	return p
 }
+func (p *DefaultPackage) HasProvides() bool {
+	if len(p.Provides) > 0 {
+		return true
+	}
+	return false
+}
 func (p *DefaultPackage) GetRequires() []*DefaultPackage {
 	return p.PackageRequires
 }
@@ -612,6 +651,161 @@ func (p *DefaultPackage) Revdeps(definitiondb PackageDatabase) Packages {
 	}
 
 	return versionsInWorld
+}
+
+func (p *DefaultPackage) ToGentooPackage() (*gentoo.GentooPackage, error) {
+
+	var cond gentoo.PackageCond
+
+	if strings.HasPrefix(p.Version, ">=") {
+		cond = gentoo.PkgCondGreaterEqual
+	} else if strings.HasPrefix(p.Version, "<=") {
+		cond = gentoo.PkgCondLessEqual
+	} else if strings.HasPrefix(p.Version, "!=") {
+		cond = gentoo.PkgCondNot
+	} else if strings.HasPrefix(p.Version, "=") {
+		cond = gentoo.PkgCondEqual
+	} else if strings.HasPrefix(p.Version, ">") {
+		cond = gentoo.PkgCondGreater
+	} else if strings.HasPrefix(p.Version, "<") {
+		cond = gentoo.PkgCondLess
+	}
+
+	ans, err := gentoo.ParsePackageStr(
+		fmt.Sprintf("%s-%s",
+			p.PackageName(),
+			strings.Trim(p.GetVersion(), "><=!"),
+		),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ans.Condition = cond
+	ans.Repository = p.Repository
+	ans.License = p.License
+	ans.UseFlags = p.UseFlags
+
+	return ans, nil
+}
+
+func (p *DefaultPackage) Admit(a *DefaultPackage) (bool, error) {
+	if len(p.PackageRequires) == 0 && len(p.PackageConflicts) == 0 {
+		return true, nil
+	}
+
+	if p.AtomMatches(a) && !p.IsSelector() {
+		panic(fmt.Errorf(
+			"Trying to compare the %s package when is not a selector %s",
+			a.HumanReadableString(), p.HumanReadableString()))
+		return false,
+			fmt.Errorf(
+				"Trying to compare the %s package when is not a selector %s",
+				a.HumanReadableString(), p.HumanReadableString())
+	}
+
+	agentoo, err := a.ToGentooPackage()
+	if err != nil {
+		return false, err
+	}
+
+	if len(p.PackageRequires) > 0 {
+		// PRE: the Requires are all selector
+		for _, r := range p.PackageRequires {
+			if r.AtomMatches(a) {
+				greq, err := r.ToGentooPackage()
+				if err != nil {
+					return false, err
+				}
+
+				admitted, err := greq.Admit(agentoo)
+				if err != nil {
+					return false, err
+				}
+
+				if !admitted {
+					return false, nil
+				}
+			} else if a.HasProvides() {
+
+				for _, prov := range a.Provides {
+					if r.AtomMatches(prov) {
+
+						greq, err := r.ToGentooPackage()
+						if err != nil {
+							return false, err
+						}
+						gprov, err := prov.ToGentooPackage()
+						if err != nil {
+							return false, err
+						}
+
+						admitted, err := greq.Admit(gprov)
+						if err != nil {
+							return false, err
+						}
+
+						if !admitted {
+							return false, nil
+						}
+					}
+				}
+
+			}
+		}
+	}
+
+	if len(p.PackageConflicts) > 0 {
+		for _, c := range p.PackageConflicts {
+			if c.AtomMatches(a) {
+				gconflict, err := c.ToGentooPackage()
+				if err != nil {
+					return false, err
+				}
+
+				admitted, err := gconflict.Admit(agentoo)
+				if err != nil {
+					return false, err
+				}
+
+				if admitted {
+					// If the package is admitted means that
+					// match the conflicts
+					return false, nil
+				}
+			} else if a.HasProvides() {
+
+				for _, prov := range a.Provides {
+					if c.AtomMatches(prov) {
+
+						gconflict, err := c.ToGentooPackage()
+						if err != nil {
+							return false, err
+						}
+						gprov, err := prov.ToGentooPackage()
+						if err != nil {
+							return false, err
+						}
+
+						admitted, err := gconflict.Admit(gprov)
+						if err != nil {
+							return false, err
+						}
+
+						if admitted {
+							// If the package is admitted means that
+							// match the conflicts
+							return false, nil
+						}
+					}
+				}
+
+			}
+		}
+	}
+
+	return true, nil
 }
 
 func walkPackage(p Package, definitiondb PackageDatabase, visited map[string]interface{}) Packages {
