@@ -18,6 +18,7 @@ type Searcher interface {
 	SearchArtifacts(searchOpts *StonesSearchOpts) (*[]*art.PackageArtifact, error)
 	SearchStones(searchOpts *StonesSearchOpts) (*[]*Stone, error)
 	SearchInstalled(searchOpts *StonesSearchOpts) (*[]*Stone, error)
+	SearchArtifactsOnRepo(name string, searchOpts *StonesSearchOpts) (*[]*art.PackageArtifact, error)
 }
 
 type SearcherSimple struct {
