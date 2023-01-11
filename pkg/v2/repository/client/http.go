@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package client
 
@@ -116,7 +116,7 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) error {
 		client := NewGrabClient()
 
 		for _, uri := range c.Repository.Urls {
-			Info("Downloading artifact", artifactName, "from", uri)
+			Debug("Downloading artifact", artifactName, "from", uri)
 
 			u, err = url.Parse(uri)
 			if err != nil {
@@ -134,24 +134,27 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) error {
 			bar := progressbar.NewOptions64(
 				resp.Size(),
 				progressbar.OptionSetDescription(
-					fmt.Sprintf("[cyan] %s - [reset]",
-						filepath.Base(resp.Request.HTTPRequest.URL.RequestURI()))),
-				progressbar.OptionSetRenderBlankState(true),
+					fmt.Sprintf("[cyan][%40s] - [reset]",
+						a.GetPackage().HumanReadableString())),
+				//filepath.Base(resp.Request.HTTPRequest.URL.RequestURI()))),
+				//progressbar.OptionSetRenderBlankState(true),
 				progressbar.OptionEnableColorCodes(config.LuetCfg.GetLogging().Color),
 				progressbar.OptionClearOnFinish(),
 				progressbar.OptionShowBytes(true),
 				progressbar.OptionShowCount(),
 				progressbar.OptionSetPredictTime(true),
 				progressbar.OptionFullWidth(),
-				progressbar.OptionSetTheme(progressbar.Theme{
-					Saucer:        "[white]=[reset]",
-					SaucerHead:    "[white]>[reset]",
-					SaucerPadding: " ",
-					BarStart:      "[",
-					BarEnd:        "]",
-				}))
+				/*
+					progressbar.OptionSetTheme(progressbar.Theme{
+						Saucer:        "[white]=[reset]",
+						SaucerHead:    "[white]>[reset]",
+						SaucerPadding: " ",
+						BarStart:      "[",
+						BarEnd:        "]",
+					})
+				*/
+			)
 
-			bar.Reset()
 			// start download loop
 			t := time.NewTicker(500 * time.Millisecond)
 			defer t.Stop()
@@ -164,6 +167,9 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) error {
 					bar.Set64(resp.BytesComplete())
 
 				case <-resp.Done:
+
+					//bar.Reset()
+					bar.Finish()
 					// download is complete
 					break download_loop
 				}
@@ -177,8 +183,8 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) error {
 				continue
 			}
 
-			bar.Reset()
-			bar.Finish()
+			//bar.Reset()
+			//bar.Finish()
 
 			Debug("\nDownloaded", artifactName, "of",
 				fmt.Sprintf("%.2f", (float64(resp.BytesComplete())/1000)/1000), "MB (",
@@ -199,6 +205,7 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) error {
 		if !ok {
 			return err
 		}
+
 	}
 
 	a.CachePath = cacheFile
