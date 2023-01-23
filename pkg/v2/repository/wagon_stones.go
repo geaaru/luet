@@ -1020,6 +1020,7 @@ func (s *WagonStones) LoadCatalog(identity *WagonIdentity) (*StonesCatalog, erro
 		if err != nil {
 			return nil, errors.Wrap(err, "Error on parse file "+metafile)
 		}
+		decoder = nil
 
 	} else {
 		return nil, errors.New("No meta field found. Repository is corrupted or to sync.")
