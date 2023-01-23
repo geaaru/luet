@@ -6,7 +6,6 @@ package repository
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -260,12 +259,10 @@ func (w *WagonRepository) Sync(force bool) error {
 		//
 		// In additional, it's generated a provides.yaml with all provides map
 		// of the repository. This speedup Searcher and reduce i/o operations.
-
 		err = w.ExplodeMetadata()
 		if err != nil {
 			return err
 		}
-
 		w.ClearCatalog()
 
 	} else {
@@ -293,12 +290,11 @@ func (w *WagonRepository) ExplodeMetadata() error {
 			w.Identity.GetName()),
 	)
 
-	_, err := w.Stones.LoadCatalog(w.Identity)
+	catalog, err := w.Stones.LoadCatalog(w.Identity)
 	if err != nil {
 		return err
 	}
 
-	catalog := *w.Stones.Catalog
 	for idx, _ := range catalog.Index {
 		pkg := catalog.Index[idx].GetPackage()
 		if pkg == nil {
@@ -328,7 +324,7 @@ func (w *WagonRepository) ExplodeMetadata() error {
 			// As workaround I read the provides from definition.yaml that
 			// is always aligned to the last repository revision.
 
-			data, err := ioutil.ReadFile(defFile)
+			data, err := os.ReadFile(defFile)
 			if err != nil {
 				return errors.New(
 					fmt.Sprintf("Error on read file %s: %s",
@@ -377,7 +373,11 @@ func (w *WagonRepository) ExplodeMetadata() error {
 			}
 
 		}
+
+		pkgDir = ""
 	}
+
+	catalog = nil
 
 	// Create the provides.yaml file under treefs/
 	providesFile := filepath.Join(w.Identity.LuetRepository.TreePath,
