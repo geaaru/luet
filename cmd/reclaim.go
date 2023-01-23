@@ -15,14 +15,17 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"sync"
 
 	cmdrepo "github.com/geaaru/luet/cmd/repo"
 	"github.com/geaaru/luet/cmd/util"
 	config "github.com/geaaru/luet/pkg/config"
 	installer "github.com/geaaru/luet/pkg/installer"
 	. "github.com/geaaru/luet/pkg/logger"
+	"golang.org/x/sync/semaphore"
 
 	"github.com/spf13/cobra"
 )
@@ -59,6 +62,11 @@ func newReclaimCommand(cfg *config.LuetConfig) *cobra.Command {
 			Debug("Solver", cfg.GetSolverOptions().CompactString())
 
 			if syncRepos {
+				waitGroup := &sync.WaitGroup{}
+				sem := semaphore.NewWeighted(int64(cfg.GetGeneral().Concurrency))
+				ctx := context.TODO()
+
+				defer waitGroup.Wait()
 
 				var ch chan util.ChannelRepoOpRes = make(
 					chan util.ChannelRepoOpRes,
@@ -69,7 +77,8 @@ func newReclaimCommand(cfg *config.LuetConfig) *cobra.Command {
 
 				for idx, repo := range cfg.SystemRepositories {
 					if repo.Enable {
-						go cmdrepo.ProcessRepository(&cfg.SystemRepositories[idx], cfg, ch, force)
+						waitGroup.Add(1)
+						go cmdrepo.ProcessRepository(&cfg.SystemRepositories[idx], cfg, ch, force, sem, waitGroup, &ctx)
 						nOps++
 					}
 				}
