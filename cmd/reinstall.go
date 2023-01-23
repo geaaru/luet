@@ -1,5 +1,6 @@
 // Copyright © 2021 Ettore Di Giacinto <mudler@mocaccino.org>
-//                  Daniele Rondina <geaaru@sabayonlinux.org>
+//
+//	Daniele Rondina <geaaru@sabayonlinux.org>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,8 +17,10 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"sync"
 
 	helpers "github.com/geaaru/luet/cmd/helpers"
 	cmdrepo "github.com/geaaru/luet/cmd/repo"
@@ -28,6 +31,7 @@ import (
 	pkg "github.com/geaaru/luet/pkg/package"
 	"github.com/geaaru/luet/pkg/solver"
 	"github.com/geaaru/luet/pkg/subsets"
+	"golang.org/x/sync/semaphore"
 
 	"github.com/spf13/cobra"
 )
@@ -59,7 +63,15 @@ func newReinstallCommand(cfg *config.LuetConfig) *cobra.Command {
 			downloadOnly, _ := cmd.Flags().GetBool("download-only")
 			syncRepos, _ := cmd.Flags().GetBool("sync-repos")
 
+			Info("Luet version", util.Version())
+
 			if syncRepos {
+
+				waitGroup := &sync.WaitGroup{}
+				sem := semaphore.NewWeighted(int64(cfg.GetGeneral().Concurrency))
+				ctx := context.TODO()
+
+				defer waitGroup.Wait()
 
 				var ch chan util.ChannelRepoOpRes = make(
 					chan util.ChannelRepoOpRes,
@@ -70,7 +82,8 @@ func newReinstallCommand(cfg *config.LuetConfig) *cobra.Command {
 
 				for idx, repo := range cfg.SystemRepositories {
 					if repo.Enable {
-						go cmdrepo.ProcessRepository(&cfg.SystemRepositories[idx], cfg, ch, force)
+						waitGroup.Add(1)
+						go cmdrepo.ProcessRepository(&cfg.SystemRepositories[idx], cfg, ch, force, sem, waitGroup, &ctx)
 						nOps++
 					}
 				}
