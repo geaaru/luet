@@ -134,8 +134,12 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) error {
 			bar := progressbar.NewOptions64(
 				resp.Size(),
 				progressbar.OptionSetDescription(
-					fmt.Sprintf("[cyan][%40s] - [reset]",
-						a.GetPackage().HumanReadableString())),
+					Emojize(fmt.Sprintf("[green]:package: %-65s - %-15s # [reset]",
+						fmt.Sprintf(
+							"%s::%s", a.GetPackage().PackageName(), a.GetPackage().Repository,
+						),
+						a.GetPackage().GetVersion(),
+					))),
 				//filepath.Base(resp.Request.HTTPRequest.URL.RequestURI()))),
 				//progressbar.OptionSetRenderBlankState(true),
 				progressbar.OptionEnableColorCodes(config.LuetCfg.GetLogging().Color),
@@ -144,19 +148,17 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) error {
 				progressbar.OptionShowCount(),
 				progressbar.OptionSetPredictTime(true),
 				progressbar.OptionFullWidth(),
-				/*
-					progressbar.OptionSetTheme(progressbar.Theme{
-						Saucer:        "[white]=[reset]",
-						SaucerHead:    "[white]>[reset]",
-						SaucerPadding: " ",
-						BarStart:      "[",
-						BarEnd:        "]",
-					})
-				*/
+				progressbar.OptionSetTheme(progressbar.Theme{
+					Saucer:        "[white]=[reset]",
+					SaucerHead:    "[white]>[reset]",
+					SaucerPadding: " ",
+					BarStart:      "[",
+					BarEnd:        "]",
+				}),
 			)
 
 			// start download loop
-			t := time.NewTicker(500 * time.Millisecond)
+			t := time.NewTicker(300 * time.Millisecond)
 			defer t.Stop()
 
 		download_loop:
