@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	. "github.com/geaaru/luet/pkg/config"
+	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewRepoListCommand() *cobra.Command {
+func NewRepoListCommand(config *cfg.LuetConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "list [OPTIONS]",
 		Short: "List of the configured repositories.",
@@ -41,8 +41,8 @@ func NewRepoListCommand() *cobra.Command {
 			quiet, _ := cmd.Flags().GetBool("quiet")
 			repoType, _ := cmd.Flags().GetString("type")
 
-			for idx, _ := range LuetCfg.SystemRepositories {
-				repo := LuetCfg.SystemRepositories[idx]
+			for idx, _ := range config.SystemRepositories {
+				repo := config.SystemRepositories[idx]
 				if enable && !repo.Enable {
 					continue
 				}
@@ -70,7 +70,7 @@ func NewRepoListCommand() *cobra.Command {
 						repoText = Yellow(repo.Urls[0]).String()
 					}
 
-					repobasedir := LuetCfg.GetSystem().GetRepoDatabaseDirPath(repo.Name)
+					repobasedir := config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
 					if repo.Cached {
 
 						r := wagon.NewWagonRepository(&repo)
