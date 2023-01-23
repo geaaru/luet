@@ -17,6 +17,7 @@ package util
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -30,6 +31,17 @@ import (
 type ChannelRepoOpRes struct {
 	Error error
 	Repo  *config.LuetRepository
+}
+
+func Version() string {
+	if config.BuildGoVersion != "" {
+		return fmt.Sprintf("%s-%s-g%s %s - %s",
+			config.LuetVersion, config.LuetForkVersion, config.BuildCommit,
+			config.BuildTime, config.BuildGoVersion)
+	} else {
+		return fmt.Sprintf("%s-%s-g%s %s", config.LuetVersion,
+			config.LuetForkVersion, config.BuildCommit, config.BuildTime)
+	}
 }
 
 func BindSystemFlags(cmd *cobra.Command) {
