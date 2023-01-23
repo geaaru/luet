@@ -7,12 +7,15 @@ package installer
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"time"
 
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 	solver "github.com/geaaru/luet/pkg/v2/solver"
+	"github.com/logrusorgru/aurora"
 
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/pkg/errors"
@@ -26,6 +29,31 @@ type InstallOpts struct {
 	SkipFinalizers              bool
 	Pretend                     bool
 	DownloadOnly                bool
+}
+
+func (m *ArtifactsManager) sortPackages2Install(
+	p2i *artifact.ArtifactsPack,
+	p2r *artifact.ArtifactsPack,
+) (*[]*solver.Operation, error) {
+
+	Spinner(3)
+
+	solverOpts := &solver.SolverOpts{
+		IgnoreConflicts: false,
+		NoDeps:          false,
+	}
+
+	s := solver.NewSolverImplementation("solverv2", m.Config, solverOpts)
+	(*s).SetDatabase(m.Database)
+	ans, err := (*s).OrderOperations(p2i, p2r)
+	SpinnerStop()
+	if err != nil {
+		return nil, err
+	}
+	// Cleanup solver and memory
+	s = nil
+
+	return ans, nil
 }
 
 func (m *ArtifactsManager) showPackage2install(
@@ -67,9 +95,36 @@ func (m *ArtifactsManager) showPackage2install(
 func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 	packs ...*pkg.DefaultPackage) error {
 
+	mapRepos := make(map[string]*wagon.WagonRepository, 0)
 	errs := []error{}
 
 	m.Setup()
+
+	// Show repositories revisions.
+	for idx, repo := range m.Config.SystemRepositories {
+
+		if !repo.Enable {
+			continue
+		}
+
+		repobasedir := m.Config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
+		wr := wagon.NewWagonRepository(&m.Config.SystemRepositories[idx])
+		err := wr.ReadWagonIdentify(repobasedir)
+		if err != nil {
+			return fmt.Errorf("Error on read repository identity file: " + err.Error())
+		}
+
+		tsec, _ := strconv.ParseInt(wr.Identity.GetLastUpdate(), 10, 64)
+
+		InfoC(
+			aurora.Bold(
+				aurora.Red(fmt.Sprintf(
+					":house:Repository: %30s Revision: ",
+					wr.Identity.GetName()))).String() +
+				aurora.Bold(aurora.Green(fmt.Sprintf("%3d", wr.GetRevision()))).String() + " - " +
+				aurora.Bold(aurora.Green(time.Unix(tsec, 0).String())).String(),
+		)
+	}
 
 	// TODO: temporary load in memory all installed packages.
 	systemPkgs := m.Database.World()
@@ -82,6 +137,7 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 	}
 	systemPkgs = nil
 
+	InfoC(":brain:Solving install tree...")
 	// Step 2. Retrieve the last available version of the
 	//         selected packages that are admitted by the
 	//         existing rootfs packages.
@@ -91,6 +147,8 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 	//         Wins existing packages. I upgrade deps on
 	//         upgrade process only.
 
+	Spinner(3)
+
 	solverOpts := &solver.SolverOpts{
 		IgnoreConflicts: false,
 		NoDeps:          opts.NoDeps,
@@ -98,7 +156,8 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 
 	s := solver.NewSolverImplementation("solverv2", m.Config, solverOpts)
 	(*s).SetDatabase(m.Database)
-	pkgs2Install, pkgs2Remove, err := (*s).Install(packs)
+	pkgs2Install, pkgs2Remove, err := (*s).Install(pkgsToInstall)
+	SpinnerStop()
 	if err != nil {
 		return err
 	}
@@ -123,8 +182,9 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 	}
 
 	// Step 5. Download all packages to install.
-	mapRepos := make(map[string]*wagon.WagonRepository, 0)
 	fail := false
+	InfoC(fmt.Sprintf(":truck:Downloading %d packages...",
+		len(pkgs2Install.Artifacts)))
 	for _, art := range pkgs2Install.Artifacts {
 		repoName := art.GetRepository()
 
@@ -135,7 +195,7 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 		}
 
 		var wr *wagon.WagonRepository
-		// Create WagonRepository if present
+		// Create WagonRepository if not present
 		if _, ok := mapRepos[repoName]; !ok {
 
 			repobasedir := m.Config.GetSystem().GetRepoDatabaseDirPath(repoName)
@@ -168,11 +228,17 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 				"Error on download artifact %s: %s",
 				art.GetPackage().HumanReadableString(),
 				err.Error()))
-			Error(fmt.Sprintf("[%40s] download failed :fire:",
-				art.GetPackage().HumanReadableString()))
+			Error(fmt.Sprintf(":package: %-65s - %-15s # download failed :fire:",
+				fmt.Sprintf("%s::%s", art.GetPackage().PackageName(),
+					art.GetPackage().Repository,
+				),
+				art.GetPackage().GetVersion()))
 		} else {
-			Info(fmt.Sprintf("[%40s] downloaded :check_mark:",
-				art.GetPackage().HumanReadableString()))
+			Info(fmt.Sprintf(":package: %-65s - %-15s # downloaded :check_mark:",
+				fmt.Sprintf("%s::%s", art.GetPackage().PackageName(),
+					art.GetPackage().Repository,
+				),
+				art.GetPackage().GetVersion()))
 		}
 
 	}
@@ -184,14 +250,28 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 		return nil
 	}
 
+	InfoC(fmt.Sprintf(":brain:Sorting %d packages operations...",
+		len(pkgs2Install.Artifacts)+len(pkgs2Remove.Artifacts)))
+
+	Spinner(3)
 	// Step 6. Order packages.
+	start := time.Now()
+	installOps, err := m.sortPackages2Install(pkgs2Install, pkgs2Remove)
+	SpinnerStop()
+	Debug(fmt.Sprintf(":brain:Sort executed in %d µs.",
+		time.Now().Sub(start).Nanoseconds()/1e3))
+	if err != nil {
+		return err
+	}
+
+	InfoC(":clinking_beer_mugs:Executing packages operations...")
 
 	// Step 7. Install the matches packages/Remove packages.
+	for _, op := range *installOps {
 
-	// Run remove of the packages
-	if len(pkgs2Remove.Artifacts) > 0 {
-		for _, art := range pkgs2Remove.Artifacts {
-			p := art.GetPackage()
+		switch op.Action {
+		case "D":
+			p := op.Artifact.GetPackage()
 
 			stone := &wagon.Stone{
 				Name:        p.GetName(),
@@ -199,7 +279,7 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 				Version:     p.GetVersion(),
 				Annotations: p.GetAnnotations(),
 			}
-			err := m.RemovePackage(stone, targetRootfs,
+			err = m.RemovePackage(stone, targetRootfs,
 				opts.PreserveSystemEssentialData,
 				opts.SkipFinalizers,
 				opts.Force,
@@ -215,51 +295,69 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 					errs = append(errs, err)
 				}
 			}
+		case "N":
+			art := op.Artifact
+			art.ResolveCachePath()
+			r := mapRepos[art.GetRepository()]
 
+			err = m.InstallPackage(art, r, targetRootfs)
+			if err != nil {
+				Error(fmt.Sprintf(":package: %-65s - %-15s # install failed :fire:",
+					fmt.Sprintf("%s::%s", art.GetPackage().PackageName(),
+						art.GetPackage().Repository,
+					),
+					art.GetPackage().GetVersion()))
+				errs = append(errs, fmt.Errorf(
+					"%s::%s - error: %s", art.GetPackage().PackageName(),
+					art.GetPackage().Repository,
+					err.Error()))
+				fail = true
+			} else {
+				Info(fmt.Sprintf(":shortcake: %-65s - %-15s # installed :check_mark:",
+					fmt.Sprintf("%s::%s", art.GetPackage().PackageName(),
+						art.GetPackage().Repository,
+					),
+					art.GetPackage().GetVersion()))
+			}
+
+			err = m.RegisterPackage(art, r)
+			if err != nil {
+				fail = true
+				Error(fmt.Sprintf(
+					"Error on register artifact %s: %s",
+					art.GetPackage().HumanReadableString(),
+					err.Error()))
+			}
 		}
-	}
 
-	// Install the new packages
-	for _, art := range pkgs2Install.Artifacts {
-		art.ResolveCachePath()
-
-		r := mapRepos[art.GetRepository()]
-
-		err = m.InstallPackage(art, r, targetRootfs)
-		if err != nil {
-			fmt.Println(fmt.Sprintf(
-				"Error on install artifact %s: %s",
-				art.GetPackage().HumanReadableString(),
-				err.Error()))
-			Error(fmt.Sprintf("[%40s] install failed - :fire:",
-				art.GetPackage().HumanReadableString()))
-			return err
-		} else {
-			Info(fmt.Sprintf("[%40s] installed - :heavy_check_mark:",
-				art.GetPackage().HumanReadableString()))
-		}
-
-		err = m.RegisterPackage(art, r)
-		if err != nil {
-			fail = true
-			fmt.Println(fmt.Sprintf(
-				"Error on register artifact %s: %s",
-				art.GetPackage().HumanReadableString(),
-				err.Error()))
-		}
 	}
 
 	// Run finalizers of the installed packages
-	for _, art := range pkgs2Install.Artifacts {
-		r := mapRepos[art.GetRepository()]
-
-		err = m.ExecuteFinalizer(art, r, true, targetRootfs)
-		if err != nil {
-			fail = true
+	// sorted for action
+	if !opts.SkipFinalizers {
+		for _, op := range *installOps {
+			if op.Action != solver.AddPackage {
+				continue
+			}
+			// POST: just run finalizer on the new packages.
+			art := op.Artifact
+			r := mapRepos[art.GetRepository()]
+			err = m.ExecuteFinalizer(art, r, true, targetRootfs)
+			if err != nil {
+				fail = true
+			}
 		}
 	}
 
 	if fail {
+
+		// Write all errors again
+		if len(errs) > 0 {
+			for _, e := range errs {
+				Error(e.Error())
+			}
+		}
+
 		return errors.New("Something goes wrong.")
 	}
 

@@ -303,7 +303,16 @@ func (m *ArtifactsManager) RemovePackage(s *repos.Stone,
 		return errors.Wrap(err, "Failed removing package from database")
 	}
 
-	Info(":recycle: ", fmt.Sprintf("%20s", p.GetFingerPrint()), "Removed :heavy_check_mark:")
+	reposSep := ""
+	if p.Repository != "" {
+		reposSep = "::"
+	}
+
+	Info(fmt.Sprintf(":recycle: %-65s - %-15s # removed :check_mark:",
+		fmt.Sprintf("%s%s%s", p.PackageName(),
+			reposSep, p.Repository,
+		),
+		p.GetVersion()))
 
 	return nil
 }
