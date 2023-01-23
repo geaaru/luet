@@ -18,9 +18,20 @@ const (
 	SingleCoreV3     = 2
 )
 
+const (
+	UpdatePackage = "U"
+	AddPackage    = "N"
+	RemovePackage = "D"
+)
+
 type SolverOpts struct {
 	IgnoreConflicts bool
 	NoDeps          bool
+}
+
+type Operation struct {
+	Action   string                    `yaml:"action" json:"action"`
+	Artifact *artifact.PackageArtifact `yaml:"artefact" json:"artefact"`
 }
 
 func NewSolverOpts() *SolverOpts {
@@ -32,10 +43,18 @@ func NewSolverOpts() *SolverOpts {
 
 // PackageSolver is an interface to a generic package solving algorithm
 type PackageSolver interface {
-	Install(p pkg.DefaultPackages) (*artifact.ArtifactsPack, *artifact.ArtifactsPack, error)
+	Install(p *[]*pkg.DefaultPackage) (*artifact.ArtifactsPack, *artifact.ArtifactsPack, error)
 	Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *artifact.ArtifactsPack, error)
 	GetType() SolverType
 	SetDatabase(pkg.PackageDatabase)
+	OrderOperations(p2i, p2r *artifact.ArtifactsPack) (*[]*Operation, error)
+}
+
+func NewOperation(action string, art *artifact.PackageArtifact) *Operation {
+	return &Operation{
+		Action:   action,
+		Artifact: art,
+	}
 }
 
 func NewSolverImplementation(stype string, cfg *config.LuetConfig, opts *SolverOpts) *PackageSolver {
@@ -43,7 +62,7 @@ func NewSolverImplementation(stype string, cfg *config.LuetConfig, opts *SolverO
 
 	switch stype {
 	case "solverv2":
-		// TODO: For now remap all implementation to the new solver implementation for now.
+		// TODO: For now remap all implementation to the new solver implementation.
 		s = NewSolver(cfg, opts)
 	default:
 		s = NewSolver(cfg, opts)

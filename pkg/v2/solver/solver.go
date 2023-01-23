@@ -7,6 +7,7 @@ package solver
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/geaaru/luet/pkg/config"
 	"github.com/geaaru/luet/pkg/helpers"
@@ -45,11 +46,206 @@ func (s *Solver) GetType() SolverType {
 
 func (s *Solver) SetDatabase(d pkg.PackageDatabase) { s.Database = d }
 
+func (s *Solver) createThinPkgsPlist(p2i *artifact.ArtifactsPack, p2imap *artifact.ArtifactsMap) []*pkg.PackageThin {
+
+	// Instead to check if a dependency is already installed
+	// I check if it's present in the map of the packages
+	// to install. If isn't present means that is already
+	// installed.
+	// I follow this choice because excluding the initial
+	// installation normally there are less packages to install
+	// and more packages already installed.
+
+	// Build the package thin array
+	pthinarr := []*pkg.PackageThin{}
+
+	for _, a := range p2i.Artifacts {
+		pt := a.GetPackage().ToPackageThin()
+
+		requires := []*pkg.PackageThin{}
+		// Check if requires are installed and drop them from the list
+		for _, r := range pt.Requires {
+
+			_, present := p2imap.Artifacts[r.PackageName()]
+			if present {
+				requires = append(requires, r)
+			}
+		}
+
+		pt.Requires = requires
+
+		pthinarr = append(pthinarr, pt)
+	}
+
+	return pthinarr
+}
+
+func (s *Solver) sortPkgsThinArr(refarr *[]*pkg.PackageThin) error {
+	ans := []*pkg.PackageThin{}
+	pinject := make(map[string]bool, 0)
+	queue := make(map[string]*pkg.PackageThin, 0)
+
+	arr := *refarr
+
+	// Sort packages to have at the begin packages with
+	// zero or less requires and at the end the packages
+	// with more requires. If the number of requires are
+	// equal then it uses the PackageName() for sorting.
+	sort.Slice(arr[:], func(i, j int) bool {
+
+		pi := arr[i]
+		pj := arr[j]
+		ireq := pi.HasRequires()
+		jreq := pj.HasRequires()
+
+		if ireq && jreq {
+			if len(pi.Requires) == len(pj.Requires) {
+				return pi.PackageName() < pj.PackageName()
+			}
+			return len(pi.Requires) < len(pj.Requires)
+		} else if !ireq && !jreq {
+			return pi.PackageName() < pj.PackageName()
+		} else if !ireq {
+			return true
+		}
+		return false
+	})
+
+	for _, p := range *refarr {
+
+		injected := false
+
+		if !p.HasRequires() {
+			ans = append(ans, p)
+			pinject[p.PackageName()] = true
+			injected = true
+
+		} else {
+			allReqok := true
+
+			for _, r := range p.Requires {
+				if _, ok := pinject[r.PackageName()]; !ok {
+					allReqok = false
+					break
+				}
+			}
+
+			if allReqok {
+				ans = append(ans, p)
+				pinject[p.PackageName()] = true
+				injected = true
+
+			} else {
+				queue[p.PackageName()] = p
+			}
+
+		}
+
+		if injected {
+			// POST: check if the elements in queue
+			//       could be injected.
+
+			pkgs2remove := []string{}
+			for k, pr := range queue {
+
+				allReqok := true
+				for _, r := range pr.Requires {
+					if _, ok := pinject[r.PackageName()]; !ok {
+						allReqok = false
+						break
+					}
+				}
+
+				if allReqok {
+					ans = append(ans, pr)
+					pinject[pr.PackageName()] = true
+					pkgs2remove = append(pkgs2remove, k)
+				}
+
+			}
+
+			for _, rm := range pkgs2remove {
+				delete(queue, rm)
+			}
+		}
+
+	} // end for
+
+	if len(queue) > 0 {
+		// TODO: review with a more optimized logic
+
+		for len(queue) > 0 {
+
+			pkgs2remove := []string{}
+			for k, p := range queue {
+
+				allReqok := true
+				for _, r := range p.Requires {
+					if _, ok := pinject[r.PackageName()]; !ok {
+						allReqok = false
+						break
+					}
+				}
+
+				if allReqok {
+					ans = append(ans, p)
+					pinject[p.PackageName()] = true
+					pkgs2remove = append(pkgs2remove, k)
+				}
+
+			}
+
+			for _, rm := range pkgs2remove {
+				delete(queue, rm)
+			}
+
+		}
+	}
+
+	*refarr = ans
+
+	return nil
+}
+
+func (s *Solver) OrderOperations(p2i, p2r *artifact.ArtifactsPack) (*[]*Operation, error) {
+	ans := []*Operation{}
+
+	if len(p2i.Artifacts) == 1 {
+		ans = append(ans, NewOperation(AddPackage, p2i.Artifacts[0]))
+	} else if len(p2i.Artifacts) > 1 {
+
+		p2imap := p2i.ToMap()
+		pthinarr := s.createThinPkgsPlist(p2i, p2imap)
+
+		err := s.sortPkgsThinArr(&pthinarr)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, p := range pthinarr {
+			a, _ := p2imap.Artifacts[p.PackageName()]
+			op := NewOperation(AddPackage, a[0])
+			ans = append(ans, op)
+		}
+	}
+
+	if len(p2r.Artifacts) > 0 {
+		// For now I just add to the head of the array the package to remove.
+		// TODO: to review
+		for _, a := range p2r.Artifacts {
+			op := NewOperation(RemovePackage, a)
+			ans = append([]*Operation{op}, ans...)
+		}
+	}
+
+	return &ans, nil
+}
+
 func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *artifact.ArtifactsPack, error) {
 	return nil, nil, nil, errors.New("Not yet implemented")
 }
 
-func (s *Solver) Install(pkgs pkg.DefaultPackages) (*artifact.ArtifactsPack, *artifact.ArtifactsPack, error) {
+func (s *Solver) Install(pkgsref *[]*pkg.DefaultPackage) (*artifact.ArtifactsPack, *artifact.ArtifactsPack, error) {
 	ans2Install := artifact.NewArtifactsPack()
 	ans2Remove := artifact.NewArtifactsPack()
 
@@ -57,6 +253,7 @@ func (s *Solver) Install(pkgs pkg.DefaultPackages) (*artifact.ArtifactsPack, *ar
 		return nil, nil, errors.New("Solver Install requires Database")
 	}
 
+	pkgs := *pkgsref
 	// PRE: the input packages are with valid category/name strings.
 
 	searcher := wagon.NewSearcherSimple(s.Config)
