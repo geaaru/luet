@@ -69,8 +69,8 @@ func NewRemovePackage(config *cfg.LuetConfig) *cobra.Command {
 			}
 
 			searcher := wagon.NewSearcherSimple(config)
-			defer searcher.Close()
 			stones, err := searcher.SearchInstalled(searchOpts)
+			searcher.Close()
 			if err != nil {
 				Error(err.Error())
 				os.Exit(1)
