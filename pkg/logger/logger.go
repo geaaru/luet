@@ -179,6 +179,13 @@ func level2AtomicLevel(level string) zap.AtomicLevel {
 	}
 }
 
+func Emojize(msg string) string {
+	if LuetCfg.GetLogging().EnableEmoji {
+		return emoji.Sprint(msg)
+	}
+	return msg
+}
+
 func Msg(level string, withoutColor, ln bool, msg ...interface{}) {
 	var message string
 	var confLevel, msgLevel int
