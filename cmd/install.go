@@ -5,8 +5,10 @@ See AUTHORS and LICENSE for the license details and contributors.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"sync"
 
 	helpers "github.com/geaaru/luet/cmd/helpers"
 	cmdrepo "github.com/geaaru/luet/cmd/repo"
@@ -17,6 +19,7 @@ import (
 	"github.com/geaaru/luet/pkg/solver"
 	"github.com/geaaru/luet/pkg/subsets"
 	installer "github.com/geaaru/luet/pkg/v2/installer"
+	"golang.org/x/sync/semaphore"
 
 	"github.com/spf13/cobra"
 )
@@ -55,6 +58,8 @@ To force install a package:
 		Run: func(cmd *cobra.Command, args []string) {
 			var toInstall pkg.DefaultPackages
 
+			Info("Luet version", util.Version())
+
 			for _, a := range args {
 				pack, err := helpers.ParsePackageStr(a)
 				if err != nil {
@@ -71,11 +76,16 @@ To force install a package:
 			preserveSystem, _ := cmd.Flags().GetBool("preserve-system-essentials")
 			downloadOnly, _ := cmd.Flags().GetBool("download-only")
 			finalizerEnvs, _ := cmd.Flags().GetStringArray("finalizer-env")
-			//relax, _ := cmd.Flags().GetBool("relax")
 			skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
 			syncRepos, _ := cmd.Flags().GetBool("sync-repos")
 
 			if syncRepos {
+
+				waitGroup := &sync.WaitGroup{}
+				sem := semaphore.NewWeighted(int64(config.GetGeneral().Concurrency))
+				ctx := context.TODO()
+
+				defer waitGroup.Wait()
 
 				var ch chan util.ChannelRepoOpRes = make(
 					chan util.ChannelRepoOpRes,
@@ -86,7 +96,10 @@ To force install a package:
 
 				for idx, repo := range config.SystemRepositories {
 					if repo.Enable {
-						go cmdrepo.ProcessRepository(&config.SystemRepositories[idx], config, ch, force)
+						waitGroup.Add(1)
+						go cmdrepo.ProcessRepository(
+							&config.SystemRepositories[idx], config, ch, force, sem,
+							waitGroup, &ctx)
 						nOps++
 					}
 				}
@@ -97,7 +110,8 @@ To force install a package:
 						resp := <-ch
 						if resp.Error != nil && !force {
 							res = 1
-							Error("Error on update repository " + resp.Repo.Name + ": " + resp.Error.Error())
+							Error("Error on update repository " + resp.Repo.Name + ": " +
+								resp.Error.Error())
 						}
 					}
 				} else {
@@ -109,9 +123,6 @@ To force install a package:
 				}
 
 			}
-
-			Debug("Solver", config.GetSolverOptions().CompactString())
-			//repos := installer.SystemRepositories(config)
 
 			// Load config protect configs
 			installer.LoadConfigProtectConfs(config)
@@ -160,7 +171,6 @@ To force install a package:
 	//flags.Bool("onlydeps", false, "Consider **only** package dependencies")
 	flags.Bool("force", false, "Skip errors and keep going (potentially harmful)")
 	flags.Bool("preserve-system-essentials", true, "Preserve system luet files")
-	flags.Bool("solver-concurrent", false, "Use concurrent solver (experimental)")
 	flags.BoolP("yes", "y", false, "Don't ask questions")
 	flags.Bool("download-only", false, "Download only")
 	flags.StringArray("finalizer-env", []string{},
