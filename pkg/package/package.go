@@ -653,6 +653,40 @@ func (p *DefaultPackage) Revdeps(definitiondb PackageDatabase) Packages {
 	return versionsInWorld
 }
 
+func (p *DefaultPackage) ToPackageThin() *PackageThin {
+	ans := &PackageThin{
+		Name:      p.Name,
+		Category:  p.Category,
+		Version:   p.Version,
+		Requires:  []*PackageThin{},
+		Conflicts: []*PackageThin{},
+		Provides:  []*PackageThin{},
+	}
+
+	if len(p.PackageRequires) > 0 {
+		for idx, _ := range p.PackageRequires {
+			ans.Requires = append(ans.Requires,
+				p.PackageRequires[idx].ToPackageThin())
+		}
+	}
+
+	if len(p.PackageConflicts) > 0 {
+		for idx, _ := range p.PackageConflicts {
+			ans.Conflicts = append(ans.Conflicts,
+				p.PackageConflicts[idx].ToPackageThin())
+		}
+	}
+
+	if len(p.Provides) > 0 {
+		for idx, _ := range p.Provides {
+			ans.Provides = append(ans.Provides,
+				p.Provides[idx].ToPackageThin())
+		}
+	}
+
+	return ans
+}
+
 func (p *DefaultPackage) ToGentooPackage() (*gentoo.GentooPackage, error) {
 
 	var cond gentoo.PackageCond
