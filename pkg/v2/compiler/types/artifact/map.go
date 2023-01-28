@@ -87,6 +87,14 @@ func (am *ArtifactsMap) Add(p *PackageArtifact) {
 	}
 }
 
+func (am *ArtifactsMap) ToList() *[]*PackageArtifact {
+	ans := []*PackageArtifact{}
+	for _, v := range am.Artifacts {
+		ans = append(ans, v...)
+	}
+	return &ans
+}
+
 func (am *ArtifactsMap) GetSortedArtifactsByKey(k string) ([]*PackageArtifact, error) {
 	ans := []*PackageArtifact{}
 
