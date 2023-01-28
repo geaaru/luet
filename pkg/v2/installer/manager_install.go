@@ -92,14 +92,7 @@ func (m *ArtifactsManager) showPackage2install(
 	t.Render()
 }
 
-func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
-	packs ...*pkg.DefaultPackage) error {
-
-	mapRepos := make(map[string]*wagon.WagonRepository, 0)
-	errs := []error{}
-
-	m.Setup()
-
+func (m *ArtifactsManager) ShowReposRevision() error {
 	// Show repositories revisions.
 	for idx, repo := range m.Config.SystemRepositories {
 
@@ -124,6 +117,22 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 				aurora.Bold(aurora.Green(fmt.Sprintf("%3d", wr.GetRevision()))).String() + " - " +
 				aurora.Bold(aurora.Green(time.Unix(tsec, 0).String())).String(),
 		)
+	}
+
+	return nil
+}
+
+func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
+	packs ...*pkg.DefaultPackage) error {
+
+	mapRepos := make(map[string]*wagon.WagonRepository, 0)
+	errs := []error{}
+
+	m.Setup()
+
+	err := m.ShowReposRevision()
+	if err != nil {
+		return err
 	}
 
 	// TODO: temporary load in memory all installed packages.
