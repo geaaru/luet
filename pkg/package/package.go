@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	"github.com/geaaru/luet/pkg/helpers/tools"
 
 	"github.com/geaaru/luet/pkg/helpers/docker"
 	"github.com/geaaru/luet/pkg/helpers/match"
@@ -52,6 +53,7 @@ type Package interface {
 	GetPackageName() string
 	ImageID() string
 	Requires([]*DefaultPackage) Package
+	HasRequires() bool
 	Conflicts([]*DefaultPackage) Package
 	Revdeps(PackageDatabase) Packages
 	LabelDeps(PackageDatabase, string) Packages
@@ -162,6 +164,10 @@ func (pm PackageMap) String() string {
 
 	}
 	return fmt.Sprint(rr)
+}
+
+func (d DefaultPackage) HasRequires() bool {
+	return tools.Ternary(d.PackageRequires != nil, len(d.PackageRequires) > 0, false)
 }
 
 func (d DefaultPackages) Hash(salt string) string {
@@ -366,6 +372,15 @@ func (p *DefaultPackage) String() string {
 // FIXME: this needs to be unique, now just name is generalized
 func (p *DefaultPackage) GetFingerPrint() string {
 	return fmt.Sprintf("%s-%s-%s", p.Name, p.Category, p.Version)
+}
+
+// This method return an hash based on package name, version
+// and his requires, conflicts that is used to identify
+// eventually changes of the requirements of a package
+// that is not rebumped.
+func (p *DefaultPackage) GetComparitionHash() string {
+	pt := p.ToPackageThin()
+	return pt.GenerateHash()
 }
 
 func (p *DefaultPackage) HashFingerprint(salt string) string {
