@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"sync"
 
 	"github.com/geaaru/luet/pkg/config"
 	"github.com/geaaru/luet/pkg/helpers"
@@ -27,8 +28,11 @@ type Solver struct {
 	conflictsMap     *pkg.PkgsMapList       `yaml:"-" json:"-"`
 	systemMap        *pkg.PkgsMapList       `yaml:"-" json:"-"`
 	providesMap      *pkg.PkgsMapList       `yaml:"provides,omitempty" json:"provides,omitempty"`
+	requiresMap      *pkg.PkgsMapList       `yaml:"-" json:"-"`
 	availableArtsMap *artifact.ArtifactsMap `yaml:"-" json:"-"`
 	candidatesMap    *artifact.ArtifactsMap `yaml:"-" json:"-"`
+
+	mutex *sync.Mutex `yaml:"-" json:"-'`
 }
 
 func NewSolver(cfg *config.LuetConfig, opts *SolverOpts) *Solver {
@@ -37,13 +41,11 @@ func NewSolver(cfg *config.LuetConfig, opts *SolverOpts) *Solver {
 		Opts:          opts,
 		Database:      nil,
 		candidatesMap: artifact.NewArtifactsMap(),
+		mutex:         &sync.Mutex{},
 	}
 }
 
-func (s *Solver) GetType() SolverType {
-	return SingleCoreV3
-}
-
+func (s *Solver) GetType() SolverType               { return SingleCoreV3 }
 func (s *Solver) SetDatabase(d pkg.PackageDatabase) { s.Database = d }
 
 func (s *Solver) createThinPkgsPlist(p2i *artifact.ArtifactsPack, p2imap *artifact.ArtifactsMap) []*pkg.PackageThin {
@@ -241,10 +243,6 @@ func (s *Solver) OrderOperations(p2i, p2r *artifact.ArtifactsPack) (*[]*Operatio
 	return &ans, nil
 }
 
-func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *artifact.ArtifactsPack, error) {
-	return nil, nil, nil, errors.New("Not yet implemented")
-}
-
 func (s *Solver) Install(pkgsref *[]*pkg.DefaultPackage) (*artifact.ArtifactsPack, *artifact.ArtifactsPack, error) {
 	ans2Install := artifact.NewArtifactsPack()
 	ans2Remove := artifact.NewArtifactsPack()
@@ -293,7 +291,7 @@ func (s *Solver) Install(pkgsref *[]*pkg.DefaultPackage) (*artifact.ArtifactsPac
 	// TODO: Use a different solution with less memory usage
 	systemPkgs := s.Database.World()
 
-	s.prepareConflictsAndSystemMap(&systemPkgs)
+	s.prepareConflictsAndSystemMap(&systemPkgs, false)
 
 	// Process all selected packages to install.
 	// Created the key list to permit changes on the map
@@ -314,8 +312,6 @@ func (s *Solver) Install(pkgsref *[]*pkg.DefaultPackage) (*artifact.ArtifactsPac
 	s.systemMap = nil
 	s.conflictsMap = nil
 	s.providesMap = nil
-
-	// TODO: sort the packages to install
 
 	// Create the list of package to install
 	if s.Opts.NoDeps {
@@ -355,7 +351,7 @@ func (s *Solver) resolvePackage(pkgstr string, stack []string) error {
 	foundMatched := false
 
 	// NOTE: if the package is not installed in the system
-	//       means that there aren't packages that requires it.
+	//  means that there aren't packages that requires it.
 
 	// Map to avoid processing of the same version multiple time.
 	bannedVersion := make(map[string]bool, 0)
@@ -582,13 +578,17 @@ func (s *Solver) artefactIsInConflict(art *artifact.PackageArtifact) bool {
 	return false
 }
 
-func (s *Solver) prepareConflictsAndSystemMap(systemPkgs *pkg.Packages) {
+func (s *Solver) prepareConflictsAndSystemMap(systemPkgs *pkg.Packages, withReverseRequires bool) {
 	// Prepare the conflicts map to speedup checks
 	s.conflictsMap = pkg.NewPkgsMapList()
 	// Prepare the system packages map to speedup check
 	s.systemMap = pkg.NewPkgsMapList()
 	// Prepare the provides map of the installed packages.
 	s.providesMap = pkg.NewPkgsMapList()
+
+	if withReverseRequires {
+		s.requiresMap = pkg.NewPkgsMapList()
+	}
 
 	for _, p := range *systemPkgs {
 		if !s.Opts.IgnoreConflicts {
@@ -603,6 +603,16 @@ func (s *Solver) prepareConflictsAndSystemMap(systemPkgs *pkg.Packages) {
 		if len(p.(*pkg.DefaultPackage).Provides) > 0 {
 			for _, prov := range p.(*pkg.DefaultPackage).Provides {
 				s.providesMap.Add(prov.PackageName(), p.(*pkg.DefaultPackage))
+			}
+		}
+
+		if withReverseRequires {
+			// POST: Register the map of the reverse requires for all
+			//       required packages of the selected package.
+			if len(p.(*pkg.DefaultPackage).PackageRequires) > 0 {
+				for _, req := range p.(*pkg.DefaultPackage).PackageRequires {
+					s.requiresMap.Add(req.PackageName(), p.(*pkg.DefaultPackage))
+				}
 			}
 		}
 
