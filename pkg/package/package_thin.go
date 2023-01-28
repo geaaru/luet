@@ -5,7 +5,11 @@ See AUTHORS and LICENSE for the license details and contributors.
 package pkg
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"hash"
 
 	"github.com/geaaru/luet/pkg/helpers/tools"
 )
@@ -68,4 +72,16 @@ func (p *PackageThin) AtomMatches(m *PackageThin) bool {
 		return true
 	}
 	return false
+}
+
+func (p *PackageThin) GenerateHash() string {
+	var pmd5 hash.Hash = md5.New()
+
+	b, _ := json.Marshal(p)
+
+	pmd5.Write(b)
+
+	var h []byte = pmd5.Sum(nil)
+
+	return hex.EncodeToString(h)
 }
