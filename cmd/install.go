@@ -16,7 +16,6 @@ import (
 	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
-	"github.com/geaaru/luet/pkg/solver"
 	"github.com/geaaru/luet/pkg/subsets"
 	installer "github.com/geaaru/luet/pkg/v2/installer"
 	"golang.org/x/sync/semaphore"
@@ -47,7 +46,6 @@ To force install a package:
 `,
 		Aliases: []string{"i"},
 		PreRun: func(cmd *cobra.Command, args []string) {
-			util.BindSolverFlags(cmd)
 			config.Viper.BindPFlag("onlydeps", cmd.Flags().Lookup("onlydeps"))
 			config.Viper.BindPFlag("nodeps", cmd.Flags().Lookup("nodeps"))
 			config.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
@@ -80,7 +78,6 @@ To force install a package:
 			syncRepos, _ := cmd.Flags().GetBool("sync-repos")
 
 			if syncRepos {
-
 				waitGroup := &sync.WaitGroup{}
 				sem := semaphore.NewWeighted(int64(config.GetGeneral().Concurrency))
 				ctx := context.TODO()
@@ -160,13 +157,9 @@ To force install a package:
 
 	flags := ans.Flags()
 
-	flags.String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
-	flags.Float32("solver-rate", 0.7, "Solver learning rate")
-	flags.Float32("solver-discount", 1.0, "Solver discount rate")
-	flags.Int("solver-attempts", 9000, "Solver maximum attempts")
 	flags.Bool("nodeps", false, "Don't consider package dependencies (harmful!)")
-	flags.Bool("relax", false, "Relax installation constraints")
-	flags.BoolP("pretend", "p", false, "simply display what *would* have been installed if --pretend weren't used")
+	flags.BoolP("pretend", "p", false,
+		"simply display what *would* have been installed if --pretend weren't used")
 
 	//flags.Bool("onlydeps", false, "Consider **only** package dependencies")
 	flags.Bool("force", false, "Skip errors and keep going (potentially harmful)")
