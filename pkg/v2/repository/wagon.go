@@ -308,6 +308,13 @@ func (w *WagonRepository) ExplodeMetadata() error {
 			pkg.Version,
 			"metadata.yaml",
 		)
+		metaJsonFile := filepath.Join(w.Identity.LuetRepository.TreePath,
+			pkg.Category,
+			pkg.Name,
+			pkg.Version,
+			"metadata.json",
+		)
+
 		pkgDir := filepath.Dir(metaFile)
 		defFile := filepath.Join(pkgDir, "definition.yaml")
 
@@ -366,6 +373,16 @@ func (w *WagonRepository) ExplodeMetadata() error {
 			if err != nil {
 				Warning(fmt.Sprintf(
 					"[%s] Error on creating metadata file for package %s: %s",
+					w.Identity.Name,
+					pkg.HumanReadableString(),
+					err.Error()),
+				)
+			}
+
+			err = catalog.Index[idx].WriteMetadataJson(metaJsonFile)
+			if err != nil {
+				Warning(fmt.Sprintf(
+					"[%s] Error on creating JSON metadata file for package %s: %s",
 					w.Identity.Name,
 					pkg.HumanReadableString(),
 					err.Error()),
