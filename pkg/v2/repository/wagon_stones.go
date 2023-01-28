@@ -350,6 +350,8 @@ func (s *WagonStones) analyzePackageDir(
 	opts *StonesSearchOpts,
 	repoName string) (*artifact.PackageArtifact, error) {
 
+	var art *artifact.PackageArtifact
+
 	defFile := filepath.Join(dir, "definition.yaml")
 
 	// Ignoring directory without definition.yaml file
@@ -357,23 +359,44 @@ func (s *WagonStones) analyzePackageDir(
 		return nil, nil
 	}
 
-	// Read the metadata.file
-	metaFile := filepath.Join(dir, "metadata.yaml")
-	data, err := ioutil.ReadFile(metaFile)
-	if err != nil {
-		return nil, errors.New(
-			fmt.Sprintf("Error on read file %s: %s",
-				metaFile, err.Error()))
-	}
+	metaJsonFile := filepath.Join(dir, "metadata.json")
 
-	art, err := artifact.NewPackageArtifactFromYaml(data)
-	if err != nil {
-		return nil, errors.New(
-			fmt.Sprintf("Error on parse file %s: %s",
-				metaFile, err.Error()))
+	if fileHelper.Exists(metaJsonFile) {
+
+		data, err := ioutil.ReadFile(metaJsonFile)
+		if err != nil {
+			return nil, errors.New(
+				fmt.Sprintf("Error on read file %s: %s",
+					metaJsonFile, err.Error()))
+		}
+
+		art, err = artifact.NewPackageArtifactFromJson(data)
+		if err != nil {
+			return nil, errors.New(
+				fmt.Sprintf("Error on parse file %s: %s",
+					metaJsonFile, err.Error()))
+		}
+		// Free memory
+		data = nil
+	} else {
+		// Read the metadata.file
+		metaFile := filepath.Join(dir, "metadata.yaml")
+		data, err := ioutil.ReadFile(metaFile)
+		if err != nil {
+			return nil, errors.New(
+				fmt.Sprintf("Error on read file %s: %s",
+					metaFile, err.Error()))
+		}
+
+		art, err = artifact.NewPackageArtifactFromYaml(data)
+		if err != nil {
+			return nil, errors.New(
+				fmt.Sprintf("Error on parse file %s: %s",
+					metaFile, err.Error()))
+		}
+		// Free memory
+		data = nil
 	}
-	// Free memory
-	data = nil
 
 	if art.Runtime == nil {
 		//fmt.Println("ARTIFACT ", artifact, repoName)
