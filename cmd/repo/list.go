@@ -39,6 +39,7 @@ func NewRepoListCommand(config *cfg.LuetConfig) *cobra.Command {
 			enable, _ := cmd.Flags().GetBool("enabled")
 			disable, _ := cmd.Flags().GetBool("disabled")
 			quiet, _ := cmd.Flags().GetBool("quiet")
+			showUrls, _ := cmd.Flags().GetBool("urls")
 			repoType, _ := cmd.Flags().GetString("type")
 
 			for idx, _ := range config.SystemRepositories {
@@ -96,12 +97,26 @@ func NewRepoListCommand(config *cfg.LuetConfig) *cobra.Command {
 						fmt.Println(
 							fmt.Sprintf("%s\n  %s", repoColor, repoText))
 					}
+
+					fmt.Println(fmt.Sprintf("  Priority %5d - Type %4s", Bold(Red(repo.Priority)),
+						Bold(Blue(repo.Type)),
+					))
+
+					if showUrls {
+						fmt.Println(fmt.Sprintf("  Urls:"))
+						for _, url := range repo.Urls {
+							fmt.Println(fmt.Sprintf(
+								"   %s", Bold(Italic(Cyan("* "+url))),
+							))
+						}
+					}
 				}
 			}
 		},
 	}
 
 	ans.Flags().Bool("enabled", false, "Show only enabled repositories.")
+	ans.Flags().BoolP("urls", "u", false, "Show URLs of the repository. (only in normal mode).")
 	ans.Flags().Bool("disabled", false, "Show only disabled repositories.")
 	ans.Flags().BoolP("quiet", "q", false, "Show only name of the repositories.")
 	ans.Flags().StringP("type", "t", "", "Filter repositories of a specific type")
