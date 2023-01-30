@@ -590,72 +590,39 @@ func (a *PackageArtifact) Unpack(dst string, enableSubsets bool) error {
 
 	switch a.CompressionType {
 	case compression.Zstandard:
-		// Create the uncompressed archive
-		archive, err := os.Create(a.CachePath + ".uncompressed")
-		if err != nil {
-			return err
-		}
-		defer os.RemoveAll(a.CachePath + ".uncompressed")
-		defer archive.Close()
-
 		original, err := os.Open(a.CachePath)
 		if err != nil {
 			return errors.Wrap(err, "Cannot open "+a.CachePath)
 		}
 		defer original.Close()
 
-		bufferedReader := bufio.NewReader(original)
-
-		d, err := zstd.NewReader(bufferedReader)
+		//		bufferedReader := bufio.NewReader(original)
+		d, err := zstd.NewReader(original)
 		if err != nil {
 			return err
 		}
 		defer d.Close()
 
-		_, err = io.Copy(archive, d)
-		if err != nil {
-			return errors.Wrap(err, "Cannot copy to "+a.CachePath+".uncompressed")
-		}
-
-		err = helpers.UntarProtectSpec(a.CachePath+".uncompressed", dst,
-			protectedFiles, tarModifierWrapperFunc, spec)
-		if err != nil {
-			return err
-		}
-		return nil
+		err = helpers.UntarProtectSpecCompress(dst,
+			protectedFiles, tarModifierWrapperFunc, spec, d)
+		return err
 	case compression.GZip:
 		// Create the uncompressed archive
-		archive, err := os.Create(a.CachePath + ".uncompressed")
-		if err != nil {
-			return err
-		}
-		defer os.RemoveAll(a.CachePath + ".uncompressed")
-		defer archive.Close()
-
 		original, err := os.Open(a.CachePath)
 		if err != nil {
 			return errors.Wrap(err, "Cannot open "+a.CachePath)
 		}
 		defer original.Close()
 
-		bufferedReader := bufio.NewReader(original)
-		r, err := gzip.NewReader(bufferedReader)
+		r, err := gzip.NewReader(original)
 		if err != nil {
 			return err
 		}
 		defer r.Close()
 
-		_, err = io.Copy(archive, r)
-		if err != nil {
-			return errors.Wrap(err, "Cannot copy to "+a.CachePath+".uncompressed")
-		}
-
-		err = helpers.UntarProtectSpec(a.CachePath+".uncompressed", dst,
-			protectedFiles, tarModifierWrapperFunc, spec)
-		if err != nil {
-			return err
-		}
-		return nil
+		err = helpers.UntarProtectSpecCompress(dst,
+			protectedFiles, tarModifierWrapperFunc, spec, r)
+		return err
 	// Defaults to tar only (covers when "none" is supplied)
 	default:
 		return helpers.UntarProtect(a.CachePath, dst,

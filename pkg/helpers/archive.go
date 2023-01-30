@@ -71,13 +71,8 @@ func UntarProtect(src, dst string, sameOwner, overwriteDirPerms bool, protectedF
 	)
 }
 
-func UntarProtectSpec(src, dst string, protectedFiles []string, modifier tarf.TarFileHandlerFunc, spec *tarf_specs.SpecFile) error {
-	in, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-
+func prepareTarformers(in io.Reader, modifier tarf.TarFileHandlerFunc,
+	spec *tarf_specs.SpecFile, protectedFiles []string) *tarf.TarFormers {
 	tarformers := tarf.NewTarFormers(tarf.GetOptimusPrime().Config)
 	tarformers.SetReader(in)
 
@@ -86,6 +81,28 @@ func UntarProtectSpec(src, dst string, protectedFiles []string, modifier tarf.Ta
 
 		spec.TriggeredFiles = protectedFiles
 	}
+
+	return tarformers
+}
+
+func UntarProtectSpecCompress(dst string, protectedFiles []string,
+	modifier tarf.TarFileHandlerFunc, spec *tarf_specs.SpecFile,
+	compressStream io.Reader) error {
+
+	tarformers := prepareTarformers(compressStream,
+		modifier, spec, protectedFiles)
+
+	return tarformers.RunTask(spec, dst)
+}
+
+func UntarProtectSpec(src, dst string, protectedFiles []string, modifier tarf.TarFileHandlerFunc, spec *tarf_specs.SpecFile) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	tarformers := prepareTarformers(in, modifier, spec, protectedFiles)
 
 	return tarformers.RunTask(spec, dst)
 }
