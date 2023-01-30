@@ -32,9 +32,7 @@ type InstallOpts struct {
 }
 
 func (m *ArtifactsManager) sortPackages2Install(
-	p2i *artifact.ArtifactsPack,
-	p2r *artifact.ArtifactsPack,
-) (*[]*solver.Operation, error) {
+	p2i, p2u, p2r *artifact.ArtifactsPack) (*[]*solver.Operation, error) {
 
 	Spinner(3)
 
@@ -45,7 +43,7 @@ func (m *ArtifactsManager) sortPackages2Install(
 
 	s := solver.NewSolverImplementation("solverv2", m.Config, solverOpts)
 	(*s).SetDatabase(m.Database)
-	ans, err := (*s).OrderOperations(p2i, p2r)
+	ans, err := (*s).OrderOperations(p2i, p2u, p2r)
 	SpinnerStop()
 	if err != nil {
 		return nil, err
@@ -188,6 +186,7 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 
 	} else {
 		Info("No packages to install.")
+		return nil
 	}
 
 	// Step 5. Download all packages to install.
@@ -265,7 +264,8 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 	Spinner(3)
 	// Step 6. Order packages.
 	start := time.Now()
-	installOps, err := m.sortPackages2Install(pkgs2Install, pkgs2Remove)
+	installOps, err := m.sortPackages2Install(
+		pkgs2Install, artifact.NewArtifactsPack(), pkgs2Remove)
 	SpinnerStop()
 	Debug(fmt.Sprintf(":brain:Sort executed in %d µs.",
 		time.Now().Sub(start).Nanoseconds()/1e3))
@@ -273,7 +273,10 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 		return err
 	}
 
-	InfoC(":clinking_beer_mugs:Executing packages operations...")
+	InfoC(fmt.Sprintf(
+		":clinking_beer_mugs:Executing %d packages operations...",
+		len(*installOps),
+	))
 
 	// Step 7. Install the matches packages/Remove packages.
 	for _, op := range *installOps {
