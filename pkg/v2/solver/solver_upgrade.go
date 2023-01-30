@@ -34,24 +34,8 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 
 	s.prepareConflictsAndSystemMap(&systemPkgs, true)
 
-	InfoC(":brain:Starting preliminary analysis...")
-	start := time.Now()
-	// 1. Search for all packages with new versions excluding
-	//    his dependencies or with changes on requires/conflicts/provides
-	err := s.analyzeInstalledPackages()
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	InfoC(fmt.Sprintf(":brain:Preliminary analysis done in %d µs.",
-		time.Now().Sub(start).Nanoseconds()/1e3))
-
-	if len(s.availableArtsMap.Artifacts) == 0 {
-		// POST: No updates available
-		return ans2Remove, ans2Update, ans2Install, nil
-	}
-
 	// Create the repositories map
-	mapRepos := make(map[string]*wagon.WagonRepository, 0)
+	s.MapRepos = make(map[string]*wagon.WagonRepository, 0)
 	for idx, repo := range s.Config.SystemRepositories {
 		if !repo.Enable {
 			continue
@@ -66,7 +50,23 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 			)
 		}
 
-		mapRepos[repo.Name] = wr
+		s.MapRepos[repo.Name] = wr
+	}
+
+	Debug(":brain:Starting preliminary analysis...")
+	start := time.Now()
+	// 1. Search for all packages with new versions excluding
+	//    his dependencies or with changes on requires/conflicts/provides
+	err := s.analyzeInstalledPackages()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	Debug(fmt.Sprintf(":brain:Preliminary analysis done in %d µs.",
+		time.Now().Sub(start).Nanoseconds()/1e3))
+
+	if len(s.availableArtsMap.Artifacts) == 0 {
+		// POST: No updates available
+		return ans2Remove, ans2Update, ans2Install, nil
 	}
 
 	// temporary convert the map to list for the sort.
@@ -74,9 +74,9 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 
 	// Sort packages for requires and repos
 	wagon.SortArtifactList4RequiresAndRepos(
-		artsSortList, &mapRepos)
+		artsSortList, &s.MapRepos)
 	// Cleanup memory
-	mapRepos = nil
+	s.MapRepos = nil
 
 	// POST: There are packages to upgrade or possible upgrades.
 	//       Analyze every candidate.
@@ -189,11 +189,23 @@ func (s *Solver) checkCandidate2Upgrade(pkgstr string, stack []string) error {
 		return nil
 	}
 
+	var selectedArts []*artifact.PackageArtifact
+	var err error
+
 	// Sort all available versions of the selected package.
 	// The first is the major version
-	selectedArts, err := s.availableArtsMap.GetSortedArtifactsByKey(pkgstr)
-	if err != nil {
-		return err
+	if s.MapRepos != nil {
+		selectedArts, err = s.availableArtsMap.GetArtifactsByKey(pkgstr)
+		if err != nil {
+			return err
+		}
+		wagon.SortArtifactList4VersionAndRepos(&selectedArts,
+			&s.MapRepos, true)
+	} else {
+		selectedArts, err = s.availableArtsMap.GetSortedArtifactsByKey(pkgstr)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Retrieve the DefaultPackage of the installed package.
@@ -555,7 +567,7 @@ func (s *Solver) checkInstalledPackageWrapper(
 
 	start := time.Now()
 	err = s.checkInstalledPackage(p)
-	InfoC(fmt.Sprintf(":brain: Analysis %s done in %d µs.",
+	Debug(fmt.Sprintf(":brain: Analysis %s done in %d µs.",
 		p.PackageName(),
 		time.Now().Sub(start).Nanoseconds()/1e3))
 	if err != nil {
@@ -598,11 +610,9 @@ func (s *Solver) checkInstalledPackage(p *pkg.DefaultPackage) error {
 		return err
 	}
 
-	InfoC(fmt.Sprintf(":brain: search %s done in %d µs.",
+	Debug(fmt.Sprintf(":brain: search %s done in %d µs (found %d candidates).",
 		p.PackageName(),
-		time.Now().Sub(start).Nanoseconds()/1e3))
-	Debug(fmt.Sprintf(":brain:For package %s found %d candidates.",
-		p.PackageName(), len(*reposArtifacts)))
+		time.Now().Sub(start).Nanoseconds()/1e3), len(*reposArtifacts))
 	if len(*reposArtifacts) == 0 {
 		Debug(fmt.Sprintf(
 			"[%s] No artifacts found between repositories. Noop.",
@@ -623,10 +633,23 @@ func (s *Solver) checkInstalledPackage(p *pkg.DefaultPackage) error {
 
 	pHash := p.GetComparitionHash()
 
-	// NOTE: I exclude packages
+	// Sort packages for version and repos (on reverse)
+	wagon.SortArtifactList4VersionAndRepos(
+		reposArtifacts, &s.MapRepos, true)
+
+	// To avoid continue reinstall of the same package version
+	// with different hash on different repository. For a specific
+	// version I consider only the first.
+	elabVersion := make(map[string]bool, 0)
 
 	foundNewVersion := false
 	for _, a := range *reposArtifacts {
+		if _, present := elabVersion[a.GetPackage().GetVersion()]; present {
+			// If the version is already been elaborated I ignoring
+			// the same package version available in the other repositories.
+			continue
+		}
+		elabVersion[a.GetPackage().GetVersion()] = true
 		gpR, err := a.GetPackage().ToGentooPackage()
 		if err != nil {
 			return err
