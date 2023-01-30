@@ -16,9 +16,10 @@ import (
 	. "github.com/geaaru/luet/pkg/logger"
 	"github.com/geaaru/luet/pkg/subsets"
 	installer "github.com/geaaru/luet/pkg/v2/installer"
-	"golang.org/x/sync/semaphore"
 
+	. "github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/semaphore"
 )
 
 func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
@@ -34,7 +35,8 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 		Long: `Upgrades packages installed.`,
 		Run: func(cmd *cobra.Command, args []string) {
 
-			Info("Luet version", util.Version())
+			InfoC(fmt.Sprintf(":rocket:%s %s",
+				Bold(Blue("Luet")), Bold(Blue(util.Version()))))
 
 			force := config.Viper.GetBool("force")
 			nodeps, _ := cmd.Flags().GetBool("nodeps")

@@ -18,9 +18,10 @@ import (
 	pkg "github.com/geaaru/luet/pkg/package"
 	"github.com/geaaru/luet/pkg/subsets"
 	installer "github.com/geaaru/luet/pkg/v2/installer"
-	"golang.org/x/sync/semaphore"
 
+	. "github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/semaphore"
 )
 
 func newInstallCommand(config *cfg.LuetConfig) *cobra.Command {
@@ -56,7 +57,8 @@ To force install a package:
 		Run: func(cmd *cobra.Command, args []string) {
 			var toInstall pkg.DefaultPackages
 
-			Info("Luet version", util.Version())
+			InfoC(fmt.Sprintf(":rocket:%s %s",
+				Bold(Blue("Luet")), Bold(Blue(util.Version()))))
 
 			for _, a := range args {
 				pack, err := helpers.ParsePackageStr(a)
