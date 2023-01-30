@@ -10,6 +10,52 @@ import (
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 )
 
+func SortArtifactList4VersionAndRepos(artsref *[]*artifact.PackageArtifact,
+	rmap *map[string]*WagonRepository, reverse bool) {
+
+	arts := *artsref
+	mapRepos := *rmap
+
+	// Sort packages ordered for version and for repository priority.
+	sort.Slice(arts[:], func(i, j int) bool {
+
+		arti := arts[i]
+		artj := arts[j]
+
+		pi, _ := arti.GetPackage().ToGentooPackage()
+		pj, _ := artj.GetPackage().ToGentooPackage()
+
+		// NOTE: If i don't find the repository in the
+		//       map i consider a priority with value 100
+		irprio := 100
+		jrprio := 100
+
+		if r, ok := mapRepos[pi.Repository]; ok {
+			irprio = r.Identity.Priority
+		}
+		if r, ok := mapRepos[pj.Repository]; ok {
+			jrprio = r.Identity.Priority
+		}
+
+		sameVersion, _ := pi.Equal(pj)
+		if sameVersion {
+			if reverse {
+				return irprio > jrprio
+			} else {
+				return irprio < jrprio
+			}
+		} else {
+			ans, _ := pi.LessThan(pj)
+			if reverse {
+				return !ans
+			} else {
+				return ans
+			}
+		}
+
+	})
+}
+
 func SortArtifactList4RequiresAndRepos(artsref *[]*artifact.PackageArtifact,
 	rmap *map[string]*WagonRepository) {
 
