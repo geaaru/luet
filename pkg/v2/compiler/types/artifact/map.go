@@ -95,13 +95,20 @@ func (am *ArtifactsMap) ToList() *[]*PackageArtifact {
 	return &ans
 }
 
+func (am *ArtifactsMap) GetArtifactsByKey(k string) ([]*PackageArtifact, error) {
+	val, ok := am.Artifacts[k]
+	if !ok {
+		return nil, fmt.Errorf("Package %s not found on map", k)
+	}
+	return val, nil
+}
+
 func (am *ArtifactsMap) GetSortedArtifactsByKey(k string) ([]*PackageArtifact, error) {
 	ans := []*PackageArtifact{}
 
 	val, ok := am.Artifacts[k]
 	if !ok {
-		panic(errors.New(fmt.Sprintf("Package %s not found", k)))
-		return nil, errors.New(fmt.Sprintf("Package %s not found on map", k))
+		return nil, fmt.Errorf("Package %s not found on map", k)
 	}
 
 	if len(val) == 1 {
