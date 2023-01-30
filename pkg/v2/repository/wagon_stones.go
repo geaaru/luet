@@ -631,8 +631,11 @@ func (s *WagonStones) SearchArtifacts(opts *StonesSearchOpts, repoName, repoDir 
 	for _, file := range files {
 
 		if !file.IsDir() {
-			Debug(fmt.Sprintf("For repository %s ignoring file %s",
-				repoName, file.Name()))
+
+			if file.Name() != "provides.yaml" {
+				Debug(fmt.Sprintf("For repository %s ignoring file %s",
+					repoName, file.Name()))
+			}
 			continue
 		}
 
