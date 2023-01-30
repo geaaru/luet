@@ -22,8 +22,9 @@ type Solver struct {
 	Config *config.LuetConfig `yaml:",inline" json:",inline"`
 	Opts   *SolverOpts        `yaml:"opts" json:"opts"`
 
-	Database pkg.PackageDatabase `yaml:"-" json:"-"`
-	Searcher wagon.Searcher      `yaml:"-" json:"-"`
+	Database pkg.PackageDatabase               `yaml:"-" json:"-"`
+	Searcher wagon.Searcher                    `yaml:"-" json:"-"`
+	MapRepos map[string]*wagon.WagonRepository `yaml:"-" json:"-"`
 
 	conflictsMap     *pkg.PkgsMapList       `yaml:"-" json:"-"`
 	systemMap        *pkg.PkgsMapList       `yaml:"-" json:"-"`
@@ -40,6 +41,7 @@ func NewSolver(cfg *config.LuetConfig, opts *SolverOpts) *Solver {
 		Config:        cfg,
 		Opts:          opts,
 		Database:      nil,
+		MapRepos:      nil,
 		candidatesMap: artifact.NewArtifactsMap(),
 		mutex:         &sync.Mutex{},
 	}
@@ -209,36 +211,152 @@ func (s *Solver) sortPkgsThinArr(refarr *[]*pkg.PackageThin) error {
 	return nil
 }
 
-func (s *Solver) OrderOperations(p2i, p2r *artifact.ArtifactsPack) (*[]*Operation, error) {
+func (s *Solver) OrderOperations(p2i, p2u, p2r *artifact.ArtifactsPack) (*[]*Operation, error) {
 	ans := []*Operation{}
+	tmpOps := []*Operation{}
 
-	if len(p2i.Artifacts) == 1 {
-		ans = append(ans, NewOperation(AddPackage, p2i.Artifacts[0]))
-	} else if len(p2i.Artifacts) > 1 {
+	// PRE: A package could not be available on both p2i and p2u arrays.
 
-		p2imap := p2i.ToMap()
-		pthinarr := s.createThinPkgsPlist(p2i, p2imap)
+	if p2i == nil || p2u == nil || p2r == nil {
+		return &ans, errors.New("Invalid parameters to OrderOperations")
+	}
+
+	// Merge packages to install with packages to updates.
+	mergedPack := artifact.NewArtifactsPack()
+	mergedPack.Artifacts = p2i.Artifacts
+	if p2u != nil {
+		mergedPack.Artifacts = append(mergedPack.Artifacts, p2u.Artifacts...)
+	}
+	mergedMap := mergedPack.ToMap()
+
+	if len(mergedPack.Artifacts) == 1 {
+		if len(p2i.Artifacts) > 0 {
+			ans = append(ans, NewOperation(AddPackage, mergedPack.Artifacts[0]))
+		} else {
+			ans = append(ans, NewOperation(UpdatePackage, mergedPack.Artifacts[0]))
+		}
+	} else if len(mergedPack.Artifacts) > 1 {
+
+		pthinarr := s.createThinPkgsPlist(mergedPack, mergedMap)
 
 		err := s.sortPkgsThinArr(&pthinarr)
 		if err != nil {
 			return nil, err
 		}
+		mergedPack = nil
+
+		p2imap := p2i.ToMap()
+		p2umap := p2u.ToMap()
 
 		for _, p := range pthinarr {
-			a, _ := p2imap.Artifacts[p.PackageName()]
-			op := NewOperation(AddPackage, a[0])
-			ans = append(ans, op)
+			var op *Operation = nil
+			if _, present := p2imap.Artifacts[p.PackageName()]; present {
+				a, _ := p2imap.Artifacts[p.PackageName()]
+				op = NewOperation(AddPackage, a[0])
+			} else {
+				a, _ := p2umap.Artifacts[p.PackageName()]
+				op = NewOperation(UpdatePackage, a[0])
+			}
+
+			tmpOps = append(tmpOps, op)
 		}
+		pthinarr = nil
 	}
 
 	if len(p2r.Artifacts) > 0 {
-		// For now I just add to the head of the array the package to remove.
-		// TODO: to review
-		for _, a := range p2r.Artifacts {
-			op := NewOperation(RemovePackage, a)
-			ans = append([]*Operation{op}, ans...)
+
+		// Sort packages to remove
+		p2rmap := p2r.ToMap()
+		pthinarr := s.createThinPkgsPlist(p2r, p2rmap)
+
+		if len(tmpOps) == 0 {
+			// POST: If there are packages to remove means
+			//       that there are only remove operations.
+			for _, a := range pthinarr {
+				val, _ := p2rmap.Artifacts[a.PackageName()]
+				ans = append(ans, NewOperation(RemovePackage, val[0]))
+			}
+		} else {
+
+			newRemoves := []*Operation{}
+
+			// Check and Add all packages not available
+			// between new install/updates in the right order.
+			for _, a := range p2r.Artifacts {
+				p := a.GetPackage()
+				if _, present := mergedMap.Artifacts[p.PackageName()]; !present {
+					newRemoves = append(newRemoves,
+						NewOperation(RemovePackage, a),
+					)
+				}
+			}
+
+			if len(newRemoves) > 0 {
+				ans = newRemoves
+			}
+
+			// Add all packages available on mergedPack in the
+			// order of the previous sort.
+
+			idxOps := len(ans)
+			rmOps := len(ans)
+			tmpNOps := len(tmpOps)
+			fmt.Println("TMPNOPTS ", tmpNOps, rmOps, idxOps)
+			for tidx := 0; tidx < tmpNOps; tidx++ {
+				p := tmpOps[tidx].Artifact.GetPackage()
+
+				// Check if the operation has a remove operation
+				if pr, present := p2rmap.Artifacts[p.PackageName()]; present {
+
+					idxConflict := -1
+					for idx := idxOps - 1; idx > rmOps; idx-- {
+						pp := ans[idx].Artifact.GetPackage()
+						admit, err := pp.Admit(p)
+						if err != nil {
+							Warning(fmt.Sprintf("[%s] Error on check conflict with %s: %s",
+								p.PackageName(), pp.PackageName(), err.Error()))
+						} else {
+							if !admit {
+								idxConflict = idx
+							}
+						}
+					}
+
+					if idxConflict == 0 {
+						ans = append([]*Operation{
+							NewOperation(RemovePackage, pr[0]),
+						}, ans...)
+						ans = append(ans, tmpOps[tidx])
+						idxOps++
+					} else if idxConflict < 0 {
+						ans = append(ans,
+							[]*Operation{
+								NewOperation(RemovePackage, pr[0]),
+								tmpOps[tidx],
+							}...)
+						idxOps++
+					} else {
+						segment := ans[idxConflict:]
+						ans = append(ans[0:idxConflict], NewOperation(RemovePackage, pr[0]))
+						ans = append(ans, segment...)
+						ans = append(ans, tmpOps[tidx])
+						idxOps++
+					}
+				} else {
+					ans = append(ans, tmpOps[tidx])
+				}
+				idxOps++
+			}
+
 		}
+
+		pthinarr = nil
+		p2rmap = nil
+	} else {
+		ans = tmpOps
 	}
+
+	mergedMap = nil
 
 	return &ans, nil
 }
