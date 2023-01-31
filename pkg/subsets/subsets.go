@@ -132,6 +132,10 @@ func LoadSubsetsDefintions(c *LuetConfig) error {
 	var err error
 	rootfs := ""
 
+	if c.SubsetsDefinitions == nil {
+		c.SubsetsDefinitions = NewLuetSubsetsDefinition()
+	}
+
 	// Respect the rootfs param on read repositories
 	if !c.ConfigFromHost {
 		rootfs, err = c.GetSystem().GetRootFsAbs()
