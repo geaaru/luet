@@ -52,6 +52,7 @@ repositories:
    - name: "main"
      type: "http"
      enable: true
+     cached: true
      urls:
        - "http://127.0.0.1:$TEST_PORT"
 EOF

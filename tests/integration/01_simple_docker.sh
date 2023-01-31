@@ -74,6 +74,7 @@ subsets_defdir:
 repositories:
    - name: "main"
      type: "docker"
+     cached: true
      enable: true
      urls:
        - "${TEST_DOCKER_IMAGE}"

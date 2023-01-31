@@ -79,6 +79,7 @@ repos_confdir:
 repositories:
    - name: "main"
      type: "disk"
+     cached: true
      enable: true
      urls:
        - "$tmpdir/testbuild"

@@ -61,6 +61,7 @@ repositories:
    - name: "main"
      type: "disk"
      enable: true
+     cached: true
      urls:
        - "/testbuild"
 EOF

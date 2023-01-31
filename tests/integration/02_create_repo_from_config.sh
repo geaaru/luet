@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 
 testsourcedir=$(dirname "${BASH_SOURCE[0]}")
 source ${testsourcedir}/_common.sh
@@ -42,6 +42,7 @@ repositories:
    - name: "main"
      type: "disk"
      enable: true
+     cached: true
      urls:
        - "$tmpdir/testbuild"
 EOF
