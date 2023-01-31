@@ -308,7 +308,7 @@ func (m *ArtifactsManager) RemovePackage(s *repos.Stone,
 		reposSep = "::"
 	}
 
-	Info(fmt.Sprintf(":recycle: %-65s - %-15s # removed :check_mark:",
+	Info(fmt.Sprintf(":recycle:  %-65s - %-15s # removed :check_mark:",
 		fmt.Sprintf("%s%s%s", p.PackageName(),
 			reposSep, p.Repository,
 		),
@@ -386,9 +386,9 @@ func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos
 		return errors.New("Artifact without Runtime package definition")
 	}
 
-	m.Setup()
-
 	start := time.Now()
+
+	m.Setup()
 
 	// Set package files on local database
 	err := m.Database.SetPackageFiles(
@@ -397,9 +397,14 @@ func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos
 			Files:              p.Files,
 		},
 	)
+
 	if err != nil {
 		return errors.Wrap(err, "Register package files on database")
 	}
+
+	Debug(fmt.Sprintf("Register package (set files ) %s completed in %d µs.",
+		pp.HumanReadableString(),
+		time.Now().Sub(start).Nanoseconds()/1e3))
 
 	// Set finalizer if present
 	if r != nil {

@@ -282,7 +282,7 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 	for _, op := range *installOps {
 
 		switch op.Action {
-		case "D":
+		case solver.RemovePackage:
 			p := op.Artifact.GetPackage()
 
 			stone := &wagon.Stone{
@@ -301,13 +301,14 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 				Error(fmt.Sprintf("[%s] Removing failed: %s",
 					stone.HumanReadableString(),
 					err.Error()))
+				fail = true
 				if !opts.Force {
 					return err
 				} else {
 					errs = append(errs, err)
 				}
 			}
-		case "N":
+		case solver.AddPackage:
 			art := op.Artifact
 			art.ResolveCachePath()
 			r := mapRepos[art.GetRepository()]
@@ -334,11 +335,16 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 
 			err = m.RegisterPackage(art, r)
 			if err != nil {
-				fail = true
 				Error(fmt.Sprintf(
 					"Error on register artifact %s: %s",
 					art.GetPackage().HumanReadableString(),
 					err.Error()))
+				fail = true
+				if !opts.Force {
+					return err
+				} else {
+					errs = append(errs, err)
+				}
 			}
 		}
 

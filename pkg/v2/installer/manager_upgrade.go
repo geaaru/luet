@@ -249,7 +249,7 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 
 	for _, op := range *installOps {
 		switch op.Action {
-		case "D":
+		case solver.RemovePackage:
 			p := op.Artifact.GetPackage()
 
 			stone := &wagon.Stone{
@@ -268,13 +268,14 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 				Error(fmt.Sprintf("[%s] Removing failed: %s",
 					stone.HumanReadableString(),
 					err.Error()))
+				fail = true
 				if !opts.Force {
 					return err
 				} else {
 					errs = append(errs, err)
 				}
 			}
-		case "N":
+		case solver.AddPackage, solver.UpdatePackage:
 			art := op.Artifact
 			art.ResolveCachePath()
 			r := mapRepos[art.GetRepository()]
@@ -306,6 +307,10 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 					"Error on register artifact %s: %s",
 					art.GetPackage().HumanReadableString(),
 					err.Error()))
+				errs = append(errs, fmt.Errorf(
+					"%s::%s - error: %s", art.GetPackage().PackageName(),
+					art.GetPackage().Repository,
+					err.Error()))
 			}
 		}
 	}
@@ -314,7 +319,7 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 	// sorted for action
 	if !opts.SkipFinalizers {
 		for _, op := range *installOps {
-			if op.Action != solver.AddPackage {
+			if op.Action == solver.RemovePackage {
 				continue
 			}
 			// POST: just run finalizer on the new packages.
