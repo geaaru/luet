@@ -224,16 +224,14 @@ func (s *Solver) OrderOperations(p2i, p2u, p2r *artifact.ArtifactsPack) (*[]*Ope
 	// Merge packages to install with packages to updates.
 	mergedPack := artifact.NewArtifactsPack()
 	mergedPack.Artifacts = p2i.Artifacts
-	if p2u != nil {
-		mergedPack.Artifacts = append(mergedPack.Artifacts, p2u.Artifacts...)
-	}
+	mergedPack.Artifacts = append(mergedPack.Artifacts, p2u.Artifacts...)
 	mergedMap := mergedPack.ToMap()
 
 	if len(mergedPack.Artifacts) == 1 {
 		if len(p2i.Artifacts) > 0 {
-			ans = append(ans, NewOperation(AddPackage, mergedPack.Artifacts[0]))
+			tmpOps = append(tmpOps, NewOperation(AddPackage, mergedPack.Artifacts[0]))
 		} else {
-			ans = append(ans, NewOperation(UpdatePackage, mergedPack.Artifacts[0]))
+			tmpOps = append(tmpOps, NewOperation(UpdatePackage, mergedPack.Artifacts[0]))
 		}
 	} else if len(mergedPack.Artifacts) > 1 {
 
@@ -301,7 +299,6 @@ func (s *Solver) OrderOperations(p2i, p2u, p2r *artifact.ArtifactsPack) (*[]*Ope
 			idxOps := len(ans)
 			rmOps := len(ans)
 			tmpNOps := len(tmpOps)
-			fmt.Println("TMPNOPTS ", tmpNOps, rmOps, idxOps)
 			for tidx := 0; tidx < tmpNOps; tidx++ {
 				p := tmpOps[tidx].Artifact.GetPackage()
 

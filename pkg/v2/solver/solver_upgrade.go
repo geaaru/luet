@@ -610,9 +610,10 @@ func (s *Solver) checkInstalledPackage(p *pkg.DefaultPackage) error {
 		return err
 	}
 
-	Debug(fmt.Sprintf(":brain: search %s done in %d µs (found %d candidates).",
+	Debug(fmt.Sprintf(":brain:Search %s done in %d µs (found %d candidates).",
 		p.PackageName(),
-		time.Now().Sub(start).Nanoseconds()/1e3), len(*reposArtifacts))
+		time.Now().Sub(start).Nanoseconds()/1e3,
+		len(*reposArtifacts)))
 	if len(*reposArtifacts) == 0 {
 		Debug(fmt.Sprintf(
 			"[%s] No artifacts found between repositories. Noop.",
