@@ -268,6 +268,7 @@ func initCommand(rootCmd *cobra.Command, cfg *config.LuetConfig) {
 		newReplaceCommand(cfg),
 		newUpgradeCommand(cfg),
 		newSearchCommand(cfg),
+		newSubsetsCommand(cfg),
 		newCleanupCommand(cfg),
 		newQueryCommand(cfg),
 		newMinerCommand(cfg),
