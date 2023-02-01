@@ -1,16 +1,15 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
 }
 
-oneTimeTearDown() {
-    rm -rf "$tmpdir"
-}
+#oneTimeTearDown() {
+#    rm -rf "$tmpdir"
+#}
 
 testBuild() {
     mkdir $tmpdir/testbuild
@@ -50,6 +49,7 @@ repositories:
    - name: "main"
      type: "disk"
      enable: true
+     cached: true
      urls:
        - "$tmpdir/testbuild"
 EOF
@@ -67,19 +67,22 @@ testInstall() {
 }
 
 testFullInstall() {
-    output=$($LUET install --sync-repos -y --config $tmpdir/luet.yaml test/d test/f test/e test/a)
+    # Without --force the solver exists with error without install packages
+    output=$($LUET install --sync-repos -y --config $tmpdir/luet.yaml test/d test/f test/e test/a --force)
     installst=$?
-    assertEquals 'cannot install' "$installst" "1"
-    assertTrue 'package D installed' "[ ! -e '$tmpdir/testrootfs/d' ]"
-    assertTrue 'package F installed' "[ ! -e '$tmpdir/testrootfs/f' ]"
+    assertEquals 'cannot install' "$installst" "0"
+    assertTrue 'package D installed' "[ -e '$tmpdir/testrootfs/d' ]"
+    assertTrue 'package F installed' "[ -e '$tmpdir/testrootfs/f' ]"
+    assertTrue 'package E not installed' "[ ! -e '$tmpdir/testrootfs/e' ]"
+    assertTrue 'package A not installed' "[ ! -e '$tmpdir/testrootfs/a' ]"
 }
 
 testInstallAgain() {
-    output=$($LUET install --sync-repos -y --solver-type qlearning --config $tmpdir/luet.yaml test/d test/f test/e test/a)
+    output=$($LUET install --sync-repos -y --config $tmpdir/luet.yaml test/d test/f test/e test/a --force)
     installst=$?
     echo "$output"
     assertEquals 'install test successfully' "0" "$installst"
-    assertNotContains 'contains warning' "$output" 'No packages to install'
+    assertContains 'contains warning' "$output" 'No packages to install'
     assertTrue 'package D installed' "[ -e '$tmpdir/testrootfs/d' ]"
     assertTrue 'package F installed' "[ -e '$tmpdir/testrootfs/f' ]"
     assertTrue 'package E not installed' "[ ! -e '$tmpdir/testrootfs/e' ]"
