@@ -23,6 +23,7 @@ import (
 
 type InstallOpts struct {
 	Force                       bool
+	IgnoreConflicts             bool
 	NoDeps                      bool
 	PreserveSystemEssentialData bool
 	Ask                         bool
@@ -158,7 +159,8 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 	Spinner(3)
 
 	solverOpts := &solver.SolverOpts{
-		IgnoreConflicts: false,
+		IgnoreConflicts: opts.IgnoreConflicts,
+		Force:           opts.Force,
 		NoDeps:          opts.NoDeps,
 	}
 

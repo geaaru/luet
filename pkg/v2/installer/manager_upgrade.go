@@ -120,7 +120,8 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 	Spinner(3)
 
 	solverOpts := &solver.SolverOpts{
-		IgnoreConflicts: false,
+		IgnoreConflicts: opts.IgnoreConflicts,
+		Force:           opts.Force,
 		NoDeps:          opts.NoDeps,
 	}
 
