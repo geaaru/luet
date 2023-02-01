@@ -140,7 +140,8 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 	//         and exclude packages already installed.
 	pkgsToInstall := m._install_s1(opts, &systemPkgs, packs...)
 	if len(*pkgsToInstall) == 0 {
-		return errors.New("No packages to install.")
+		Warning("No packages to install.")
+		return nil
 	}
 	systemPkgs = nil
 
