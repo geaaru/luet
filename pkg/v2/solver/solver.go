@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/geaaru/luet/pkg/config"
@@ -418,7 +419,7 @@ func (s *Solver) Install(pkgsref *[]*pkg.DefaultPackage) (*artifact.ArtifactsPac
 
 	for _, pname := range pList {
 		err := s.resolvePackage(pname, []string{})
-		if err != nil {
+		if !s.Opts.Force && err != nil {
 			return nil, nil, err
 		}
 	}
@@ -507,6 +508,9 @@ func (s *Solver) resolvePackage(pkgstr string, stack []string) error {
 		if !admittedDeps {
 			// POST: Not all packages dependencies are admit by
 			//       the current system.
+			Debug(fmt.Sprintf(
+				"For %s not found admitted dependencies.",
+				art.GetPackage().HumanReadableString()))
 			continue
 		}
 
@@ -515,7 +519,16 @@ func (s *Solver) resolvePackage(pkgstr string, stack []string) error {
 	}
 
 	if !foundMatched {
-		return fmt.Errorf("No valid candidate found for %s", pkgstr)
+		var str string
+		if len(stack) > 0 {
+			str = fmt.Sprintf(
+				"No valid or admitted version found for dependency %s", pkgstr)
+		} else {
+			str = fmt.Sprintf(
+				"No valid candidate or valid dependencies found for %s", pkgstr)
+		}
+		Debug(str)
+		return errors.New(str)
 	}
 
 	firstValid := false
@@ -651,6 +664,9 @@ func (s *Solver) processArtefactDeps(art *artifact.PackageArtifact, stack []stri
 			err = s.resolvePackage(p.PackageName(), stack)
 		}
 		if err != nil {
+			if strings.HasPrefix(err.Error(), "No valid") {
+				return false, nil
+			}
 			return false, err
 		}
 
@@ -677,16 +693,25 @@ func (s *Solver) artefactAdmitByQueue(art *artifact.PackageArtifact) (bool, erro
 }
 
 func (s *Solver) artefactIsInConflict(art *artifact.PackageArtifact) bool {
-	cc, ok := s.conflictsMap.Packages[art.GetPackage().PackageName()]
-	if !ok {
-		return false
+	p := art.GetPackage()
+	cc, ok := s.conflictsMap.Packages[p.PackageName()]
+	if ok {
+		for _, c := range cc {
+			// Check if propagate error
+			valid, _ := c.Admit(p)
+			if !valid {
+				return true
+			}
+		}
 	}
 
-	for _, c := range cc {
-		// Check if propagate error
-		valid, _ := c.Admit(art.GetPackage())
-		if !valid {
-			return true
+	// Check if the artefact has conflicts with existing tree.
+	for _, c := range p.PackageConflicts {
+		val, present := s.systemMap.Packages[c.PackageName()]
+		if present {
+			if valid, _ := p.Admit(val[0]); !valid {
+				return true
+			}
 		}
 	}
 

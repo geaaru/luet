@@ -26,6 +26,7 @@ const (
 
 type SolverOpts struct {
 	IgnoreConflicts bool
+	Force           bool
 	NoDeps          bool
 }
 
