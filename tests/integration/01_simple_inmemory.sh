@@ -8,7 +8,7 @@ oneTimeSetUp() {
 }
 
 oneTimeTearDown() {
-    rm -rf "$tmpdir"
+  rm -rf "$tmpdir"
 }
 
 testBuild() {

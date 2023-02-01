@@ -88,7 +88,7 @@ testInstall() {
     # Disable tests which require a DOCKER registry
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
-    $LUET install -y --config $tmpdir/luet.yaml test/c@1.0 test/z test/interpolated
+    $LUET install -y --sync-repos --config $tmpdir/luet.yaml test/c@1.0 test/z test/interpolated
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"
@@ -133,7 +133,7 @@ testInstallAgain() {
 }
 
 testCleanup() {
-    $LUET cleanup --config $tmpdir/luet.yaml
+    $LUET cleanup --config $tmpdir/luet.yaml --purge-repos
     installst=$?
     assertEquals 'cleanup test successfully' "$installst" "0"
 }
