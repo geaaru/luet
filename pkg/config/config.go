@@ -198,7 +198,7 @@ func NewEmptyLuetRepository() *LuetRepository {
 		TreePath:       "",
 		MetaPath:       "",
 		Enable:         false,
-		Cached:         false,
+		Cached:         true,
 		Authentication: make(map[string]string, 0),
 	}
 }
