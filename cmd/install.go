@@ -73,6 +73,7 @@ To force install a package:
 			//onlydeps := config.Viper.GetBool("onlydeps")
 			yes := config.Viper.GetBool("yes")
 			pretend, _ := cmd.Flags().GetBool("pretend")
+			ignoreConflicts, _ := cmd.Flags().GetBool("ignore-conflicts")
 			preserveSystem, _ := cmd.Flags().GetBool("preserve-system-essentials")
 			downloadOnly, _ := cmd.Flags().GetBool("download-only")
 			finalizerEnvs, _ := cmd.Flags().GetStringArray("finalizer-env")
@@ -141,6 +142,7 @@ To force install a package:
 
 			opts := &installer.InstallOpts{
 				Force:                       force,
+				IgnoreConflicts:             ignoreConflicts,
 				NoDeps:                      nodeps,
 				PreserveSystemEssentialData: preserveSystem,
 				Ask:                         !yes,
@@ -160,6 +162,7 @@ To force install a package:
 	flags := ans.Flags()
 
 	flags.Bool("nodeps", false, "Don't consider package dependencies (harmful!)")
+	flags.Bool("ignore-conflicts", false, "Don't consider package conflicts (harmful!)")
 	flags.BoolP("pretend", "p", false,
 		"simply display what *would* have been installed if --pretend weren't used")
 
