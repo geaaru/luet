@@ -585,8 +585,13 @@ func (s *Solver) checkInstalledPackageWrapper(
 }
 
 func (s *Solver) checkInstalledPackage(p *pkg.DefaultPackage) error {
+
+	// Clone the installed package to set version >=0
+	ps := p.Clone().(*pkg.DefaultPackage)
+	ps.Version = ">=0"
+
 	searchOpts := &wagon.StonesSearchOpts{
-		Packages:      pkg.DefaultPackages([]*pkg.DefaultPackage{p}),
+		Packages:      pkg.DefaultPackages([]*pkg.DefaultPackage{ps}),
 		Categories:    []string{},
 		Labels:        []string{},
 		LabelsMatches: []string{},
@@ -609,6 +614,7 @@ func (s *Solver) checkInstalledPackage(p *pkg.DefaultPackage) error {
 	if err != nil {
 		return err
 	}
+	ps = nil
 
 	Debug(fmt.Sprintf(":brain:Search %s done in %d µs (found %d candidates).",
 		p.PackageName(),
@@ -725,7 +731,7 @@ func (s *Solver) analyzeInstalledPackages() error {
 	// and I add the package for a second phase analysis
 	// in that case.
 	for _, p := range s.systemMap.Packages {
-		Debug(fmt.Sprintf(":brain:Checking package %s", p[0].PackageName()))
+		Debug(fmt.Sprintf(":brain:Checking package %s", p[0].HumanReadableString()))
 		waitGroup.Add(1)
 		go s.checkInstalledPackageWrapper(
 			p[0], ch, sem, waitGroup, &ctx)
