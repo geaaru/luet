@@ -62,7 +62,7 @@ var _ = Describe("Repository", func() {
 
 			generalRecipe := tree.NewCompilerRecipe(pkg.NewInMemoryDatabase(false))
 
-			err = generalRecipe.Load("../../tests/fixtures/buildable")
+			err = generalRecipe.Load("../../../tests/fixtures/buildable")
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(3))
@@ -101,7 +101,7 @@ var _ = Describe("Repository", func() {
 			Expect(fileHelper.Exists(spec.Rel("b-test-1.0.package.tar"))).To(BeTrue())
 			Expect(fileHelper.Exists(spec.Rel("b-test-1.0.metadata.yaml"))).To(BeTrue())
 
-			repo, err := stubRepo(tmpdir, "../../tests/fixtures/buildable")
+			repo, err := stubRepo(tmpdir, "../../../tests/fixtures/buildable")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(repo.GetName()).To(Equal("test"))
 			Expect(fileHelper.Exists(spec.Rel(REPOSITORY_SPECFILE))).ToNot(BeTrue())
@@ -123,12 +123,12 @@ var _ = Describe("Repository", func() {
 
 			generalRecipe := tree.NewCompilerRecipe(pkg.NewInMemoryDatabase(false))
 
-			err = generalRecipe.Load("../../tests/fixtures/buildable")
+			err = generalRecipe.Load("../../../tests/fixtures/buildable")
 			Expect(err).ToNot(HaveOccurred())
 
 			generalRecipe2 := tree.NewCompilerRecipe(pkg.NewInMemoryDatabase(false))
 
-			err = generalRecipe2.Load("../../tests/fixtures/finalizers")
+			err = generalRecipe2.Load("../../../tests/fixtures/finalizers")
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(len(generalRecipe2.GetDatabase().GetPackages())).To(Equal(1))
@@ -181,7 +181,7 @@ var _ = Describe("Repository", func() {
 			Expect(fileHelper.Exists(spec2.Rel("alpine-seed-1.0.package.tar"))).To(BeTrue())
 			Expect(fileHelper.Exists(spec2.Rel("alpine-seed-1.0.metadata.yaml"))).To(BeTrue())
 
-			repo, err := stubRepo(tmpdir, "../../tests/fixtures/buildable")
+			repo, err := stubRepo(tmpdir, "../../../tests/fixtures/buildable")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(repo.GetName()).To(Equal("test"))
 			Expect(fileHelper.Exists(spec.Rel(REPOSITORY_SPECFILE))).ToNot(BeTrue())
@@ -220,12 +220,12 @@ urls:
 
 			generalRecipe := tree.NewCompilerRecipe(pkg.NewInMemoryDatabase(false))
 
-			err = generalRecipe.Load("../../tests/fixtures/buildable")
+			err = generalRecipe.Load("../../../tests/fixtures/buildable")
 			Expect(err).ToNot(HaveOccurred())
 
 			generalRecipe2 := tree.NewCompilerRecipe(pkg.NewInMemoryDatabase(false))
 
-			err = generalRecipe2.Load("../../tests/fixtures/finalizers")
+			err = generalRecipe2.Load("../../../tests/fixtures/finalizers")
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(len(generalRecipe2.GetDatabase().GetPackages())).To(Equal(1))
@@ -287,7 +287,7 @@ urls:
 				WithPriority(1),
 				WithSource(tmpdir),
 				FromMetadata(true), // Enabling from metadata makes the package visible
-				WithTree("../../tests/fixtures/buildable"),
+				WithTree("../../../tests/fixtures/buildable"),
 				WithDatabase(pkg.NewInMemoryDatabase(false)),
 			)
 			Expect(err).ToNot(HaveOccurred())
@@ -357,7 +357,7 @@ urls:
 
 			generalRecipe := tree.NewCompilerRecipe(pkg.NewInMemoryDatabase(false))
 
-			err = generalRecipe.Load("../../tests/fixtures/buildable")
+			err = generalRecipe.Load("../../../tests/fixtures/buildable")
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(3))
@@ -383,7 +383,7 @@ urls:
 			Expect(fileHelper.Exists(spec.Rel("test5"))).To(BeTrue())
 			Expect(fileHelper.Exists(spec.Rel("test6"))).To(BeTrue())
 
-			repo, err := dockerStubRepo(tmpdir, "../../tests/fixtures/buildable", repoImage, true, true)
+			repo, err := dockerStubRepo(tmpdir, "../../../tests/fixtures/buildable", repoImage, true, true)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(repo.GetName()).To(Equal("test"))
 			Expect(fileHelper.Exists(spec.Rel(REPOSITORY_SPECFILE))).ToNot(BeTrue())
@@ -431,7 +431,7 @@ urls:
 
 			generalRecipe := tree.NewCompilerRecipe(pkg.NewInMemoryDatabase(false))
 
-			err = generalRecipe.Load("../../tests/fixtures/virtuals")
+			err = generalRecipe.Load("../../../tests/fixtures/virtuals")
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(5))
@@ -454,7 +454,7 @@ urls:
 			Expect(fileHelper.Exists(a.Path)).To(BeTrue())
 			Expect(helpers.Untar(a.Path, tmpdir, false, true)).ToNot(HaveOccurred())
 
-			repo, err := dockerStubRepo(tmpdir, "../../tests/fixtures/virtuals", repoImage, true, true)
+			repo, err := dockerStubRepo(tmpdir, "../../../tests/fixtures/virtuals", repoImage, true, true)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(repo.GetName()).To(Equal("test"))
 			Expect(fileHelper.Exists(spec.Rel(REPOSITORY_SPECFILE))).ToNot(BeTrue())
