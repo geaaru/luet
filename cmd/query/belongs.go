@@ -49,7 +49,6 @@ func NewQueryBelongsCommand(config *cfg.LuetConfig) *cobra.Command {
 			installed := config.Viper.GetBool("installed")
 
 			util.SetSystemConfig()
-			util.SetSolverConfig()
 
 			// Files inside the metadata are store without initial /
 			// I drop it if defined.
