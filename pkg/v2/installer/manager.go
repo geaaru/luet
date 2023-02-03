@@ -32,7 +32,10 @@ type ArtifactsManager struct {
 
 	sync.Mutex
 
-	// Temporary struct to review
+	// Temporary struct to review.
+	// This requires a lot of RAM when the elaborated
+	// packages are with a lot of files. Maybe the map
+	// could be created on filesystem in the near future?
 	fileIndex map[string]*pkg.DefaultPackage
 }
 
@@ -453,6 +456,7 @@ func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos
 
 func (m *ArtifactsManager) CheckFileConflicts(
 	toInstall *[]*artifact.PackageArtifact,
+	toRemove *[]*artifact.PackageArtifact,
 	checkSystem bool,
 	safeCheck bool,
 	targetRootfs string,
@@ -460,10 +464,30 @@ func (m *ArtifactsManager) CheckFileConflicts(
 
 	m.Setup()
 
-	Info("Checking for file conflicts...")
+	Info(":guard:Checking for file conflicts...")
 	start := time.Now()
 
+	// This requires a lot of RAM when the elaborated
+	// packages are with a lot of files. Maybe the map
+	// could be created on filesystem in the near future?
 	filesToInstall := make(map[string]string, 0)
+	filesToRemove := make(map[string]string, 0)
+
+	if checkSystem {
+		for _, a := range *toRemove {
+			pp := a.GetPackage()
+			files := a.Files
+			if len(files) == 0 {
+				// Trying to retrieve the list of the files
+				// from the database.
+				files, _ = m.Database.GetPackageFiles(pp)
+			}
+
+			for _, f := range files {
+				filesToRemove[f] = pp.HumanReadableString()
+			}
+		}
+	}
 
 	// NOTE: Instead of load in memory the list
 	//       of the files of every installed package
@@ -472,6 +496,8 @@ func (m *ArtifactsManager) CheckFileConflicts(
 	//       The check validate if a package file is present
 	//       on target system or between the list of
 	//       files of the packages to install.
+	//       if a file is already present I will
+	//       check if the file is also on fileRmIndex map.
 	for _, a := range *toInstall {
 		pp := a.GetPackage()
 
@@ -497,36 +523,48 @@ func (m *ArtifactsManager) CheckFileConflicts(
 
 				// Check if the file is present on the target path.
 				if fileHelper.Exists(tFile) {
-					exists, p, err := m.ExistsPackageFile(f)
-					if err != nil {
-						return errors.Wrap(err, "failed checking into system db")
-					}
-					if exists {
-						if safeCheck {
 
-							Warning(fmt.Errorf(
-								"file conflict between '%s' and '%s' ( file: %s )",
-								p.HumanReadableString(),
-								pp.HumanReadableString(),
-								f,
-							))
-						} else {
-							return fmt.Errorf(
-								"file conflict between '%s' and '%s' ( file: %s )",
-								p.HumanReadableString(),
-								pp.HumanReadableString(),
-								f,
-							)
+					// Check if the file is in the list of the file to remove
+					if _, ok := filesToRemove[f]; !ok {
+
+						fmt.Println("Check file ", f)
+						exists, p, err := m.ExistsPackageFile(f)
+						if err != nil {
+							return errors.Wrap(err, "failed checking into system db")
 						}
-					}
+						if exists {
+							if safeCheck {
+
+								Warning(fmt.Errorf(
+									"file conflict between '%s' and '%s' ( file: %s )",
+									p.HumanReadableString(),
+									pp.HumanReadableString(),
+									f,
+								))
+							} else {
+								return fmt.Errorf(
+									"file conflict between '%s' and '%s' ( file: %s )",
+									p.HumanReadableString(),
+									pp.HumanReadableString(),
+									f,
+								)
+							}
+						}
+					} // else ignoring file.
 				}
+
 			}
 
 		} // end for a.Files
 
 	} // end for toInstall
 
-	Info(fmt.Sprintf("Check for file conflicts completed in %d µs.",
+	m.Lock()
+	defer m.Unlock()
+	m.fileIndex = nil
+
+	Info(fmt.Sprintf(
+		":heavy_check_mark: No conflicts found (executed in %d µs).",
 		time.Now().Sub(start).Nanoseconds()/1e3))
 
 	return nil
@@ -595,7 +633,11 @@ func (m *ArtifactsManager) buildIndexFiles() {
 	start := time.Now()
 
 	// Check if cache is empty or if it got modified
-	if m.fileIndex == nil { //|| len(s.Database.GetPackages()) != len(s.fileIndex) {
+	if m.fileIndex == nil {
+
+		// This requires a lot of RAM when the elaborated
+		// packages are with a lot of files. Maybe the map
+		// could be created on filesystem in the near future?
 		m.fileIndex = make(map[string]*pkg.DefaultPackage)
 		for _, p := range m.Database.World() {
 			files, _ := m.Database.GetPackageFiles(p)
