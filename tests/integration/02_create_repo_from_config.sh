@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 testsourcedir=$(dirname "${BASH_SOURCE[0]}")
 source ${testsourcedir}/_common.sh

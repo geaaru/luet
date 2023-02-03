@@ -1,14 +1,13 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
   export tmpdir="$(mktemp -d)"
   cat <<EOF > $tmpdir/luet-build.yaml
 general:
-  debug: true
+  debug: false
 logging:
   enable_emoji: false
   color: false
@@ -23,7 +22,7 @@ EOF
 }
 
 oneTimeTearDown() {
-    rm -rf "$tmpdir"
+  rm -rf "$tmpdir"
 }
 
 testBuild() {
@@ -57,7 +56,7 @@ testConfig() {
     mkdir $tmpdir/testrootfs
     cat <<EOF > $tmpdir/luet.yaml
 general:
-  debug: true
+  debug: false
 logging:
   enable_emoji: false
   color: false
@@ -83,10 +82,8 @@ EOF
 
 testInstall() {
     $LUET install --sync-repos -y --force --config $tmpdir/luet.yaml test1/conflict@1.0 test2/conflict@1.0
-    #$LUET install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
     installst=$?
     assertEquals 'install test succeded' "$installst" "0"
-    #assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"
 }
 
 testUpgrade() {
@@ -94,10 +91,9 @@ testUpgrade() {
     installst=$?
     assertEquals 'install test succeeded' "$installst" "1"
     assertContains 'does find conflicts' "$out" \
-      "Error: file conflict found: file test1 conflict between package"
+      "Error: file test1 conflict between package"
 
     $LUET upgrade --sync-repos -y --config $tmpdir/luet.yaml --force
-    #$LUET install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
     installst=$?
     assertEquals 'install test succeeded' "$installst" "0"
 }
