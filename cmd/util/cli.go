@@ -18,12 +18,10 @@ package util
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/config"
-	"github.com/geaaru/luet/pkg/installer"
 
 	"github.com/spf13/cobra"
 )
@@ -58,14 +56,6 @@ func BindSolverFlags(cmd *cobra.Command) {
 	LuetCfg.Viper.BindPFlag("solver.implementation", cmd.Flags().Lookup("solver-implementation"))
 }
 
-func BindValuesFlags(cmd *cobra.Command) {
-	LuetCfg.Viper.BindPFlag("values", cmd.Flags().Lookup("values"))
-}
-
-func ValuesFlags() []string {
-	return LuetCfg.Viper.GetStringSlice("values")
-}
-
 func SetSystemConfig() {
 	dbpath := LuetCfg.Viper.GetString("system.database_path")
 	rootfs := LuetCfg.Viper.GetString("system.rootfs")
@@ -74,34 +64,6 @@ func SetSystemConfig() {
 	LuetCfg.System.DatabaseEngine = engine
 	LuetCfg.System.DatabasePath = dbpath
 	LuetCfg.System.SetRootFS(rootfs)
-}
-
-func SetSolverConfig() (c *config.LuetSolverOptions) {
-	stype := LuetCfg.Viper.GetString("solver.type")
-	discount := LuetCfg.Viper.GetFloat64("solver.discount")
-	rate := LuetCfg.Viper.GetFloat64("solver.rate")
-	attempts := LuetCfg.Viper.GetInt("solver.max_attempts")
-	implementation := LuetCfg.Viper.GetString("solver.implementation")
-
-	LuetCfg.GetSolverOptions().Type = stype
-	LuetCfg.GetSolverOptions().LearnRate = float32(rate)
-	LuetCfg.GetSolverOptions().Discount = float32(discount)
-	LuetCfg.GetSolverOptions().MaxAttempts = attempts
-	LuetCfg.GetSolverOptions().Implementation = implementation
-
-	if implementation == "" {
-		// Using solver.type until i will drop solver.implementation option.
-		LuetCfg.GetSolverOptions().Implementation = stype
-		implementation = stype
-	}
-
-	return &config.LuetSolverOptions{
-		Type:           stype,
-		LearnRate:      float32(rate),
-		Discount:       float32(discount),
-		MaxAttempts:    attempts,
-		Implementation: implementation,
-	}
 }
 
 func SetCliFinalizerEnvs(finalizerEnvs []string) error {
@@ -118,19 +80,4 @@ func SetCliFinalizerEnvs(finalizerEnvs []string) error {
 	}
 
 	return nil
-}
-
-// TemplateFolders returns the default folders which holds shared template between packages in a given tree path
-func TemplateFolders(fromRepo bool, treePaths []string) []string {
-	templateFolders := []string{}
-	if !fromRepo {
-		for _, t := range treePaths {
-			templateFolders = append(templateFolders, filepath.Join(t, "templates"))
-		}
-	} else {
-		for _, s := range installer.SystemRepositories(LuetCfg) {
-			templateFolders = append(templateFolders, filepath.Join(s.TreePath, "templates"))
-		}
-	}
-	return templateFolders
 }
