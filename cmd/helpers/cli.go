@@ -1,59 +1,34 @@
-// Copyright © 2020 Ettore Di Giacinto <mudler@gentoo.org>
-//                  Daniele Rondina <geaaru@sabayonlinux.org>
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, see <http://www.gnu.org/licenses/>.
+/*
+Copyright © 2022-2023 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
+*/
 
 package cmd_helpers
 
 import (
-	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 
 	. "github.com/geaaru/luet/pkg/logger"
 
-	_gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 	pkg "github.com/geaaru/luet/pkg/package"
+	_gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 )
 
-func CreateRegexArray(rgx []string) ([]*regexp.Regexp, error) {
-	ans := make([]*regexp.Regexp, len(rgx))
-	if len(rgx) > 0 {
-		for idx, reg := range rgx {
-			re := regexp.MustCompile(reg)
-			if re == nil {
-				return nil, errors.New("Invalid regex " + reg + "!")
-			}
-			ans[idx] = re
-		}
-	}
-
-	return ans, nil
-}
-
-func packageData(p string) (string, string) {
+func packageData(p string) (string, string, _gentoo.PackageCond) {
 	cat := ""
 	name := ""
+	cond := _gentoo.PackageCond(_gentoo.PkgCondInvalid)
+
 	if strings.Contains(p, "/") {
-		packagedata := strings.Split(p, "/")
-		cat = packagedata[0]
-		name = packagedata[1]
+		gp, _ := _gentoo.ParsePackageStr(p)
+		cond = gp.Condition
+		cat = gp.Category
+		name = gp.Name
 	} else {
 		name = p
 	}
-	return cat, name
+	return cat, name, cond
 }
 
 func gentooVersion(gp *_gentoo.GentooPackage) string {
@@ -83,18 +58,23 @@ func ParsePackageStr(p string) (*pkg.DefaultPackage, error) {
 	ver := ">=0"
 	cat := ""
 	name := ""
+	cond := _gentoo.PackageCond(_gentoo.PkgCondInvalid)
 
 	if strings.Contains(p, "@") || !strings.Contains(p, "/") {
 		packageinfo := strings.Split(p, "@")
 		if len(packageinfo) > 1 {
 			ver = packageinfo[1]
 		}
-		cat, name = packageData(packageinfo[0])
+		cat, name, cond = packageData(packageinfo[0])
+		if cond != _gentoo.PkgCondInvalid && ver != "" {
+			ver = cond.String() + ver
+		}
 	} else {
 		gp, err := _gentoo.ParsePackageStr(p)
 		if err != nil {
 			return nil, err
 		}
+
 		if gp.Version == "" {
 			gp.Version = "0"
 			gp.Condition = _gentoo.PkgCondGreaterEqual
