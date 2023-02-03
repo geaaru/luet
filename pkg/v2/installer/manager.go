@@ -529,8 +529,6 @@ func (m *ArtifactsManager) CheckFileConflicts(
 
 					// Check if the file is in the list of the file to remove
 					if _, ok := filesToRemove[f]; !ok {
-
-						fmt.Println("Check file ", f)
 						exists, p, err := m.ExistsPackageFile(f)
 						if err != nil {
 							return errors.Wrap(err, "failed checking into system db")
