@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd
 
@@ -10,14 +10,14 @@ import (
 	"path/filepath"
 
 	helpers "github.com/geaaru/luet/cmd/helpers"
-	"github.com/geaaru/luet/cmd/util"
+	bhelpers "github.com/geaaru/luet/luet-build/cmd/helpers"
+	"github.com/geaaru/luet/luet-build/pkg/installer"
 	"github.com/geaaru/luet/pkg/compiler"
 	"github.com/geaaru/luet/pkg/compiler/types/artifact"
 	"github.com/geaaru/luet/pkg/compiler/types/compression"
 	"github.com/geaaru/luet/pkg/compiler/types/options"
 	compilerspec "github.com/geaaru/luet/pkg/compiler/types/spec"
 	cfg "github.com/geaaru/luet/pkg/config"
-	"github.com/geaaru/luet/pkg/installer"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 	tree "github.com/geaaru/luet/pkg/tree"
@@ -87,7 +87,7 @@ func newBuildCommand(config *cfg.LuetConfig) *cobra.Command {
 			config.Viper.BindPFlag("compression", cmd.Flags().Lookup("compression"))
 			config.Viper.BindPFlag("nodeps", cmd.Flags().Lookup("nodeps"))
 			config.Viper.BindPFlag("onlydeps", cmd.Flags().Lookup("onlydeps"))
-			util.BindValuesFlags(cmd)
+			bhelpers.BindValuesFlags(cmd)
 			config.Viper.BindPFlag("backend-args", cmd.Flags().Lookup("backend-args"))
 
 			config.Viper.BindPFlag("image-repository", cmd.Flags().Lookup("image-repository"))
@@ -96,7 +96,7 @@ func newBuildCommand(config *cfg.LuetConfig) *cobra.Command {
 			config.Viper.BindPFlag("wait", cmd.Flags().Lookup("wait"))
 			config.Viper.BindPFlag("keep-images", cmd.Flags().Lookup("keep-images"))
 
-			util.BindSolverFlags(cmd)
+			bhelpers.BindSolverFlags(cmd)
 
 			config.Viper.BindPFlag("general.show_build_output", cmd.Flags().Lookup("live-output"))
 			config.Viper.BindPFlag("backend-args", cmd.Flags().Lookup("backend-args"))
@@ -113,7 +113,7 @@ func newBuildCommand(config *cfg.LuetConfig) *cobra.Command {
 			all := config.Viper.GetBool("all")
 			compressionType := config.Viper.GetString("compression")
 			imageRepository := config.Viper.GetString("image-repository")
-			values := util.ValuesFlags()
+			values := bhelpers.ValuesFlags()
 			wait := config.Viper.GetBool("wait")
 			push := config.Viper.GetBool("push")
 			pull := config.Viper.GetBool("pull")
@@ -158,7 +158,7 @@ func newBuildCommand(config *cfg.LuetConfig) *cobra.Command {
 
 			Info("Building in", dst)
 
-			opts := util.SetSolverConfig()
+			opts := bhelpers.SetSolverConfig()
 			pullRepo, _ := cmd.Flags().GetStringArray("pull-repository")
 
 			config.GetGeneral().ShowBuildOutput = config.Viper.GetBool("general.show_build_output")
@@ -174,7 +174,7 @@ func newBuildCommand(config *cfg.LuetConfig) *cobra.Command {
 				options.WithPullRepositories(pullRepo),
 				options.WithPushRepository(imageRepository),
 				options.Rebuild(rebuild),
-				options.WithTemplateFolder(util.TemplateFolders(fromRepo, treePaths)),
+				options.WithTemplateFolder(bhelpers.TemplateFolders(fromRepo, treePaths)),
 				options.Wait(wait),
 				options.OnlyTarget(onlyTarget),
 				options.PullFirst(pull),

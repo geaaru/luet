@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd
 
@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 
 	helpers "github.com/geaaru/luet/cmd/helpers"
+	installer "github.com/geaaru/luet/luet-build/pkg/installer"
 	"github.com/geaaru/luet/pkg/compiler"
 	"github.com/geaaru/luet/pkg/compiler/types/compression"
 	cfg "github.com/geaaru/luet/pkg/config"
-	installer "github.com/geaaru/luet/pkg/installer"
 	pkg "github.com/geaaru/luet/pkg/package"
 
 	"github.com/spf13/cobra"
