@@ -409,6 +409,25 @@ func (s *Solver) Install(pkgsref *[]*pkg.DefaultPackage) (*artifact.ArtifactsPac
 
 	s.prepareConflictsAndSystemMap(&systemPkgs, false)
 
+	// Create the repositories map
+	s.MapRepos = make(map[string]*wagon.WagonRepository, 0)
+	for idx, repo := range s.Config.SystemRepositories {
+		if !repo.Enable {
+			continue
+		}
+
+		repobasedir := s.Config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
+		wr := wagon.NewWagonRepository(&s.Config.SystemRepositories[idx])
+		err := wr.ReadWagonIdentify(repobasedir)
+		if err != nil {
+			return nil, nil, fmt.Errorf(
+				"Error on read repository identity file: " + err.Error(),
+			)
+		}
+
+		s.MapRepos[repo.Name] = wr
+	}
+
 	// Process all selected packages to install.
 	// Created the key list to permit changes on the map
 	// meantime that packages are elaborated.
@@ -428,6 +447,8 @@ func (s *Solver) Install(pkgsref *[]*pkg.DefaultPackage) (*artifact.ArtifactsPac
 	s.systemMap = nil
 	s.conflictsMap = nil
 	s.providesMap = nil
+	// Cleanup memory
+	s.MapRepos = nil
 
 	// Create the list of package to install
 	if s.Opts.NoDeps {
@@ -568,7 +589,8 @@ func (s *Solver) processArtefactDeps(art *artifact.PackageArtifact, stack []stri
 
 		val, ok := s.systemMap.Packages[p.PackageName()]
 		if ok {
-			// Check if the dependency installed is admitted by the package to install
+			// Check if the dependency installed is admitted by the
+			// package to install
 			admit, err := candidate.Admit(val[0])
 			if err != nil {
 				return false, err
@@ -619,43 +641,79 @@ func (s *Solver) processArtefactDeps(art *artifact.PackageArtifact, stack []stri
 			continue
 		}
 
-		// Search all availables artefacts from enabled repositories.
-		searchOpts := &wagon.StonesSearchOpts{
-			Packages: []*pkg.DefaultPackage{
-				pkg.NewPackageWithCatThin(p.Category, p.Name, p.Version),
-			},
-			Categories:       []string{},
-			Labels:           []string{},
-			LabelsMatches:    []string{},
-			Matches:          []string{},
-			FilesOwner:       []string{},
-			Annotations:      []string{},
-			Hidden:           false,
-			AndCondition:     false,
-			WithFiles:        true,
-			WithRootfsPrefix: false,
-			Full:             true,
-			OnlyPackages:     true,
-		}
-		Debug(fmt.Sprintf("[%30s] Searching for dependency %s...",
-			candidate.PackageName(), searchOpts.Packages[0].PackageName()))
-		reposArtifacts, err := s.Searcher.SearchArtifacts(searchOpts)
-		if err != nil {
-			return false, err
-		}
-
-		// Convert the results in a map with all available versions of the
-		// selected packages.
+		// POST: Check if the dependency is in the list of the packages
+		//       to elaborate and to install
+		var reposArtifacts *[]*artifact.PackageArtifact
+		var err error
 		provStr := ""
-		for _, depArt := range *reposArtifacts {
-			// If the researched package is provided we need to use
-			// the name of the package that provides the requirements.
-			if provStr == "" &&
-				depArt.GetPackage().PackageName() != searchOpts.Packages[0].PackageName() {
-				provStr = depArt.GetPackage().PackageName()
+
+		if _, onQueue := s.availableArtsMap.Artifacts[p.PackageName()]; onQueue {
+			// Sort all available versions of the selected package.
+			// The first is the major version
+			if s.MapRepos != nil {
+				selectedArts, err := s.availableArtsMap.GetArtifactsByKey(p.PackageName())
+				if err != nil {
+					return false, err
+				}
+
+				wagon.SortArtifactList4VersionAndRepos(&selectedArts,
+					&s.MapRepos, true)
+
+				reposArtifacts = &selectedArts
+			} else {
+				selectedArts, err := s.availableArtsMap.GetSortedArtifactsByKey(p.PackageName())
+				if err != nil {
+					return false, err
+				}
+				reposArtifacts = &selectedArts
 			}
 
-			s.availableArtsMap.Add(depArt)
+		} else {
+
+			// Search all availables artefacts from enabled repositories.
+			searchOpts := &wagon.StonesSearchOpts{
+				Packages: []*pkg.DefaultPackage{
+					pkg.NewPackageWithCatThin(p.Category, p.Name, p.Version),
+				},
+				Categories:       []string{},
+				Labels:           []string{},
+				LabelsMatches:    []string{},
+				Matches:          []string{},
+				FilesOwner:       []string{},
+				Annotations:      []string{},
+				Hidden:           false,
+				AndCondition:     false,
+				WithFiles:        true,
+				WithRootfsPrefix: false,
+				Full:             true,
+				OnlyPackages:     true,
+			}
+			Debug(fmt.Sprintf("[%30s] Searching for dependency %s...",
+				candidate.PackageName(), searchOpts.Packages[0].PackageName()))
+			reposArtifacts, err = s.Searcher.SearchArtifacts(searchOpts)
+			if err != nil {
+				return false, err
+			}
+
+			if s.MapRepos != nil {
+				// Sort packages for version and repos (on reverse)
+				wagon.SortArtifactList4VersionAndRepos(
+					reposArtifacts, &s.MapRepos, true)
+			}
+
+			// Convert the results in a map with all available versions of the
+			// selected packages.
+			for _, depArt := range *reposArtifacts {
+				// If the researched package is provided we need to use
+				// the name of the package that provides the requirements.
+				if provStr == "" &&
+					depArt.GetPackage().PackageName() != searchOpts.Packages[0].PackageName() {
+					provStr = depArt.GetPackage().PackageName()
+				}
+
+				s.availableArtsMap.Add(depArt)
+			}
+
 		}
 
 		if provStr != "" {
