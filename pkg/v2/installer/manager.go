@@ -467,6 +467,8 @@ func (m *ArtifactsManager) CheckFileConflicts(
 	Info(":guard:Checking for file conflicts...")
 	start := time.Now()
 
+	conflictsFound := false
+
 	// This requires a lot of RAM when the elaborated
 	// packages are with a lot of files. Maybe the map
 	// could be created on filesystem in the near future?
@@ -508,6 +510,7 @@ func (m *ArtifactsManager) CheckFileConflicts(
 						"file %s conflict between package %s and %s",
 						f, pkg, pp.HumanReadableString(),
 					))
+					conflictsFound = true
 				} else {
 					return fmt.Errorf(
 						"file %s conflict between package %s and %s",
@@ -541,6 +544,7 @@ func (m *ArtifactsManager) CheckFileConflicts(
 									pp.HumanReadableString(),
 									f,
 								))
+								conflictsFound = true
 							} else {
 								return fmt.Errorf(
 									"file conflict between '%s' and '%s' ( file: %s )",
@@ -563,9 +567,15 @@ func (m *ArtifactsManager) CheckFileConflicts(
 	defer m.Unlock()
 	m.fileIndex = nil
 
-	Info(fmt.Sprintf(
-		":heavy_check_mark: No conflicts found (executed in %d µs).",
-		time.Now().Sub(start).Nanoseconds()/1e3))
+	if conflictsFound {
+		Info(fmt.Sprintf(
+			":heavy_check_mark: Conflicts ignored (executed in %d µs).",
+			time.Now().Sub(start).Nanoseconds()/1e3))
+	} else {
+		Info(fmt.Sprintf(
+			":heavy_check_mark: No conflicts found (executed in %d µs).",
+			time.Now().Sub(start).Nanoseconds()/1e3))
+	}
 
 	return nil
 }
