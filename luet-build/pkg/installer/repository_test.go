@@ -16,14 +16,12 @@
 package installer_test
 
 import (
-
-	//	. "github.com/geaaru/luet/pkg/installer"
-
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
+	. "github.com/geaaru/luet/luet-build/pkg/installer"
 	"github.com/geaaru/luet/pkg/compiler"
 	backend "github.com/geaaru/luet/pkg/compiler/backend"
 	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
@@ -31,7 +29,6 @@ import (
 	config "github.com/geaaru/luet/pkg/config"
 	"github.com/geaaru/luet/pkg/helpers"
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	. "github.com/geaaru/luet/pkg/installer"
 	pkg "github.com/geaaru/luet/pkg/package"
 	"github.com/geaaru/luet/pkg/tree"
 

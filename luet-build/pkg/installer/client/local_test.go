@@ -20,9 +20,9 @@ import (
 	"os"
 	"path/filepath"
 
+	. "github.com/geaaru/luet/luet-build/pkg/installer/client"
 	"github.com/geaaru/luet/pkg/compiler/types/artifact"
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	. "github.com/geaaru/luet/pkg/installer/client"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

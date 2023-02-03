@@ -20,7 +20,6 @@ import (
 	"os"
 	"path/filepath"
 
-	//	. "github.com/geaaru/luet/pkg/installer"
 	compiler "github.com/geaaru/luet/pkg/compiler"
 	backend "github.com/geaaru/luet/pkg/compiler/backend"
 	compression "github.com/geaaru/luet/pkg/compiler/types/compression"
@@ -29,7 +28,7 @@ import (
 	"github.com/geaaru/luet/pkg/helpers"
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 
-	. "github.com/geaaru/luet/pkg/installer"
+	. "github.com/geaaru/luet/luet-build/pkg/installer"
 	pkg "github.com/geaaru/luet/pkg/package"
 	"github.com/geaaru/luet/pkg/tree"
 	. "github.com/onsi/ginkgo/v2"

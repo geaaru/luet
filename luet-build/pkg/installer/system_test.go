@@ -16,10 +16,7 @@
 package installer_test
 
 import (
-
-	//	. "github.com/geaaru/luet/pkg/installer"
-
-	. "github.com/geaaru/luet/pkg/installer"
+	. "github.com/geaaru/luet/luet-build/pkg/installer"
 	pkg "github.com/geaaru/luet/pkg/package"
 
 	. "github.com/onsi/ginkgo/v2"
