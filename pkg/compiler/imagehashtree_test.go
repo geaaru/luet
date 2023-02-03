@@ -100,7 +100,9 @@ var _ = Describe("ImageHashTree", func() {
 			)
 			Expect(packageHash.Dependencies[len(packageHash.Dependencies)-1].Hash.PackageHash).To(Equal(expectedPackageHash))
 			Expect(packageHash.SourceHash).To(Equal(expectedPackageHash))
-			Expect(packageHash.BuilderImageHash).To(Equal("builder-2cd316290c2c2631f30f71219f763b13"))
+			Expect(packageHash.BuilderImageHash).To(Equal(
+				"builder-ad9a301b463fa7336fbaa51908e8e073",
+			))
 			//Expect(packageHash.BuilderImageHash).To(Equal("builder-977129605c0d7e974cc8a431a563cec1"))
 
 			//Expect(packageHash.Target.Hash.BuildHash).To(Equal("79d7107d13d578b362e6a7bf10ec850efce26316405b8d732ce8f9e004d64281"))
