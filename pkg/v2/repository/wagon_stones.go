@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 Macaroni OS Linux
+Copyright © 2022-2023 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package repository
@@ -365,16 +365,14 @@ func (s *WagonStones) analyzePackageDir(
 
 		data, err := ioutil.ReadFile(metaJsonFile)
 		if err != nil {
-			return nil, errors.New(
-				fmt.Sprintf("Error on read file %s: %s",
-					metaJsonFile, err.Error()))
+			return nil, fmt.Errorf("Error on read file %s: %s",
+				metaJsonFile, err.Error())
 		}
 
 		art, err = artifact.NewPackageArtifactFromJson(data)
 		if err != nil {
-			return nil, errors.New(
-				fmt.Sprintf("Error on parse file %s: %s",
-					metaJsonFile, err.Error()))
+			return nil, fmt.Errorf("Error on parse file %s: %s",
+				metaJsonFile, err.Error())
 		}
 		// Free memory
 		data = nil
@@ -383,16 +381,14 @@ func (s *WagonStones) analyzePackageDir(
 		metaFile := filepath.Join(dir, "metadata.yaml")
 		data, err := ioutil.ReadFile(metaFile)
 		if err != nil {
-			return nil, errors.New(
-				fmt.Sprintf("Error on read file %s: %s",
-					metaFile, err.Error()))
+			return nil, fmt.Errorf("Error on read file %s: %s",
+				metaFile, err.Error())
 		}
 
 		art, err = artifact.NewPackageArtifactFromYaml(data)
 		if err != nil {
-			return nil, errors.New(
-				fmt.Sprintf("Error on parse file %s: %s",
-					metaFile, err.Error()))
+			return nil, fmt.Errorf("Error on parse file %s: %s",
+				metaFile, err.Error())
 		}
 		// Free memory
 		data = nil
@@ -431,20 +427,33 @@ func (s *WagonStones) analyzePackageDir(
 				}
 			}
 
-			if !match {
-				if art.Runtime.Category != opts.Packages[idx].GetCategory() {
-					continue
-				}
-
-				if art.Runtime.Name != opts.Packages[idx].GetName() {
-					continue
-				}
-
-				match = true
+			if art.Runtime.Category != opts.Packages[idx].GetCategory() {
+				continue
 			}
 
-			break
-		}
+			if art.Runtime.Name != opts.Packages[idx].GetName() {
+				continue
+			}
+
+			// NOTE: Ignore error here because the parsing
+			//       is been already validate before.
+			gS, _ := opts.Packages[idx].ToGentooPackage()
+			gP, _ := art.GetPackage().ToGentooPackage()
+
+			admit, err := gS.Admit(gP)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"Unexpected error on compare %s with %s: %s",
+					opts.Packages[idx].HumanReadableString(),
+					art.GetPackage().HumanReadableString(),
+					err.Error())
+			}
+
+			if admit {
+				match = true
+				break
+			}
+		} // end for
 	}
 
 	if len(opts.Matches) > 0 {
@@ -724,9 +733,11 @@ func (s *WagonStones) searchProvides(repoTreeDir, repoName string,
 	providesFile := filepath.Join(repoTreeDir, "provides.yaml")
 	providers := NewWagonProvides()
 
-	err := providers.Load(providesFile)
-	if err != nil {
-		return err
+	if fileHelper.Exists(providesFile) {
+		err := providers.Load(providesFile)
+		if err != nil {
+			return err
+		}
 	}
 
 	isInList := func(pkgstr string, aa *[]*artifact.PackageArtifact) bool {
