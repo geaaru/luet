@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	LuetVersion     = "0.29.6"
+	LuetVersion     = "0.30.0"
 	LuetEnvPrefix   = "LUET"
 	LuetForkVersion = "geaaru"
 )
@@ -198,7 +198,7 @@ func NewEmptyLuetRepository() *LuetRepository {
 		TreePath:       "",
 		MetaPath:       "",
 		Enable:         false,
-		Cached:         false,
+		Cached:         true,
 		Authentication: make(map[string]string, 0),
 	}
 }

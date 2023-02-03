@@ -48,6 +48,7 @@ repositories:
    - name: "main"
      type: "disk"
      enable: true
+     cached: true
      urls:
        - "$tmpdir/testbuild"
 repos_confdir:

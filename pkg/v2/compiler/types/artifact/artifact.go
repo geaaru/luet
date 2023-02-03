@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package artifact
 
@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -38,7 +39,8 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
-//  When compiling, we write also a fingerprint.metadata.yaml file with PackageArtifact. In this way we can have another command to create the repository
+//	When compiling, we write also a fingerprint.metadata.yaml file with PackageArtifact. In this way we can have another command to create the repository
+//
 // which will consist in just of an repository.yaml which is just the repository structure with the list of package artifact.
 // In this way a generic client can fetch the packages and, after unpacking the tree, performing queries to install packages.
 type PackageArtifact struct {
@@ -67,6 +69,16 @@ func NewPackageArtifact(path string) *PackageArtifact {
 func NewPackageArtifactFromYaml(data []byte) (*PackageArtifact, error) {
 	p := &PackageArtifact{Checksums: Checksums{}}
 	err := yaml.Unmarshal(data, &p)
+	if err != nil {
+		return p, err
+	}
+
+	return p, err
+}
+
+func NewPackageArtifactFromJson(data []byte) (*PackageArtifact, error) {
+	p := &PackageArtifact{Checksums: Checksums{}}
+	err := json.Unmarshal(data, &p)
 	if err != nil {
 		return p, err
 	}
@@ -168,6 +180,27 @@ func (a *PackageArtifact) WriteMetadataYaml(dst string) error {
 	err = ioutil.WriteFile(dst, data, os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "While writing PackageArtifact YAML")
+	}
+
+	return nil
+}
+
+func (a *PackageArtifact) WriteMetadataJson(dst string) error {
+	// Update runtime package information
+	if a.Runtime == nil && a.CompileSpec != nil && a.CompileSpec.Package != nil {
+		a.Runtime = a.CompileSpec.Package
+	}
+
+	// TODO: probably to reduce using of memory it's better create a writer/reader?
+
+	data, err := json.Marshal(a)
+	if err != nil {
+		return errors.Wrap(err, "While marshalling for PackageArtifact JSON")
+	}
+
+	err = ioutil.WriteFile(dst, data, os.ModePerm)
+	if err != nil {
+		return errors.Wrap(err, "While writing PackageArtifact JSON")
 	}
 
 	return nil
@@ -557,72 +590,39 @@ func (a *PackageArtifact) Unpack(dst string, enableSubsets bool) error {
 
 	switch a.CompressionType {
 	case compression.Zstandard:
-		// Create the uncompressed archive
-		archive, err := os.Create(a.CachePath + ".uncompressed")
-		if err != nil {
-			return err
-		}
-		defer os.RemoveAll(a.CachePath + ".uncompressed")
-		defer archive.Close()
-
 		original, err := os.Open(a.CachePath)
 		if err != nil {
 			return errors.Wrap(err, "Cannot open "+a.CachePath)
 		}
 		defer original.Close()
 
-		bufferedReader := bufio.NewReader(original)
-
-		d, err := zstd.NewReader(bufferedReader)
+		//		bufferedReader := bufio.NewReader(original)
+		d, err := zstd.NewReader(original)
 		if err != nil {
 			return err
 		}
 		defer d.Close()
 
-		_, err = io.Copy(archive, d)
-		if err != nil {
-			return errors.Wrap(err, "Cannot copy to "+a.CachePath+".uncompressed")
-		}
-
-		err = helpers.UntarProtectSpec(a.CachePath+".uncompressed", dst,
-			protectedFiles, tarModifierWrapperFunc, spec)
-		if err != nil {
-			return err
-		}
-		return nil
+		err = helpers.UntarProtectSpecCompress(dst,
+			protectedFiles, tarModifierWrapperFunc, spec, d)
+		return err
 	case compression.GZip:
 		// Create the uncompressed archive
-		archive, err := os.Create(a.CachePath + ".uncompressed")
-		if err != nil {
-			return err
-		}
-		defer os.RemoveAll(a.CachePath + ".uncompressed")
-		defer archive.Close()
-
 		original, err := os.Open(a.CachePath)
 		if err != nil {
 			return errors.Wrap(err, "Cannot open "+a.CachePath)
 		}
 		defer original.Close()
 
-		bufferedReader := bufio.NewReader(original)
-		r, err := gzip.NewReader(bufferedReader)
+		r, err := gzip.NewReader(original)
 		if err != nil {
 			return err
 		}
 		defer r.Close()
 
-		_, err = io.Copy(archive, r)
-		if err != nil {
-			return errors.Wrap(err, "Cannot copy to "+a.CachePath+".uncompressed")
-		}
-
-		err = helpers.UntarProtectSpec(a.CachePath+".uncompressed", dst,
-			protectedFiles, tarModifierWrapperFunc, spec)
-		if err != nil {
-			return err
-		}
-		return nil
+		err = helpers.UntarProtectSpecCompress(dst,
+			protectedFiles, tarModifierWrapperFunc, spec, r)
+		return err
 	// Defaults to tar only (covers when "none" is supplied)
 	default:
 		return helpers.UntarProtect(a.CachePath, dst,

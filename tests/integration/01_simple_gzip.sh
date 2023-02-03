@@ -60,6 +60,7 @@ repositories:
    - name: "main"
      type: "disk"
      enable: true
+     cached: true
      urls:
        - "$tmpdir/testbuild"
 EOF
@@ -92,7 +93,7 @@ testUnInstall() {
 
 testInstallAgain() {
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
-    output=$($LUET install --sync-repos -y --config $tmpdir/luet.yaml =test/c-1.0)
+    output=$($LUET install -y --config $tmpdir/luet.yaml =test/c-1.0)
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertNotContains 'contains warning' "$output" 'No packages to install'

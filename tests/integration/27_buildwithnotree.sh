@@ -1,15 +1,14 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
-export tmpdir="$(mktemp -d)"
+  export tmpdir="$(mktemp -d)"
 }
 
 oneTimeTearDown() {
-    rm -rf "$tmpdir"
+  rm -rf "$tmpdir"
 }
 
 testBuild() {
@@ -49,6 +48,7 @@ repositories:
    - name: "main"
      type: "disk"
      enable: true
+     cached: true
      urls:
        - "$tmpdir/testbuild"
 EOF
@@ -100,6 +100,7 @@ config_from_host: true
 repositories:
    - name: "main"
      type: "disk"
+     cached: true
      enable: true
      urls:
        - "$tmpdir/testbuild2"

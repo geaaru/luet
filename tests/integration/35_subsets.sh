@@ -79,6 +79,7 @@ repos_confdir:
 repositories:
    - name: "main"
      type: "disk"
+     cached: true
      enable: true
      urls:
        - "$tmpdir/testbuild"
@@ -130,6 +131,7 @@ repositories:
    - name: "main"
      type: "disk"
      enable: true
+     cached: true
      urls:
        - "$tmpdir/testbuild"
 EOF

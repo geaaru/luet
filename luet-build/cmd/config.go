@@ -1,5 +1,6 @@
 // Copyright © 2019 Ettore Di Giacinto <mudler@gentoo.org>
-//                  Daniele Rondina <geaaru@sabayonlinux.org>
+//
+//	Daniele Rondina <geaaru@sabayonlinux.org>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,8 +19,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/geaaru/luet/luet-build/pkg/installer"
 	config "github.com/geaaru/luet/pkg/config"
-	"github.com/geaaru/luet/pkg/installer"
 	. "github.com/geaaru/luet/pkg/logger"
 	"github.com/geaaru/luet/pkg/subsets"
 

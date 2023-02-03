@@ -19,7 +19,7 @@ func newRepoCommand(config *cfg.LuetConfig) *cobra.Command {
 	}
 
 	ans.AddCommand(
-		NewRepoListCommand(),
+		NewRepoListCommand(config),
 		NewRepoUpdateCommand(config),
 		NewRepoEnableCommand(config),
 		NewRepoDisableCommand(config),

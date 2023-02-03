@@ -27,6 +27,7 @@ import (
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 	"github.com/marcsauter/single"
 
+	util "github.com/geaaru/luet/cmd/util"
 	config "github.com/geaaru/luet/pkg/config"
 	helpers "github.com/geaaru/luet/pkg/helpers"
 	. "github.com/geaaru/luet/pkg/logger"
@@ -39,35 +40,6 @@ import (
 var cfgFile string
 var Verbose bool
 var LockedCommands = []string{"install", "uninstall", "upgrade"}
-
-func version() string {
-	if config.BuildGoVersion != "" {
-		return fmt.Sprintf("%s-%s-g%s %s - %s",
-			config.LuetVersion, config.LuetForkVersion, config.BuildCommit,
-			config.BuildTime, config.BuildGoVersion)
-	} else {
-		return fmt.Sprintf("%s-%s-g%s %s", config.LuetVersion,
-			config.LuetForkVersion, config.BuildCommit, config.BuildTime)
-	}
-}
-
-var bannerCommands = []string{
-	"uninstall", "install", "build",
-}
-
-func displayVersionBanner() {
-	display := false
-	if len(os.Args) > 1 {
-		for _, c := range bannerCommands {
-			if os.Args[1] == c {
-				display = true
-			}
-		}
-	}
-	if display {
-		Info("Luet version", version())
-	}
-}
 
 func handleLock() {
 	if os.Getenv("LUET_NOLOCK") != "true" {
@@ -172,7 +144,7 @@ func Execute() {
 		$ luet search --hidden package
 		
 	`,
-		Version: version(),
+		Version: util.Version(),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 
 			cfg.Viper.SetConfigType("yaml")
@@ -213,8 +185,6 @@ func Execute() {
 			}
 
 			handleLock()
-			displayVersionBanner()
-
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {
 			// Cleanup all tmp directories used by luet
@@ -293,11 +263,9 @@ func initCommand(rootCmd *cobra.Command, cfg *config.LuetConfig) {
 		newDatabaseCommand(cfg),
 		newExecCommand(cfg),
 		newRepoCommand(cfg),
-		newReinstallCommand(cfg),
-		newReclaimCommand(cfg),
-		newReplaceCommand(cfg),
 		newUpgradeCommand(cfg),
 		newSearchCommand(cfg),
+		newSubsetsCommand(cfg),
 		newCleanupCommand(cfg),
 		newQueryCommand(cfg),
 		newMinerCommand(cfg),

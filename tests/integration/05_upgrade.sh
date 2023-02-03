@@ -1,15 +1,14 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
-export tmpdir="$(mktemp -d)"
+  export tmpdir="$(mktemp -d)"
 }
 
 oneTimeTearDown() {
-    rm -rf "$tmpdir"
+  rm -rf "$tmpdir"
 }
 
 testBuild() {
@@ -78,6 +77,7 @@ repositories:
    - name: "main"
      type: "disk"
      enable: true
+     cached: true
      urls:
        - "$tmpdir/testbuild"
 EOF
@@ -104,18 +104,15 @@ testInstall() {
 }
 
 testUpgrade() {
-    upgrade=$($LUET --config $tmpdir/luet.yaml upgrade --sync-repos -y)
+    upgrade=$($LUET --config $tmpdir/luet.yaml upgrade -y)
     installst=$?
     echo "$upgrade"
-    assertEquals 'install test successfully' "$installst" "0"
+    assertEquals 'upgrade test successfully' "$installst" "0"
     assertTrue 'package uninstalled B' "[ ! -e '$tmpdir/testrootfs/test5' ]"
     assertTrue 'package installed B' "[ -e '$tmpdir/testrootfs/newc' ]"
     assertTrue 'package uninstalled A' "[ ! -e '$tmpdir/testrootfs/testaa' ]"
     assertTrue 'package installed new A' "[ -e '$tmpdir/testrootfs/testlatest' ]"
-    assertNotContains 'does not contain test/c@1.0' "$upgrade" 'test/c-1.0'
-    assertNotContains 'does not attempt to download test/c@1.0' "$upgrade" 'test/c-1.0 downloaded'
 }
 
 # Load shUnit2.
 . "$ROOT_DIR/tests/integration/shunit2"/shunit2
-

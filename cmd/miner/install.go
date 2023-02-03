@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package miner
 
@@ -97,12 +97,13 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 			fail := false
 
 			artifacts := *artifactsRef
+			rmA := []*artifact.PackageArtifact{}
 
 			// Check for file conflicts
 			// NOTE: checkConflicts avoid to
 			//       exclude installed packages.
 			err = aManager.CheckFileConflicts(
-				artifactsRef, checkConflicts, force,
+				artifactsRef, &rmA, checkConflicts, force,
 				config.GetSystem().Rootfs,
 			)
 			if err != nil {
@@ -134,7 +135,7 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 					Info(fmt.Sprintf("[%40s] installed - :heavy_check_mark:", a.Runtime.HumanReadableString()))
 				}
 
-				err = aManager.RegisterPackage(a, r)
+				err = aManager.RegisterPackage(a, r, force)
 				if err != nil {
 					fail = true
 					fmt.Println(fmt.Sprintf(

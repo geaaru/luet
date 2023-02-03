@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package repository
 
@@ -14,6 +14,7 @@ import (
 	"github.com/geaaru/luet/pkg/config"
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 	. "github.com/geaaru/luet/pkg/logger"
+	dpkg "github.com/geaaru/luet/pkg/package"
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	"github.com/geaaru/luet/pkg/v2/repository/client"
 	"github.com/pkg/errors"
@@ -130,16 +131,19 @@ func (w *WagonRepository) ClearCatalog() {
 // The Sync method update the repository.
 //
 // In particular, follow these steps:
-// * download the main repository.yaml file to a temporary directory
-// * load the new repository.yaml as WagonIdentity and compare revision
-//   and last update date with the current status.
-// * if there is a new revision download the meta and tree file
-//   and unpack them to the local cache.
+//   - download the main repository.yaml file to a temporary directory
+//   - load the new repository.yaml as WagonIdentity and compare revision
+//     and last update date with the current status.
+//   - if there is a new revision download the meta and tree file
+//     and unpack them to the local cache.
 //
 // NOTE:
-//   Until I will implement the new metadata tarball
-//   i need process metadata and write under the treefs
-//   the artifacts information.
+//
+//	Until I will implement the new metadata tarball
+//	i need process metadata and write under the treefs
+//	the artifacts information.
+//	I will create a provides.yaml with all repositories provides
+//	to speedup research.
 //
 // If force is true the download of the meta and tree files are done always.
 func (w *WagonRepository) Sync(force bool) error {
@@ -252,12 +256,13 @@ func (w *WagonRepository) Sync(force bool) error {
 		// under <cache_dir>/repos/treefs/<cat>/<name>/<version>/metadata.yaml
 		// to avoid the parsing of metadata stream every time. It's something
 		// that consume too memory when i have more of >2k packages on a repo.
-
+		//
+		// In additional, it's generated a provides.yaml with all provides map
+		// of the repository. This speedup Searcher and reduce i/o operations.
 		err = w.ExplodeMetadata()
 		if err != nil {
 			return err
 		}
-
 		w.ClearCatalog()
 
 	} else {
@@ -276,18 +281,20 @@ func (w *WagonRepository) Sync(force bool) error {
 func (w *WagonRepository) ExplodeMetadata() error {
 	w.ClearCatalog()
 
+	// Create Provides Map
+	provides := NewWagonProvides()
+
 	Debug(
 		fmt.Sprintf(
 			"\n:house:Repository: %30s unpacking metadata. ",
 			w.Identity.GetName()),
 	)
 
-	_, err := w.Stones.LoadCatalog(w.Identity)
+	catalog, err := w.Stones.LoadCatalog(w.Identity)
 	if err != nil {
 		return err
 	}
 
-	catalog := *w.Stones.Catalog
 	for idx, _ := range catalog.Index {
 		pkg := catalog.Index[idx].GetPackage()
 		if pkg == nil {
@@ -301,13 +308,66 @@ func (w *WagonRepository) ExplodeMetadata() error {
 			pkg.Version,
 			"metadata.yaml",
 		)
+		metaJsonFile := filepath.Join(w.Identity.LuetRepository.TreePath,
+			pkg.Category,
+			pkg.Name,
+			pkg.Version,
+			"metadata.json",
+		)
+
 		pkgDir := filepath.Dir(metaFile)
+		defFile := filepath.Join(pkgDir, "definition.yaml")
 
 		// TODO: On ArtifactIndex provides are insert in the index!
 		//       For now just ignoring the artifacts if the directory is not
 		//       present.
 		if fileHelper.Exists(pkgDir) {
 			//Debug(fmt.Sprintf("Creating file %s", metaFile))
+
+			// TODO: Review this logic on luet-build too.
+			// At the moment the creation of metadata.yaml file of the
+			// build package doesn't permit to update package provides,requires
+			// and/or conflicts without a new build of the package.
+			// As workaround I read the provides from definition.yaml that
+			// is always aligned to the last repository revision.
+
+			data, err := os.ReadFile(defFile)
+			if err != nil {
+				return errors.New(
+					fmt.Sprintf("Error on read file %s: %s",
+						defFile, err.Error()))
+			}
+
+			dp, err := dpkg.NewDefaultPackageFromYaml(data)
+			if err != nil {
+				return errors.New(
+					fmt.Sprintf("Error on parse file %s: %s",
+						defFile, err.Error()))
+			}
+
+			if len(dp.Provides) > 0 {
+				if catalog.Index[idx].Runtime != nil {
+					catalog.Index[idx].Runtime.Provides = dp.Provides
+				} else if catalog.Index[idx].CompileSpec != nil && catalog.Index[idx].CompileSpec.Package != nil {
+					catalog.Index[idx].CompileSpec.Package.Provides = dp.Provides
+				}
+				// Write provides on map
+				for _, prov := range dp.Provides {
+					provides.Add(prov.PackageName(), pkg)
+				}
+			}
+
+			// Override also requires from definition.yaml
+			if len(dp.PackageRequires) > 0 {
+				if catalog.Index[idx].Runtime != nil {
+					catalog.Index[idx].Runtime.PackageRequires = dp.PackageRequires
+				} else if catalog.Index[idx].CompileSpec != nil && catalog.Index[idx].CompileSpec.Package != nil {
+					catalog.Index[idx].CompileSpec.Package.PackageRequires = dp.PackageRequires
+				}
+			}
+
+			dp = nil
+			data = nil
 
 			err = catalog.Index[idx].WriteMetadataYaml(metaFile)
 			if err != nil {
@@ -318,8 +378,36 @@ func (w *WagonRepository) ExplodeMetadata() error {
 					err.Error()),
 				)
 			}
+
+			err = catalog.Index[idx].WriteMetadataJson(metaJsonFile)
+			if err != nil {
+				Warning(fmt.Sprintf(
+					"[%s] Error on creating JSON metadata file for package %s: %s",
+					w.Identity.Name,
+					pkg.HumanReadableString(),
+					err.Error()),
+				)
+			}
+
 		}
 
+		pkgDir = ""
+	}
+
+	catalog = nil
+
+	// Create the provides.yaml file under treefs/
+	providesFile := filepath.Join(w.Identity.LuetRepository.TreePath,
+		"provides.yaml",
+	)
+	err = provides.WriteProvidesYAML(providesFile)
+	if err != nil {
+		Warning(fmt.Sprintf(
+			"[%s] Error on creating provides file %s: %s",
+			w.Identity.Name,
+			providesFile,
+			err.Error()),
+		)
 	}
 
 	return nil

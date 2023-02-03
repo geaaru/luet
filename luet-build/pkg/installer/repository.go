@@ -32,9 +32,9 @@ import (
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 	"go.uber.org/multierr"
 
+	"github.com/geaaru/luet/luet-build/pkg/installer/client"
 	"github.com/geaaru/luet/pkg/compiler"
 	"github.com/geaaru/luet/pkg/config"
-	"github.com/geaaru/luet/pkg/installer/client"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 	tree "github.com/geaaru/luet/pkg/tree"

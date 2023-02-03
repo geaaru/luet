@@ -9,7 +9,6 @@ import (
 	"os"
 
 	helpers "github.com/geaaru/luet/cmd/helpers"
-	util "github.com/geaaru/luet/cmd/util"
 	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
@@ -57,18 +56,21 @@ func NewRemovePackage(config *cfg.LuetConfig) *cobra.Command {
 			subsets.LoadSubsetsConfig(config)
 
 			searchOpts := &wagon.StonesSearchOpts{
-				Packages:      pkgs,
-				Categories:    []string{},
-				Labels:        []string{},
-				LabelsMatches: []string{},
-				Matches:       []string{},
-				FilesOwner:    []string{},
-				Hidden:        true,
-				AndCondition:  false,
-				WithFiles:     false,
+				Packages:         pkgs,
+				Categories:       []string{},
+				Labels:           []string{},
+				LabelsMatches:    []string{},
+				Matches:          []string{},
+				FilesOwner:       []string{},
+				Hidden:           true,
+				AndCondition:     false,
+				WithFiles:        false,
+				WithRootfsPrefix: false,
 			}
 
-			stones, err := util.SearchInstalled(config, searchOpts)
+			searcher := wagon.NewSearcherSimple(config)
+			stones, err := searcher.SearchInstalled(searchOpts)
+			searcher.Close()
 			if err != nil {
 				Error(err.Error())
 				os.Exit(1)

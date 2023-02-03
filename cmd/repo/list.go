@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	. "github.com/geaaru/luet/pkg/config"
+	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewRepoListCommand() *cobra.Command {
+func NewRepoListCommand(config *cfg.LuetConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "list [OPTIONS]",
 		Short: "List of the configured repositories.",
@@ -39,10 +39,11 @@ func NewRepoListCommand() *cobra.Command {
 			enable, _ := cmd.Flags().GetBool("enabled")
 			disable, _ := cmd.Flags().GetBool("disabled")
 			quiet, _ := cmd.Flags().GetBool("quiet")
+			showUrls, _ := cmd.Flags().GetBool("urls")
 			repoType, _ := cmd.Flags().GetString("type")
 
-			for idx, _ := range LuetCfg.SystemRepositories {
-				repo := LuetCfg.SystemRepositories[idx]
+			for idx, _ := range config.SystemRepositories {
+				repo := config.SystemRepositories[idx]
 				if enable && !repo.Enable {
 					continue
 				}
@@ -70,7 +71,7 @@ func NewRepoListCommand() *cobra.Command {
 						repoText = Yellow(repo.Urls[0]).String()
 					}
 
-					repobasedir := LuetCfg.GetSystem().GetRepoDatabaseDirPath(repo.Name)
+					repobasedir := config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
 					if repo.Cached {
 
 						r := wagon.NewWagonRepository(&repo)
@@ -96,12 +97,26 @@ func NewRepoListCommand() *cobra.Command {
 						fmt.Println(
 							fmt.Sprintf("%s\n  %s", repoColor, repoText))
 					}
+
+					fmt.Println(fmt.Sprintf("  Priority %5d - Type %4s", Bold(Red(repo.Priority)),
+						Bold(Blue(repo.Type)),
+					))
+
+					if showUrls {
+						fmt.Println(fmt.Sprintf("  Urls:"))
+						for _, url := range repo.Urls {
+							fmt.Println(fmt.Sprintf(
+								"   %s", Bold(Italic(Cyan("* "+url))),
+							))
+						}
+					}
 				}
 			}
 		},
 	}
 
 	ans.Flags().Bool("enabled", false, "Show only enabled repositories.")
+	ans.Flags().BoolP("urls", "u", false, "Show URLs of the repository. (only in normal mode).")
 	ans.Flags().Bool("disabled", false, "Show only disabled repositories.")
 	ans.Flags().BoolP("quiet", "q", false, "Show only name of the repositories.")
 	ans.Flags().StringP("type", "t", "", "Filter repositories of a specific type")

@@ -17,28 +17,33 @@ package client_test
 
 import (
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 
+	. "github.com/geaaru/luet/luet-build/pkg/installer/client"
 	"github.com/geaaru/luet/pkg/compiler/types/artifact"
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	. "github.com/geaaru/luet/pkg/installer/client"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Local client", func() {
+var _ = Describe("Http client", func() {
 	Context("With repository", func() {
+
 		It("Downloads single files", func() {
+			// setup small staticfile webserver with content
 			tmpdir, err := ioutil.TempDir("", "test")
 			Expect(err).ToNot(HaveOccurred())
 			defer os.RemoveAll(tmpdir) // clean up
-
-			// write the whole body at once
+			Expect(err).ToNot(HaveOccurred())
+			ts := httptest.NewServer(http.FileServer(http.Dir(tmpdir)))
+			defer ts.Close()
 			err = ioutil.WriteFile(filepath.Join(tmpdir, "test.txt"), []byte(`test`), os.ModePerm)
 			Expect(err).ToNot(HaveOccurred())
 
-			c := NewLocalClient(RepoData{Urls: []string{tmpdir}})
+			c := NewHttpClient(RepoData{Urls: []string{ts.URL}})
 			path, err := c.DownloadFile("test.txt")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fileHelper.Read(path)).To(Equal("test"))
@@ -46,15 +51,17 @@ var _ = Describe("Local client", func() {
 		})
 
 		It("Downloads artifacts", func() {
+			// setup small staticfile webserver with content
 			tmpdir, err := ioutil.TempDir("", "test")
 			Expect(err).ToNot(HaveOccurred())
 			defer os.RemoveAll(tmpdir) // clean up
-
-			// write the whole body at once
+			Expect(err).ToNot(HaveOccurred())
+			ts := httptest.NewServer(http.FileServer(http.Dir(tmpdir)))
+			defer ts.Close()
 			err = ioutil.WriteFile(filepath.Join(tmpdir, "test.txt"), []byte(`test`), os.ModePerm)
 			Expect(err).ToNot(HaveOccurred())
 
-			c := NewLocalClient(RepoData{Urls: []string{tmpdir}})
+			c := NewHttpClient(RepoData{Urls: []string{ts.URL}})
 			path, err := c.DownloadArtifact(&artifact.PackageArtifact{Path: "test.txt"})
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fileHelper.Read(path.Path)).To(Equal("test"))

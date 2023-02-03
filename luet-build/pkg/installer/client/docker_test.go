@@ -26,7 +26,7 @@ import (
 
 	pkg "github.com/geaaru/luet/pkg/package"
 
-	. "github.com/geaaru/luet/pkg/installer/client"
+	. "github.com/geaaru/luet/luet-build/pkg/installer/client"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )

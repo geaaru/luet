@@ -1,17 +1,7 @@
-// Copyright © 2019 Ettore Di Giacinto <mudler@gentoo.org>
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, see <http://www.gnu.org/licenses/>.
+/*
+Copyright © 2019-2023 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
+*/
 
 package pkg_test
 
@@ -473,4 +463,57 @@ var _ = Describe("Package", func() {
 		})
 	})
 
+	Context("Check Admit", func() {
+		p1 := NewPackageWithCat("cat1", "A", "1.0+1",
+			[]*DefaultPackage{
+				NewPackageWithCatThin("cat1", "D", ">5.0"),
+			},
+			[]*DefaultPackage{
+				NewPackageWithCatThin("cat1", "B", "<=3"),
+				NewPackageWithCatThin("cat1", "E", "!=4.0"),
+			},
+		)
+		p2 := NewPackageWithCatThin("cat1", "B", "3.1")
+		p3 := NewPackageWithCatThin("cat1", "B", "1.0+1")
+		p4 := NewPackageWithCatThin("cat1", "D", "4.0+2")
+		p5 := NewPackageWithCatThin("cat1", "D", "5.1+1")
+		p6 := NewPackageWithCatThin("cat1", "E", "4.0+33")
+		p7 := NewPackageWithCatThin("cat1", "E", "2.0")
+
+		It("Check conflict1", func() {
+			a, err := p1.Admit(p2)
+			Expect(err).Should(BeNil())
+			Expect(a).Should(Equal(true))
+		})
+
+		It("Check conflict2", func() {
+			a, err := p1.Admit(p3)
+			Expect(err).Should(BeNil())
+			Expect(a).Should(Equal(false))
+		})
+
+		It("Check conflict3", func() {
+			a, err := p1.Admit(p6)
+			Expect(err).Should(BeNil())
+			Expect(a).Should(Equal(true))
+		})
+
+		It("Check conflict4", func() {
+			a, err := p1.Admit(p7)
+			Expect(err).Should(BeNil())
+			Expect(a).Should(Equal(false))
+		})
+
+		It("Check requires1", func() {
+			a, err := p1.Admit(p4)
+			Expect(err).Should(BeNil())
+			Expect(a).Should(Equal(false))
+		})
+
+		It("Check requires2", func() {
+			a, err := p1.Admit(p5)
+			Expect(err).Should(BeNil())
+			Expect(a).Should(Equal(true))
+		})
+	})
 })

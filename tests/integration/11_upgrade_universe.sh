@@ -1,15 +1,14 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
-export tmpdir="$(mktemp -d)"
+  export tmpdir="$(mktemp -d)"
 }
 
 oneTimeTearDown() {
-    rm -rf "$tmpdir"
+  rm -rf "$tmpdir"
 }
 
 testBuild() {
@@ -78,6 +77,7 @@ repositories:
    - name: "main"
      type: "disk"
      enable: true
+     cached: true
      urls:
        - "$tmpdir/testbuild"
 EOF
@@ -96,7 +96,7 @@ testInstall() {
 }
 
 testUpgrade() {
-    upgrade=$($LUET --config $tmpdir/luet.yaml upgrade --sync-repos -y --universe --clean)
+    upgrade=$($LUET --config $tmpdir/luet.yaml upgrade -y)
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     echo "$upgrade"

@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022-2023 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package repository
 
@@ -40,19 +40,19 @@ type StonesSearchTask struct {
 }
 
 type StonesSearchOpts struct {
-	Packages      pkg.DefaultPackages
-	Categories    []string
-	Labels        []string
-	LabelsMatches []string
-	Matches       []string
-	FilesOwner    []string
-	Annotations   []string
-	Hidden        bool
-	AndCondition  bool
-	WithFiles     bool
-	Full          bool
-
-	Modev2 bool
+	Packages         pkg.DefaultPackages
+	Categories       []string
+	Labels           []string
+	LabelsMatches    []string
+	Matches          []string
+	FilesOwner       []string
+	Annotations      []string
+	Hidden           bool
+	AndCondition     bool
+	WithFiles        bool
+	WithRootfsPrefix bool
+	Full             bool
+	OnlyPackages     bool
 }
 
 type ArtifactIndex []*artifact.PackageArtifact
@@ -95,6 +95,26 @@ type ChannelSearchRes struct {
 	Artifacts *[]*artifact.PackageArtifact
 
 	Error error
+}
+
+func (so *StonesSearchOpts) CloneWithPkgs(pkgs pkg.DefaultPackages) *StonesSearchOpts {
+	ans := &StonesSearchOpts{
+		Packages:         pkgs,
+		Categories:       so.Categories,
+		Labels:           so.Labels,
+		LabelsMatches:    so.LabelsMatches,
+		Matches:          so.Matches,
+		FilesOwner:       so.FilesOwner,
+		Annotations:      so.Annotations,
+		Hidden:           so.Hidden,
+		AndCondition:     so.AndCondition,
+		WithFiles:        so.WithFiles,
+		WithRootfsPrefix: so.WithRootfsPrefix,
+		Full:             so.Full,
+		OnlyPackages:     so.OnlyPackages,
+	}
+
+	return ans
 }
 
 func (sp *StonesPack) ToMap() *StonesMap {
@@ -330,6 +350,8 @@ func (s *WagonStones) analyzePackageDir(
 	opts *StonesSearchOpts,
 	repoName string) (*artifact.PackageArtifact, error) {
 
+	var art *artifact.PackageArtifact
+
 	defFile := filepath.Join(dir, "definition.yaml")
 
 	// Ignoring directory without definition.yaml file
@@ -337,20 +359,39 @@ func (s *WagonStones) analyzePackageDir(
 		return nil, nil
 	}
 
-	// Read the metadata.file
-	metaFile := filepath.Join(dir, "metadata.yaml")
-	data, err := ioutil.ReadFile(metaFile)
-	if err != nil {
-		return nil, errors.New(
-			fmt.Sprintf("Error on read file %s: %s",
-				metaFile, err.Error()))
-	}
+	metaJsonFile := filepath.Join(dir, "metadata.json")
 
-	art, err := artifact.NewPackageArtifactFromYaml(data)
-	if err != nil {
-		return nil, errors.New(
-			fmt.Sprintf("Error on parse file %s: %s",
-				metaFile, err.Error()))
+	if fileHelper.Exists(metaJsonFile) {
+
+		data, err := ioutil.ReadFile(metaJsonFile)
+		if err != nil {
+			return nil, fmt.Errorf("Error on read file %s: %s",
+				metaJsonFile, err.Error())
+		}
+
+		art, err = artifact.NewPackageArtifactFromJson(data)
+		if err != nil {
+			return nil, fmt.Errorf("Error on parse file %s: %s",
+				metaJsonFile, err.Error())
+		}
+		// Free memory
+		data = nil
+	} else {
+		// Read the metadata.file
+		metaFile := filepath.Join(dir, "metadata.yaml")
+		data, err := ioutil.ReadFile(metaFile)
+		if err != nil {
+			return nil, fmt.Errorf("Error on read file %s: %s",
+				metaFile, err.Error())
+		}
+
+		art, err = artifact.NewPackageArtifactFromYaml(data)
+		if err != nil {
+			return nil, fmt.Errorf("Error on parse file %s: %s",
+				metaFile, err.Error())
+		}
+		// Free memory
+		data = nil
 	}
 
 	if art.Runtime == nil {
@@ -375,6 +416,17 @@ func (s *WagonStones) analyzePackageDir(
 	// For now only match category and name
 	if len(opts.Packages) > 0 {
 		for idx, _ := range opts.Packages {
+
+			// Check Provides
+			if len(art.Runtime.Provides) > 0 {
+				for _, prov := range art.Runtime.Provides {
+					if prov.AtomMatches(opts.Packages[idx]) {
+						match = true
+						break
+					}
+				}
+			}
+
 			if art.Runtime.Category != opts.Packages[idx].GetCategory() {
 				continue
 			}
@@ -383,9 +435,25 @@ func (s *WagonStones) analyzePackageDir(
 				continue
 			}
 
-			match = true
-			break
-		}
+			// NOTE: Ignore error here because the parsing
+			//       is been already validate before.
+			gS, _ := opts.Packages[idx].ToGentooPackage()
+			gP, _ := art.GetPackage().ToGentooPackage()
+
+			admit, err := gS.Admit(gP)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"Unexpected error on compare %s with %s: %s",
+					opts.Packages[idx].HumanReadableString(),
+					art.GetPackage().HumanReadableString(),
+					err.Error())
+			}
+
+			if admit {
+				match = true
+				break
+			}
+		} // end for
 	}
 
 	if len(opts.Matches) > 0 {
@@ -517,6 +585,7 @@ func (s *WagonStones) SearchArtifacts(opts *StonesSearchOpts, repoName, repoDir 
 
 		channels: []chan ChannelSearchRes{},
 	}
+	catMap := make(map[string]bool, 0)
 
 	// Create regexes array
 
@@ -559,13 +628,23 @@ func (s *WagonStones) SearchArtifacts(opts *StonesSearchOpts, repoName, repoDir 
 
 	nCategories := 0
 
+	if opts.OnlyPackages {
+		// Create the map of the categories researched.
+		for _, p := range opts.Packages {
+			catMap[p.Category] = true
+		}
+	}
+
 	// NOTE: A repository directory is in this format
 	//       <repo-dir>/<pkg-category>/<pkg-name>/<pkg-version>/
 	for _, file := range files {
 
 		if !file.IsDir() {
-			Debug(fmt.Sprintf("For repository %s ignoring file %s",
-				repoName, file.Name()))
+
+			if file.Name() != "provides.yaml" {
+				Debug(fmt.Sprintf("For repository %s ignoring file %s",
+					repoName, file.Name()))
+			}
 			continue
 		}
 
@@ -588,6 +667,14 @@ func (s *WagonStones) SearchArtifacts(opts *StonesSearchOpts, repoName, repoDir 
 			}
 		}
 
+		if opts.OnlyPackages {
+			if _, ok := catMap[categoryDir]; !ok {
+				// POST: if the category is not used I skip directory
+				//       parsing.
+				continue
+			}
+		}
+
 		// POST: category matched or no category filter available.
 		catDirAbs := filepath.Join(repoTreeDir, categoryDir)
 
@@ -601,6 +688,7 @@ func (s *WagonStones) SearchArtifacts(opts *StonesSearchOpts, repoName, repoDir 
 		if err != nil {
 			Error("Error on acquire sem " + err.Error())
 		}
+
 		go s.analyzeCatDir(catDirAbs, categoryDir, task, opts,
 			task.channels[nCategories], repoName)
 		nCategories++
@@ -620,11 +708,88 @@ func (s *WagonStones) SearchArtifacts(opts *StonesSearchOpts, repoName, repoDir 
 
 	task.waitGroup.Wait()
 
+	if opts.OnlyPackages {
+		// If OnlyPackages is used then check the provides file
+		// directly.
+		err := s.searchProvides(repoTreeDir, repoName, task, opts, &ans)
+		if err != nil {
+			return nil, err
+		}
+
+	}
+
 	Debug(fmt.Sprintf("[%s] Search Artifacts in %d µs.",
 		repoName,
 		time.Now().Sub(start).Nanoseconds()/1e3),
 	)
 	return &ans, nil
+}
+
+func (s *WagonStones) searchProvides(repoTreeDir, repoName string,
+	task *StonesSearchTask,
+	opts *StonesSearchOpts,
+	arts *[]*artifact.PackageArtifact) error {
+
+	providesFile := filepath.Join(repoTreeDir, "provides.yaml")
+	providers := NewWagonProvides()
+
+	if fileHelper.Exists(providesFile) {
+		err := providers.Load(providesFile)
+		if err != nil {
+			return err
+		}
+	}
+
+	isInList := func(pkgstr string, aa *[]*artifact.PackageArtifact) bool {
+		inList := false
+		for _, p := range *aa {
+			if p.GetPackage().HumanReadableString() == pkgstr {
+				inList = true
+				break
+			}
+		}
+		return inList
+	}
+
+	if len(providers.Provides) > 0 {
+		//
+		ans := *arts
+
+		for _, sp := range opts.Packages {
+			for provname, provArts := range providers.Provides {
+				if sp.PackageName() == provname {
+					for _, p := range provArts {
+						if isInList(p.HumanReadableString(), arts) {
+							continue
+						} else {
+							// Analyze package dir
+							pkgDir := filepath.Join(repoTreeDir,
+								p.Category,
+								p.Name,
+								p.Version,
+							)
+
+							art, err := s.analyzePackageDir(
+								pkgDir, task, opts, repoName,
+							)
+							if err != nil {
+								return fmt.Errorf("Error on analyze directory %s: %s",
+									pkgDir, err.Error())
+							}
+
+							if art != nil {
+								ans = append(ans, art)
+							}
+						}
+					}
+				}
+			}
+		}
+
+		*arts = ans
+	}
+
+	return nil
 }
 
 func (s *WagonStones) SearchArtifactsFromCatalog(
@@ -892,6 +1057,7 @@ func (s *WagonStones) LoadCatalog(identity *WagonIdentity) (*StonesCatalog, erro
 		if err != nil {
 			return nil, errors.Wrap(err, "Error on parse file "+metafile)
 		}
+		decoder = nil
 
 	} else {
 		return nil, errors.New("No meta field found. Repository is corrupted or to sync.")

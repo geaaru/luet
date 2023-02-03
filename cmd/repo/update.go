@@ -17,38 +17,53 @@
 package cmd_repo
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"sync"
 
 	cmd_util "github.com/geaaru/luet/cmd/util"
 	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
+	"golang.org/x/sync/semaphore"
 
 	"github.com/spf13/cobra"
 )
 
 func ProcessRepository(repo *cfg.LuetRepository, config *cfg.LuetConfig,
-	channel chan cmd_util.ChannelRepoOpRes, force bool) {
+	channel chan cmd_util.ChannelRepoOpRes, force bool,
+	sem *semaphore.Weighted, waitGroup *sync.WaitGroup, ctx *context.Context) {
 
 	repobasedir := config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
 
+	defer waitGroup.Done()
+
+	err := sem.Acquire(*ctx, 1)
+	if err != nil {
+		return
+	}
+	defer sem.Release(1)
+
 	r := wagon.NewWagonRepository(repo)
 	if r.HasLocalWagonIdentity(repobasedir) {
-		err := r.ReadWagonIdentify(repobasedir)
+		err = r.ReadWagonIdentify(repobasedir)
 		if err != nil && (!force) {
 			channel <- cmd_util.ChannelRepoOpRes{err, repo}
 			return
 		}
 	}
 
-	err := r.Sync(force)
+	err = r.Sync(force)
+	r.ClearCatalog()
+	r = nil
+
 	if err != nil {
 		channel <- cmd_util.ChannelRepoOpRes{err, repo}
 	} else {
 		channel <- cmd_util.ChannelRepoOpRes{nil, repo}
 	}
-	r.ClearCatalog()
+	return
 }
 
 func NewRepoUpdateCommand(config *cfg.LuetConfig) *cobra.Command {
@@ -75,6 +90,10 @@ $> luet repo update repo1 repo2
 				config.GetGeneral().Concurrency,
 			)
 
+			waitGroup := &sync.WaitGroup{}
+			sem := semaphore.NewWeighted(int64(config.GetGeneral().Concurrency))
+			ctx := context.TODO()
+
 			if len(args) > 0 {
 				for _, rname := range args {
 					repo, err := config.GetSystemRepository(rname)
@@ -83,15 +102,17 @@ $> luet repo update repo1 repo2
 					} else if err != nil {
 						continue
 					}
+					waitGroup.Add(1)
 
-					go ProcessRepository(repo, config, ch, force)
+					go ProcessRepository(repo, config, ch, force, sem, waitGroup, &ctx)
 					nOps++
 				}
 
 			} else {
 				for idx, repo := range config.SystemRepositories {
 					if repo.Enable {
-						go ProcessRepository(&config.SystemRepositories[idx], config, ch, force)
+						waitGroup.Add(1)
+						go ProcessRepository(&config.SystemRepositories[idx], config, ch, force, sem, waitGroup, &ctx)
 						nOps++
 					}
 				}
@@ -109,6 +130,8 @@ $> luet repo update repo1 repo2
 			} else {
 				fmt.Println("No repositories candidates found.")
 			}
+
+			waitGroup.Wait()
 
 			os.Exit(res)
 		},

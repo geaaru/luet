@@ -20,10 +20,8 @@ import (
 	"fmt"
 	"os"
 
-	//. "github.com/geaaru/luet/pkg/config"
-	"github.com/ghodss/yaml"
 	helpers "github.com/geaaru/luet/cmd/helpers"
-	"github.com/geaaru/luet/cmd/util"
+	bhelpers "github.com/geaaru/luet/luet-build/cmd/helpers"
 	"github.com/geaaru/luet/pkg/compiler"
 	"github.com/geaaru/luet/pkg/compiler/backend"
 	"github.com/geaaru/luet/pkg/compiler/types/options"
@@ -31,6 +29,7 @@ import (
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 	tree "github.com/geaaru/luet/pkg/tree"
+	"github.com/ghodss/yaml"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -50,7 +49,7 @@ func NewTreeImageCommand() *cobra.Command {
 			if len(args) != 1 {
 				Fatal("Expects one package as parameter")
 			}
-			util.BindValuesFlags(cmd)
+			bhelpers.BindValuesFlags(cmd)
 			viper.BindPFlag("image-repository", cmd.Flags().Lookup("image-repository"))
 
 		},
@@ -60,7 +59,7 @@ func NewTreeImageCommand() *cobra.Command {
 			treePath, _ := cmd.Flags().GetStringArray("tree")
 			imageRepository := viper.GetString("image-repository")
 			pullRepo, _ := cmd.Flags().GetStringArray("pull-repository")
-			values := util.ValuesFlags()
+			values := bhelpers.ValuesFlags()
 
 			out, _ := cmd.Flags().GetString("output")
 			if out != "terminal" {
@@ -84,7 +83,7 @@ func NewTreeImageCommand() *cobra.Command {
 				options.WithBuildValues(values),
 				options.WithPushRepository(imageRepository),
 				options.WithPullRepositories(pullRepo),
-				options.WithTemplateFolder(util.TemplateFolders(false, treePath)),
+				options.WithTemplateFolder(bhelpers.TemplateFolders(false, treePath)),
 				options.WithSolverOptions(opts),
 			)
 

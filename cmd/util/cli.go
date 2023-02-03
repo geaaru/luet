@@ -17,16 +17,11 @@ package util
 
 import (
 	"errors"
-	"path/filepath"
+	"fmt"
 	"strings"
 
 	"github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/config"
-	"github.com/geaaru/luet/pkg/installer"
-	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
-	art "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
-	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
 	"github.com/spf13/cobra"
 )
@@ -34,6 +29,17 @@ import (
 type ChannelRepoOpRes struct {
 	Error error
 	Repo  *config.LuetRepository
+}
+
+func Version() string {
+	if config.BuildGoVersion != "" {
+		return fmt.Sprintf("%s-%s-g%s %s - %s",
+			config.LuetVersion, config.LuetForkVersion, config.BuildCommit,
+			config.BuildTime, config.BuildGoVersion)
+	} else {
+		return fmt.Sprintf("%s-%s-g%s %s", config.LuetVersion,
+			config.LuetForkVersion, config.BuildCommit, config.BuildTime)
+	}
 }
 
 func BindSystemFlags(cmd *cobra.Command) {
@@ -50,14 +56,6 @@ func BindSolverFlags(cmd *cobra.Command) {
 	LuetCfg.Viper.BindPFlag("solver.implementation", cmd.Flags().Lookup("solver-implementation"))
 }
 
-func BindValuesFlags(cmd *cobra.Command) {
-	LuetCfg.Viper.BindPFlag("values", cmd.Flags().Lookup("values"))
-}
-
-func ValuesFlags() []string {
-	return LuetCfg.Viper.GetStringSlice("values")
-}
-
 func SetSystemConfig() {
 	dbpath := LuetCfg.Viper.GetString("system.database_path")
 	rootfs := LuetCfg.Viper.GetString("system.rootfs")
@@ -66,34 +64,6 @@ func SetSystemConfig() {
 	LuetCfg.System.DatabaseEngine = engine
 	LuetCfg.System.DatabasePath = dbpath
 	LuetCfg.System.SetRootFS(rootfs)
-}
-
-func SetSolverConfig() (c *config.LuetSolverOptions) {
-	stype := LuetCfg.Viper.GetString("solver.type")
-	discount := LuetCfg.Viper.GetFloat64("solver.discount")
-	rate := LuetCfg.Viper.GetFloat64("solver.rate")
-	attempts := LuetCfg.Viper.GetInt("solver.max_attempts")
-	implementation := LuetCfg.Viper.GetString("solver.implementation")
-
-	LuetCfg.GetSolverOptions().Type = stype
-	LuetCfg.GetSolverOptions().LearnRate = float32(rate)
-	LuetCfg.GetSolverOptions().Discount = float32(discount)
-	LuetCfg.GetSolverOptions().MaxAttempts = attempts
-	LuetCfg.GetSolverOptions().Implementation = implementation
-
-	if implementation == "" {
-		// Using solver.type until i will drop solver.implementation option.
-		LuetCfg.GetSolverOptions().Implementation = stype
-		implementation = stype
-	}
-
-	return &config.LuetSolverOptions{
-		Type:           stype,
-		LearnRate:      float32(rate),
-		Discount:       float32(discount),
-		MaxAttempts:    attempts,
-		Implementation: implementation,
-	}
 }
 
 func SetCliFinalizerEnvs(finalizerEnvs []string) error {
@@ -110,181 +80,4 @@ func SetCliFinalizerEnvs(finalizerEnvs []string) error {
 	}
 
 	return nil
-}
-
-// TemplateFolders returns the default folders which holds shared template between packages in a given tree path
-func TemplateFolders(fromRepo bool, treePaths []string) []string {
-	templateFolders := []string{}
-	if !fromRepo {
-		for _, t := range treePaths {
-			templateFolders = append(templateFolders, filepath.Join(t, "templates"))
-		}
-	} else {
-		for _, s := range installer.SystemRepositories(LuetCfg) {
-			templateFolders = append(templateFolders, filepath.Join(s.TreePath, "templates"))
-		}
-	}
-	return templateFolders
-}
-
-func ProcessRepository(
-	repo *LuetRepository,
-	searchOpts *wagon.StonesSearchOpts,
-	config *LuetConfig,
-	channel chan wagon.ChannelSearchRes,
-	artifactsRes bool) {
-
-	repobasedir := config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
-	r := wagon.NewWagonRepository(repo)
-	err := r.ReadWagonIdentify(repobasedir)
-	if err != nil {
-
-		Warning("Error on read repository identity file: " + err.Error())
-		if artifactsRes {
-			ansArts := []*art.PackageArtifact{}
-			channel <- wagon.ChannelSearchRes{nil, &ansArts, nil}
-		} else {
-			ansStones := []*wagon.Stone{}
-			channel <- wagon.ChannelSearchRes{&ansStones, nil, nil}
-		}
-
-	} else {
-		if artifactsRes {
-			artifacts, err := r.SearchArtifacts(searchOpts)
-			if err != nil {
-				Warning("Error on read repository catalog for repo : " + r.Identity.Name)
-				channel <- wagon.ChannelSearchRes{nil, nil, err}
-				return
-			}
-
-			channel <- wagon.ChannelSearchRes{nil, artifacts, nil}
-		} else {
-			var pkgs *[]*wagon.Stone
-			var err error
-
-			pkgs, err = r.SearchStones(searchOpts)
-			if err != nil {
-				Warning("Error on read repository catalog for repo : " + r.Identity.Name)
-				channel <- wagon.ChannelSearchRes{nil, nil, err}
-				return
-			}
-
-			channel <- wagon.ChannelSearchRes{pkgs, nil, nil}
-		}
-
-		r.ClearCatalog()
-	}
-}
-
-func SearchFromRepos(
-	config *LuetConfig,
-	searchOpts *wagon.StonesSearchOpts) (*[]*wagon.Stone, error) {
-
-	res := []*wagon.Stone{}
-	var ch chan wagon.ChannelSearchRes = make(
-		chan wagon.ChannelSearchRes,
-		config.GetGeneral().Concurrency,
-	)
-
-	for idx, _ := range config.SystemRepositories {
-		repo := config.SystemRepositories[idx]
-		if !repo.Enable {
-			continue
-		}
-
-		if repo.Cached {
-			go ProcessRepository(&repo, searchOpts, config, ch, false)
-		} else {
-			return &res, errors.New("Only cached repositories are supported.")
-		}
-
-	}
-
-	var err error = nil
-
-	for idx, _ := range config.SystemRepositories {
-		repo := config.SystemRepositories[idx]
-		if !repo.Enable {
-			continue
-		}
-
-		if repo.Cached {
-			resp := <-ch
-			if resp.Error == nil {
-				res = append(res, *resp.Stones...)
-			} else {
-				err = resp.Error
-			}
-		}
-	}
-
-	return &res, err
-}
-
-func SearchArtifactsFromRepos(
-	config *LuetConfig,
-	searchOpts *wagon.StonesSearchOpts) (*[]*art.PackageArtifact, error) {
-
-	res := []*art.PackageArtifact{}
-	var ch chan wagon.ChannelSearchRes = make(
-		chan wagon.ChannelSearchRes,
-		config.GetGeneral().Concurrency,
-	)
-
-	for idx, _ := range config.SystemRepositories {
-		repo := config.SystemRepositories[idx]
-		if !repo.Enable {
-			continue
-		}
-
-		if repo.Cached {
-			go ProcessRepository(&repo, searchOpts, config, ch, true)
-		} else {
-			return &res, errors.New("Only cached repositories are supported.")
-		}
-
-	}
-
-	var err error = nil
-
-	for idx, _ := range config.SystemRepositories {
-		repo := config.SystemRepositories[idx]
-		if !repo.Enable {
-			continue
-		}
-
-		if repo.Cached {
-			resp := <-ch
-			if resp.Error == nil {
-				res = append(res, *resp.Artifacts...)
-			} else {
-				err = resp.Error
-			}
-		}
-	}
-
-	return &res, err
-}
-
-func SearchInstalled(config *LuetConfig, searchOpts *wagon.StonesSearchOpts) (*[]*wagon.Stone, error) {
-	system := &installer.System{
-		Database: config.GetSystemDB(),
-		Target:   config.GetSystem().Rootfs,
-	}
-	defer system.Database.Close()
-	wagonStones := wagon.NewWagonStones()
-	wagonStones.Catalog = &wagon.StonesCatalog{}
-
-	pkgs := system.Database.World()
-	for idx, _ := range pkgs {
-		p := pkgs[idx].(*pkg.DefaultPackage)
-		artifact := art.NewPackageArtifact(p.GetPath())
-		artifact.Runtime = p
-		if searchOpts.WithFiles {
-			f, _ := system.Database.GetPackageFiles(pkgs[idx])
-			artifact.Files = f
-		}
-		wagonStones.Catalog.Index = append(wagonStones.Catalog.Index, artifact)
-	}
-	return wagonStones.SearchFromCatalog(searchOpts, "system")
 }

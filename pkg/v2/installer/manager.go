@@ -32,7 +32,10 @@ type ArtifactsManager struct {
 
 	sync.Mutex
 
-	// Temporary struct to review
+	// Temporary struct to review.
+	// This requires a lot of RAM when the elaborated
+	// packages are with a lot of files. Maybe the map
+	// could be created on filesystem in the near future?
 	fileIndex map[string]*pkg.DefaultPackage
 }
 
@@ -303,7 +306,16 @@ func (m *ArtifactsManager) RemovePackage(s *repos.Stone,
 		return errors.Wrap(err, "Failed removing package from database")
 	}
 
-	Info(":recycle: ", fmt.Sprintf("%20s", p.GetFingerPrint()), "Removed :heavy_check_mark:")
+	reposSep := ""
+	if p.Repository != "" {
+		reposSep = "::"
+	}
+
+	Info(fmt.Sprintf(":recycle:  %-65s - %-15s # removed :check_mark:",
+		fmt.Sprintf("%s%s%s", p.PackageName(),
+			reposSep, p.Repository,
+		),
+		p.GetVersion()))
 
 	return nil
 }
@@ -313,7 +325,8 @@ func (m *ArtifactsManager) ReinstallPackage(
 	p *artifact.PackageArtifact,
 	r *repos.WagonRepository,
 	targetRootfs string,
-	preserveSystemEssentialData bool) error {
+	preserveSystemEssentialData bool,
+	force bool) error {
 
 	if p.Runtime == nil {
 		return errors.New("Artifact without Runtime package definition")
@@ -322,8 +335,21 @@ func (m *ArtifactsManager) ReinstallPackage(
 	m.Setup()
 
 	err := m.removePackageFiles(s, targetRootfs, preserveSystemEssentialData)
-	if err != nil {
+	if err != nil && !force {
 		return err
+	}
+
+	if force {
+		pkg := s.ToPackage()
+		// With force i reinstall also database files
+		m.Database.RemovePackageFiles(pkg)
+		m.Database.RemovePackageFinalizer(pkg)
+		m.Database.RemovePackage(pkg)
+
+		err = m.RegisterPackage(p, r, force)
+		if err != nil {
+			return err
+		}
 	}
 
 	return m.InstallPackage(p, r, targetRootfs)
@@ -356,16 +382,16 @@ func (m *ArtifactsManager) InstallPackage(p *artifact.PackageArtifact, r *repos.
 	return nil
 }
 
-func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos.WagonRepository) error {
+func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos.WagonRepository, force bool) error {
 
 	pp := p.GetPackage()
 	if pp == nil {
 		return errors.New("Artifact without Runtime package definition")
 	}
 
-	m.Setup()
-
 	start := time.Now()
+
+	m.Setup()
 
 	// Set package files on local database
 	err := m.Database.SetPackageFiles(
@@ -374,9 +400,14 @@ func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos
 			Files:              p.Files,
 		},
 	)
-	if err != nil {
+
+	if err != nil && !force {
 		return errors.Wrap(err, "Register package files on database")
 	}
+
+	Debug(fmt.Sprintf("Register package (set files ) %s completed in %d µs.",
+		pp.HumanReadableString(),
+		time.Now().Sub(start).Nanoseconds()/1e3))
 
 	// Set finalizer if present
 	if r != nil {
@@ -401,7 +432,7 @@ func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos
 					Uninstall:          finalizer.Uninstall,
 				},
 			)
-			if err != nil {
+			if err != nil && !force {
 				return errors.Wrap(err,
 					fmt.Sprintf("Register package %s", pp.HumanReadableString()))
 			}
@@ -425,6 +456,7 @@ func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos
 
 func (m *ArtifactsManager) CheckFileConflicts(
 	toInstall *[]*artifact.PackageArtifact,
+	toRemove *[]*artifact.PackageArtifact,
 	checkSystem bool,
 	safeCheck bool,
 	targetRootfs string,
@@ -432,10 +464,32 @@ func (m *ArtifactsManager) CheckFileConflicts(
 
 	m.Setup()
 
-	Info("Checking for file conflicts...")
+	Info(":guard:Checking for file conflicts...")
 	start := time.Now()
 
+	conflictsFound := false
+
+	// This requires a lot of RAM when the elaborated
+	// packages are with a lot of files. Maybe the map
+	// could be created on filesystem in the near future?
 	filesToInstall := make(map[string]string, 0)
+	filesToRemove := make(map[string]string, 0)
+
+	if checkSystem {
+		for _, a := range *toRemove {
+			pp := a.GetPackage()
+			files := a.Files
+			if len(files) == 0 {
+				// Trying to retrieve the list of the files
+				// from the database.
+				files, _ = m.Database.GetPackageFiles(pp)
+			}
+
+			for _, f := range files {
+				filesToRemove[f] = pp.HumanReadableString()
+			}
+		}
+	}
 
 	// NOTE: Instead of load in memory the list
 	//       of the files of every installed package
@@ -444,6 +498,8 @@ func (m *ArtifactsManager) CheckFileConflicts(
 	//       The check validate if a package file is present
 	//       on target system or between the list of
 	//       files of the packages to install.
+	//       if a file is already present I will
+	//       check if the file is also on fileRmIndex map.
 	for _, a := range *toInstall {
 		pp := a.GetPackage()
 
@@ -454,6 +510,7 @@ func (m *ArtifactsManager) CheckFileConflicts(
 						"file %s conflict between package %s and %s",
 						f, pkg, pp.HumanReadableString(),
 					))
+					conflictsFound = true
 				} else {
 					return fmt.Errorf(
 						"file %s conflict between package %s and %s",
@@ -469,37 +526,54 @@ func (m *ArtifactsManager) CheckFileConflicts(
 
 				// Check if the file is present on the target path.
 				if fileHelper.Exists(tFile) {
-					exists, p, err := m.ExistsPackageFile(f)
-					if err != nil {
-						return errors.Wrap(err, "failed checking into system db")
-					}
-					if exists {
-						if safeCheck {
 
-							Warning(fmt.Errorf(
-								"file conflict between '%s' and '%s' ( file: %s )",
-								p.HumanReadableString(),
-								pp.HumanReadableString(),
-								f,
-							))
-						} else {
-							return fmt.Errorf(
-								"file conflict between '%s' and '%s' ( file: %s )",
-								p.HumanReadableString(),
-								pp.HumanReadableString(),
-								f,
-							)
+					// Check if the file is in the list of the file to remove
+					if _, ok := filesToRemove[f]; !ok {
+						exists, p, err := m.ExistsPackageFile(f)
+						if err != nil {
+							return errors.Wrap(err, "failed checking into system db")
 						}
-					}
+						if exists {
+							if safeCheck {
+
+								Warning(fmt.Errorf(
+									"file conflict between '%s' and '%s' ( file: %s )",
+									p.HumanReadableString(),
+									pp.HumanReadableString(),
+									f,
+								))
+								conflictsFound = true
+							} else {
+								return fmt.Errorf(
+									"file conflict between '%s' and '%s' ( file: %s )",
+									p.HumanReadableString(),
+									pp.HumanReadableString(),
+									f,
+								)
+							}
+						}
+					} // else ignoring file.
 				}
+
 			}
 
 		} // end for a.Files
 
 	} // end for toInstall
 
-	Info(fmt.Sprintf("Check for file conflicts completed in %d µs.",
-		time.Now().Sub(start).Nanoseconds()/1e3))
+	m.Lock()
+	defer m.Unlock()
+	m.fileIndex = nil
+
+	if conflictsFound {
+		Info(fmt.Sprintf(
+			":heavy_check_mark: Conflicts ignored (executed in %d µs).",
+			time.Now().Sub(start).Nanoseconds()/1e3))
+	} else {
+		Info(fmt.Sprintf(
+			":heavy_check_mark: No conflicts found (executed in %d µs).",
+			time.Now().Sub(start).Nanoseconds()/1e3))
+	}
 
 	return nil
 }
@@ -567,7 +641,11 @@ func (m *ArtifactsManager) buildIndexFiles() {
 	start := time.Now()
 
 	// Check if cache is empty or if it got modified
-	if m.fileIndex == nil { //|| len(s.Database.GetPackages()) != len(s.fileIndex) {
+	if m.fileIndex == nil {
+
+		// This requires a lot of RAM when the elaborated
+		// packages are with a lot of files. Maybe the map
+		// could be created on filesystem in the near future?
 		m.fileIndex = make(map[string]*pkg.DefaultPackage)
 		for _, p := range m.Database.World() {
 			files, _ := m.Database.GetPackageFiles(p)

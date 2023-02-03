@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022-2023 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd
 
@@ -13,7 +13,6 @@ import (
 	"github.com/geaaru/luet/cmd/util"
 	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
-	"github.com/geaaru/luet/pkg/solver"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
 	tablewriter "github.com/olekukonko/tablewriter"
@@ -81,29 +80,28 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 			}
 			hidden, _ := cmd.Flags().GetBool("hidden")
 			files, _ := cmd.Flags().GetBool("files")
+			withRootfsPrefix, _ := cmd.Flags().GetBool("with-rootfs-prefix")
 			orCond, _ := cmd.Flags().GetBool("condition-or")
 			installed, _ := cmd.Flags().GetBool("installed")
 			tableMode, _ := cmd.Flags().GetBool("table")
 			quiet, _ := cmd.Flags().GetBool("quiet")
-			mode2, _ := cmd.Flags().GetBool("mode2")
 			full, _ := cmd.Flags().GetBool("full")
 
 			util.SetSystemConfig()
-			util.SetSolverConfig()
 
 			out, _ := cmd.Flags().GetString("output")
 			config.GetLogging().SetLogLevel("error")
 
 			searchOpts := &wagon.StonesSearchOpts{
-				Categories:    categories,
-				Labels:        labels,
-				LabelsMatches: regLabels,
-				Matches:       args,
-				Hidden:        hidden,
-				AndCondition:  !orCond,
-				WithFiles:     files,
-				Modev2:        mode2,
-				Full:          full,
+				Categories:       categories,
+				Labels:           labels,
+				LabelsMatches:    regLabels,
+				Matches:          args,
+				Hidden:           hidden,
+				AndCondition:     !orCond,
+				WithFiles:        files,
+				WithRootfsPrefix: withRootfsPrefix,
+				Full:             full,
 			}
 			var res *[]*wagon.Stone
 			var err error
@@ -116,16 +114,26 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 					}
 					searchOpts.Packages = append(searchOpts.Packages, pack)
 				}
+
+				if len(categories) == 0 && len(labels) == 0 &&
+					len(regLabels) == 0 && len(args) == 0 {
+					searchOpts.OnlyPackages = true
+				}
+
 			}
 
+			searcher := wagon.NewSearcherSimple(config)
+			defer searcher.Close()
+
 			if installed {
-				res, err = util.SearchInstalled(config, searchOpts)
+				res, err = searcher.SearchInstalled(searchOpts)
 				if err != nil {
 					fmt.Println("Error on retrieve installed packages ", err.Error())
 					os.Exit(1)
 				}
 			} else {
-				res, err = util.SearchFromRepos(config, searchOpts)
+
+				res, err = searcher.SearchStones(searchOpts)
 				if err != nil {
 					fmt.Println("Error on retrieve installed packages ", err.Error())
 					os.Exit(1)
@@ -188,10 +196,6 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 	flags.String("system-dbpath", "", "System db path")
 	flags.String("system-target", "", "System rootpath")
 	flags.String("system-engine", "", "System DB engine")
-	flags.String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
-	flags.Float32("solver-rate", 0.7, "Solver learning rate")
-	flags.Float32("solver-discount", 1.0, "Solver discount rate")
-	flags.Int("solver-attempts", 9000, "Solver maximum attempts")
 
 	flags.Bool("installed", false, "Search between system packages")
 
@@ -212,11 +216,10 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 		"Output format ( Defaults: terminal, available: json,yaml )")
 	flags.Bool("hidden", false, "Include hidden packages")
 	flags.Bool("files", false, "Show package files on YAML/JSON output.")
+	flags.Bool("with-rootfs-prefix", true, "Add prefix of the configured rootfs path.")
 	flags.Bool("table", false, "show output in a table (wider screens)")
 	flags.Bool("quiet", false, "show output as list without version")
 	flags.Bool("full", false, "Show full informations.")
-
-	flags.Bool("mode2", true, "Using searching v2.")
 
 	return ans
 }

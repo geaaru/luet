@@ -49,7 +49,6 @@ func NewQueryBelongsCommand(config *cfg.LuetConfig) *cobra.Command {
 			installed := config.Viper.GetBool("installed")
 
 			util.SetSystemConfig()
-			util.SetSolverConfig()
 
 			// Files inside the metadata are store without initial /
 			// I drop it if defined.
@@ -67,26 +66,30 @@ func NewQueryBelongsCommand(config *cfg.LuetConfig) *cobra.Command {
 			}
 
 			searchOpts := &wagon.StonesSearchOpts{
-				Categories:    []string{},
-				Labels:        []string{},
-				LabelsMatches: []string{},
-				Matches:       []string{},
-				FilesOwner:    files,
-				Hidden:        true,
-				AndCondition:  false,
-				WithFiles:     true,
+				Categories:       []string{},
+				Labels:           []string{},
+				LabelsMatches:    []string{},
+				Matches:          []string{},
+				FilesOwner:       files,
+				Hidden:           true,
+				AndCondition:     false,
+				WithFiles:        true,
+				WithRootfsPrefix: false,
 			}
 			var res *[]*wagon.Stone
 			var err error
 
+			searcher := wagon.NewSearcherSimple(config)
+			defer searcher.Close()
+
 			if installed {
-				res, err = util.SearchInstalled(config, searchOpts)
+				res, err = searcher.SearchInstalled(searchOpts)
 				if err != nil {
 					fmt.Println("Error on retrieve installed packages ", err.Error())
 					os.Exit(1)
 				}
 			} else {
-				res, err = util.SearchFromRepos(config, searchOpts)
+				res, err = searcher.SearchStones(searchOpts)
 				if err != nil {
 					fmt.Println("Error on retrieve packages ", err.Error())
 					os.Exit(1)

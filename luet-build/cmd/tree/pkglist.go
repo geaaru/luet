@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd_tree
 
@@ -9,7 +9,7 @@ import (
 	"os"
 	"sort"
 
-	helpers "github.com/geaaru/luet/cmd/helpers"
+	helpers "github.com/geaaru/luet/luet-build/cmd/helpers"
 	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"

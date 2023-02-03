@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd
 
@@ -44,6 +44,9 @@ of the finalizers.
 `,
 		Aliases: []string{"rm", "un"},
 		Run: func(cmd *cobra.Command, args []string) {
+
+			Info("Luet version", util.Version())
+
 			toRemove := []*pkg.DefaultPackage{}
 			for _, a := range args {
 

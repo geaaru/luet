@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	"github.com/geaaru/luet/pkg/helpers/tools"
 
 	"github.com/geaaru/luet/pkg/helpers/docker"
 	"github.com/geaaru/luet/pkg/helpers/match"
@@ -52,12 +53,14 @@ type Package interface {
 	GetPackageName() string
 	ImageID() string
 	Requires([]*DefaultPackage) Package
+	HasRequires() bool
 	Conflicts([]*DefaultPackage) Package
 	Revdeps(PackageDatabase) Packages
 	LabelDeps(PackageDatabase, string) Packages
 
 	GetProvides() []*DefaultPackage
 	SetProvides([]*DefaultPackage) Package
+	HasProvides() bool
 
 	GetRequires() []*DefaultPackage
 	GetConflicts() []*DefaultPackage
@@ -163,6 +166,10 @@ func (pm PackageMap) String() string {
 	return fmt.Sprint(rr)
 }
 
+func (d DefaultPackage) HasRequires() bool {
+	return tools.Ternary(d.PackageRequires != nil, len(d.PackageRequires) > 0, false)
+}
+
 func (d DefaultPackages) Hash(salt string) string {
 
 	overallFp := ""
@@ -172,6 +179,14 @@ func (d DefaultPackages) Hash(salt string) string {
 	h := md5.New()
 	io.WriteString(h, fmt.Sprintf("%s-%s", overallFp, salt))
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func NewDefaultPackageFromYaml(data []byte) (*DefaultPackage, error) {
+	ans, err := DefaultPackageFromYaml(data)
+	if err != nil {
+		return nil, err
+	}
+	return &ans, nil
 }
 
 // >> Unmarshallers
@@ -312,6 +327,30 @@ func NewPackage(name, version string, requires []*DefaultPackage, conflicts []*D
 	}
 }
 
+// TODO: Permit to create a new package also with category.
+func NewPackageWithCat(category, name, version string,
+	requires []*DefaultPackage, conflicts []*DefaultPackage) *DefaultPackage {
+	return &DefaultPackage{
+		Name:             name,
+		Category:         category,
+		Version:          version,
+		PackageRequires:  requires,
+		PackageConflicts: conflicts,
+		Labels:           nil,
+	}
+}
+
+func NewPackageWithCatThin(category, name, version string) *DefaultPackage {
+	return &DefaultPackage{
+		Name:             name,
+		Category:         category,
+		Version:          version,
+		PackageRequires:  []*DefaultPackage{},
+		PackageConflicts: []*DefaultPackage{},
+		Labels:           nil,
+	}
+}
+
 func (p *DefaultPackage) SetRepository(r string) { p.Repository = r }
 func (p *DefaultPackage) GetRepository() string  { return p.Repository }
 
@@ -333,6 +372,15 @@ func (p *DefaultPackage) String() string {
 // FIXME: this needs to be unique, now just name is generalized
 func (p *DefaultPackage) GetFingerPrint() string {
 	return fmt.Sprintf("%s-%s-%s", p.Name, p.Category, p.Version)
+}
+
+// This method return an hash based on package name, version
+// and his requires, conflicts that is used to identify
+// eventually changes of the requirements of a package
+// that is not rebumped.
+func (p *DefaultPackage) GetComparitionHash() string {
+	pt := p.ToPackageThin()
+	return pt.GenerateHash()
 }
 
 func (p *DefaultPackage) HashFingerprint(salt string) string {
@@ -538,6 +586,12 @@ func (p *DefaultPackage) SetProvides(req []*DefaultPackage) Package {
 	p.Provides = req
 	return p
 }
+func (p *DefaultPackage) HasProvides() bool {
+	if len(p.Provides) > 0 {
+		return true
+	}
+	return false
+}
 func (p *DefaultPackage) GetRequires() []*DefaultPackage {
 	return p.PackageRequires
 }
@@ -612,6 +666,195 @@ func (p *DefaultPackage) Revdeps(definitiondb PackageDatabase) Packages {
 	}
 
 	return versionsInWorld
+}
+
+func (p *DefaultPackage) ToPackageThin() *PackageThin {
+	ans := &PackageThin{
+		Name:      p.Name,
+		Category:  p.Category,
+		Version:   p.Version,
+		Requires:  []*PackageThin{},
+		Conflicts: []*PackageThin{},
+		Provides:  []*PackageThin{},
+	}
+
+	if len(p.PackageRequires) > 0 {
+		for idx, _ := range p.PackageRequires {
+			ans.Requires = append(ans.Requires,
+				p.PackageRequires[idx].ToPackageThin())
+		}
+	}
+
+	if len(p.PackageConflicts) > 0 {
+		for idx, _ := range p.PackageConflicts {
+			ans.Conflicts = append(ans.Conflicts,
+				p.PackageConflicts[idx].ToPackageThin())
+		}
+	}
+
+	if len(p.Provides) > 0 {
+		for idx, _ := range p.Provides {
+			ans.Provides = append(ans.Provides,
+				p.Provides[idx].ToPackageThin())
+		}
+	}
+
+	return ans
+}
+
+func (p *DefaultPackage) ToGentooPackage() (*gentoo.GentooPackage, error) {
+
+	var cond gentoo.PackageCond
+
+	if strings.HasPrefix(p.Version, ">=") {
+		cond = gentoo.PkgCondGreaterEqual
+	} else if strings.HasPrefix(p.Version, "<=") {
+		cond = gentoo.PkgCondLessEqual
+	} else if strings.HasPrefix(p.Version, "!=") {
+		cond = gentoo.PkgCondNot
+	} else if strings.HasPrefix(p.Version, "=") {
+		cond = gentoo.PkgCondEqual
+	} else if strings.HasPrefix(p.Version, ">") {
+		cond = gentoo.PkgCondGreater
+	} else if strings.HasPrefix(p.Version, "<") {
+		cond = gentoo.PkgCondLess
+	}
+
+	ans, err := gentoo.ParsePackageStr(
+		fmt.Sprintf("%s-%s",
+			p.PackageName(),
+			strings.Trim(p.GetVersion(), "><=!"),
+		),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ans.Condition = cond
+	ans.Repository = p.Repository
+	ans.License = p.License
+	ans.UseFlags = p.UseFlags
+
+	return ans, nil
+}
+
+func (p *DefaultPackage) Admit(a *DefaultPackage) (bool, error) {
+	if len(p.PackageRequires) == 0 && len(p.PackageConflicts) == 0 {
+		return true, nil
+	}
+
+	if p.AtomMatches(a) && !p.IsSelector() {
+		panic(fmt.Errorf(
+			"Trying to compare the %s package when is not a selector %s",
+			a.HumanReadableString(), p.HumanReadableString()))
+		return false,
+			fmt.Errorf(
+				"Trying to compare the %s package when is not a selector %s",
+				a.HumanReadableString(), p.HumanReadableString())
+	}
+
+	agentoo, err := a.ToGentooPackage()
+	if err != nil {
+		return false, err
+	}
+
+	if len(p.PackageRequires) > 0 {
+		// PRE: the Requires are all selector
+		for _, r := range p.PackageRequires {
+			if r.AtomMatches(a) {
+				greq, err := r.ToGentooPackage()
+				if err != nil {
+					return false, err
+				}
+
+				admitted, err := greq.Admit(agentoo)
+				if err != nil {
+					return false, err
+				}
+
+				if !admitted {
+					return false, nil
+				}
+			} else if a.HasProvides() {
+
+				for _, prov := range a.Provides {
+					if r.AtomMatches(prov) {
+
+						greq, err := r.ToGentooPackage()
+						if err != nil {
+							return false, err
+						}
+						gprov, err := prov.ToGentooPackage()
+						if err != nil {
+							return false, err
+						}
+
+						admitted, err := greq.Admit(gprov)
+						if err != nil {
+							return false, err
+						}
+
+						if !admitted {
+							return false, nil
+						}
+					}
+				}
+
+			}
+		}
+	}
+
+	if len(p.PackageConflicts) > 0 {
+		for _, c := range p.PackageConflicts {
+			if c.AtomMatches(a) {
+				gconflict, err := c.ToGentooPackage()
+				if err != nil {
+					return false, err
+				}
+
+				admitted, err := gconflict.Admit(agentoo)
+				if err != nil {
+					return false, err
+				}
+
+				if admitted {
+					// If the package is admitted means that
+					// match the conflicts
+					return false, nil
+				}
+			} else if a.HasProvides() {
+
+				for _, prov := range a.Provides {
+					if c.AtomMatches(prov) {
+
+						gconflict, err := c.ToGentooPackage()
+						if err != nil {
+							return false, err
+						}
+						gprov, err := prov.ToGentooPackage()
+						if err != nil {
+							return false, err
+						}
+
+						admitted, err := gconflict.Admit(gprov)
+						if err != nil {
+							return false, err
+						}
+
+						if admitted {
+							// If the package is admitted means that
+							// match the conflicts
+							return false, nil
+						}
+					}
+				}
+
+			}
+		}
+	}
+
+	return true, nil
 }
 
 func walkPackage(p Package, definitiondb PackageDatabase, visited map[string]interface{}) Packages {
