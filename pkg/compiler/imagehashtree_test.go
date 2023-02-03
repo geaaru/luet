@@ -107,7 +107,7 @@ var _ = Describe("ImageHashTree", func() {
 
 			//Expect(packageHash.Target.Hash.BuildHash).To(Equal("79d7107d13d578b362e6a7bf10ec850efce26316405b8d732ce8f9e004d64281"))
 			//Expect(packageHash.Target.Hash.PackageHash).To(Equal("9112e2c97bf8ca998c1df303a9ebc4957b685930c882e9aa556eab4507220079"))
-			Expect(packageHash.Target.Hash.PackageHash).To(Equal("33c75f8d07738ddc7edd1640f5ce73ad09bc526273ba9b91760fecc9a06c84d9"))
+			Expect(packageHash.Target.Hash.PackageHash).To(Equal("cfeeefe631ea3f857510f8af2326974de99fbf7cbec7835f29412be990a86519"))
 			a := &pkg.DefaultPackage{Name: "a", Category: "test", Version: "1.1"}
 			hash, err := packageHash.DependencyBuildImage(a)
 			Expect(err).ToNot(HaveOccurred())
