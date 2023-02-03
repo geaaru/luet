@@ -41,6 +41,7 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 			force := config.Viper.GetBool("force")
 			nodeps, _ := cmd.Flags().GetBool("nodeps")
 			yes := config.Viper.GetBool("yes")
+			skipCheckSystem, _ := cmd.Flags().GetBool("skip-check-system")
 			downloadOnly, _ := cmd.Flags().GetBool("download-only")
 			pretend, _ := cmd.Flags().GetBool("pretend")
 			ignoreConflicts, _ := cmd.Flags().GetBool("ignore-conflicts")
@@ -120,6 +121,7 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 				SkipFinalizers:              skipFinalizers,
 				Pretend:                     pretend,
 				DownloadOnly:                downloadOnly,
+				CheckSystemFiles:            !skipCheckSystem,
 			}
 			if err := aManager.Upgrade(opts, config.GetSystem().Rootfs); err != nil {
 				Fatal("Error: " + err.Error())
@@ -133,6 +135,7 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 		"simply display what *would* have been upgraded if --pretend weren't used")
 	flags.Bool("nodeps", false, "Don't consider package dependencies (harmful!)")
 	flags.Bool("ignore-conflicts", false, "Don't consider package conflicts (harmful!)")
+	flags.Bool("skip-check-system", false, "Skip conflicts check with existing rootfs.")
 	flags.Bool("force", false, "Force upgrade by ignoring errors")
 	flags.StringArray("finalizer-env", []string{},
 		"Set finalizer environment in the format key=value.")

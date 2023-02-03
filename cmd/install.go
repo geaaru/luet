@@ -73,6 +73,7 @@ To force install a package:
 			//onlydeps := config.Viper.GetBool("onlydeps")
 			yes := config.Viper.GetBool("yes")
 			pretend, _ := cmd.Flags().GetBool("pretend")
+			skipCheckSystem, _ := cmd.Flags().GetBool("skip-check-system")
 			ignoreConflicts, _ := cmd.Flags().GetBool("ignore-conflicts")
 			preserveSystem, _ := cmd.Flags().GetBool("preserve-system-essentials")
 			downloadOnly, _ := cmd.Flags().GetBool("download-only")
@@ -149,6 +150,7 @@ To force install a package:
 				SkipFinalizers:              skipFinalizers,
 				Pretend:                     pretend,
 				DownloadOnly:                downloadOnly,
+				CheckSystemFiles:            !skipCheckSystem,
 			}
 
 			if err := aManager.Install(opts, config.GetSystem().Rootfs,
@@ -163,6 +165,7 @@ To force install a package:
 
 	flags.Bool("nodeps", false, "Don't consider package dependencies (harmful!)")
 	flags.Bool("ignore-conflicts", false, "Don't consider package conflicts (harmful!)")
+	flags.Bool("skip-check-system", false, "Skip conflicts check with existing rootfs.")
 	flags.BoolP("pretend", "p", false,
 		"simply display what *would* have been installed if --pretend weren't used")
 

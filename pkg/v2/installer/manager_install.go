@@ -30,6 +30,7 @@ type InstallOpts struct {
 	SkipFinalizers              bool
 	Pretend                     bool
 	DownloadOnly                bool
+	CheckSystemFiles            bool
 }
 
 func (m *ArtifactsManager) sortPackages2Install(
@@ -176,6 +177,15 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 
 	if len(pkgs2Install.Artifacts) > 0 {
 		m.showPackage2install(pkgs2Install, pkgs2Remove)
+
+		err = m.CheckFileConflicts(
+			&pkgs2Install.Artifacts,
+			&pkgs2Remove.Artifacts,
+			opts.CheckSystemFiles, opts.Pretend || opts.Force, targetRootfs,
+		)
+		if err != nil {
+			return err
+		}
 
 		if opts.Pretend {
 			return nil

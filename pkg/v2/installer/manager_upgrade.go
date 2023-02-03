@@ -145,6 +145,19 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 
 	m.showPackages2Update(pkgs2Install, pkgs2Update, pkgs2Remove)
 
+	iandu := []*artifact.PackageArtifact{}
+	iandu = append(iandu, pkgs2Install.Artifacts...)
+	iandu = append(iandu, pkgs2Update.Artifacts...)
+	err = m.CheckFileConflicts(
+		&iandu,
+		&pkgs2Remove.Artifacts,
+		opts.CheckSystemFiles, opts.Pretend || opts.Force, targetRootfs,
+	)
+	if err != nil {
+		return err
+	}
+	iandu = nil
+
 	if opts.Pretend {
 		return nil
 	}
