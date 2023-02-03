@@ -7,9 +7,9 @@ oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
 }
 
-#oneTimeTearDown() {
-#    rm -rf "$tmpdir"
-#}
+oneTimeTearDown() {
+  rm -rf "$tmpdir"
+}
 
 testBuild() {
     mkdir $tmpdir/testbuild
