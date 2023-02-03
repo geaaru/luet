@@ -346,7 +346,7 @@ func (m *ArtifactsManager) ReinstallPackage(
 		m.Database.RemovePackageFinalizer(pkg)
 		m.Database.RemovePackage(pkg)
 
-		err = m.RegisterPackage(p, r)
+		err = m.RegisterPackage(p, r, force)
 		if err != nil {
 			return err
 		}
@@ -382,7 +382,7 @@ func (m *ArtifactsManager) InstallPackage(p *artifact.PackageArtifact, r *repos.
 	return nil
 }
 
-func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos.WagonRepository) error {
+func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos.WagonRepository, force bool) error {
 
 	pp := p.GetPackage()
 	if pp == nil {
@@ -401,7 +401,7 @@ func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos
 		},
 	)
 
-	if err != nil {
+	if err != nil && !force {
 		return errors.Wrap(err, "Register package files on database")
 	}
 
@@ -432,7 +432,7 @@ func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos
 					Uninstall:          finalizer.Uninstall,
 				},
 			)
-			if err != nil {
+			if err != nil && !force {
 				return errors.Wrap(err,
 					fmt.Sprintf("Register package %s", pp.HumanReadableString()))
 			}

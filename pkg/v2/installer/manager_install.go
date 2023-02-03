@@ -346,7 +346,7 @@ func (m *ArtifactsManager) Install(opts *InstallOpts, targetRootfs string,
 					art.GetPackage().GetVersion()))
 			}
 
-			err = m.RegisterPackage(art, r)
+			err = m.RegisterPackage(art, r, opts.Force)
 			if err != nil {
 				Error(fmt.Sprintf(
 					"Error on register artifact %s: %s",

@@ -135,7 +135,7 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 					Info(fmt.Sprintf("[%40s] installed - :heavy_check_mark:", a.Runtime.HumanReadableString()))
 				}
 
-				err = aManager.RegisterPackage(a, r)
+				err = aManager.RegisterPackage(a, r, force)
 				if err != nil {
 					fail = true
 					fmt.Println(fmt.Sprintf(

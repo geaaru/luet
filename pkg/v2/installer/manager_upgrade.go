@@ -314,7 +314,7 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 					art.GetPackage().GetVersion()))
 			}
 
-			err = m.RegisterPackage(art, r)
+			err = m.RegisterPackage(art, r, opts.Force)
 			if err != nil {
 				fail = true
 				Error(fmt.Sprintf(
