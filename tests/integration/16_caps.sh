@@ -1,15 +1,14 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
-export tmpdir="$(mktemp -d)"
+  export tmpdir="$(mktemp -d)"
 }
 
 oneTimeTearDown() {
-    rm -rf "$tmpdir"
+  rm -rf "$tmpdir"
 }
 
 testBuild() {
@@ -66,8 +65,8 @@ testInstall() {
     assertTrue 'package installed file1' "[ -e '$tmpdir/testrootfs/file1' ]"
     assertTrue 'package installed file2' "[ -e '$tmpdir/testrootfs/file2' ]"
 
-    assertContains 'caps' "$(getcap $tmpdir/testrootfs/file1)" "cap_net_raw+ep"
-    assertContains 'caps' "$(getcap $tmpdir/testrootfs/file2)" "cap_net_raw+ep"
+    assertContains 'caps' "$(getcap $tmpdir/testrootfs/file1)" "cap_net_raw=ep"
+    assertContains 'caps' "$(getcap $tmpdir/testrootfs/file2)" "cap_net_raw=ep"
 }
 
 
