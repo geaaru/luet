@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 Macaroni OS Linux
+Copyright © 2022-2023 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd
@@ -13,7 +13,6 @@ import (
 	"github.com/geaaru/luet/cmd/util"
 	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
-	"github.com/geaaru/luet/pkg/solver"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
 	tablewriter "github.com/olekukonko/tablewriter"
@@ -89,7 +88,6 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 			full, _ := cmd.Flags().GetBool("full")
 
 			util.SetSystemConfig()
-			util.SetSolverConfig()
 
 			out, _ := cmd.Flags().GetString("output")
 			config.GetLogging().SetLogLevel("error")
@@ -198,10 +196,6 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 	flags.String("system-dbpath", "", "System db path")
 	flags.String("system-target", "", "System rootpath")
 	flags.String("system-engine", "", "System DB engine")
-	flags.String("solver-type", "", "Solver strategy ( Defaults none, available: "+solver.AvailableResolvers+" )")
-	flags.Float32("solver-rate", 0.7, "Solver learning rate")
-	flags.Float32("solver-discount", 1.0, "Solver discount rate")
-	flags.Int("solver-attempts", 9000, "Solver maximum attempts")
 
 	flags.Bool("installed", false, "Search between system packages")
 
