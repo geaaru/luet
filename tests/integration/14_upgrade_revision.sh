@@ -1,16 +1,15 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
-export tmpdir="$(mktemp -d)"
+  export tmpdir="$(mktemp -d)"
 }
 
-oneTimeTearDown() {
-    rm -rf "$tmpdir"
-}
+#oneTimeTearDown() {
+#  rm -rf "$tmpdir"
+#}
 
 testBuild() {
     mkdir $tmpdir/testbuild
@@ -91,25 +90,27 @@ system:
   database_path: "/"
   database_engine: "boltdb"
 repositories:
-   - name: "main"
+   - name: "main2"
      type: "disk"
      enable: true
+     cached: true
      urls:
        - "$tmpdir/testbuild_revision"
 EOF
 
     $LUET cleanup --config $tmpdir/luet.yaml
+    $LUET repo update --config $tmpdir/luet.yaml
     $LUET config --config $tmpdir/luet.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 
-    $LUET upgrade --sync-repos -y --sync --config $tmpdir/luet.yaml
+    $LUET upgrade -y --config $tmpdir/luet.yaml
     installst=$?
     assertEquals 'upgrade test successfully' "$installst" "0"
     assertTrue 'package uninstalled B' "[ ! -e '$tmpdir/testrootfs/test5' ]"
     assertTrue 'package installed B' "[ -e '$tmpdir/testrootfs/newc' ]"
 
-    content=$($LUET upgrade --sync-repos -y --sync --config $tmpdir/luet.yaml)
+    content=$($LUET upgrade -y --config $tmpdir/luet.yaml)
     installst=$?
     assertNotContains 'didn not upgrade' "$content" "Uninstalling"
 }
