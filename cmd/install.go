@@ -86,8 +86,6 @@ To force install a package:
 				sem := semaphore.NewWeighted(int64(config.GetGeneral().Concurrency))
 				ctx := context.TODO()
 
-				defer waitGroup.Wait()
-
 				var ch chan util.ChannelRepoOpRes = make(
 					chan util.ChannelRepoOpRes,
 					config.GetGeneral().Concurrency,
@@ -119,9 +117,15 @@ To force install a package:
 					fmt.Println("No repositories candidates found.")
 				}
 
+				waitGroup.Wait()
+
 				if res != 0 {
 					os.Exit(res)
 				}
+
+				waitGroup = nil
+				ch = nil
+				sem = nil
 
 			}
 
