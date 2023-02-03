@@ -74,7 +74,7 @@ var _ = Describe("ImageHashTree", func() {
 	})
 
 	//expectedPackageHash := "f3f42a7435293225e92a51da8416f90b7c0ccd5958cd5c72276c39ece408c01f"
-	expectedPackageHash := "fd19b663238f389b0df16ecf00f3e6c3efed54b0c50d0f5ea47473b503c661fd"
+	expectedPackageHash := "2110248439f3695b8ded9e96f85a186ab2ab42ca7ed1f3f06a0ec1a36c0b6281"
 
 	Context("complex package definition", func() {
 		BeforeEach(func() {
