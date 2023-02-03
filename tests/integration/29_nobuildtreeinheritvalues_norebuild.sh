@@ -106,6 +106,7 @@ repositories:
    - name: "main"
      type: "docker"
      enable: true
+     cached: true
      urls:
        - "${TEST_DOCKER_IMAGE}-2"
 EOF

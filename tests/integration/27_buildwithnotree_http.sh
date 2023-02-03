@@ -105,6 +105,7 @@ repositories:
    - name: "main"
      type: "disk"
      enable: true
+     cached: true
      urls:
        - "$tmpdir/testbuild2"
 EOF
