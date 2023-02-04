@@ -7,9 +7,9 @@ oneTimeSetUp() {
   export tmpdir="$(mktemp -d)"
 }
 
-#oneTimeTearDown() {
-#  rm -rf "$tmpdir"
-#}
+oneTimeTearDown() {
+  rm -rf "$tmpdir"
+}
 
 testBuild() {
     mkdir $tmpdir/testbuild
@@ -113,13 +113,7 @@ EOF
     assertTrue 'package uninstalled B' "[ ! -e '$tmpdir/testrootfs/test5' ]"
     assertTrue 'package installed D' "[ -e '$tmpdir/testrootfs/pkgd1' ]"
     assertTrue 'package installed E 1.1' "[ -e '$tmpdir/testrootfs/e-1.1' ]"
-
-#    content=$($LUET upgrade -y --config $tmpdir/luet.yaml)
-#    installst=$?
-#    assertNotContains 'didn not upgrade' "$content" "Uninstalling"
 }
-
 
 # Load shUnit2.
 . "$ROOT_DIR/tests/integration/shunit2"/shunit2
-
