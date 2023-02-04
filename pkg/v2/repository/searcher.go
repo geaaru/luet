@@ -11,6 +11,7 @@ import (
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 	art "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
+	"github.com/geaaru/luet/pkg/v2/repository/mask"
 	"github.com/pkg/errors"
 )
 
@@ -19,11 +20,14 @@ type Searcher interface {
 	SearchStones(searchOpts *StonesSearchOpts) (*[]*Stone, error)
 	SearchInstalled(searchOpts *StonesSearchOpts) (*[]*Stone, error)
 	SearchArtifactsOnRepo(name string, searchOpts *StonesSearchOpts) (*[]*art.PackageArtifact, error)
+
+	SetMaskManager(m *mask.PackagesMaskManager)
 }
 
 type SearcherSimple struct {
-	Config   *config.LuetConfig
-	Database pkg.PackageDatabase
+	Config      *config.LuetConfig
+	MaskManager *mask.PackagesMaskManager
+	Database    pkg.PackageDatabase
 }
 
 func NewSearcherSimple(cfg *config.LuetConfig) *SearcherSimple {
@@ -45,11 +49,21 @@ func (s *SearcherSimple) Close() {
 	}
 }
 
+func (s *SearcherSimple) SetMaskManager(m *mask.PackagesMaskManager) {
+	s.MaskManager = m
+}
+
 func (s *SearcherSimple) searchOnRepoRoutine(
 	repo *config.LuetRepository,
 	searchOpts *StonesSearchOpts,
 	channel chan ChannelSearchRes,
 	artifactsRes bool) {
+
+	m := s.MaskManager
+	if m == nil {
+		// Create Empty MaskManager
+		m = mask.NewPackagesMaskManager(s.Config)
+	}
 
 	repobasedir := s.Config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
 	r := NewWagonRepository(repo)
@@ -67,7 +81,7 @@ func (s *SearcherSimple) searchOnRepoRoutine(
 
 	} else {
 		if artifactsRes {
-			artifacts, err := r.SearchArtifacts(searchOpts)
+			artifacts, err := r.SearchArtifacts(searchOpts, m)
 			if err != nil {
 				Warning("Error on read repository catalog for repo : " + r.Identity.Name)
 				channel <- ChannelSearchRes{nil, nil, err}
@@ -79,7 +93,7 @@ func (s *SearcherSimple) searchOnRepoRoutine(
 			var pkgs *[]*Stone
 			var err error
 
-			pkgs, err = r.SearchStones(searchOpts)
+			pkgs, err = r.SearchStones(searchOpts, m)
 			if err != nil {
 				Warning("Error on read repository catalog for repo : " + r.Identity.Name)
 				channel <- ChannelSearchRes{nil, nil, err}
@@ -100,6 +114,12 @@ func (s *SearcherSimple) SearchArtifactsOnRepo(name string, searchOpts *StonesSe
 		return nil, err
 	}
 
+	m := s.MaskManager
+	if m == nil {
+		// Create Empty MaskManager
+		m = mask.NewPackagesMaskManager(s.Config)
+	}
+
 	ans := []*art.PackageArtifact{}
 	repobasedir := s.Config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
 	r := NewWagonRepository(repo)
@@ -107,7 +127,7 @@ func (s *SearcherSimple) SearchArtifactsOnRepo(name string, searchOpts *StonesSe
 	if err != nil {
 		Warning("Error on read repository identity file: " + err.Error())
 	} else {
-		artifacts, err := r.SearchArtifacts(searchOpts)
+		artifacts, err := r.SearchArtifacts(searchOpts, m)
 		if err != nil {
 			Warning("Error on read repository catalog for repo : " + r.Identity.Name)
 			return &ans, err

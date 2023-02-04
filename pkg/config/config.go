@@ -238,6 +238,7 @@ type LuetConfig struct {
 
 	RepositoriesConfDir  []string         `yaml:"repos_confdir,omitempty" mapstructure:"repos_confdir"`
 	ConfigProtectConfDir []string         `yaml:"config_protect_confdir,omitempty" mapstructure:"config_protect_confdir"`
+	PackagesMaskDir      []string         `yaml:"packages_maskdir,omitempty" mapstructure:"packages_maskdir,omitempty"`
 	ConfigProtectSkip    bool             `yaml:"config_protect_skip,omitempty" mapstructure:"config_protect_skip"`
 	ConfigFromHost       bool             `yaml:"config_from_host,omitempty" mapstructure:"config_from_host"`
 	CacheRepositories    []LuetRepository `yaml:"repetitors,omitempty" mapstructure:"repetitors"`
@@ -330,6 +331,7 @@ func GenDefault(viper *v.Viper) {
 
 	viper.SetDefault("repos_confdir", []string{"/etc/luet/repos.conf.d"})
 	viper.SetDefault("config_protect_confdir", []string{"/etc/luet/config.protect.d"})
+	viper.SetDefault("packages_maskdir", []string{"/etc/luet/mask.d"})
 	viper.SetDefault("subsets_confdir", []string{})
 	viper.SetDefault("subsets_defdir", []string{})
 	viper.SetDefault("config_protect_skip", false)

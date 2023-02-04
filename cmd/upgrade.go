@@ -49,6 +49,7 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 			finalizerEnvs, _ := cmd.Flags().GetStringArray("finalizer-env")
 			skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
 			syncRepos, _ := cmd.Flags().GetBool("sync-repos")
+			ignoreMasks, _ := cmd.Flags().GetBool("ignore-masks")
 
 			// TODO: Move this inside the ArtifactManager or
 			//       to a common function.
@@ -125,6 +126,7 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 				Pretend:                     pretend,
 				DownloadOnly:                downloadOnly,
 				CheckSystemFiles:            !skipCheckSystem,
+				IgnoreMasks:                 ignoreMasks,
 			}
 			if err := aManager.Upgrade(opts, config.GetSystem().Rootfs); err != nil {
 				Fatal("Error: " + err.Error())
@@ -149,6 +151,7 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 		"Skip the execution of the finalizers.")
 	flags.Bool("sync-repos", false,
 		"Sync repositories before upgrade. Note: If there are in memory repositories then the sync is done always.")
+	flags.Bool("ignore-masks", false, "Ignore packages masked.")
 
 	return upgradeCmd
 }

@@ -21,6 +21,7 @@ import (
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
+	"github.com/geaaru/luet/pkg/v2/repository/mask"
 
 	"github.com/pkg/errors"
 	"golang.org/x/sync/semaphore"
@@ -37,6 +38,8 @@ type StonesSearchTask struct {
 	catRegs []*regexp.Regexp
 
 	channels []chan ChannelSearchRes
+
+	maskManager *mask.PackagesMaskManager
 }
 
 type StonesSearchOpts struct {
@@ -53,6 +56,7 @@ type StonesSearchOpts struct {
 	WithRootfsPrefix bool
 	Full             bool
 	OnlyPackages     bool
+	IgnoreMasks      bool
 }
 
 type ArtifactIndex []*artifact.PackageArtifact
@@ -112,6 +116,7 @@ func (so *StonesSearchOpts) CloneWithPkgs(pkgs pkg.DefaultPackages) *StonesSearc
 		WithRootfsPrefix: so.WithRootfsPrefix,
 		Full:             so.Full,
 		OnlyPackages:     so.OnlyPackages,
+		IgnoreMasks:      so.IgnoreMasks,
 	}
 
 	return ans
@@ -406,6 +411,19 @@ func (s *WagonStones) analyzePackageDir(
 		art.Runtime = art.CompileSpec.Package
 	}
 
+	if !opts.IgnoreMasks {
+		// POST: Check if the package is masked.
+		g, err := art.GetPackage().ToGentooPackage()
+		masked, err := task.maskManager.IsMasked(repoName, g)
+		if err != nil {
+			return nil, err
+		} else if masked {
+			Debug(fmt.Sprintf("[%s] Package %s masked.",
+				repoName, art.GetPackage().HumanReadableString()))
+			return nil, nil
+		}
+	}
+
 	if !opts.Hidden && art.Runtime.Hidden {
 		// Exclude hidden packages
 		return nil, nil
@@ -564,7 +582,9 @@ matched:
 // The SearchArtifacts instead to read artifacts from memory (catalog)
 // it tries to return all artifacts matching with the search
 // options reading metadata from files under the treefs directory.
-func (s *WagonStones) SearchArtifacts(opts *StonesSearchOpts, repoName, repoDir string) (*[]*artifact.PackageArtifact, error) {
+func (s *WagonStones) SearchArtifacts(
+	opts *StonesSearchOpts, repoName, repoDir string,
+	maskManager *mask.PackagesMaskManager) (*[]*artifact.PackageArtifact, error) {
 	ans := []*artifact.PackageArtifact{}
 
 	if len(opts.LabelsMatches) > 0 && len(opts.Matches) > 0 {
@@ -583,7 +603,8 @@ func (s *WagonStones) SearchArtifacts(opts *StonesSearchOpts, repoName, repoDir 
 		lRegs:   []*regexp.Regexp{},
 		catRegs: []*regexp.Regexp{},
 
-		channels: []chan ChannelSearchRes{},
+		channels:    []chan ChannelSearchRes{},
+		maskManager: maskManager,
 	}
 	catMap := make(map[string]bool, 0)
 
@@ -998,10 +1019,13 @@ func (s *WagonStones) SearchFromCatalog(opts *StonesSearchOpts, repoName string)
 	return &ans, nil
 }
 
-func (s *WagonStones) Search(opts *StonesSearchOpts, repoName, repoDir string) (*[]*Stone, error) {
+func (s *WagonStones) Search(
+	opts *StonesSearchOpts, repoName, repoDir string,
+	m *mask.PackagesMaskManager,
+) (*[]*Stone, error) {
 	ans := []*Stone{}
 
-	artifactsMatched, err := s.SearchArtifacts(opts, repoName, repoDir)
+	artifactsMatched, err := s.SearchArtifacts(opts, repoName, repoDir, m)
 	if err != nil {
 		return nil, err
 	}
@@ -1034,17 +1058,6 @@ func (s *WagonStones) LoadCatalog(identity *WagonIdentity) (*StonesCatalog, erro
 
 		Debug(fmt.Sprintf("[%s] Found metafile %s", identity.Name, metafile))
 
-		/*
-			data, err := ioutil.ReadFile(metafile)
-			if err != nil {
-				return nil, errors.Wrap(err, "Error on reading file "+metafile)
-			}
-
-			err = yaml.Unmarshal(data, &ans)
-			if err != nil {
-				return nil, errors.Wrap(err, "Error on parse file "+metafile)
-			}
-		*/
 		file, err := os.Open(metafile)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error on reading file "+metafile)

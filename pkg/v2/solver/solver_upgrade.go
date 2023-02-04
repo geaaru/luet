@@ -16,6 +16,7 @@ import (
 	pkg "github.com/geaaru/luet/pkg/package"
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
+	"github.com/geaaru/luet/pkg/v2/repository/mask"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -557,6 +558,7 @@ func (s *Solver) processArtefactDeps4Upgrade(art *artifact.PackageArtifact, stac
 			WithRootfsPrefix: false,
 			Full:             true,
 			OnlyPackages:     true,
+			IgnoreMasks:      s.Opts.IgnoreMasks,
 		}
 		Debug(fmt.Sprintf("[%30s] Searching for dependency %s...",
 			candidate.PackageName(), searchOpts.Packages[0].PackageName()))
@@ -650,6 +652,7 @@ func (s *Solver) checkInstalledPackage(p *pkg.DefaultPackage) error {
 		WithRootfsPrefix: false,
 		Full:             true,
 		OnlyPackages:     true,
+		IgnoreMasks:      s.Opts.IgnoreMasks,
 	}
 
 	start := time.Now()
@@ -788,6 +791,14 @@ func (s *Solver) analyzeInstalledPackages() error {
 
 	if s.Searcher == nil {
 		s.Searcher = wagon.NewSearcherSimple(s.Config)
+		if !s.Opts.IgnoreMasks {
+			maskManager := mask.NewPackagesMaskManager(s.Config)
+			err := maskManager.LoadFiles()
+			if err != nil {
+				return err
+			}
+			s.Searcher.SetMaskManager(maskManager)
+		}
 	}
 
 	waitGroup := &sync.WaitGroup{}

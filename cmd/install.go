@@ -80,6 +80,7 @@ To force install a package:
 			finalizerEnvs, _ := cmd.Flags().GetStringArray("finalizer-env")
 			skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
 			syncRepos, _ := cmd.Flags().GetBool("sync-repos")
+			ignoreMasks, _ := cmd.Flags().GetBool("ignore-masks")
 
 			if syncRepos {
 				waitGroup := &sync.WaitGroup{}
@@ -155,6 +156,7 @@ To force install a package:
 				Pretend:                     pretend,
 				DownloadOnly:                downloadOnly,
 				CheckSystemFiles:            !skipCheckSystem,
+				IgnoreMasks:                 ignoreMasks,
 			}
 
 			if err := aManager.Install(opts, config.GetSystem().Rootfs,
@@ -186,6 +188,7 @@ To force install a package:
 		"Skip the execution of the finalizers.")
 	flags.Bool("sync-repos", false,
 		"Sync repositories before install. Note: If there are in memory repositories then the sync is done always.")
+	flags.Bool("ignore-masks", false, "Ignore packages masked.")
 
 	return ans
 }

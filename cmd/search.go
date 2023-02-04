@@ -14,6 +14,7 @@ import (
 	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
+	mask "github.com/geaaru/luet/pkg/v2/repository/mask"
 
 	tablewriter "github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -86,6 +87,7 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 			tableMode, _ := cmd.Flags().GetBool("table")
 			quiet, _ := cmd.Flags().GetBool("quiet")
 			full, _ := cmd.Flags().GetBool("full")
+			ignoreMasks, _ := cmd.Flags().GetBool("ignore-masks")
 
 			util.SetSystemConfig()
 
@@ -122,8 +124,17 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 
 			}
 
+			maskManager := mask.NewPackagesMaskManager(config)
+			if !ignoreMasks {
+				err = maskManager.LoadFiles()
+				if err != nil {
+					Fatal("Error on load packages mask files.")
+				}
+			}
+
 			searcher := wagon.NewSearcherSimple(config)
 			defer searcher.Close()
+			searcher.SetMaskManager(maskManager)
 
 			if installed {
 				res, err = searcher.SearchInstalled(searchOpts)
@@ -220,6 +231,7 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 	flags.Bool("table", false, "show output in a table (wider screens)")
 	flags.Bool("quiet", false, "show output as list without version")
 	flags.Bool("full", false, "Show full informations.")
+	flags.Bool("ignore-masks", false, "Ignore packages masked.")
 
 	return ans
 }

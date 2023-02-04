@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022-2023 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package miner
 
@@ -14,6 +14,7 @@ import (
 	pkg "github.com/geaaru/luet/pkg/package"
 	installer "github.com/geaaru/luet/pkg/v2/installer"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
+	"github.com/geaaru/luet/pkg/v2/repository/mask"
 
 	"github.com/spf13/cobra"
 )
@@ -53,6 +54,9 @@ func NewDownload(config *cfg.LuetConfig) *cobra.Command {
 				pkgs = append(pkgs, p)
 			}
 
+			// On miner I don't load masks. Keep full control to users.
+			maskManager := mask.NewPackagesMaskManager(config)
+
 			searchOpts := &wagon.StonesSearchOpts{
 				Packages:      pkgs,
 				Categories:    []string{},
@@ -63,6 +67,7 @@ func NewDownload(config *cfg.LuetConfig) *cobra.Command {
 				Hidden:        true,
 				AndCondition:  false,
 				WithFiles:     true,
+				IgnoreMasks:   false,
 			}
 
 			repobasedir := config.GetSystem().GetRepoDatabaseDirPath(repo.Name)
@@ -71,7 +76,7 @@ func NewDownload(config *cfg.LuetConfig) *cobra.Command {
 			if err != nil {
 				Fatal("Error on read repository identity file: " + err.Error())
 			}
-			artifactsRef, err := r.SearchArtifacts(searchOpts)
+			artifactsRef, err := r.SearchArtifacts(searchOpts, maskManager)
 			if err != nil {
 				Warning("Error on read repository catalog for repo : " + r.Identity.Name)
 				os.Exit(1)
