@@ -768,7 +768,15 @@ func (s *Solver) artefactIsInConflict(art *artifact.PackageArtifact) bool {
 		val, present := s.systemMap.Packages[c.PackageName()]
 		if present {
 			if valid, _ := p.Admit(val[0]); !valid {
-				return true
+				// Check if the package will replace this.
+				prov := p.GetProvidePackage(val[0].PackageName())
+				if prov != nil {
+					Debug(fmt.Sprintf(
+						"[%s] conflict with %s but is provided. Ignoring it.",
+						p.HumanReadableString(), val[0].HumanReadableString()))
+				} else {
+					return true
+				}
 			}
 		}
 	}
