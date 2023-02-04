@@ -1,0 +1,11 @@
+category: "test"
+name: "d"
+version: "2.0"
+conflicts:
+  - category: test
+    name: b
+    version: '<=2.0'
+provides:
+  - category: test
+    name: b
+    version: "2.1"

@@ -16,6 +16,7 @@ import (
 	pkg "github.com/geaaru/luet/pkg/package"
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
+	"github.com/geaaru/luet/pkg/v2/repository/mask"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -75,8 +76,6 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 	// Sort packages for requires and repos
 	wagon.SortArtifactList4RequiresAndRepos(
 		artsSortList, &s.MapRepos)
-	// Cleanup memory
-	s.MapRepos = nil
 
 	// POST: There are packages to upgrade or possible upgrades.
 	//       Analyze every candidate.
@@ -84,6 +83,17 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 	mapArt := make(map[string]bool, 0)
 	for _, art := range *artsSortList {
 		pname := art.GetPackage().PackageName()
+		if _, present := s.availableArtsMap.Artifacts[pname]; !present {
+			// POST: Package provides an installed package.
+			key := s.availableArtsMap.GetKeyFromValue(art)
+			if key == "" {
+				Warning(fmt.Sprintf(
+					"No key found for package %s",
+					art.GetPackage().HumanReadableString()))
+				continue
+			}
+			pname = key
+		}
 		if _, ok := mapArt[pname]; ok {
 			continue
 		}
@@ -99,6 +109,9 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 			return nil, nil, nil, err
 		}
 	}
+
+	// Cleanup memory
+	s.MapRepos = nil
 
 	// Create the list of the packages to install, upgrade,
 	// and remove.
@@ -116,7 +129,15 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 						Runtime: val[0],
 					})
 
-				ans2Update.Artifacts = append(ans2Install.Artifacts, plist[0])
+				if plist[0].GetPackage().PackageName() != pname {
+					// The provides replace the exiting package too.
+					// I add it if there is also the same package as update.
+					if _, present := s.candidatesMap.Artifacts[plist[0].GetPackage().PackageName()]; !present {
+						ans2Install.Artifacts = append(ans2Install.Artifacts, plist[0])
+					} // else ignoring it.
+				} else {
+					ans2Update.Artifacts = append(ans2Update.Artifacts, plist[0])
+				}
 
 				// POST: Package to upgrade
 			} else {
@@ -139,7 +160,15 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 						Runtime: val[0],
 					})
 
-				ans2Update.Artifacts = append(ans2Update.Artifacts, plist[0])
+				if plist[0].GetPackage().PackageName() != pname {
+					// The provides replace the exiting package too.
+					// I add it if there is also the same package as update.
+					if _, present := s.candidatesMap.Artifacts[plist[0].GetPackage().PackageName()]; !present {
+						ans2Install.Artifacts = append(ans2Install.Artifacts, plist[0])
+					} // else ignoring it.
+				} else {
+					ans2Update.Artifacts = append(ans2Update.Artifacts, plist[0])
+				}
 
 				// POST: Package to upgrade
 			} else {
@@ -192,6 +221,10 @@ func (s *Solver) checkCandidate2Upgrade(pkgstr string, stack []string) error {
 	var selectedArts []*artifact.PackageArtifact
 	var err error
 
+	// If the package replace an existing package through provides
+	// could not be present in the availableArtsMap with his
+	// package name. If doesn't exist search for the provided package.
+
 	// Sort all available versions of the selected package.
 	// The first is the major version
 	if s.MapRepos != nil {
@@ -207,6 +240,7 @@ func (s *Solver) checkCandidate2Upgrade(pkgstr string, stack []string) error {
 			return err
 		}
 	}
+	//pkg2replace = pkgstr
 
 	// Retrieve the DefaultPackage of the installed package.
 	dp, ok := s.systemMap.Packages[pkgstr]
@@ -231,6 +265,18 @@ func (s *Solver) checkCandidate2Upgrade(pkgstr string, stack []string) error {
 	for idx, _ := range selectedArts {
 		art := selectedArts[idx]
 		candidate := art.GetPackage()
+
+		if !candidate.AtomMatches(dp[0]) {
+			// POST: The package provides the selected package to analyze.
+			prov := candidate.GetProvidePackage(dp[0].PackageName())
+			if prov == nil {
+				Warning(fmt.Sprintf("Unexpected package %s for installed package %s",
+					candidate.HumanReadableString(), dp[0].PackageName()))
+				continue
+			}
+			candidate = prov
+		}
+
 		gpS, err := candidate.ToGentooPackage()
 		if err != nil {
 			return err
@@ -238,7 +284,7 @@ func (s *Solver) checkCandidate2Upgrade(pkgstr string, stack []string) error {
 
 		// If version is already been processed and banned I will
 		// skip the artefact
-		if _, ok := bannedVersion[art.GetPackage().GetVersion()]; ok {
+		if _, ok := bannedVersion[candidate.GetVersion()]; ok {
 			continue
 		}
 
@@ -269,6 +315,7 @@ func (s *Solver) checkCandidate2Upgrade(pkgstr string, stack []string) error {
 						newUserVersions, ok := s.availableArtsMap.Artifacts[user.PackageName()]
 						if ok {
 							newUserVersionAdmit := false
+							// TODO: Handle provides
 							for _, uv := range newUserVersions {
 								a, err := uv.GetPackage().Admit(candidate)
 								if err != nil {
@@ -321,7 +368,7 @@ func (s *Solver) checkCandidate2Upgrade(pkgstr string, stack []string) error {
 				continue
 			}
 
-			ss := append(stack, candidate.PackageName())
+			ss := append(stack, art.GetPackage().PackageName())
 			// Check and in queue all package dependencies
 			admittedDeps, err := s.processArtefactDeps4Upgrade(art, ss)
 			if err != nil {
@@ -348,7 +395,7 @@ func (s *Solver) checkCandidate2Upgrade(pkgstr string, stack []string) error {
 				//       greather then the installed. I could just
 				//       validate the new requires.
 
-				ss := append(stack, candidate.PackageName())
+				ss := append(stack, art.GetPackage().PackageName())
 				// Check the package dependencies
 				admittedDeps, err := s.processArtefactDeps4Upgrade(art, ss)
 				if err != nil {
@@ -382,7 +429,6 @@ func (s *Solver) checkCandidate2Upgrade(pkgstr string, stack []string) error {
 	} // end for selectedArts
 
 	if foundMatched {
-
 		// TODO: Check if just needed leave the valid candidate.
 
 		firstValid := false
@@ -512,6 +558,7 @@ func (s *Solver) processArtefactDeps4Upgrade(art *artifact.PackageArtifact, stac
 			WithRootfsPrefix: false,
 			Full:             true,
 			OnlyPackages:     true,
+			IgnoreMasks:      s.Opts.IgnoreMasks,
 		}
 		Debug(fmt.Sprintf("[%30s] Searching for dependency %s...",
 			candidate.PackageName(), searchOpts.Packages[0].PackageName()))
@@ -605,6 +652,7 @@ func (s *Solver) checkInstalledPackage(p *pkg.DefaultPackage) error {
 		WithRootfsPrefix: false,
 		Full:             true,
 		OnlyPackages:     true,
+		IgnoreMasks:      s.Opts.IgnoreMasks,
 	}
 
 	start := time.Now()
@@ -650,14 +698,32 @@ func (s *Solver) checkInstalledPackage(p *pkg.DefaultPackage) error {
 	elabVersion := make(map[string]bool, 0)
 
 	foundNewVersion := false
+	// Store candidate name to print the name of the package
+	// that provides the searched package.
+	candidateName := ""
 	for _, a := range *reposArtifacts {
-		if _, present := elabVersion[a.GetPackage().GetVersion()]; present {
+
+		provides := false
+		ap := a.GetPackage()
+		if !ap.AtomMatches(p) {
+			// POST: the package provides the package in analysis.
+			//       Retrieve the provide package.
+			prov := ap.GetProvidePackage(p.PackageName())
+			if prov == nil {
+				return fmt.Errorf("For package %s found artefact %s but without provides.",
+					p.HumanReadableString(), ap.HumanReadableString())
+			}
+			ap = prov
+			provides = true
+		}
+
+		if _, present := elabVersion[ap.GetVersion()]; present {
 			// If the version is already been elaborated I ignoring
 			// the same package version available in the other repositories.
 			continue
 		}
-		elabVersion[a.GetPackage().GetVersion()] = true
-		gpR, err := a.GetPackage().ToGentooPackage()
+		elabVersion[ap.GetVersion()] = true
+		gpR, err := ap.ToGentooPackage()
 		if err != nil {
 			return err
 		}
@@ -668,13 +734,20 @@ func (s *Solver) checkInstalledPackage(p *pkg.DefaultPackage) error {
 			return err
 		}
 		if val {
-
-			Debug(fmt.Sprintf(
-				":brain:Package %s greather than %s.",
-				gpR.GetPF(), gpI.GetPF()))
 			// POST: There is at least one version
 			//       new. This means that I will elaborate
 			//       a specific analysis later.
+
+			if provides {
+				Debug(fmt.Sprintf(
+					":brain:Provide %s greather than %s.",
+					gpR.GetPF(), gpI.GetPF()))
+			} else {
+				Debug(fmt.Sprintf(
+					":brain:Package %s greather than %s.",
+					gpR.GetPF(), gpI.GetPF()))
+			}
+			candidateName = a.GetPackage().PackageName()
 			foundNewVersion = true
 			break
 		} else if val, _ = gpR.Equal(gpI); val {
@@ -684,9 +757,16 @@ func (s *Solver) checkInstalledPackage(p *pkg.DefaultPackage) error {
 
 			if pHash != aHash {
 
-				Debug(fmt.Sprintf(
-					":brain:Package %s has a new hash.",
-					gpI.GetPF()))
+				if provides {
+					Debug(fmt.Sprintf(
+						":brain:Provide %s has a new hash.",
+						gpI.GetPF()))
+				} else {
+					Debug(fmt.Sprintf(
+						":brain:Package %s has a new hash.",
+						gpI.GetPF()))
+				}
+				candidateName = a.GetPackage().PackageName()
 				foundNewVersion = true
 				break
 			}
@@ -697,7 +777,7 @@ func (s *Solver) checkInstalledPackage(p *pkg.DefaultPackage) error {
 		s.mutex.Lock()
 		Debug(fmt.Sprintf(
 			":brain:Package %s queued for analysis.",
-			p.PackageName()))
+			candidateName))
 		// POST: Add the versions on availableArtsMap
 		s.availableArtsMap.Artifacts[p.PackageName()] = *reposArtifacts
 		s.mutex.Unlock()
@@ -711,6 +791,14 @@ func (s *Solver) analyzeInstalledPackages() error {
 
 	if s.Searcher == nil {
 		s.Searcher = wagon.NewSearcherSimple(s.Config)
+		if !s.Opts.IgnoreMasks {
+			maskManager := mask.NewPackagesMaskManager(s.Config)
+			err := maskManager.LoadFiles()
+			if err != nil {
+				return err
+			}
+			s.Searcher.SetMaskManager(maskManager)
+		}
 	}
 
 	waitGroup := &sync.WaitGroup{}

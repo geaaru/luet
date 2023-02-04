@@ -61,6 +61,7 @@ type Package interface {
 	GetProvides() []*DefaultPackage
 	SetProvides([]*DefaultPackage) Package
 	HasProvides() bool
+	GetProvidePackage(string) *DefaultPackage
 
 	GetRequires() []*DefaultPackage
 	GetConflicts() []*DefaultPackage
@@ -575,6 +576,21 @@ func (p *DefaultPackage) GetAnnotations() map[string]interface{} {
 func (p *DefaultPackage) GetAnnotationByKey(k string) (ans interface{}) {
 	if p.HasAnnotation(k) {
 		ans = p.Annotations[k]
+	}
+
+	return ans
+}
+
+func (p *DefaultPackage) GetProvidePackage(pname string) *DefaultPackage {
+	var ans *DefaultPackage = nil
+
+	if p.HasProvides() {
+		for idx, prov := range p.Provides {
+			if prov.PackageName() == pname {
+				ans = p.Provides[idx]
+				break
+			}
+		}
 	}
 
 	return ans

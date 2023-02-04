@@ -1,0 +1,5 @@
+image: "alpine"
+prelude:
+  - echo foo > /pkgd
+steps:
+  - echo artifact5 > /pkgd1

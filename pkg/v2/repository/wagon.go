@@ -17,6 +17,7 @@ import (
 	dpkg "github.com/geaaru/luet/pkg/package"
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	"github.com/geaaru/luet/pkg/v2/repository/client"
+	"github.com/geaaru/luet/pkg/v2/repository/mask"
 	"github.com/pkg/errors"
 )
 
@@ -53,9 +54,9 @@ func NewWagonRepository(l *config.LuetRepository) *WagonRepository {
 	}
 }
 
-func (w *WagonRepository) SearchStones(opts *StonesSearchOpts) (*[]*Stone, error) {
+func (w *WagonRepository) SearchStones(opts *StonesSearchOpts, m *mask.PackagesMaskManager) (*[]*Stone, error) {
 	repobasedir := config.LuetCfg.GetSystem().GetRepoDatabaseDirPath(w.Identity.Name)
-	return w.Stones.Search(opts, w.Identity.Name, repobasedir)
+	return w.Stones.Search(opts, w.Identity.Name, repobasedir, m)
 }
 
 func (w *WagonRepository) SearchStonesFromCatalog(opts *StonesSearchOpts) (*[]*Stone, error) {
@@ -71,9 +72,9 @@ func (w *WagonRepository) SearchStonesFromCatalog(opts *StonesSearchOpts) (*[]*S
 	return w.Stones.SearchFromCatalog(opts, w.Identity.Name)
 }
 
-func (w *WagonRepository) SearchArtifacts(opts *StonesSearchOpts) (*[]*artifact.PackageArtifact, error) {
+func (w *WagonRepository) SearchArtifacts(opts *StonesSearchOpts, m *mask.PackagesMaskManager) (*[]*artifact.PackageArtifact, error) {
 	repobasedir := config.LuetCfg.GetSystem().GetRepoDatabaseDirPath(w.Identity.Name)
-	return w.Stones.SearchArtifacts(opts, w.Identity.Name, repobasedir)
+	return w.Stones.SearchArtifacts(opts, w.Identity.Name, repobasedir, m)
 }
 
 func (w *WagonRepository) SearchArtifactsFromCatalog(opts *StonesSearchOpts) (*[]*artifact.PackageArtifact, error) {

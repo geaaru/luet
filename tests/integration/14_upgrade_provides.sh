@@ -13,21 +13,24 @@ oneTimeTearDown() {
 
 testBuild() {
     mkdir $tmpdir/testbuild
-    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo" --destination $tmpdir/testbuild --compression gzip --full
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_provides" --destination $tmpdir/testbuild --compression gzip --full
     buildst=$?
+    assertTrue 'create package C 1.0' "[ -e '$tmpdir/testbuild/c-test-1.0.package.tar.gz' ]"
+    assertTrue 'create package A 1.1' "[ -e '$tmpdir/testbuild/a-test-1.1.package.tar.gz' ]"
     assertTrue 'create package B 1.0' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
+    assertTrue 'create package E 1.0' "[ -e '$tmpdir/testbuild/e-test-1.0.package.tar.gz' ]"
     assertEquals 'builds successfully' "$buildst" "0"
 
-    mkdir $tmpdir/testbuild_revision
-    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo_revision" --destination $tmpdir/testbuild_revision --compression gzip --full
+    mkdir $tmpdir/testbuild_provides
+    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_provides_new" --destination $tmpdir/testbuild_provides --compression gzip --full
     buildst=$?
-    assertTrue 'create package B 1.0' "[ -e '$tmpdir/testbuild_revision/b-test-1.0.package.tar.gz' ]"
+    assertTrue 'create package D 2.0' "[ -e '$tmpdir/testbuild_provides/d-test-2.0.package.tar.gz' ]"
     assertEquals 'builds successfully' "$buildst" "0"
 }
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo" \
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_provides" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -39,10 +42,10 @@ testRepo() {
     assertEquals 'create repo successfully' "$createst" "0"
     assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
 
-    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild_revision/repository.yaml' ]"
-    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo_revision" \
-    --output $tmpdir/testbuild_revision \
-    --packages $tmpdir/testbuild_revision \
+    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild_provides/repository.yaml' ]"
+    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_provides_new" \
+    --output $tmpdir/testbuild_provides \
+    --packages $tmpdir/testbuild_provides \
     --name "test" \
     --descr "Test Repo" \
     --urls $tmpdir/testrootfs \
@@ -50,7 +53,7 @@ testRepo() {
 
     createst=$?
     assertEquals 'create repo successfully' "$createst" "0"
-    assertTrue 'create repository' "[ -e '$tmpdir/testbuild_revision/repository.yaml' ]"
+    assertTrue 'create repository' "[ -e '$tmpdir/testbuild_provides/repository.yaml' ]"
 }
 
 testConfig() {
@@ -77,7 +80,7 @@ EOF
 }
 
 testUpgrade() {
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/b@1.0
+    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/a@1.1 test/e@1.0
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed B' "[ -e '$tmpdir/testrootfs/test5' ]"
@@ -95,7 +98,7 @@ repositories:
      enable: true
      cached: true
      urls:
-       - "$tmpdir/testbuild_revision"
+       - "$tmpdir/testbuild_provides"
 EOF
 
     $LUET cleanup --config $tmpdir/luet.yaml
@@ -108,14 +111,9 @@ EOF
     installst=$?
     assertEquals 'upgrade test successfully' "$installst" "0"
     assertTrue 'package uninstalled B' "[ ! -e '$tmpdir/testrootfs/test5' ]"
-    assertTrue 'package installed B' "[ -e '$tmpdir/testrootfs/newc' ]"
-
-    content=$($LUET upgrade -y --config $tmpdir/luet.yaml)
-    installst=$?
-    assertNotContains 'didn not upgrade' "$content" "Uninstalling"
+    assertTrue 'package installed D' "[ -e '$tmpdir/testrootfs/pkgd1' ]"
+    assertTrue 'package installed E 1.1' "[ -e '$tmpdir/testrootfs/e-1.1' ]"
 }
-
 
 # Load shUnit2.
 . "$ROOT_DIR/tests/integration/shunit2"/shunit2
-

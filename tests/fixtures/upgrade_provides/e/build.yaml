@@ -1,0 +1,9 @@
+prelude:
+  - >-
+    mkdir /pkg &&
+    echo prov > /pkg/e-1.0
+package_dir: /pkg
+requires:
+- category: "test"
+  name: "a"
+  version: ">=1.0"

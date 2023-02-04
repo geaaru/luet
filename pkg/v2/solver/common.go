@@ -28,6 +28,7 @@ type SolverOpts struct {
 	IgnoreConflicts bool
 	Force           bool
 	NoDeps          bool
+	IgnoreMasks     bool
 }
 
 type Operation struct {
@@ -39,6 +40,7 @@ func NewSolverOpts() *SolverOpts {
 	return &SolverOpts{
 		IgnoreConflicts: false,
 		NoDeps:          false,
+		IgnoreMasks:     false,
 	}
 }
 

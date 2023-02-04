@@ -17,6 +17,7 @@ import (
 	pkg "github.com/geaaru/luet/pkg/package"
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
+	"github.com/geaaru/luet/pkg/v2/repository/mask"
 )
 
 type Solver struct {
@@ -385,8 +386,18 @@ func (s *Solver) Install(pkgsref *[]*pkg.DefaultPackage) (*artifact.ArtifactsPac
 		WithRootfsPrefix: false,
 		Full:             true,
 		OnlyPackages:     true,
+		IgnoreMasks:      s.Opts.IgnoreMasks,
 	}
 	s.Searcher = searcher
+
+	if !s.Opts.IgnoreMasks {
+		maskManager := mask.NewPackagesMaskManager(s.Config)
+		err := maskManager.LoadFiles()
+		if err != nil {
+			return nil, nil, err
+		}
+		s.Searcher.SetMaskManager(maskManager)
+	}
 
 	// For every package in list retrieve all available candidates
 	// and store the result on ArtifactsMap
@@ -687,6 +698,7 @@ func (s *Solver) processArtefactDeps(art *artifact.PackageArtifact, stack []stri
 				WithRootfsPrefix: false,
 				Full:             true,
 				OnlyPackages:     true,
+				IgnoreMasks:      s.Opts.IgnoreMasks,
 			}
 			Debug(fmt.Sprintf("[%30s] Searching for dependency %s...",
 				candidate.PackageName(), searchOpts.Packages[0].PackageName()))
@@ -768,7 +780,15 @@ func (s *Solver) artefactIsInConflict(art *artifact.PackageArtifact) bool {
 		val, present := s.systemMap.Packages[c.PackageName()]
 		if present {
 			if valid, _ := p.Admit(val[0]); !valid {
-				return true
+				// Check if the package will replace this.
+				prov := p.GetProvidePackage(val[0].PackageName())
+				if prov != nil {
+					Debug(fmt.Sprintf(
+						"[%s] conflict with %s but is provided. Ignoring it.",
+						p.HumanReadableString(), val[0].HumanReadableString()))
+				} else {
+					return true
+				}
 			}
 		}
 	}
