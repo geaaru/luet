@@ -1,0 +1,7 @@
+category: "test"
+name: "e"
+version: "1.1"
+provides:
+  - category: test
+    name: g
+    version: "1.0"
