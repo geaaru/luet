@@ -95,6 +95,26 @@ func (am *ArtifactsMap) ToList() *[]*PackageArtifact {
 	return &ans
 }
 
+func (am *ArtifactsMap) HasKey(k string) bool {
+	_, present := am.Artifacts[k]
+	return present
+}
+
+func (am *ArtifactsMap) GetKeyFromValue(p *PackageArtifact) string {
+	ans := ""
+
+	for k, val := range am.Artifacts {
+		for _, a := range val {
+			if a == p {
+				ans = k
+				break
+			}
+		}
+	}
+
+	return ans
+}
+
 func (am *ArtifactsMap) GetArtifactsByKey(k string) ([]*PackageArtifact, error) {
 	val, ok := am.Artifacts[k]
 	if !ok {
