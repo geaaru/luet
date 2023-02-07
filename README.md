@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img width=150 height=150 src="https://github.com/macaroni-os/macaroni-site/blob/master/site/static/images/logo.png">
+  <img src="https://github.com/macaroni-os/macaroni-site/blob/master/site/static/images/logo.png">
 </p>
 
 # luet-geaaru (fork) - Container-based Package manager
