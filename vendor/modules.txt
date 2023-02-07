@@ -205,7 +205,7 @@ github.com/fsouza/go-dockerclient
 # github.com/geaaru/pkgs-checker v0.13.0
 ## explicit; go 1.16
 github.com/geaaru/pkgs-checker/pkg/gentoo
-# github.com/geaaru/tar-formers v0.5.0
+# github.com/geaaru/tar-formers v0.6.0
 ## explicit; go 1.18
 github.com/geaaru/tar-formers/pkg/executor
 github.com/geaaru/tar-formers/pkg/logger

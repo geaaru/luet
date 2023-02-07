@@ -93,16 +93,33 @@ func (t *TarFormers) CreateFile(dir, name string, mode os.FileMode, reader io.Re
 	t.waitGroup.Add(1)
 	go func() {
 
-		defer f.Close()
 		defer t.waitGroup.Done()
 		defer t.semaphore.Release(1)
 
 		if err := f.Sync(); err != nil {
-
 			t.flushMutex.Lock()
 			defer t.flushMutex.Unlock()
 			t.FlushErrs = append(t.FlushErrs, err)
+			f.Close()
+
+		} else {
+
+			f.Close()
+			if t.Task.Validate {
+				exists, err := t.ExistFile(file)
+				if err != nil {
+					t.FlushErrs = append(t.FlushErrs,
+						errors.New(fmt.Sprintf("For file %s validation failed: %s",
+							file, err.Error())))
+				} else if !exists {
+					t.FlushErrs = append(t.FlushErrs,
+						errors.New(fmt.Sprintf("For file %s validation failed: file not found.",
+							file)))
+				}
+
+			}
 		}
+
 	}()
 
 	return nil

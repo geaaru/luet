@@ -20,7 +20,7 @@ require (
 	github.com/ecooper/qlearning v0.0.0-20160612200101-3075011a69fd
 	github.com/fsouza/go-dockerclient v1.6.4
 	github.com/geaaru/pkgs-checker v0.13.0
-	github.com/geaaru/tar-formers v0.5.0
+	github.com/geaaru/tar-formers v0.6.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/google/go-containerregistry v0.5.1

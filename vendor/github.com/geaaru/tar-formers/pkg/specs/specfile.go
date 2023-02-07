@@ -47,6 +47,7 @@ func NewSpecFile() *SpecFile {
 		BrokenLinksFatal: false,
 		EnableMutex:      false,
 		OverwritePerms:   false,
+		Validate:         false,
 
 		mapModifier:   make(map[string]bool, 0),
 		ignoreRegexes: []*regexp.Regexp{},

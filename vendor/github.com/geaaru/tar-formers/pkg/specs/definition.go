@@ -1,6 +1,6 @@
 /*
 
-Copyright (C) 2021  Daniele Rondina <geaaru@sabayonlinux.org>
+Copyright (C) 2021-2022  Daniele Rondina <geaaru@funtoo.org>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -63,6 +63,9 @@ type SpecFile struct {
 	// Parallel max open files.
 	MaxOpenFiles int64 `yaml:"max_openfiles,omitempty" json:"max_openfiles,omitempty"`
 	BufferSize   int   `yaml:"copy_buffer_size,omitempty" json:"copy_buffer_size,omitempty"`
+
+	// Validate extract when the file is been closed.
+	Validate bool `yaml:"validate,omitempty" json:"validate,omitempty"`
 }
 
 type RenameRule struct {

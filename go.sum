@@ -503,6 +503,8 @@ github.com/geaaru/pkgs-checker v0.13.0 h1:0gZ53d1acbwoXbj9Pm+raiQDMGdPi4nCDFjBWM
 github.com/geaaru/pkgs-checker v0.13.0/go.mod h1:kJftjfWPOnKytgt4zDO9DrLdCAYBIP0fhgtuP/SFKug=
 github.com/geaaru/tar-formers v0.5.0 h1:dxfsBGow/ywZpoiqeOqgMuo8sxNOLr8rSUBjhNn4KMQ=
 github.com/geaaru/tar-formers v0.5.0/go.mod h1:Ap1xameXhHtnDc+vlkFg0caiccwizfubf786x2eQXJQ=
+github.com/geaaru/tar-formers v0.6.0 h1:Vp3+FWNi4Ut8O+GcAKNQz4k6v73CgaCwSllRphc05sA=
+github.com/geaaru/tar-formers v0.6.0/go.mod h1:Ap1xameXhHtnDc+vlkFg0caiccwizfubf786x2eQXJQ=
 github.com/ghodss/yaml v0.0.0-20150909031657-73d445a93680/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/ghodss/yaml v1.0.0 h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
