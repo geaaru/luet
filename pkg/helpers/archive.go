@@ -65,6 +65,7 @@ func UntarProtect(src, dst string, sameOwner, overwriteDirPerms bool, protectedF
 	spec.EnableMutex = LuetCfg.GetTarFlows().Mutex4Dirs
 	spec.MaxOpenFiles = LuetCfg.GetTarFlows().MaxOpenFiles
 	spec.BufferSize = LuetCfg.GetTarFlows().CopyBufferSize
+	spec.Validate = LuetCfg.GetTarFlows().Validate
 
 	return UntarProtectSpec(
 		src, dst, protectedFiles, modifier, spec,

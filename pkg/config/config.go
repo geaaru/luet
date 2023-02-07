@@ -262,6 +262,7 @@ type LuetTarflowsConfig struct {
 	CopyBufferSize int   `yaml:"copy_buffer_size,omitempty" mapstructure:"copy_buffer_size,omitempty"`
 	MaxOpenFiles   int64 `yaml:"max_openfiles,omitempty" mapstructure:"max_openfiles,omitempty"`
 	Mutex4Dirs     bool  `yaml:"mutex4dir,omitempty" mapstructure:"mutex4dir,omitempty"`
+	Validate       bool  `yaml:"validate,omitempty" mapstructure:"validate,omitempty"`
 }
 
 type LuetSubsetsConfig struct {
@@ -349,6 +350,7 @@ func GenDefault(viper *v.Viper) {
 	viper.SetDefault("tar_flows.mutex4dir", true)
 	viper.SetDefault("tar_flows.max_openfiles", 100)
 	viper.SetDefault("tar_flows.copy_buffer_size", 32)
+	viper.SetDefault("tar_flows.validate", false)
 }
 
 func (c *LuetConfig) GetSystemDB() pkg.PackageDatabase {
