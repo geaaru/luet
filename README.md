@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img width=150 height=150 src="https://user-images.githubusercontent.com/2420543/119691600-0293d700-be4b-11eb-827f-49ff1174a07a.png">
+  <img width=150 height=150 src="https://github.com/macaroni-os/macaroni-site/blob/master/site/static/images/logo.png">
 </p>
 
 # luet-geaaru (fork) - Container-based Package manager
@@ -41,7 +41,7 @@ For now, I will try to describe what are the major differences:
   # ---------------------------------------------
   # Tarball flows configuration section:
   # ---------------------------------------------
-  # tar_flows:
+  tar_flows:
   #
   #   Enable mutex for parallel creation of directories
   #   in the untar specs. Normally this field must be
@@ -53,11 +53,11 @@ For now, I will try to describe what are the major differences:
   #   set this option with a big value to avoid
   #   'too open files' errors.
   #   In a normal system this could be also 512.
-  #   max_openfiles: 100
+    max_openfiles: 100
   #
   #   Define the buffer size in KB to use
   #   on create files from tar content.
-  #   copy_buffer_size: 32
+    copy_buffer_size: 32
   ```
   FWIS, increasing these values to 200/300 max open files and using a buffer of 128 could
   improve performance but this depends on disk speed, hardware, RAM, etc.
