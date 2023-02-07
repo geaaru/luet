@@ -17,6 +17,7 @@ limitations under the License.
 package chartutil
 
 import (
+	"fmt"
 	"regexp"
 
 	"github.com/pkg/errors"
@@ -39,15 +40,24 @@ var (
 	errMissingName = errors.New("no name provided")
 
 	// errInvalidName indicates that an invalid release name was provided
-	errInvalidName = errors.New("invalid release name, must match regex ^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])+$ and the length must not longer than 53")
+	errInvalidName = fmt.Errorf(
+		"invalid release name, must match regex %s and the length must not be longer than 53",
+		validName.String())
 
 	// errInvalidKubernetesName indicates that the name does not meet the Kubernetes
 	// restrictions on metadata names.
-	errInvalidKubernetesName = errors.New("invalid metadata name, must match regex ^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])+$ and the length must not longer than 253")
+	errInvalidKubernetesName = fmt.Errorf(
+		"invalid metadata name, must match regex %s and the length must not be longer than 253",
+		validName.String())
 )
 
 const (
-	// maxNameLen is the maximum length Helm allows for a release name
+	// According to the Kubernetes docs (https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#rfc-1035-label-names)
+	// some resource names have a max length of 63 characters while others have a max
+	// length of 253 characters. As we cannot be sure the resources used in a chart, we
+	// therefore need to limit it to 63 chars and reserve 10 chars for additional part to name
+	// of the resource. The reason is that chart maintainers can use release name as part of
+	// the resource name (and some additional chars).
 	maxReleaseNameLen = 53
 	// maxMetadataNameLen is the maximum length Kubernetes allows for any name.
 	maxMetadataNameLen = 253
@@ -56,7 +66,7 @@ const (
 // ValidateReleaseName performs checks for an entry for a Helm release name
 //
 // For Helm to allow a name, it must be below a certain character count (53) and also match
-// a reguar expression.
+// a regular expression.
 //
 // According to the Kubernetes help text, the regular expression it uses is:
 //
@@ -91,6 +101,9 @@ func ValidateReleaseName(name string) error {
 //
 // The Kubernetes documentation is here, though it is not entirely correct:
 // https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+//
+// Deprecated: remove in Helm 4.  Name validation now uses rules defined in
+// pkg/lint/rules.validateMetadataNameFunc()
 func ValidateMetadataName(name string) error {
 	if name == "" || len(name) > maxMetadataNameLen || !validName.MatchString(name) {
 		return errInvalidKubernetesName
