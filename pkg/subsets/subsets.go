@@ -6,30 +6,16 @@ See AUTHORS and LICENSE for the license details and contributors.
 package subsets
 
 import (
-	"io/ioutil"
-	"path"
+	"os"
 	"path/filepath"
 	"regexp"
 
-	"github.com/geaaru/luet/pkg/helpers"
-
-	"gopkg.in/yaml.v2"
-
 	. "github.com/geaaru/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/helpers"
 	. "github.com/geaaru/luet/pkg/logger"
+
+	"gopkg.in/yaml.v3"
 )
-
-func NewLuetSubsetsConfig() *LuetSubsetsConfig {
-	return &LuetSubsetsConfig{
-		Enabled: []string{},
-	}
-}
-
-func NewLuetSubsetsDefinition() *LuetSubsetsDefinition {
-	return &LuetSubsetsDefinition{
-		Definitions: make(map[string]*LuetSubsetDefinition, 0),
-	}
-}
 
 func LoadSubsetsConfig(c *LuetConfig) error {
 	var regexRepo = regexp.MustCompile(`.yml$|.yaml$`)
@@ -49,7 +35,7 @@ func LoadSubsetsConfig(c *LuetConfig) error {
 
 		Debug("Parsing Subsets Configs Directory", sdir, "...")
 
-		files, err := ioutil.ReadDir(sdir)
+		files, err := os.ReadDir(sdir)
 		if err != nil {
 			Debug("Skip dir", sdir, ":", err.Error())
 			continue
@@ -65,23 +51,16 @@ func LoadSubsetsConfig(c *LuetConfig) error {
 				continue
 			}
 
-			content, err := ioutil.ReadFile(path.Join(sdir, file.Name()))
+			sc, err := NewSubsetsConfigFromFile(filepath.Join(sdir, file.Name()))
 			if err != nil {
-				Warning("On read file", file.Name(), ":", err.Error())
-				Warning("File", file.Name(), "skipped.")
-				continue
-			}
-
-			sc, err := NewSubsetsConfig(content)
-			if err != nil {
-				Warning("On parser file", file.Name(), ":", err.Error())
+				Warning(err.Error())
 				Warning("File", file.Name(), "skipped.")
 				continue
 			}
 
 			if len(sc.Enabled) == 0 {
-				Warning("Invalid subset config ", file.Name())
-				Warning("File", file.Name(), "skipped.")
+				// On using luet subsets disable we could have no subsets defined.
+				// just ignoring the file.
 				continue
 			}
 
@@ -95,16 +74,6 @@ func LoadSubsetsConfig(c *LuetConfig) error {
 	}
 
 	return nil
-}
-
-func NewSubsetsConfig(data []byte) (*LuetSubsetsConfig, error) {
-	ans := NewLuetSubsetsConfig()
-	err := yaml.Unmarshal(data, &ans)
-	if err != nil {
-		return nil, err
-	}
-
-	return ans, nil
 }
 
 func LoadSubsetsDef(data []byte) (*LuetSubsetsDefinition, error) {
@@ -139,7 +108,7 @@ func LoadSubsetsDefintions(c *LuetConfig) error {
 
 		Debug("Parsing Subsets Defintions Directory", sdir, "...")
 
-		files, err := ioutil.ReadDir(sdir)
+		files, err := os.ReadDir(sdir)
 		if err != nil {
 			Debug("Skip dir", sdir, ":", err.Error())
 			continue
@@ -155,7 +124,7 @@ func LoadSubsetsDefintions(c *LuetConfig) error {
 				continue
 			}
 
-			content, err := ioutil.ReadFile(path.Join(sdir, file.Name()))
+			content, err := os.ReadFile(filepath.Join(sdir, file.Name()))
 			if err != nil {
 				Warning("On read file", file.Name(), ":", err.Error())
 				Warning("File", file.Name(), "skipped.")

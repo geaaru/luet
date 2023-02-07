@@ -20,6 +20,8 @@ func newSubsetsCommand(config *cfg.LuetConfig) *cobra.Command {
 
 	ans.AddCommand(
 		cmd_subsets.NewSubsetsListCommand(config),
+		cmd_subsets.NewSubsetsEnableCommand(config),
+		cmd_subsets.NewSubsetsDisableCommand(config),
 	)
 
 	return ans
