@@ -14,39 +14,64 @@ It offers a simple [specfile format](https://luet-lab.github.io/docs/docs/concep
 
 It is written entirely in Golang and where used as package manager, it can run in from scratch environment, with zero dependencies.
 
-## Major differences between upstream release
+## Differences between upstream release
+
+There are so many differences that it becomes challenging to create a list.
+This is also the reason because probably in the near future my fork will be renamed and rebooted.
+This fork has the primary scope to be used in [Macaroni OS](https://www.macaronios.org) with specific
+requirements needed for a good integration with [Funtoo Linux](https://funtoo.org) too.
+
+For now, I will try to describe what are the major differences:
+
+* the binary is been splitted, `luet` is the client installer normally used by users
+  to install/remove packages, `luet-build` instead is used for build packages,
+  create repos, etc.
+
+* there is only one solver now that doesn't use SAT or QLearning.
+  It's been totally rewritten.
+
+* i begin to rewrite the docker backend and use the [tar-formers](https://github.com/geaaru/tar-formers/)
+  to manage the tar streams. The same library is now used to unpack the tarball and install packages.
+  On installation, it's important to ensure that the unpacked files will be synced to the filesystem
+  and so the tar-formers library forces a flush and sync to the filesystem,
+  this decreases the installation speed. To speed up this there is a section on luet config that
+  could be tuned based on the target system:
+
+  ```yaml
+  # ---------------------------------------------
+  # Tarball flows configuration section:
+  # ---------------------------------------------
+  # tar_flows:
+  #
+  #   Enable mutex for parallel creation of directories
+  #   in the untar specs. Normally this field must be
+  #   set to true, the default value.
+  #   mutex4dir: true
+  #
+  #   Define the max number of open files related
+  #   to a single untar operation. Be carefour on
+  #   set this option with a big value to avoid
+  #   'too open files' errors.
+  #   In a normal system this could be also 512.
+  #   max_openfiles: 100
+  #
+  #   Define the buffer size in KB to use
+  #   on create files from tar content.
+  #   copy_buffer_size: 32
+  ```
+  FWIS, increasing these values to 200/300 max open files and using a buffer of 128 could
+  improve performance but this depends on disk speed, hardware, RAM, etc.
 
 * `subsets` feature: Permit to define subsets to choice what files extract from original package.
   This means that we could avoid splitting of a package, for example for Portage metadata, Include files, etc.
   and customize the subsets defined in the original package definition with custom options that could be
   configured from an user at runtime.
 
-* `solverv2` implementation: i begin the rewriting of all solver code and for now i only rewrite some internal
-  code to speedup solver logic. It's yet too slow for a stable condition but i hope to rewrite completly all
-  this part.
-
 * `annotations`: the annotations are managed as interface{} struct without define only strings
-
-* `luet q files`: following the command `equo q files` from Sabayon entropy tool, this command supply the list
-  of the files of a package and in the near future the mapping of the files with the subsets configured.
-
-* `luet q belongs`: following the command `equo q belongs` from Sabayon entropy tool, this command supply the list of the packages that own files in input.
-
-* `dockerv2` backend: i begin to rewrite the docker backend and using the [tar-formers](https://github.com/geaaru/tar-formers/) to manage the tar streams.
 
 * drop `extensions` and `plugin` support not used
 
-## In a glance
-
-- Luet can reuse Gentoo's portage tree hierarchy, and it is heavily inspired from it.
-- It builds, installs, uninstalls and perform upgrades on machines
-- Installer doesn't depend on anything ( 0 dep installer !), statically built
-- You can install it aside also with your current distro package manager, and start building and distributing your packages
-- [Support for packages as "layers"](https://luet-lab.github.io/docs/docs/concepts/packages/specfile/#building-strategies)
-- [It uses SAT solving techniques to solve the deptree](https://luet-lab.github.io/docs/docs/concepts/overview/constraints/) ( Inspired by [OPIUM](https://ranjitjhala.github.io/static/opium.pdf) )
-- Support for [collections](https://luet-lab.github.io/docs/docs/concepts/packages/collections/) and [templated package definitions](https://luet-lab.github.io/docs/docs/concepts/packages/templates/)
-- [Can be extended with Plugins and Extensions](https://luet-lab.github.io/docs/docs/concepts/plugins-and-extensions/)
-- [Can build packages in Kubernetes (experimental)](https://github.com/mudler/luet-k8s)
+* drop `reclaim` command.
 
 ## Install
 
@@ -69,28 +94,7 @@ $ make build
 
 ## Documentation
 
-Original [Documentation](https://luet-lab.github.io/docs) is available, or
-run `luet --help`,  any subcommand is documented as well, try e.g.: `luet build --help`.
-
-I hope to prepare an aligned documentation to the geaaru fork soon.
-
-# Dependency solving
-
-Luet uses SAT and Reinforcement learning engine for dependency solving.
-It encodes the package requirements into a SAT problem, using [gophersat](https://github.com/crillab/gophersat) to solve the dependency tree and give a concrete model as result.
-
-## SAT encoding
-
-Each package and its constraints are encoded and built around [OPIUM](https://ranjitjhala.github.io/static/opium.pdf). Additionally, Luet treats
-also selectors seamlessly while building the model, adding *ALO* ( *At least one* ) and *AMO* ( *At most one* ) rules to guarantee coherence within the installed system.
-
-## Reinforcement learning
-
-Luet also implements a small and portable qlearning agent that will try to solve conflict on your behalf
-when they arises while trying to validate your queries against the system model.
-
-To leverage it, simply pass ```--solver-type qlearning``` to the subcommands that supports it ( you can check out by invoking ```--help``` ).
-
+Will be soon integrated with Macaroni OS documentation.
 
 ## License
 
