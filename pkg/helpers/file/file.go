@@ -71,7 +71,7 @@ func OrderFiles(target string, files []string) ([]string, []string, []string) {
 
 	for _, f := range files {
 		completePath := filepath.Join(target, f)
-		fi, err := os.Stat(completePath)
+		fi, err := os.Lstat(completePath)
 		if err != nil {
 			notPresent = append(notPresent, f)
 			continue
