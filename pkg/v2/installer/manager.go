@@ -142,6 +142,8 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone,
 		mapDirs[d] = 1
 	}
 
+	sort.Sort(sort.Reverse(sort.StringSlice(toRemove)))
+
 	// Remove from target
 	for _, f := range toRemove {
 		target := filepath.Join(targetRootfs, f)
@@ -186,7 +188,7 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone,
 		}
 
 		// Add subpaths of the file to ensure that all dirs
-		// are injected for the prune phase. (NOTE: i'm not sure about this)
+		// are injected for the prune phase.
 		dirname := filepath.Dir(target)
 		words := strings.Split(dirname, string(os.PathSeparator))
 
@@ -203,6 +205,10 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone,
 		}
 	}
 
+	// TODO: Check why this?? Not present means errors on stats,
+	//       and this could be related to a file that doesn't exist
+	//       or not installed because related to a subsets.
+	//       Why try to remove it?
 	for _, f := range notPresent {
 		target := filepath.Join(targetRootfs, f)
 
