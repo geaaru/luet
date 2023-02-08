@@ -6,6 +6,7 @@ package installer
 
 import (
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -166,13 +167,17 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone,
 		}
 		switch mode := fi.Mode(); {
 		case mode.IsDir():
-			files, err := ioutil.ReadDir(target)
-			if err != nil {
-				Warning("Failed reading folder", target, err.Error())
-			}
-			if len(files) != 0 {
-				Info("DROPPED = Preserving not-empty folder", target)
-				continue
+			if mode&fs.ModeSymlink != 0 {
+				Debug(fmt.Sprintf("Directory %s is a link. Ignoring.", target))
+			} else {
+				files, err := ioutil.ReadDir(target)
+				if err != nil {
+					Warning("Failed reading folder", target, err.Error())
+				}
+				if len(files) != 0 {
+					Info("DROPPED = Preserving not-empty folder", target)
+					continue
+				}
 			}
 		}
 
@@ -222,6 +227,7 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone,
 
 	// Check if directories could be removed.
 	for _, f := range dirs2Remove {
+		f := filepath.Join(targetRootfs, f)
 
 		if preserveSystemEssentialData &&
 			strings.HasPrefix(f, m.Config.GetSystem().GetSystemPkgsCacheDirPath()) ||
@@ -236,16 +242,28 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone,
 			continue
 		}
 
-		files, err := ioutil.ReadDir(f)
-		if err != nil {
-			Warning("Failed reading folder", f, err.Error())
-		}
-		Debug("Removing dir", f, "if empty: files ", len(files), ".")
+		// Check if the directory is a link to avoid error with broken links.
+		fi, err := os.Lstat(f)
+		if err == nil {
+			if fi.Mode()&fs.ModeSymlink == 0 {
+				if fi.IsDir() {
+					files, err := ioutil.ReadDir(f)
+					if err != nil {
+						Warning("Failed reading folder", f, err.Error())
+					}
+					Debug("Removing dir", f, "if empty: files ", len(files), ".")
 
-		if len(files) != 0 {
-			Debug("Preserving not-empty folder", f)
-			continue
+					if len(files) != 0 {
+						Debug("Preserving not-empty folder", f)
+						continue
+					}
+				}
+			} else {
+				Debug(fmt.Sprintf("Directory %s is a link to remove.", f))
+			}
 		}
+		// else remove the file in any case. I consider the file a broken link or
+		// a file that doesn't exist.
 
 		if err = os.Remove(f); err != nil {
 			Debug("Failed removing file (not present in the system target)", f, err.Error())
