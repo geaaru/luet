@@ -1,5 +1,5 @@
 /*
-Copyright © 2021-2022 Macaroni OS Linux
+Copyright © 2021-2023 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package config
@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	LuetVersion     = "0.31.0"
+	LuetVersion     = "0.31.1"
 	LuetEnvPrefix   = "LUET"
 	LuetForkVersion = "geaaru"
 )
