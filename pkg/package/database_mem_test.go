@@ -182,8 +182,8 @@ var _ = Describe("Database", func() {
 				a1 := NewPackage("A", "1.1", []*DefaultPackage{}, []*DefaultPackage{})
 				z := NewPackage("Z", "1.3", []*DefaultPackage{}, []*DefaultPackage{})
 
-				z.SetProvides([]*DefaultPackage{{Name: "A", Category: "", Version: ">=1.0"}})
-				Expect(z.GetProvides()).To(Equal([]*DefaultPackage{{Name: "A", Category: "", Version: ">=1.0"}}))
+				z.SetProvides([]*DefaultPackage{{Name: "A", Category: "", Version: "1.0"}})
+				Expect(z.GetProvides()).To(Equal([]*DefaultPackage{{Name: "A", Category: "", Version: "1.0"}}))
 
 				_, err := db.CreatePackage(a)
 				Expect(err).ToNot(HaveOccurred())

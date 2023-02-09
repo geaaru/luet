@@ -308,7 +308,14 @@ func (db *BoltDatabase) getProvide(p Package) (Package, error) {
 
 		for ve, _ := range versions {
 
-			match, err := p.SelectorMatchVersion(ve, nil)
+			var match bool
+			var err error
+
+			if p.IsSelector() {
+				match, err = p.SelectorMatchVersion(ve, nil)
+			} else {
+				match, err = p.VersionMatchSelector(ve, nil)
+			}
 			if err != nil {
 				return nil, errors.Wrap(err, "Error on match version")
 			}
