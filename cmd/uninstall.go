@@ -5,6 +5,8 @@ See AUTHORS and LICENSE for the license details and contributors.
 package cmd
 
 import (
+	"fmt"
+
 	helpers "github.com/geaaru/luet/cmd/helpers"
 	"github.com/geaaru/luet/cmd/util"
 	cfg "github.com/geaaru/luet/pkg/config"
@@ -13,6 +15,7 @@ import (
 	"github.com/geaaru/luet/pkg/subsets"
 	installer "github.com/geaaru/luet/pkg/v2/installer"
 
+	. "github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
 )
 
@@ -45,7 +48,8 @@ of the finalizers.
 		Aliases: []string{"rm", "un"},
 		Run: func(cmd *cobra.Command, args []string) {
 
-			Info("Luet version", util.Version())
+			InfoC(fmt.Sprintf(":rocket:%s %s",
+				Bold(Blue("Luet")), Bold(Blue(util.Version()))))
 
 			toRemove := []*pkg.DefaultPackage{}
 			for _, a := range args {
