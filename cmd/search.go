@@ -28,6 +28,7 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 	var categories []string
 	var annotations []string
 	var packages []string
+	var names []string
 
 	var ans = &cobra.Command{
 		Use:   "search <term>",
@@ -59,6 +60,10 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 	or by categories:
 
 		$ luet search --category <cat1>,..,<catN>
+
+	or by names:
+
+		$ luet search --name|-n <name1>,..,<nameN>
 
 	or by annotations:
 
@@ -100,6 +105,7 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 				LabelsMatches:    regLabels,
 				Matches:          args,
 				Hidden:           hidden,
+				Names:            names,
 				AndCondition:     !orCond,
 				WithFiles:        files,
 				WithRootfsPrefix: withRootfsPrefix,
@@ -220,6 +226,8 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 		"Search packages through one or more annotations.")
 	flags.StringSliceVarP(&packages, "package", "p", []string{},
 		"Search packages matching the package string cat/name.")
+	flags.StringSliceVarP(&names, "name", "n", []string{},
+		"Search packages matching the package name string.")
 	flags.Bool("condition-or", false,
 		"The searching options are managed in OR between the searching types.")
 
