@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/geaaru/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/helpers"
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
@@ -45,6 +46,7 @@ type StonesSearchTask struct {
 type StonesSearchOpts struct {
 	Packages         pkg.DefaultPackages
 	Categories       []string
+	Names            []string
 	Labels           []string
 	LabelsMatches    []string
 	Matches          []string
@@ -277,6 +279,20 @@ func (s *WagonStones) analyzeCatDir(
 			Debug(fmt.Sprintf("For repository %s ignoring file %s",
 				repoName, pkgname.Name()))
 			continue
+		}
+
+		if len(opts.Names) > 0 {
+			match := false
+			// POST: Check if the name of the package matches
+			//       one of the names selected
+
+			if helpers.ContainsElem(&opts.Names, pkgname.Name()) {
+				match = true
+			}
+
+			if !match {
+				continue
+			}
 		}
 
 		if len(opts.Matches) > 0 && opts.AndCondition {
