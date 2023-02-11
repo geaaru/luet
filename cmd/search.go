@@ -116,7 +116,10 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 
 			if len(packages) > 0 {
 				for _, p := range packages {
-					pack, err := helpers.ParsePackageStr(p)
+
+					// NOTE: pass nil to ParsePackageStr because the
+					//       search already is with Names options.
+					pack, err := helpers.ParsePackageStr(nil, p)
 					if err != nil {
 						Fatal("Invalid package string ", p, ": ", err.Error())
 					}

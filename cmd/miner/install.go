@@ -52,7 +52,7 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 
 			args = args[1:]
 			for _, pstr := range args {
-				p, err := helpers.ParsePackageStr(pstr)
+				p, err := helpers.ParsePackageStr(config, pstr)
 				if err != nil {
 					fmt.Println("Error on parse package string " + pstr + ": " +
 						err.Error())

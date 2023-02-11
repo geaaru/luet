@@ -1,0 +1,25 @@
+name: mottainai-stable
+description: MottainaiCI Official Repository
+urls:
+- http://localhost:8000
+type: http
+enable: true
+revision: 58
+last_update: "1675551464"
+index: []
+repo_files:
+  compilertree:
+    filename: compilertree.tar.gz
+    compressiontype: gzip
+    checksums:
+      sha256: 7ed57b5e82aa70a77b8641617a4ea1e72f1fb848384c3a5bb0ed7295de7c4a26
+  meta:
+    filename: repository.meta.yaml.tar.zst
+    compressiontype: zstd
+    checksums:
+      sha256: 490a1c813f094e8142894afa0661daa0555ff4c852e2e356bcbeec86f4a164e8
+  tree:
+    filename: tree.tar.zst
+    compressiontype: zstd
+    checksums:
+      sha256: 583071007f5a769d417aadd287b629dfa9a64bb7fc91232f5e3feef7fa01404c

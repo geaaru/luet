@@ -1,0 +1,26 @@
+category: www-apps
+conflicts: null
+description: A web frontend for MottainaiCI
+id: 0
+labels:
+  github.owner: mottainai-dashboard
+  github.repo: MottainaiCI
+license: GPL-3.0
+name: mottainai-dashboard
+path: packages/mottainai-dashboard
+requires:
+- category: groups
+  conflicts: null
+  id: 0
+  name: mottainai
+  requires: null
+  version: '>=0'
+- category: users
+  conflicts: null
+  id: 0
+  name: mottainai-server
+  requires: null
+  version: '>=0'
+uri:
+- https://github.com/MottainaiCI/mottainai-dashboard
+version: 0.2.4

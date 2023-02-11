@@ -1,0 +1,11 @@
+category: system
+conflicts: null
+description: Luet devkit package
+id: 0
+labels:
+  github.owner: geaaru
+  github.repo: extensions
+name: luet-devkit
+path: packages/luet-extensions
+requires: null
+version: 0.13.1

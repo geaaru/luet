@@ -1,0 +1,332 @@
+path: mottainai-server-dev-util-0.2.0.package.tar.zst
+compilespec:
+    steps:
+        - cd ${GOPATH}/src/github.com/MottainaiCI/mottainai-server && git checkout "${GIT_HASH%\+*}"  -b build && make build
+        - mkdir -p /mottainai-server/etc/mottainai
+        - mkdir -p /mottainai-server/usr/bin
+        - mkdir -p /mottainai-server${LIB_DIR}
+        - mkdir -p /mottainai-server${SRV_DIR}/web/artefact
+        - mkdir -p /mottainai-server${SRV_DIR}/web/namespace
+        - mkdir -p /mottainai-server${SRV_DIR}/web/db
+        - mkdir -p /mottainai-server${SRV_DIR}/lock
+        - |
+          cd ${GOPATH}/src/github.com/${GITHUB_ORG}/mottainai-server/ && \
+          mv mottainai-server /mottainai-server/usr/bin/mottainai-server && \
+          mv mottainai-exporter/mottainai-exporter /mottainai-server/usr/bin/mottainai-exporter && \
+          mv mottainai-importer/mottainai-importer /mottainai-server/usr/bin/mottainai-importer && \
+          cp contrib/config/mottainai-server.yaml.example /mottainai-server/etc/mottainai/mottainai-server.yaml && \
+          cp -Rv templates /mottainai-server${LIB_DIR}/ && \
+          cp -Rv public /mottainai-server${LIB_DIR} && \
+          cp -v contrib/systemd/mottainai-server.service /mottainai-server/${SRV_DIR}/
+        - chmod -R 770 /mottainai-server${LIB_DIR} && chmod -R 774 /mottainai-server${LIB_DIR}/public && chmod -R 774 /mottainai-server${SRV_DIR}
+    env:
+        - GOPATH=/luetbuild/go/
+        - GIT_HASH=v0.2.0
+        - GITHUB_ORG=MottainaiCI
+        - LIB_DIR=/var/lib/mottainai
+        - SRV_DIR=/srv/mottainai
+        - LUET_YES=true
+    prelude:
+        - apt-get update && apt-get install -y git make
+        - mkdir -p go/src/github.com/MottainaiCI/ && cd go/src/github.com/MottainaiCI && git clone https://github.com/MottainaiCI/mottainai-server.git
+        - git config --global advice.detachedHead false
+    image: golang
+    seed: golang
+    package:
+        id: 0
+        name: mottainai-server
+        version: 0.2.0
+        category: dev-util
+        useflags: []
+        state: ""
+        packagerequires: []
+        packageconflicts: []
+        provides: []
+        hidden: false
+        annotations: {}
+        path: ""
+        description: ""
+        uri: []
+        license: ""
+        buildtimestamp: 2022-06-14 07:18:06.522814604 +0000 UTC m=+157.108972475
+        labels:
+            github.owner: mottainai-server
+            github.repo: MottainaiCI
+        treedir: ./packages
+        repository: ""
+    package_dir: /mottainai-server
+    retrieve: []
+    unpack: false
+    includes: []
+    excludes: []
+    build_options:
+        pushimagerepository: luet/cache
+        pullimagerepository:
+            - luet/cache
+        pullfirst: false
+        keepimg: false
+        push: false
+        concurrency: 0
+        compressiontype: ""
+        wait: false
+        onlydeps: false
+        nodeps: false
+        solveroptions: {}
+        buildvaluesfile: []
+        buildvalues:
+            - {}
+        packagetargetonly: false
+        rebuild: false
+        backendargs: []
+        backendtype: ""
+        templatesfolder: []
+    copy: []
+    requires_final_images: false
+checksums:
+    sha256: 1d4abda51fa1d9017eefb8aeac671791789c4a142622fba00ece63c1f0b24a2e
+compressiontype: zstd
+files:
+    - etc/mottainai/mottainai-server.yaml
+    - srv/mottainai/mottainai-server.service
+    - usr/bin/mottainai-exporter
+    - usr/bin/mottainai-importer
+    - usr/bin/mottainai-server
+    - var/lib/mottainai/public/assets/css/animate.css
+    - var/lib/mottainai/public/assets/css/bootstrap-select.css
+    - var/lib/mottainai/public/assets/css/bootstrap.css
+    - var/lib/mottainai/public/assets/css/bootstrap.css.map
+    - var/lib/mottainai/public/assets/css/bootstrap.min.css
+    - var/lib/mottainai/public/assets/css/bootstrap.min.css.map
+    - var/lib/mottainai/public/assets/css/cs-skin-elastic.css
+    - var/lib/mottainai/public/assets/css/emoji.css
+    - var/lib/mottainai/public/assets/css/flag-icon.min.css
+    - var/lib/mottainai/public/assets/css/font-awesome.min.css
+    - var/lib/mottainai/public/assets/css/jquery.terminal.min.css
+    - var/lib/mottainai/public/assets/css/lib/datatable/dataTables.bootstrap.min.css
+    - var/lib/mottainai/public/assets/css/normalize.css
+    - var/lib/mottainai/public/assets/css/style.css
+    - var/lib/mottainai/public/assets/css/style.css.map
+    - var/lib/mottainai/public/assets/css/themify-icons.css
+    - var/lib/mottainai/public/assets/css/variables.css
+    - var/lib/mottainai/public/assets/fonts/FontAwesome.otf
+    - var/lib/mottainai/public/assets/fonts/codropsicons/codropsicons.eot
+    - var/lib/mottainai/public/assets/fonts/codropsicons/codropsicons.svg
+    - var/lib/mottainai/public/assets/fonts/codropsicons/codropsicons.ttf
+    - var/lib/mottainai/public/assets/fonts/codropsicons/codropsicons.woff
+    - var/lib/mottainai/public/assets/fonts/codropsicons/index.html
+    - var/lib/mottainai/public/assets/fonts/codropsicons/license.txt
+    - var/lib/mottainai/public/assets/fonts/fontawesome-webfont.eot
+    - var/lib/mottainai/public/assets/fonts/fontawesome-webfont.svg
+    - var/lib/mottainai/public/assets/fonts/fontawesome-webfont.ttf
+    - var/lib/mottainai/public/assets/fonts/fontawesome-webfont.woff
+    - var/lib/mottainai/public/assets/fonts/fontawesome-webfont.woff2
+    - var/lib/mottainai/public/assets/fonts/glyphicons-halflings-regular.eot
+    - var/lib/mottainai/public/assets/fonts/glyphicons-halflings-regular.svg
+    - var/lib/mottainai/public/assets/fonts/glyphicons-halflings-regular.ttf
+    - var/lib/mottainai/public/assets/fonts/glyphicons-halflings-regular.woff
+    - var/lib/mottainai/public/assets/fonts/glyphicons-halflings-regular.woff2
+    - var/lib/mottainai/public/assets/fonts/icomoon/icomoon.eot
+    - var/lib/mottainai/public/assets/fonts/icomoon/icomoon.svg
+    - var/lib/mottainai/public/assets/fonts/icomoon/icomoon.ttf
+    - var/lib/mottainai/public/assets/fonts/icomoon/icomoon.woff
+    - var/lib/mottainai/public/assets/fonts/icomoon/index.html
+    - var/lib/mottainai/public/assets/fonts/index.html
+    - var/lib/mottainai/public/assets/fonts/themify.eot
+    - var/lib/mottainai/public/assets/fonts/themify.svg
+    - var/lib/mottainai/public/assets/fonts/themify.ttf
+    - var/lib/mottainai/public/assets/fonts/themify.woff
+    - var/lib/mottainai/public/assets/js/chartjs.min.js
+    - var/lib/mottainai/public/assets/js/clipboard.min.js
+    - var/lib/mottainai/public/assets/js/dashboard.js
+    - var/lib/mottainai/public/assets/js/index.html
+    - var/lib/mottainai/public/assets/js/lib/data-table/dataTables.bootstrap.min.js
+    - var/lib/mottainai/public/assets/js/lib/data-table/datatables.min.js
+    - var/lib/mottainai/public/assets/js/lib/data-table/jquery-1.12.4.js
+    - var/lib/mottainai/public/assets/js/main.js
+    - var/lib/mottainai/public/assets/js/plugins.js
+    - var/lib/mottainai/public/assets/js/popper.min.js
+    - var/lib/mottainai/public/assets/js/vendor/emoji.js
+    - var/lib/mottainai/public/assets/js/vendor/gotime.js
+    - var/lib/mottainai/public/assets/js/vendor/index.html
+    - var/lib/mottainai/public/assets/js/vendor/jquery-1.11.3.min.js
+    - var/lib/mottainai/public/assets/js/vendor/jquery-2.1.4.min.js
+    - var/lib/mottainai/public/assets/js/vendor/jquery.terminal.min.js
+    - var/lib/mottainai/public/assets/js/vendor/jquery.timeago.js
+    - var/lib/mottainai/public/assets/js/vendor/modernizr-2.8.3.min.js
+    - var/lib/mottainai/public/assets/js/vendor/unix_formatting.js
+    - var/lib/mottainai/public/assets/js/widgets.js
+    - var/lib/mottainai/public/assets/scss/_gauge.scss
+    - var/lib/mottainai/public/assets/scss/_switches.scss
+    - var/lib/mottainai/public/assets/scss/_widgets.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_alert.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_badge.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_breadcrumb.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_button-group.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_buttons.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_card.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_carousel.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_close.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_code.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_custom-forms.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_dropdown.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_forms.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_functions.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_grid.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_images.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_input-group.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_jumbotron.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_list-group.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_media.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_mixins.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_modal.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_nav.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_navbar.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_pagination.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_popover.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_print.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_progress.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_reboot.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_root.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_tables.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_tooltip.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_transitions.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_type.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_utilities.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/_variables.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/bootstrap-grid.css
+    - var/lib/mottainai/public/assets/scss/bootstrap/bootstrap-grid.css.map
+    - var/lib/mottainai/public/assets/scss/bootstrap/bootstrap-grid.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/bootstrap-reboot.css
+    - var/lib/mottainai/public/assets/scss/bootstrap/bootstrap-reboot.css.map
+    - var/lib/mottainai/public/assets/scss/bootstrap/bootstrap-reboot.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/bootstrap.css
+    - var/lib/mottainai/public/assets/scss/bootstrap/bootstrap.css.map
+    - var/lib/mottainai/public/assets/scss/bootstrap/bootstrap.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_alert.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_background-variant.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_badge.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_border-radius.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_box-shadow.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_breakpoints.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_buttons.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_caret.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_clearfix.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_float.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_forms.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_gradients.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_grid-framework.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_grid.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_hover.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_image.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_list-group.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_lists.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_nav-divider.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_navbar-align.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_pagination.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_reset-text.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_resize.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_screen-reader.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_size.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_table-row.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_text-emphasis.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_text-hide.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_text-truncate.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_transition.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/mixins/_visibility.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/utilities/_align.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/utilities/_background.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/utilities/_borders.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/utilities/_clearfix.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/utilities/_display.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/utilities/_embed.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/utilities/_flex.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/utilities/_float.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/utilities/_position.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/utilities/_screenreaders.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/utilities/_sizing.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/utilities/_spacing.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/utilities/_text.scss
+    - var/lib/mottainai/public/assets/scss/bootstrap/utilities/_visibility.scss
+    - var/lib/mottainai/public/assets/scss/socials.css
+    - var/lib/mottainai/public/assets/scss/socials.css.map
+    - var/lib/mottainai/public/assets/scss/socials.scss
+    - var/lib/mottainai/public/assets/scss/style.css
+    - var/lib/mottainai/public/assets/scss/style.css.map
+    - var/lib/mottainai/public/assets/scss/style.scss
+    - var/lib/mottainai/public/assets/scss/variables.css
+    - var/lib/mottainai/public/assets/scss/variables.scss
+    - var/lib/mottainai/public/assets/scss/widgets.css
+    - var/lib/mottainai/public/favicon.ico
+    - var/lib/mottainai/public/images/.gitignore
+    - var/lib/mottainai/public/images/mottainai_logo.png
+    - var/lib/mottainai/public/images/mottainai_logo_small.png
+    - var/lib/mottainai/templates/base/alert.tmpl
+    - var/lib/mottainai/templates/base/footer.tmpl
+    - var/lib/mottainai/templates/base/head.tmpl
+    - var/lib/mottainai/templates/base/menu.tmpl
+    - var/lib/mottainai/templates/callbacks/integrations/github.tmpl
+    - var/lib/mottainai/templates/index.tmpl
+    - var/lib/mottainai/templates/inject/footer.tmpl
+    - var/lib/mottainai/templates/inject/head.tmpl
+    - var/lib/mottainai/templates/status/404.tmpl
+    - var/lib/mottainai/templates/status/500.tmpl
+runtime:
+    id: 0
+    name: mottainai-server
+    version: 0.2.0
+    category: dev-util
+    useflags: []
+    state: ""
+    packagerequires:
+        - id: 0
+          name: mottainai-server
+          version: '>=0'
+          category: users
+          useflags: []
+          state: ""
+          packagerequires: []
+          packageconflicts: []
+          provides: []
+          hidden: false
+          annotations: {}
+          path: ""
+          description: ""
+          uri: []
+          license: ""
+          buildtimestamp: ""
+          labels: {}
+          treedir: ""
+          repository: ""
+        - id: 0
+          name: mottainai
+          version: '>=0'
+          category: groups
+          useflags: []
+          state: ""
+          packagerequires: []
+          packageconflicts: []
+          provides: []
+          hidden: false
+          annotations: {}
+          path: ""
+          description: ""
+          uri: []
+          license: ""
+          buildtimestamp: ""
+          labels: {}
+          treedir: ""
+          repository: ""
+    packageconflicts: []
+    provides: []
+    hidden: false
+    annotations: {}
+    path: ""
+    description: ""
+    uri: []
+    license: ""
+    buildtimestamp: ""
+    labels:
+        github.owner: mottainai-server
+        github.repo: MottainaiCI
+    treedir: ""
+    repository: ""

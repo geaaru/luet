@@ -1,0 +1,138 @@
+path: database-release-manager-database-0.2.3.package.tar.zst
+compilespec:
+    steps:
+        - mkdir -p /database-release-manager/ && cd /dbrm && aclocal && autoconf && automake --add-missing && ./configure --with-configfile-path=$DBRM_DEFAULT_CONFPATH --prefix=/usr && make && DESTDIR=/database-release-manager/ make install
+    env:
+        - LUET_YES=true
+        - DBRM_DEFAULT_CONFPATH=/etc/dbrm.conf
+    prelude:
+        - luet install development/make development/automake utils/autoconf development/m4 vcs/git shells/bash
+        - PACKAGE_VERSION=${PACKAGE_VERSION%\+*} && git config --global advice.detachedHead false && git clone https://github.com/geaaru/database-release-manager.git --depth 1 -b v$PACKAGE_VERSION /dbrm
+    image: quay.io/mocaccino/extra
+    seed: quay.io/mocaccino/extra
+    package:
+        id: 0
+        name: database-release-manager
+        version: 0.2.3
+        category: database
+        useflags: []
+        state: ""
+        packagerequires: []
+        packageconflicts: []
+        provides: []
+        hidden: false
+        annotations: {}
+        path: ""
+        description: Software for manage database scripts and managing easy installations/developments
+        uri:
+            - https://github.com/geaaru/database-release-manager
+        license: GPL-2.0
+        buildtimestamp: 2022-09-09 07:32:07.196246163 +0000 UTC m=+29.552618500
+        labels:
+            github.owner: geaaru
+            github.repo: database-release-manager
+        treedir: ./packages
+        repository: ""
+    package_dir: /database-release-manager
+    retrieve: []
+    unpack: false
+    includes: []
+    excludes: []
+    build_options:
+        pushimagerepository: luet/cache
+        pullimagerepository:
+            - luet/cache
+        pullfirst: false
+        keepimg: false
+        push: false
+        concurrency: 0
+        compressiontype: ""
+        wait: false
+        onlydeps: false
+        nodeps: false
+        solveroptions: {}
+        buildvaluesfile: []
+        buildvalues:
+            - {}
+        packagetargetonly: false
+        rebuild: false
+        backendargs: []
+        backendtype: ""
+        templatesfolder: []
+    copy: []
+    requires_final_images: false
+checksums:
+    sha256: 35c4c71af75a30a4e07fc0dd317108fddd05d232753c6671776bd4002af0b760
+compressiontype: zstd
+files:
+    - etc/dbrm.conf
+    - usr/bin/dbrm
+    - usr/share/dbrm/core/commons.sh
+    - usr/share/dbrm/core/commons_mariadb.sh
+    - usr/share/dbrm/core/commons_mongo.sh
+    - usr/share/dbrm/core/commons_oracle.sh
+    - usr/share/dbrm/core/commons_psql.sh
+    - usr/share/dbrm/core/dbm/dbm_args.inc
+    - usr/share/dbrm/core/dbm/dbm_exts.inc
+    - usr/share/dbrm/core/dbm/dbm_semver.inc
+    - usr/share/dbrm/core/dbm/dbm_tools.inc
+    - usr/share/dbrm/core/mongo.sh
+    - usr/share/dbrm/core/mysql.sh
+    - usr/share/dbrm/core/psql.sh
+    - usr/share/dbrm/core/sqlplus.sh
+    - usr/share/dbrm/dbm_sqlite_schema.sql
+    - usr/share/dbrm/dbrm.conf.example
+    - usr/share/dbrm/modules/dbm.mod
+    - usr/share/dbrm/modules/extensions-scripts/ssl_sqlite_schema.sql
+    - usr/share/dbrm/modules/install.mod
+    - usr/share/dbrm/modules/logfile.mod
+    - usr/share/dbrm/modules/mariadb.mod
+    - usr/share/dbrm/modules/mongo.mod
+    - usr/share/dbrm/modules/oracle.mod
+    - usr/share/dbrm/modules/out_handler.mod
+    - usr/share/dbrm/modules/out_stdout.mod
+    - usr/share/dbrm/modules/package.mod
+    - usr/share/dbrm/modules/psql.mod
+    - usr/share/dbrm/modules/sql_handler.mod
+    - usr/share/dbrm/modules/sqlite.mod
+    - usr/share/dbrm/modules/ssl.mod
+    - usr/share/dbrm/modules/sweeper.mod
+    - usr/share/dbrm/oracle/export_function_gen.sql.in
+    - usr/share/dbrm/oracle/export_functions_gen.sql.in
+    - usr/share/dbrm/oracle/export_job_gen.sql.in
+    - usr/share/dbrm/oracle/export_jobs_gen.sql.in
+    - usr/share/dbrm/oracle/export_package_gen.sql.in
+    - usr/share/dbrm/oracle/export_packages_gen.sql.in
+    - usr/share/dbrm/oracle/export_procedure_gen.sql.in
+    - usr/share/dbrm/oracle/export_procedures_gen.sql.in
+    - usr/share/dbrm/oracle/export_schedule_gen.sql.in
+    - usr/share/dbrm/oracle/export_schedules_gen.sql.in
+    - usr/share/dbrm/oracle/export_test_gen.sql.in
+    - usr/share/dbrm/oracle/export_tests_gen.sql.in
+    - usr/share/dbrm/oracle/export_trigger_gen.sql.in
+    - usr/share/dbrm/oracle/export_triggers_gen.sql.in
+    - usr/share/dbrm/oracle/export_view_gen.sql.in
+    - usr/share/dbrm/oracle/export_views_gen.sql.in
+runtime:
+    id: 0
+    name: database-release-manager
+    version: 0.2.3
+    category: database
+    useflags: []
+    state: ""
+    packagerequires: []
+    packageconflicts: []
+    provides: []
+    hidden: false
+    annotations: {}
+    path: ""
+    description: Software for manage database scripts and managing easy installations/developments
+    uri:
+        - https://github.com/geaaru/database-release-manager
+    license: GPL-2.0
+    buildtimestamp: ""
+    labels:
+        github.owner: geaaru
+        github.repo: database-release-manager
+    treedir: ""
+    repository: ""

@@ -1,0 +1,11 @@
+category: net-fs
+conflicts: null
+id: 0
+labels:
+  autobump.strategy: snapshot
+  github.owner: minio
+  github.repo: minio
+name: minio-client
+path: packages/minio-client
+requires: null
+version: "0.20220624"

@@ -1,0 +1,8 @@
+category: extension
+conflicts: null
+description: Luet search filter utils
+id: 0
+name: filter
+path: packages/luet-extensions/filter
+requires: null
+version: "0.1"

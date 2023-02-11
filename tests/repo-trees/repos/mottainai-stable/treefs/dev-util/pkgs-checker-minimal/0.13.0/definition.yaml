@@ -1,0 +1,14 @@
+category: dev-util
+conflicts: null
+description: pkgs-checker version (without CGO stuff)
+id: 0
+labels:
+  github.owner: pkgs-checker
+  github.repo: geaaru
+  original.package.name: pkgs-checker
+  original.package.version: 0.13.0
+license: GPL-3.0
+name: pkgs-checker-minimal
+path: packages/pkgs-checker-minimal
+requires: null
+version: 0.13.0

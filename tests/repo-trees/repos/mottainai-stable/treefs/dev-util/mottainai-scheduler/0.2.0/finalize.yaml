@@ -1,0 +1,2 @@
+install:
+- cd /usr/lib/systemd/system && if [ ! -e mottainai-scheduler.service ] ; then ln -s /etc/mottainai/systemd/* . ; fi

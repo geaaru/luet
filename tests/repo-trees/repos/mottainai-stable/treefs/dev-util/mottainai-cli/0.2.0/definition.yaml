@@ -1,0 +1,10 @@
+category: dev-util
+conflicts: null
+id: 0
+labels:
+  github.owner: mottainai-cli
+  github.repo: MottainaiCI
+name: mottainai-cli
+path: packages/mottainai-cli
+requires: null
+version: 0.2.0

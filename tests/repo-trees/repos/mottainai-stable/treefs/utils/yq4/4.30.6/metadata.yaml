@@ -1,0 +1,101 @@
+path: yq4-utils-4.30.6.package.tar.zst
+compilespec:
+    steps:
+        - |
+          PACKAGE_VERSION=${PACKAGE_VERSION%\+*} && \
+          mkdir -p /${PACKAGE_NAME}/usr/bin && \
+          YQ_ARCH=amd64 && \
+          curl -L https://github.com/mikefarah/yq/releases/download/v${PACKAGE_VERSION}/yq_linux_${YQ_ARCH} -o /${PACKAGE_NAME}/usr/bin/${PACKAGE_NAME} && \
+          chmod +x /${PACKAGE_NAME}/usr/bin/${PACKAGE_NAME}
+    env: []
+    prelude:
+        - apk add curl
+    image: alpine
+    seed: alpine
+    package:
+        id: 0
+        name: yq4
+        version: 4.30.6
+        category: utils
+        useflags: []
+        state: ""
+        packagerequires: []
+        packageconflicts: []
+        provides: []
+        hidden: false
+        annotations: {}
+        path: ""
+        description: ""
+        uri:
+            - https://github.com/mikefarah/yq
+            - https://yq.readthedocs.io
+            - https://github.com/kislyuk/yq
+            - https://pypi.org/project/yq
+        license: MIT
+        buildtimestamp: 2022-12-23 14:07:12.708100435 +0000 UTC m=+9.495798689
+        labels:
+            autobump.strategy: release
+            github.owner: mikefarah
+            github.repo: yq
+        treedir: ./packages
+        repository: ""
+    package_dir: /yq4
+    retrieve: []
+    unpack: false
+    includes: []
+    excludes: []
+    build_options:
+        pushimagerepository: luet/cache
+        pullimagerepository:
+            - luet/cache
+        pullfirst: false
+        keepimg: false
+        push: false
+        concurrency: 0
+        compressiontype: ""
+        wait: false
+        onlydeps: false
+        nodeps: false
+        solveroptions: {}
+        buildvaluesfile: []
+        buildvalues:
+            - {}
+        packagetargetonly: false
+        rebuild: false
+        backendargs: []
+        backendtype: ""
+        templatesfolder: []
+    copy: []
+    requires_final_images: false
+checksums:
+    sha256: 5656fa16e3d163614cb3c1b3639a80ca396d65e60f0adf59d589b81eec37bb21
+compressiontype: zstd
+files:
+    - usr/bin/yq4
+runtime:
+    id: 0
+    name: yq4
+    version: 4.30.6
+    category: utils
+    useflags: []
+    state: ""
+    packagerequires: []
+    packageconflicts: []
+    provides: []
+    hidden: false
+    annotations: {}
+    path: ""
+    description: ""
+    uri:
+        - https://github.com/mikefarah/yq
+        - https://yq.readthedocs.io
+        - https://github.com/kislyuk/yq
+        - https://pypi.org/project/yq
+    license: MIT
+    buildtimestamp: ""
+    labels:
+        autobump.strategy: release
+        github.owner: mikefarah
+        github.repo: yq
+    treedir: ""
+    repository: ""

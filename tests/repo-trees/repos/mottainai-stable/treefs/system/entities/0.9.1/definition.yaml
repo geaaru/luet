@@ -1,0 +1,10 @@
+category: system
+conflicts: null
+id: 0
+labels:
+  github.owner: geaaru
+  github.repo: entities
+name: entities
+path: packages/entities
+requires: null
+version: 0.9.1

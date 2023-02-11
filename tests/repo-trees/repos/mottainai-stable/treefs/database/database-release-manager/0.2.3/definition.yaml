@@ -1,0 +1,14 @@
+category: database
+conflicts: null
+description: Software for manage database scripts and managing easy installations/developments
+id: 0
+labels:
+  github.owner: geaaru
+  github.repo: database-release-manager
+license: GPL-2.0
+name: database-release-manager
+path: packages/database-release-manager
+requires: null
+uri:
+- https://github.com/geaaru/database-release-manager
+version: 0.2.3

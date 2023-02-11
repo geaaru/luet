@@ -1,0 +1,97 @@
+path: package-browser-extension-0.4.1.package.tar.zst
+compilespec:
+    steps:
+        - mkdir /usr/share/luet-package-browser
+        - cd package-browser && git checkout v"${PACKAGE_VERSION}" && make build && mv luet-package-browser /usr/bin/luet-package-browser
+        - cp -rfv package-browser/templates/* /usr/share/luet-package-browser/
+    env: []
+    prelude:
+        - apt-get update
+        - apt-get install git
+        - git clone https://github.com/Luet-lab/package-browser
+    image: golang
+    seed: golang
+    package:
+        id: 0
+        name: package-browser
+        version: 0.4.1
+        category: extension
+        useflags: []
+        state: ""
+        packagerequires: []
+        packageconflicts: []
+        provides: []
+        hidden: false
+        annotations: {}
+        path: ""
+        description: ""
+        uri: []
+        license: ""
+        buildtimestamp: 2022-01-27 19:40:17.34632689 +0000 UTC m=+1758.769262368
+        labels:
+            github.owner: Luet-lab
+            github.repo: package-browser
+        treedir: ./packages
+        repository: ""
+    package_dir: ""
+    retrieve: []
+    unpack: false
+    includes:
+        - /usr/share/luet-package-browser
+        - /usr/share/luet-package-browser/.*
+        - /usr/bin/luet-package-browser
+    excludes: []
+    build_options:
+        pushimagerepository: luet/cache
+        pullimagerepository:
+            - luet/cache
+        pullfirst: false
+        keepimg: false
+        push: false
+        concurrency: 0
+        compressiontype: ""
+        wait: false
+        onlydeps: false
+        nodeps: false
+        solveroptions: {}
+        buildvaluesfile: []
+        buildvalues:
+            - {}
+        packagetargetonly: false
+        rebuild: false
+        backendargs: []
+        backendtype: ""
+        templatesfolder: []
+    copy: []
+    requires_final_images: false
+checksums:
+    sha256: ebdaa22d5476ed34dadb5dcc3ca1d9d45423f54eed08986134c76596838c5d88
+compressiontype: zstd
+files:
+    - usr/bin/luet-package-browser
+    - usr/share/luet-package-browser/index.tmpl
+    - usr/share/luet-package-browser/package.tmpl
+    - usr/share/luet-package-browser/packages.tmpl
+    - usr/share/luet-package-browser/repository.tmpl
+runtime:
+    id: 0
+    name: package-browser
+    version: 0.4.1
+    category: extension
+    useflags: []
+    state: ""
+    packagerequires: []
+    packageconflicts: []
+    provides: []
+    hidden: false
+    annotations: {}
+    path: ""
+    description: ""
+    uri: []
+    license: ""
+    buildtimestamp: ""
+    labels:
+        github.owner: Luet-lab
+        github.repo: package-browser
+    treedir: ""
+    repository: ""

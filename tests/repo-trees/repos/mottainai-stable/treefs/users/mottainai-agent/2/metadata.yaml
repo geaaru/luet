@@ -1,0 +1,102 @@
+path: mottainai-agent-users-2.package.tar.zst
+compilespec:
+    steps:
+        - mkdir /etc/entities/|| true
+        - cp -rfv ${PACKAGE_NAME/-/_}*.yaml /etc/entities/
+    env: []
+    prelude: []
+    image: quay.io/mocaccino/micro:latest
+    seed: quay.io/mocaccino/micro:latest
+    package:
+        id: 0
+        name: mottainai-agent
+        version: "2"
+        category: users
+        useflags: []
+        state: ""
+        packagerequires: []
+        packageconflicts: []
+        provides: []
+        hidden: false
+        annotations: {}
+        path: ""
+        description: ""
+        uri: []
+        license: ""
+        buildtimestamp: 2022-01-27 19:33:15.614756918 +0000 UTC m=+1337.037692402
+        labels: {}
+        treedir: ./packages
+        repository: ""
+    package_dir: ""
+    retrieve: []
+    unpack: false
+    includes: []
+    excludes: []
+    build_options:
+        pushimagerepository: luet/cache
+        pullimagerepository:
+            - luet/cache
+        pullfirst: false
+        keepimg: false
+        push: false
+        concurrency: 0
+        compressiontype: ""
+        wait: false
+        onlydeps: false
+        nodeps: false
+        solveroptions: {}
+        buildvaluesfile: []
+        buildvalues:
+            - {}
+        packagetargetonly: false
+        rebuild: false
+        backendargs: []
+        backendtype: ""
+        templatesfolder: []
+    copy: []
+    requires_final_images: false
+checksums:
+    sha256: 6ec735b7b12b439cb14696b9df10f2ee4705074d40a6a60b9a655502ae226f8a
+compressiontype: zstd
+files:
+    - etc/entities/mottainai_agent_entity_add.yaml
+    - etc/entities/mottainai_agent_shadow_entity_add.yaml
+runtime:
+    id: 0
+    name: mottainai-agent
+    version: "2"
+    category: users
+    useflags: []
+    state: ""
+    packagerequires:
+        - id: 0
+          name: entities
+          version: '>=0.5'
+          category: system
+          useflags: []
+          state: ""
+          packagerequires: []
+          packageconflicts: []
+          provides: []
+          hidden: false
+          annotations: {}
+          path: ""
+          description: ""
+          uri: []
+          license: ""
+          buildtimestamp: ""
+          labels: {}
+          treedir: ""
+          repository: ""
+    packageconflicts: []
+    provides: []
+    hidden: false
+    annotations: {}
+    path: ""
+    description: ""
+    uri: []
+    license: ""
+    buildtimestamp: ""
+    labels: {}
+    treedir: ""
+    repository: ""

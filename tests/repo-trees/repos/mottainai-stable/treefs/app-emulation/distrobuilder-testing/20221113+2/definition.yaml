@@ -1,0 +1,14 @@
+category: app-emulation
+conflicts: null
+description: System container image builder for LXC and LXD
+id: 0
+labels:
+  github.owner: distrobuilder
+  github.repo: geaaru
+license: Apache-2.0
+name: distrobuilder-testing
+path: packages/distrobuilder-testing
+requires: null
+uri:
+- https://github.com/lxc/distrobuilder
+version: 20221113+2

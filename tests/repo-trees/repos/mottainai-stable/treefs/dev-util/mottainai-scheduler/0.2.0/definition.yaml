@@ -1,0 +1,22 @@
+category: dev-util
+conflicts: null
+id: 0
+labels:
+  github.owner: mottainai-agent
+  github.repo: MottainaiCI
+name: mottainai-scheduler
+path: packages/mottainai-scheduler
+requires:
+- category: users
+  conflicts: null
+  id: 0
+  name: mottainai-agent
+  requires: null
+  version: '>=0'
+- category: groups
+  conflicts: null
+  id: 0
+  name: mottainai
+  requires: null
+  version: '>=0'
+version: 0.2.0

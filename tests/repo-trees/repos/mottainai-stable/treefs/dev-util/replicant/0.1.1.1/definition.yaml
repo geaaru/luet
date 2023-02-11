@@ -1,0 +1,10 @@
+category: dev-util
+conflicts: null
+id: 0
+labels:
+  github.owner: replicant
+  github.repo: MottainaiCI
+name: replicant
+path: packages/replicant
+requires: null
+version: 0.1.1.1

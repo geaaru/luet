@@ -34,7 +34,7 @@ This commands takes multiple packages as arguments and prunes their entries from
 			aManager.Setup()
 
 			for _, a := range args {
-				pack, err := helpers.ParsePackageStr(a)
+				pack, err := helpers.ParsePackageStr(cfg, a)
 				if err != nil {
 					Fatal("Invalid package string ", a, ": ", err.Error())
 				}

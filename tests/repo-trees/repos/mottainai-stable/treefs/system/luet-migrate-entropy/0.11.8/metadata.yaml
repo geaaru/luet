@@ -1,0 +1,95 @@
+path: luet-migrate-entropy-system-0.11.8.package.tar.zst
+compilespec:
+    steps:
+        - cd extensions && DESTDIR=/luet-extensions make install
+    env:
+        - BUNDLED_EXTENSIONS="migrate-entropy"
+    prelude:
+        - apt-get update
+        - apt-get install -y make git upx
+        - git clone https://github.com/Luet-lab/extensions
+        - |
+          PACKAGE_VERSION=${PACKAGE_VERSION%\+*} && \
+          cd extensions && git checkout -b build v${PACKAGE_VERSION}
+        - mkdir /luet-extensions
+        - go get gopkg.in/yaml.v3
+        - cd extensions && make build
+    image: golang
+    seed: golang
+    package:
+        id: 0
+        name: luet-migrate-entropy
+        version: 0.11.8
+        category: system
+        useflags: []
+        state: ""
+        packagerequires: []
+        packageconflicts: []
+        provides: []
+        hidden: false
+        annotations: {}
+        path: ""
+        description: Luet Entropy migration package
+        uri: []
+        license: ""
+        buildtimestamp: 2022-01-27 19:44:37.498131672 +0000 UTC m=+2018.921067155
+        labels:
+            github.owner: Luet-lab
+            github.repo: extensions
+        treedir: ./packages
+        repository: ""
+    package_dir: /luet-extensions
+    retrieve: []
+    unpack: false
+    includes: []
+    excludes: []
+    build_options:
+        pushimagerepository: luet/cache
+        pullimagerepository:
+            - luet/cache
+        pullfirst: false
+        keepimg: false
+        push: false
+        concurrency: 0
+        compressiontype: ""
+        wait: false
+        onlydeps: false
+        nodeps: false
+        solveroptions: {}
+        buildvaluesfile: []
+        buildvalues:
+            - {}
+        packagetargetonly: false
+        rebuild: false
+        backendargs: []
+        backendtype: ""
+        templatesfolder: []
+    copy: []
+    requires_final_images: false
+checksums:
+    sha256: 1ea7db49e9f40ec0ea9f180aad862699d06b09c566ff30c1e987189ef26e7e2b
+compressiontype: zstd
+files:
+    - usr/bin/luet-migrate-entropy
+runtime:
+    id: 0
+    name: luet-migrate-entropy
+    version: 0.11.8
+    category: system
+    useflags: []
+    state: ""
+    packagerequires: []
+    packageconflicts: []
+    provides: []
+    hidden: false
+    annotations: {}
+    path: ""
+    description: Luet Entropy migration package
+    uri: []
+    license: ""
+    buildtimestamp: ""
+    labels:
+        github.owner: Luet-lab
+        github.repo: extensions
+    treedir: ""
+    repository: ""

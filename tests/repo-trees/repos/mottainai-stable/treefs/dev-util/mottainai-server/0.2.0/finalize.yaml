@@ -1,0 +1,9 @@
+install:
+# when there are more of 500GB of data is not a good idea to run chown command.
+# With this change: https://github.com/mudler/luet/commit/0cc8930708ffe3dc1558dc50b68eecbcdb12e712#diff-10f0aa3bed150041a8c91985466f994c8699db6730b0631ff50bba08a9dcb980R106
+# is not possible configure environment variable for finalizer.
+- if [ -z "${SKIP_DATA_CHOWN}" ] ; then chown mottainai-server:mottainai -R /srv/mottainai ; fi
+- chown mottainai-server:mottainai -R /var/lib/mottainai
+# Workaround until https://github.com/mudler/luet/issues/188 is fixed
+# NOTE: This is not good for cross OS. Different distro has different path for systemd .service files.
+- cd /lib/systemd/system && if [ ! -e mottainai-server.service ] ; then ln -s /srv/mottainai/mottainai-server.service ; fi || true

@@ -1,0 +1,3 @@
+install:
+- entities apply --safe=true -f /etc/group /etc/entities/mottainai-group_entity.yaml || true
+- entities apply --safe=true -f /etc/gshadow /etc/entities/mottainai_gshadow_entity.yaml || true

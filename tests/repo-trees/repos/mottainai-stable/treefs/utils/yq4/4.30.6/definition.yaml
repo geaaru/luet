@@ -1,0 +1,17 @@
+category: utils
+conflicts: null
+id: 0
+labels:
+  autobump.strategy: release
+  github.owner: mikefarah
+  github.repo: yq
+license: MIT
+name: yq4
+path: packages/yq4
+requires: null
+uri:
+- https://github.com/mikefarah/yq
+- https://yq.readthedocs.io
+- https://github.com/kislyuk/yq
+- https://pypi.org/project/yq
+version: 4.30.6

@@ -1,0 +1,10 @@
+category: utils
+conflicts: null
+id: 0
+license: MIT
+name: yq
+path: packages/yq
+requires: null
+uri:
+- https://github.com/mikefarah/yq
+version: 3.4.1+1

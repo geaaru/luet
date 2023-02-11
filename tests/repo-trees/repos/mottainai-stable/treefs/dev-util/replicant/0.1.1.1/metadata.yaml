@@ -1,0 +1,92 @@
+path: replicant-dev-util-0.1.1.1.package.tar.zst
+compilespec:
+    steps:
+        - cd ${PACKAGE_NAME} && git checkout "${GIT_HASH%\+*}" && make build && mv ${PACKAGE_NAME} /usr/bin/${PACKAGE_NAME}
+    env:
+        - GITHUB_ORG=MottainaiCI
+        - GIT_HASH=v0.1.1.1
+        - LUET_YES=true
+    prelude:
+        - apt-get update
+        - apt-get install -y git make
+        - git clone https://github.com/${GITHUB_ORG}/${PACKAGE_NAME}.git
+    image: golang
+    seed: golang
+    package:
+        id: 0
+        name: replicant
+        version: 0.1.1.1
+        category: dev-util
+        useflags: []
+        state: ""
+        packagerequires: []
+        packageconflicts: []
+        provides: []
+        hidden: false
+        annotations: {}
+        path: ""
+        description: ""
+        uri: []
+        license: ""
+        buildtimestamp: 2022-01-27 19:25:27.290602715 +0000 UTC m=+868.713538199
+        labels:
+            github.owner: replicant
+            github.repo: MottainaiCI
+        treedir: ./packages
+        repository: ""
+    package_dir: ""
+    retrieve: []
+    unpack: false
+    includes:
+        - /usr/bin/replicant
+    excludes: []
+    build_options:
+        pushimagerepository: luet/cache
+        pullimagerepository:
+            - luet/cache
+        pullfirst: false
+        keepimg: false
+        push: false
+        concurrency: 0
+        compressiontype: ""
+        wait: false
+        onlydeps: false
+        nodeps: false
+        solveroptions: {}
+        buildvaluesfile: []
+        buildvalues:
+            - {}
+        packagetargetonly: false
+        rebuild: false
+        backendargs: []
+        backendtype: ""
+        templatesfolder: []
+    copy: []
+    requires_final_images: false
+checksums:
+    sha256: b0ae745eac30e2350a5661bd6ab0ea137d06e9f24b4cbdf542844dfd7e355052
+compressiontype: zstd
+files:
+    - usr/bin/replicant
+runtime:
+    id: 0
+    name: replicant
+    version: 0.1.1.1
+    category: dev-util
+    useflags: []
+    state: ""
+    packagerequires: []
+    packageconflicts: []
+    provides: []
+    hidden: false
+    annotations: {}
+    path: ""
+    description: ""
+    uri: []
+    license: ""
+    buildtimestamp: ""
+    labels:
+        github.owner: replicant
+        github.repo: MottainaiCI
+    treedir: ""
+    repository: ""

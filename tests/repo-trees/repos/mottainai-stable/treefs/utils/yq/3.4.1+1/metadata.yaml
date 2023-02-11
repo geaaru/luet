@@ -1,0 +1,89 @@
+path: yq-utils-3.4.1+1.package.tar.zst
+compilespec:
+    steps:
+        - |
+          PACKAGE_VERSION=${PACKAGE_VERSION%\+*} && \
+          YQ_ARCH="amd64" && \
+          mkdir -p /${PACKAGE_NAME}/usr/bin && \
+          curl -L https://github.com/mikefarah/${PACKAGE_NAME}/releases/download/${PACKAGE_VERSION}/yq_linux_${YQ_ARCH} -o /${PACKAGE_NAME}/usr/bin/${PACKAGE_NAME} && \
+          chmod +x /${PACKAGE_NAME}/usr/bin/${PACKAGE_NAME}
+    env: []
+    prelude:
+        - apk add curl
+    image: alpine
+    seed: alpine
+    package:
+        id: 0
+        name: yq
+        version: 3.4.1+1
+        category: utils
+        useflags: []
+        state: ""
+        packagerequires: []
+        packageconflicts: []
+        provides: []
+        hidden: false
+        annotations: {}
+        path: ""
+        description: ""
+        uri:
+            - https://github.com/mikefarah/yq
+        license: MIT
+        buildtimestamp: 2022-03-20 09:45:52.613810661 +0000 UTC m=+8.906078908
+        labels: {}
+        treedir: ./packages
+        repository: ""
+    package_dir: /yq
+    retrieve: []
+    unpack: false
+    includes: []
+    excludes: []
+    build_options:
+        pushimagerepository: luet/cache
+        pullimagerepository:
+            - luet/cache
+        pullfirst: false
+        keepimg: false
+        push: false
+        concurrency: 0
+        compressiontype: ""
+        wait: false
+        onlydeps: false
+        nodeps: false
+        solveroptions: {}
+        buildvaluesfile: []
+        buildvalues:
+            - {}
+        packagetargetonly: false
+        rebuild: false
+        backendargs: []
+        backendtype: ""
+        templatesfolder: []
+    copy: []
+    requires_final_images: false
+checksums:
+    sha256: 6d6d58c63c9190bed47de20b2cd32e386ca836f0b9e38506e78af8406e4881c4
+compressiontype: zstd
+files:
+    - usr/bin/yq
+runtime:
+    id: 0
+    name: yq
+    version: 3.4.1+1
+    category: utils
+    useflags: []
+    state: ""
+    packagerequires: []
+    packageconflicts: []
+    provides: []
+    hidden: false
+    annotations: {}
+    path: ""
+    description: ""
+    uri:
+        - https://github.com/mikefarah/yq
+    license: MIT
+    buildtimestamp: ""
+    labels: {}
+    treedir: ""
+    repository: ""

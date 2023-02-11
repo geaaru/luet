@@ -1,0 +1,113 @@
+path: luet-devkit-system-0.13.1.package.tar.zst
+compilespec:
+    steps:
+        - cd extensions && DESTDIR=/luet-extensions make install
+    env:
+        - BUNDLED_EXTENSIONS="remote-exec autobump-github geniso genimage qa-artefacts parallel-tools portage apkbuildconverter k8s-build-scheduler repo-devkit"
+    prelude:
+        - apt-get update
+        - apt-get install -y make git upx
+        - git clone https://github.com/geaaru/extensions
+        - |
+          PACKAGE_VERSION=${PACKAGE_VERSION%\+*} && \
+          cd extensions && git checkout -b build v${PACKAGE_VERSION}-geaaru
+        - mkdir /luet-extensions
+        - go get gopkg.in/yaml.v3
+        - cd extensions && make build
+    image: golang
+    seed: golang
+    package:
+        id: 0
+        name: luet-devkit
+        version: 0.13.1
+        category: system
+        useflags: []
+        state: ""
+        packagerequires: []
+        packageconflicts: []
+        provides: []
+        hidden: false
+        annotations: {}
+        path: ""
+        description: Luet devkit package
+        uri: []
+        license: ""
+        buildtimestamp: 2022-01-27 19:51:56.828184156 +0000 UTC m=+2458.251119634
+        labels:
+            github.owner: geaaru
+            github.repo: extensions
+        treedir: ./packages
+        repository: ""
+    package_dir: /luet-extensions
+    retrieve: []
+    unpack: false
+    includes: []
+    excludes: []
+    build_options:
+        pushimagerepository: luet/cache
+        pullimagerepository:
+            - luet/cache
+        pullfirst: false
+        keepimg: false
+        push: false
+        concurrency: 0
+        compressiontype: ""
+        wait: false
+        onlydeps: false
+        nodeps: false
+        solveroptions: {}
+        buildvaluesfile: []
+        buildvalues:
+            - {}
+        packagetargetonly: false
+        rebuild: false
+        backendargs: []
+        backendtype: ""
+        templatesfolder: []
+    copy: []
+    requires_final_images: false
+checksums:
+    sha256: 2990ee854ff848d3bea63d3b730012a8111a53b8e84777c213ff25b79544a94f
+compressiontype: zstd
+files:
+    - usr/bin/luet-abuildspec
+    - usr/bin/luet-apkbuildtospec
+    - usr/bin/luet-autobump-github
+    - usr/bin/luet-genimage-build
+    - usr/bin/luet-genimage-clean
+    - usr/bin/luet-geniso
+    - usr/bin/luet-geniso-isospec
+    - usr/bin/luet-k8s-build-scheduler
+    - usr/bin/luet-parallel-tools-commondeps
+    - usr/bin/luet-portage
+    - usr/bin/luet-qa-artefacts
+    - usr/bin/luet-qa-repo-fileconflicts
+    - usr/bin/luet-remote-exec
+    - usr/bin/luet-repo-devkit
+    - usr/share/luet-extension/geniso/09_prepare.sh
+    - usr/share/luet-extension/geniso/10_pack_rootfs.sh
+    - usr/share/luet-extension/geniso/13_prepare_iso.sh
+    - usr/share/luet-extension/geniso/14_generate_iso.sh
+    - usr/share/luet-extension/geniso/func.sh
+runtime:
+    id: 0
+    name: luet-devkit
+    version: 0.13.1
+    category: system
+    useflags: []
+    state: ""
+    packagerequires: []
+    packageconflicts: []
+    provides: []
+    hidden: false
+    annotations: {}
+    path: ""
+    description: Luet devkit package
+    uri: []
+    license: ""
+    buildtimestamp: ""
+    labels:
+        github.owner: geaaru
+        github.repo: extensions
+    treedir: ""
+    repository: ""

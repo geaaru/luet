@@ -1,0 +1,90 @@
+path: distrobuilder-testing-app-emulation-20221113+2.package.tar.zst
+compilespec:
+    steps:
+        - cd /go/src/github.com/geaaru/distrobuilder && git checkout v${PACKAGE_VERSION%\+*} && make && mkdir /distrobuilder-testing/usr/bin -p && mv /go/bin/distrobuilder /distrobuilder-testing/usr/bin/distrobuilder
+    env:
+        - GOPATH=/go
+        - DEBIAN_FRONTEND=noninteractive
+    prelude:
+        - apt-get update && apt-get install -y git make && mkdir /go/src/github.com/geaaru/ -p && cd /go/src/github.com/geaaru/ && git clone https://github.com/geaaru/distrobuilder.git
+    image: golang
+    seed: golang
+    package:
+        id: 0
+        name: distrobuilder-testing
+        version: 20221113+2
+        category: app-emulation
+        useflags: []
+        state: ""
+        packagerequires: []
+        packageconflicts: []
+        provides: []
+        hidden: false
+        annotations: {}
+        path: ""
+        description: System container image builder for LXC and LXD
+        uri:
+            - https://github.com/lxc/distrobuilder
+        license: Apache-2.0
+        buildtimestamp: 2022-11-17 21:44:48.118139508 +0000 UTC m=+30.997685708
+        labels:
+            github.owner: distrobuilder
+            github.repo: geaaru
+        treedir: ./packages
+        repository: ""
+    package_dir: /distrobuilder-testing
+    retrieve: []
+    unpack: false
+    includes: []
+    excludes: []
+    build_options:
+        pushimagerepository: luet/cache
+        pullimagerepository:
+            - luet/cache
+        pullfirst: false
+        keepimg: false
+        push: false
+        concurrency: 0
+        compressiontype: ""
+        wait: false
+        onlydeps: false
+        nodeps: false
+        solveroptions: {}
+        buildvaluesfile: []
+        buildvalues:
+            - {}
+        packagetargetonly: false
+        rebuild: false
+        backendargs: []
+        backendtype: ""
+        templatesfolder: []
+    copy: []
+    requires_final_images: false
+checksums:
+    sha256: d5f98b251b50e62a2b48a81cdfb9e7793ca11451390023d44c54ff65db7fe57e
+compressiontype: zstd
+files:
+    - usr/bin/distrobuilder
+runtime:
+    id: 0
+    name: distrobuilder-testing
+    version: 20221113+2
+    category: app-emulation
+    useflags: []
+    state: ""
+    packagerequires: []
+    packageconflicts: []
+    provides: []
+    hidden: false
+    annotations: {}
+    path: ""
+    description: System container image builder for LXC and LXD
+    uri:
+        - https://github.com/lxc/distrobuilder
+    license: Apache-2.0
+    buildtimestamp: ""
+    labels:
+        github.owner: distrobuilder
+        github.repo: geaaru
+    treedir: ""
+    repository: ""

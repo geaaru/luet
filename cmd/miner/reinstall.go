@@ -48,7 +48,7 @@ func NewReinstallPackage(config *cfg.LuetConfig) *cobra.Command {
 			force, _ := cmd.Flags().GetBool("force")
 
 			for _, pstr := range args {
-				p, err := helpers.ParsePackageStr(pstr)
+				p, err := helpers.ParsePackageStr(config, pstr)
 				if err != nil {
 					fmt.Println("Error on parse package string " + pstr + ": " +
 						err.Error())

@@ -1,0 +1,3 @@
+install:
+- chown mottainai-agent:mottainai -R /srv/mottainai
+- cd /usr/lib/systemd/system && if [ ! -e mottainai-agent.service ] ; then ln -s /srv/mottainai/systemd/* . ; fi

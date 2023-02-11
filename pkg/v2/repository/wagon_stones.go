@@ -447,7 +447,12 @@ func (s *WagonStones) analyzePackageDir(
 
 	match := false
 
-	// For now only match category and name
+	if len(opts.Names) > 0 {
+		if helpers.ContainsElem(&opts.Names, art.Runtime.Name) {
+			match = true
+		}
+	}
+
 	if len(opts.Packages) > 0 {
 		for idx, _ := range opts.Packages {
 

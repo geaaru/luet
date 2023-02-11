@@ -1,0 +1,15 @@
+category: app-emulation
+conflicts: null
+description: Supply a way to deploy a complex environment to an LXD Cluster or LXD
+  standalone installation
+id: 0
+labels:
+  github.owner: lxd-compose
+  github.repo: MottainaiCI
+license: GPL-3.0
+name: lxd-compose
+path: packages/lxd-compose
+requires: null
+uri:
+- https://github.com/MottainaiCI/lxd-compose
+version: 0.25.0

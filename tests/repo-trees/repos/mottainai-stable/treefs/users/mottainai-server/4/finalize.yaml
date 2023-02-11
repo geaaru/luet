@@ -1,0 +1,4 @@
+install:
+- entities apply --safe=true -f /etc/shadow /etc/entities/mottainai_server_shadow_entity_add.yaml || true
+- entities apply --safe=true -f /etc/passwd /etc/entities/mottainai_server_entity_add.yaml || true
+

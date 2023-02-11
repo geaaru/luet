@@ -1,0 +1,7 @@
+category: utils
+conflicts: null
+id: 0
+name: keybase-tools
+path: packages/keybase-tools
+requires: null
+version: "0.4"

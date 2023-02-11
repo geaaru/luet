@@ -1,0 +1,84 @@
+path: filter-extension-0.1.package.tar.zst
+compilespec:
+    steps:
+        - CGO_ENABLED=0 go build -o luet-filter ./luet-filter.go
+        - cp -rfv luet-filter /container/usr/bin
+        - chmod +x /container/usr/bin/luet-filter
+    env: []
+    prelude:
+        - mkdir -p /container/usr/bin
+    image: golang:alpine
+    seed: golang:alpine
+    package:
+        id: 0
+        name: filter
+        version: "0.1"
+        category: extension
+        useflags: []
+        state: ""
+        packagerequires: []
+        packageconflicts: []
+        provides: []
+        hidden: false
+        annotations: {}
+        path: ""
+        description: Luet search filter utils
+        uri: []
+        license: ""
+        buildtimestamp: 2022-01-27 19:36:48.28513185 +0000 UTC m=+1549.708067335
+        labels: {}
+        treedir: ./packages
+        repository: ""
+    package_dir: /container
+    retrieve: []
+    unpack: false
+    includes: []
+    excludes: []
+    build_options:
+        pushimagerepository: luet/cache
+        pullimagerepository:
+            - luet/cache
+        pullfirst: false
+        keepimg: false
+        push: false
+        concurrency: 0
+        compressiontype: ""
+        wait: false
+        onlydeps: false
+        nodeps: false
+        solveroptions: {}
+        buildvaluesfile: []
+        buildvalues:
+            - {}
+        packagetargetonly: false
+        rebuild: false
+        backendargs: []
+        backendtype: ""
+        templatesfolder: []
+    copy: []
+    requires_final_images: false
+checksums:
+    sha256: d0a500846d83f56ee18d5a86828018dd4beb5f20f259e06bd036c235c3c9ebff
+compressiontype: zstd
+files:
+    - usr/bin/luet-filter
+runtime:
+    id: 0
+    name: filter
+    version: "0.1"
+    category: extension
+    useflags: []
+    state: ""
+    packagerequires: []
+    packageconflicts: []
+    provides: []
+    hidden: false
+    annotations: {}
+    path: ""
+    description: Luet search filter utils
+    uri: []
+    license: ""
+    buildtimestamp: ""
+    labels: {}
+    treedir: ""
+    repository: ""

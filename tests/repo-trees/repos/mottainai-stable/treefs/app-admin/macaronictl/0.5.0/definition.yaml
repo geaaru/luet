@@ -1,0 +1,14 @@
+category: app-admin
+conflicts: null
+description: Macaroni Linux System Management CLI
+id: 0
+labels:
+  github.owner: macaronictl
+  github.repo: funtoo
+license: GPL-3.0
+name: macaronictl
+path: packages/macaronictl
+requires: null
+uri:
+- https://github.com/funtoo/macaronictl
+version: 0.5.0

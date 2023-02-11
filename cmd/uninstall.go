@@ -54,7 +54,7 @@ of the finalizers.
 			toRemove := []*pkg.DefaultPackage{}
 			for _, a := range args {
 
-				pack, err := helpers.ParsePackageStr(a)
+				pack, err := helpers.ParsePackageStr(config, a)
 				if err != nil {
 					Fatal("Invalid package string ", a, ": ", err.Error())
 				}

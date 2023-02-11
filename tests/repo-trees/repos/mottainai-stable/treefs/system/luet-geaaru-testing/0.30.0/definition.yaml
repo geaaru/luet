@@ -1,0 +1,10 @@
+category: system
+conflicts: null
+id: 0
+labels:
+  github.owner: geaaru
+  github.repo: luet
+name: luet-geaaru-testing
+path: packages/luet-geaaru-testing
+requires: null
+version: 0.30.0

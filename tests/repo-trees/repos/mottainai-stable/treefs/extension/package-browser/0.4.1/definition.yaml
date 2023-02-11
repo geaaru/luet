@@ -1,0 +1,10 @@
+category: extension
+conflicts: null
+id: 0
+labels:
+  github.owner: Luet-lab
+  github.repo: package-browser
+name: package-browser
+path: packages/luet-extensions/package-browser
+requires: null
+version: 0.4.1

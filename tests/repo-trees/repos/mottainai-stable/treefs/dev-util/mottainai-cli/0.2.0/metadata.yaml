@@ -1,0 +1,106 @@
+path: mottainai-cli-dev-util-0.2.0.package.tar.zst
+compilespec:
+    steps:
+        - cd go/src/github.com/${GITHUB_ORG}/mottainai-server/mottainai-cli/ && mv mottainai-cli /usr/bin/mottainai-cli
+    env:
+        - GOPATH=/luetbuild/go/
+    prelude: []
+    image: ""
+    seed: luet/cache:1e39afaeb3e0d5f927c761fc12720b3f782fc646ff8967044d381b056709db87
+    package:
+        id: 0
+        name: mottainai-cli
+        version: 0.2.0
+        category: dev-util
+        useflags: []
+        state: ""
+        packagerequires:
+            - id: 0
+              name: mottainai-server
+              version: '>=0'
+              category: dev-util
+              useflags: []
+              state: ""
+              packagerequires: []
+              packageconflicts: []
+              provides: []
+              hidden: false
+              annotations: {}
+              path: ""
+              description: ""
+              uri: []
+              license: ""
+              buildtimestamp: ""
+              labels: {}
+              treedir: ""
+              repository: ""
+        packageconflicts: []
+        provides: []
+        hidden: false
+        annotations: {}
+        path: ""
+        description: ""
+        uri: []
+        license: ""
+        buildtimestamp: 2022-06-14 07:25:17.151271185 +0000 UTC m=+289.125208723
+        labels:
+            github.owner: mottainai-cli
+            github.repo: MottainaiCI
+        treedir: ./packages
+        repository: ""
+    package_dir: ""
+    retrieve: []
+    unpack: false
+    includes:
+        - /usr/bin/mottainai-cli
+    excludes: []
+    build_options:
+        pushimagerepository: luet/cache
+        pullimagerepository:
+            - luet/cache
+        pullfirst: false
+        keepimg: false
+        push: false
+        concurrency: 0
+        compressiontype: ""
+        wait: false
+        onlydeps: false
+        nodeps: false
+        solveroptions: {}
+        buildvaluesfile: []
+        buildvalues:
+            - {}
+        packagetargetonly: false
+        rebuild: false
+        backendargs: []
+        backendtype: ""
+        templatesfolder: []
+    copy: []
+    requires_final_images: false
+checksums:
+    sha256: 2de984852e81ae2781e170c3a7d26ff476c483c807c1e0a6e558fb31cded62d2
+compressiontype: zstd
+files:
+    - usr/bin/mottainai-cli
+runtime:
+    id: 0
+    name: mottainai-cli
+    version: 0.2.0
+    category: dev-util
+    useflags: []
+    state: ""
+    packagerequires: []
+    packageconflicts: []
+    provides: []
+    hidden: false
+    annotations: {}
+    path: ""
+    description: ""
+    uri: []
+    license: ""
+    buildtimestamp: ""
+    labels:
+        github.owner: mottainai-cli
+        github.repo: MottainaiCI
+    treedir: ""
+    repository: ""

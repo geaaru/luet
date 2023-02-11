@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd_database
 
@@ -35,7 +35,7 @@ To return also files:
 			aManager.Setup()
 
 			for _, a := range args {
-				pack, err := helpers.ParsePackageStr(a)
+				pack, err := helpers.ParsePackageStr(cfg, a)
 				if err != nil {
 					continue
 				}

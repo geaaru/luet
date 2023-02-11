@@ -1,0 +1,19 @@
+category: users
+conflicts: null
+id: 0
+name: mottainai-server
+path: packages/users/mottainai-server
+requires:
+- category: groups
+  conflicts: null
+  id: 0
+  name: mottainai
+  requires: null
+  version: '>=0'
+- category: system
+  conflicts: null
+  id: 0
+  name: entities
+  requires: null
+  version: '>=0.5'
+version: "4"
