@@ -197,7 +197,7 @@ func newBuildCommand(config *cfg.LuetConfig) *cobra.Command {
 				}
 			} else if !all {
 				for _, a := range args {
-					pack, err := helpers.ParsePackageStr(a)
+					pack, err := helpers.ParsePackageStr(config, a)
 					if err != nil {
 						Fatal("Invalid package string ", a, ": ", err.Error())
 					}

@@ -63,7 +63,7 @@ func newPackCommand(config *cfg.LuetConfig) *cobra.Command {
 
 			packageName := args[0]
 
-			p, err := helpers.ParsePackageStr(packageName)
+			p, err := helpers.ParsePackageStr(config, packageName)
 			if err != nil {
 				Fatal("Invalid package string ", packageName, ": ", err.Error())
 			}

@@ -89,7 +89,7 @@ func NewTreeImageCommand() *cobra.Command {
 
 			a := args[0]
 
-			pack, err := helpers.ParsePackageStr(a)
+			pack, err := helpers.ParsePackageStr(LuetCfg, a)
 			if err != nil {
 				Fatal("Invalid package string ", a, ": ", err.Error())
 			}
