@@ -439,6 +439,93 @@ func (s *Solver) Install(pkgsref *[]*pkg.DefaultPackage) (*artifact.ArtifactsPac
 		s.MapRepos[repo.Name] = wr
 	}
 
+	// NOTE: Using a common search for all packages doesn't
+	//       permit to rerieve the map between package used on
+	//       search and the packages returned when it's used
+	//       the provides.
+	//       To resolve this I need to iterate over all packages
+	//       and to create a provides map to join common packages.
+	provMaps := make(map[string]map[string][]*artifact.PackageArtifact, 0)
+	for _, arts := range s.availableArtsMap.Artifacts {
+		// NOTE: I need to iterate over all value packages because provides
+		//       could be different.
+		ppmap := make(map[string]bool, 0)
+		for _, art := range arts {
+			p := art.GetPackage()
+			if p.HasProvides() {
+				for _, prov := range p.GetProvides() {
+					ppmap[prov.PackageName()] = true
+				}
+			}
+		} // end for arts
+
+		if len(ppmap) > 0 {
+			p := arts[0].GetPackage()
+			for k, _ := range ppmap {
+				if val, ok := provMaps[k]; ok {
+					if pval, ok2 := val[p.PackageName()]; ok2 {
+						val[p.PackageName()] = append(pval, arts...)
+					} else {
+						val[p.PackageName()] = arts
+					}
+					provMaps[k] = val
+				} else {
+					val := make(map[string][]*artifact.PackageArtifact, 0)
+					val[p.PackageName()] = arts
+					provMaps[k] = val
+				}
+			}
+		}
+
+		ppmap = nil
+	}
+	// Check generated prov map
+	if len(provMaps) > 0 {
+		for k, m := range provMaps {
+			if len(m) > 1 {
+				arts := []*artifact.PackageArtifact{}
+				installedPkg := ""
+				for k, pp := range m {
+					if _, present := s.systemMap.Packages[k]; present {
+						installedPkg = k
+						break
+					}
+					arts = append(arts, pp...)
+				}
+
+				if installedPkg != "" {
+
+					Debug(fmt.Sprintf(
+						"For the provides %s found multiple packages. But is already installed %s.",
+						k, installedPkg))
+
+					// Delete all packages because is already installed.
+					for k, _ := range m {
+						delete(s.availableArtsMap.Artifacts, k)
+					}
+				} else {
+					// Sort packages for requires and repos
+					wagon.SortArtifactList4ReposAndRequires(
+						&arts, &s.MapRepos)
+
+					Debug(fmt.Sprintf(
+						"For provide %s found multiple packages. Using %s",
+						k, arts[0].GetPackage().PackageName()))
+
+					// Delete the packages related with the same provides
+					// loser.
+					for k, _ := range m {
+						if k != arts[0].GetPackage().PackageName() {
+							delete(s.availableArtsMap.Artifacts, k)
+						}
+					}
+
+				}
+
+			}
+		}
+	}
+
 	// Process all selected packages to install.
 	// Created the key list to permit changes on the map
 	// meantime that packages are elaborated.
@@ -506,6 +593,7 @@ func (s *Solver) resolvePackage(pkgstr string, stack []string) error {
 
 	for idx, _ := range selectedArts {
 		art := selectedArts[idx]
+
 		// If version is already been processed and banned I will
 		// skip the artefact
 		if _, ok := bannedVersion[art.GetPackage().GetVersion()]; ok {
@@ -835,7 +923,6 @@ func (s *Solver) prepareConflictsAndSystemMap(systemPkgs *pkg.Packages, withReve
 		}
 
 		s.systemMap.Add(p.PackageName(), p.(*pkg.DefaultPackage))
-
 	}
 
 }
