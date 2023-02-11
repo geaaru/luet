@@ -405,11 +405,30 @@ func (m *ArtifactsManager) _install_s1(
 	sysPkgsMap := syspkgs.ToMap()
 	spm := *sysPkgsMap
 
+	// Create a provides map of the installed package.
+	// (TODO: Fix this on database. where is used ProvidesDatabase in memory
+	//        without a correct setup)
+	provMap := make(map[string]*pkg.DefaultPackage, 0)
+	for _, p := range *syspkgs {
+		if p.HasProvides() {
+			for _, pp := range p.GetProvides() {
+				provMap[pp.PackageName()] = p.(*pkg.DefaultPackage)
+			}
+		}
+	}
+
 	for _, p := range packs {
 		if _, ok := spm[p.PackageName()]; !ok {
-			ans = append(ans, p)
+			// Check if the package is available as provides
+			if prov, ok := provMap[p.PackageName()]; ok {
+				Warning(fmt.Sprintf("%s already provided by %s.",
+					p.PackageName(), prov.PackageName()))
+			} else {
+				ans = append(ans, p)
+			}
 		} else {
-			Warning(fmt.Sprintf("[%s] already installed.", p.PackageName()))
+			Warning(fmt.Sprintf("%s already installed.",
+				aurora.Bold(p.PackageName())))
 		}
 	}
 
