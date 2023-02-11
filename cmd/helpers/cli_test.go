@@ -24,18 +24,18 @@ import (
 )
 
 var _ = Describe("CLI Helpers", func() {
+
+	config := cfg.NewLuetConfig(nil)
+	config.GetSystem().DatabasePath = "../../tests/repo-trees"
+	repo := cfg.NewLuetRepository("mottainai-stable", "http",
+		"Mottainai Stable Repo",
+		[]string{"http://mydomain.it"},
+		10, true, true)
+	config.SystemRepositories = append(
+		config.SystemRepositories, *repo)
+
 	Context("Can parse package strings correctly", func() {
 		It("accept single package names", func() {
-
-			config := cfg.NewLuetConfig(nil)
-			config.GetSystem().DatabasePath = "../../tests/repo-trees"
-			repo := cfg.NewLuetRepository("mottainai-stable", "http",
-				"Mottainai Stable Repo",
-				[]string{"http://mydomain.it"},
-				10, true, true)
-			config.SystemRepositories = append(
-				config.SystemRepositories, *repo)
-
 			pack, err := ParsePackageStr(config, "foo")
 			Expect(err).To(HaveOccurred())
 			Expect(pack == nil).To(Equal(true))
@@ -43,17 +43,6 @@ var _ = Describe("CLI Helpers", func() {
 		})
 
 		It("accept single package names and resolve category", func() {
-
-			config := cfg.NewLuetConfig(nil)
-			config.GetGeneral().Debug = true
-			config.GetSystem().DatabasePath = "../../tests/repo-trees"
-			repo := cfg.NewLuetRepository("mottainai-stable", "http",
-				"Mottainai Stable Repo",
-				[]string{"http://mydomain.it"},
-				10, true, true)
-			config.SystemRepositories = append(
-				config.SystemRepositories, *repo)
-
 			pack, err := ParsePackageStr(config, "lxd-compose")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(pack.GetName()).To(Equal("lxd-compose"))
