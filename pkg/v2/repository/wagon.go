@@ -346,24 +346,34 @@ func (w *WagonRepository) ExplodeMetadata() error {
 						defFile, err.Error()))
 			}
 
-			if len(dp.Provides) > 0 {
-				if catalog.Index[idx].Runtime != nil {
+			// Always update provides and requires to fix broken metadata at least until
+			// create-repo method is been rebuild.
+			if catalog.Index[idx].Runtime != nil {
+				if len(dp.Provides) != len(catalog.Index[idx].Runtime.Provides) || len(dp.Provides) > 0 {
 					catalog.Index[idx].Runtime.Provides = dp.Provides
-				} else if catalog.Index[idx].CompileSpec != nil && catalog.Index[idx].CompileSpec.Package != nil {
 					catalog.Index[idx].CompileSpec.Package.Provides = dp.Provides
 				}
-				// Write provides on map
-				for _, prov := range dp.Provides {
-					provides.Add(prov.PackageName(), pkg)
+
+				if len(dp.PackageRequires) > 0 || len(dp.PackageRequires) != len(catalog.Index[idx].Runtime.PackageRequires) {
+					catalog.Index[idx].Runtime.PackageRequires = dp.PackageRequires
+					catalog.Index[idx].CompileSpec.Package.PackageRequires = dp.PackageRequires
+				}
+
+			} else if catalog.Index[idx].CompileSpec != nil && catalog.Index[idx].CompileSpec.Package != nil {
+
+				if len(dp.Provides) != len(catalog.Index[idx].CompileSpec.Package.Provides) || len(dp.Provides) > 0 {
+					catalog.Index[idx].CompileSpec.Package.Provides = dp.Provides
+				}
+
+				if len(dp.PackageRequires) > 0 || len(dp.PackageRequires) != len(catalog.Index[idx].CompileSpec.Package.PackageRequires) {
+					catalog.Index[idx].CompileSpec.Package.PackageRequires = dp.PackageRequires
 				}
 			}
 
-			// Override also requires from definition.yaml
-			if len(dp.PackageRequires) > 0 {
-				if catalog.Index[idx].Runtime != nil {
-					catalog.Index[idx].Runtime.PackageRequires = dp.PackageRequires
-				} else if catalog.Index[idx].CompileSpec != nil && catalog.Index[idx].CompileSpec.Package != nil {
-					catalog.Index[idx].CompileSpec.Package.PackageRequires = dp.PackageRequires
+			if len(dp.Provides) > 0 {
+				// Write provides on map
+				for _, prov := range dp.Provides {
+					provides.Add(prov.PackageName(), pkg)
 				}
 			}
 
