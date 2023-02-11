@@ -16,6 +16,8 @@
 package cmd_helpers_test
 
 import (
+	"path/filepath"
+
 	. "github.com/geaaru/luet/cmd/helpers"
 	cfg "github.com/geaaru/luet/pkg/config"
 
@@ -25,8 +27,11 @@ import (
 
 var _ = Describe("CLI Helpers", func() {
 
-	config := cfg.NewLuetConfig(nil)
-	config.GetSystem().DatabasePath = "../../tests/repo-trees"
+	dbpath, _ := filepath.Abs("../../tests/repo-trees")
+	// At the moment the wagon use global variable
+	// to retrieve database Path.
+	config := cfg.LuetCfg
+	config.GetSystem().DatabasePath = dbpath
 	repo := cfg.NewLuetRepository("mottainai-stable", "http",
 		"Mottainai Stable Repo",
 		[]string{"http://mydomain.it"},
@@ -36,6 +41,7 @@ var _ = Describe("CLI Helpers", func() {
 
 	Context("Can parse package strings correctly", func() {
 		It("accept single package names", func() {
+
 			pack, err := ParsePackageStr(config, "foo")
 			Expect(err).To(HaveOccurred())
 			Expect(pack == nil).To(Equal(true))
@@ -43,6 +49,7 @@ var _ = Describe("CLI Helpers", func() {
 		})
 
 		It("accept single package names and resolve category", func() {
+
 			pack, err := ParsePackageStr(config, "lxd-compose")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(pack.GetName()).To(Equal("lxd-compose"))
