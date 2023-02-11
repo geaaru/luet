@@ -10,8 +10,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"hash"
+	"strings"
 
 	"github.com/geaaru/luet/pkg/helpers/tools"
+	gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 )
 
 // PackageThin is a thin representation
@@ -48,6 +50,40 @@ func (p *PackageThin) PackageName() string {
 	}
 }
 
+func (p *PackageThin) ToGentooPackage() (*gentoo.GentooPackage, error) {
+
+	var cond gentoo.PackageCond
+
+	if strings.HasPrefix(p.Version, ">=") {
+		cond = gentoo.PkgCondGreaterEqual
+	} else if strings.HasPrefix(p.Version, "<=") {
+		cond = gentoo.PkgCondLessEqual
+	} else if strings.HasPrefix(p.Version, "!=") {
+		cond = gentoo.PkgCondNot
+	} else if strings.HasPrefix(p.Version, "=") {
+		cond = gentoo.PkgCondEqual
+	} else if strings.HasPrefix(p.Version, ">") {
+		cond = gentoo.PkgCondGreater
+	} else if strings.HasPrefix(p.Version, "<") {
+		cond = gentoo.PkgCondLess
+	}
+
+	ans, err := gentoo.ParsePackageStr(
+		fmt.Sprintf("%s-%s",
+			p.PackageName(),
+			strings.Trim(p.GetVersion(), "><=!"),
+		),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ans.Condition = cond
+
+	return ans, nil
+}
+
 func (p *PackageThin) GetVersion() string           { return p.Version }
 func (p *PackageThin) GetCategory() string          { return p.Category }
 func (p *PackageThin) GetName() string              { return p.Name }
@@ -67,6 +103,16 @@ func (p *PackageThin) HasProvides() bool {
 	return tools.Ternary(p.Provides != nil, len(p.Provides) > 0, false)
 }
 
+func (p *PackageThin) RequirePackage(m *PackageThin) bool {
+	for _, r := range p.Requires {
+		if r.AtomMatches(m) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (p *PackageThin) AtomMatches(m *PackageThin) bool {
 	if p.GetName() == m.GetName() && p.GetCategory() == m.GetCategory() {
 		return true
@@ -84,4 +130,8 @@ func (p *PackageThin) GenerateHash() string {
 	var h []byte = pmd5.Sum(nil)
 
 	return hex.EncodeToString(h)
+}
+
+func (p *PackageThin) HumanReadableString() string {
+	return fmt.Sprintf("%s/%s-%s", p.Category, p.Name, p.Version)
 }

@@ -97,8 +97,7 @@ func (s *Solver) sortPkgsThinArr(refarr *[]*pkg.PackageThin) error {
 	// zero or less requires and at the end the packages
 	// with more requires. If the number of requires are
 	// equal then it uses the PackageName() for sorting.
-	sort.Slice(arr[:], func(i, j int) bool {
-
+	sortPkgThin := func(i, j int) bool {
 		pi := arr[i]
 		pj := arr[j]
 		ireq := pi.HasRequires()
@@ -115,7 +114,9 @@ func (s *Solver) sortPkgsThinArr(refarr *[]*pkg.PackageThin) error {
 			return true
 		}
 		return false
-	})
+	}
+
+	sort.Slice(arr[:], sortPkgThin)
 
 	for _, p := range *refarr {
 
@@ -181,14 +182,24 @@ func (s *Solver) sortPkgsThinArr(refarr *[]*pkg.PackageThin) error {
 		// TODO: review with a more optimized logic
 
 		for len(queue) > 0 {
-
 			pkgs2remove := []string{}
 			for k, p := range queue {
 
 				allReqok := true
 				for _, r := range p.Requires {
 					if _, ok := pinject[r.PackageName()]; !ok {
-						allReqok = false
+						// Check if there are dependency cycles.
+						// I prefer leave this check only here to reduce
+						// the impact of a wrong order.
+						rr, _ := queue[r.PackageName()]
+						if rr != nil && rr.RequirePackage(p) {
+							Warning(fmt.Sprintf(
+								"Found dependency cycle between %s and %s. I break cycle. Check the repo.",
+								p.HumanReadableString(), r.HumanReadableString()))
+							allReqok = true
+						} else {
+							allReqok = false
+						}
 						break
 					}
 				}
