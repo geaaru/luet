@@ -111,6 +111,12 @@ func (sc *LuetSystemConfig) GetRepoDatabaseDirPath(name string) string {
 	return dbpath
 }
 
+func (c *LuetConfig) GetLockFilePath(lockfile string) string {
+	// NOTE: Also when config_from_host is true I prefer
+	//       using the rootfs directory for locks.
+	return filepath.Join(c.System.Rootfs, "/var/lock/", lockfile)
+}
+
 func (sc *LuetSystemConfig) GetSystemRepoDatabaseDirPath() string {
 	dbpath := filepath.Join(sc.Rootfs, sc.DatabasePath)
 	err := os.MkdirAll(dbpath, os.ModePerm)

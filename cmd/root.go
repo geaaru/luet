@@ -1,18 +1,7 @@
-// Copyright © 2019-2021 Ettore Di Giacinto <mudler@gentoo.org>
-//                       Daniele Rondina <geaaru@sabayonlinux.org>
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, see <http://www.gnu.org/licenses/>.
+/*
+Copyright © 2021-2023 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
+*/
 
 package cmd
 
@@ -24,14 +13,13 @@ import (
 	"runtime"
 	"strings"
 
-	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	"github.com/marcsauter/single"
-
 	util "github.com/geaaru/luet/cmd/util"
 	config "github.com/geaaru/luet/pkg/config"
 	helpers "github.com/geaaru/luet/pkg/helpers"
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 	. "github.com/geaaru/luet/pkg/logger"
 	repo "github.com/geaaru/luet/pkg/repository"
+
 	tarf "github.com/geaaru/tar-formers/pkg/executor"
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
 	"github.com/spf13/cobra"
@@ -39,27 +27,6 @@ import (
 
 var cfgFile string
 var Verbose bool
-var LockedCommands = []string{"install", "uninstall", "upgrade"}
-
-func handleLock() {
-	if os.Getenv("LUET_NOLOCK") != "true" {
-		if len(os.Args) > 1 {
-			for _, lockedCmd := range LockedCommands {
-				if os.Args[1] == lockedCmd {
-					s := single.New("luet")
-					if err := s.CheckLock(); err != nil && err == single.ErrAlreadyRunning {
-						Fatal("another instance of the app is already running, exiting")
-					} else if err != nil {
-						// Another error occurred, might be worth handling it as well
-						Fatal("failed to acquire exclusive app lock:", err.Error())
-					}
-					defer s.TryUnlock()
-					break
-				}
-			}
-		}
-	}
-}
 
 func LoadConfig(c *config.LuetConfig) error {
 	// If a config file is found, read it in.
@@ -120,6 +87,8 @@ func Execute() {
 	var cfg *config.LuetConfig = config.LuetCfg
 
 	initConfig(cfg)
+
+	lock := util.NewLockGuard()
 
 	// RootCmd represents the base command when called without any subcommands
 	var RootCmd = &cobra.Command{
@@ -184,7 +153,14 @@ func Execute() {
 				Fatal("failed on init tmp basedir:", err.Error())
 			}
 
-			handleLock()
+			if len(os.Args) > 1 {
+				locked, err := lock.TryLock(os.Args[1], cfg)
+				if err != nil {
+					Fatal(err.Error())
+				} else if !locked {
+					Fatal("Error on lock luet.lock file. Another process is running?")
+				}
+			}
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {
 			// Cleanup all tmp directories used by luet
@@ -199,6 +175,7 @@ func Execute() {
 				Warning("failed on close database:", err.Error())
 			}
 
+			lock.Unlock()
 		},
 		SilenceErrors: true,
 	}
