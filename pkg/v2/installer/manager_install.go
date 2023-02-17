@@ -73,8 +73,12 @@ func (m *ArtifactsManager) showPackage2install(
 	if len(p2r.Artifacts) > 0 {
 		for _, art := range p2r.Artifacts {
 			p := art.GetPackage()
+			license := p.License
+			if len(license) > 50 {
+				license = license[0:47] + "..."
+			}
 			t.AppendRow([]interface{}{
-				p.PackageName(), "D", p.GetVersion(), p.GetRepository(), p.License,
+				p.PackageName(), "D", p.GetVersion(), p.GetRepository(), license,
 			})
 		}
 	}
@@ -82,8 +86,12 @@ func (m *ArtifactsManager) showPackage2install(
 	if len(p2i.Artifacts) > 0 {
 		for _, art := range p2i.Artifacts {
 			p := art.GetPackage()
+			license := p.License
+			if len(license) > 50 {
+				license = license[0:47] + "..."
+			}
 			t.AppendRow([]interface{}{
-				p.PackageName(), "N", p.GetVersion(), p.GetRepository(), p.License,
+				p.PackageName(), "N", p.GetVersion(), p.GetRepository(), license,
 			})
 		}
 	}
