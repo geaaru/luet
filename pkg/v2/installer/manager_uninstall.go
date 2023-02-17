@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package installer
 
@@ -30,13 +30,13 @@ func (m *ArtifactsManager) showRemovePkgsTable(list *[]*pkg.DefaultPackage) {
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(
 		table.Row{
-			"Package", "Version",
+			"Package", "Version", "Repository",
 		},
 	)
 
 	for _, p := range *list {
 		t.AppendRow([]interface{}{
-			p.PackageName(), p.GetVersion(),
+			p.PackageName(), p.GetVersion(), p.GetRepository(),
 		})
 	}
 
