@@ -60,14 +60,6 @@ To force install a package:
 			InfoC(fmt.Sprintf(":rocket:%s %s",
 				Bold(Blue("Luet")), Bold(Blue(util.Version()))))
 
-			for _, a := range args {
-				pack, err := helpers.ParsePackageStr(config, a)
-				if err != nil {
-					Fatal("Invalid package string ", a, ": ", err.Error())
-				}
-				toInstall = append(toInstall, pack)
-			}
-
 			force := config.Viper.GetBool("force")
 			nodeps := config.Viper.GetBool("nodeps")
 			//onlydeps := config.Viper.GetBool("onlydeps")
@@ -128,6 +120,14 @@ To force install a package:
 				ch = nil
 				sem = nil
 
+			}
+
+			for _, a := range args {
+				pack, err := helpers.ParsePackageStr(config, a)
+				if err != nil {
+					Fatal("Invalid package string ", a, ": ", err.Error())
+				}
+				toInstall = append(toInstall, pack)
 			}
 
 			// Load config protect configs
