@@ -5,7 +5,7 @@ See AUTHORS and LICENSE for the license details and contributors.
 package pkg
 
 type PkgsMapList struct {
-	Packages map[string][]*DefaultPackage
+	Packages map[string][]*DefaultPackage `json:"packages_map" yaml:"packages_map"`
 }
 
 func NewPkgsMapList() *PkgsMapList {
