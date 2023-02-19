@@ -101,7 +101,7 @@ multiarch-build:
 multiarch-build-small:
 	@$(MAKE) multiarch-build
 	for file in $(ROOT_DIR)/release/**/* ; do \
-		upx --brute -1 $${file} ; \
+		upx --best --lzma --brute -1 $${file} ; \
 	done
 
 run-tasks: build
