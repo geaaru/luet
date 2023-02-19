@@ -1,14 +1,15 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package repository
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/geaaru/luet/pkg/config"
+	fhelpers "github.com/geaaru/luet/pkg/helpers/file"
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	compression "github.com/geaaru/luet/pkg/v2/compiler/types/compression"
 
@@ -73,7 +74,12 @@ func (w *WagonIdentity) IncrementRevision() {
 func (w *WagonIdentity) Load(f string) error {
 	//previousName := w.LuetRepository.Name
 
-	data, err := ioutil.ReadFile(f)
+	if !fhelpers.Exists(f) {
+		return fmt.Errorf("The repository %s must be synced.",
+			w.LuetRepository.Name)
+	}
+
+	data, err := os.ReadFile(f)
 	if err != nil {
 		return errors.Wrap(err, "Error on reading file "+f)
 	}
