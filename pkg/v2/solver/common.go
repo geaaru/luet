@@ -45,6 +45,7 @@ type PackageSolver interface {
 	Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *artifact.ArtifactsPack, error)
 	SetDatabase(pkg.PackageDatabase)
 	OrderOperations(p2i, p2u, p2r *artifact.ArtifactsPack) (*[]*Operation, error)
+	Orphans() (*[]*pkg.DefaultPackage, error)
 }
 
 func NewOperation(action string, art *artifact.PackageArtifact) *Operation {
