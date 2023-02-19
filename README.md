@@ -16,8 +16,9 @@ It is written entirely in Golang and where used as package manager, it can run i
 
 ## Differences between upstream release
 
-There are so many differences that it becomes challenging to create a list.
-This is also the reason because probably in the near future my fork will be renamed and rebooted.
+There are so many differences that it becomes challenging to create a list because
+after version 0.16.x the two projects get a different path.
+This is also the reason because probably in the near future my fork will be renamed with a different name.
 This fork has the primary scope to be used in [Macaroni OS](https://www.macaronios.org) with specific
 requirements needed for a good integration with [Funtoo Linux](https://funtoo.org) too.
 
@@ -28,7 +29,7 @@ For now, I will try to describe what are the major differences:
   create repos, etc.
 
 * there is only one solver now that doesn't use SAT or QLearning.
-  It's been totally rewritten.
+  It's been totally rewritten from the version 0.30.0.
 
 * i begin to rewrite the docker backend and use the [tar-formers](https://github.com/geaaru/tar-formers/)
   to manage the tar streams. The same library is now used to unpack the tarball and install packages.
@@ -72,6 +73,11 @@ For now, I will try to describe what are the major differences:
 * drop `extensions` and `plugin` support not used
 
 * drop `reclaim` command.
+
+* it supports packages `mask` like in Funtoo/Gentoo. This is a mandatory feature to permit different
+  versions of the same packages and to avoid only the major version release being installed.
+  In a similar way, the same happens when there are two packages supplying the same provides but
+  only one is preferred.
 
 ## Install
 
