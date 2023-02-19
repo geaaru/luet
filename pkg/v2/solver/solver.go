@@ -17,7 +17,6 @@ import (
 	pkg "github.com/geaaru/luet/pkg/package"
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
-	"github.com/geaaru/luet/pkg/v2/repository/mask"
 )
 
 type Solver struct {
@@ -49,7 +48,6 @@ func NewSolver(cfg *config.LuetConfig, opts *SolverOpts) *Solver {
 	}
 }
 
-func (s *Solver) GetType() SolverType               { return SingleCoreV3 }
 func (s *Solver) SetDatabase(d pkg.PackageDatabase) { s.Database = d }
 
 func (s *Solver) createThinPkgsPlist(p2i *artifact.ArtifactsPack, p2imap *artifact.ArtifactsMap) []*pkg.PackageThin {
@@ -382,7 +380,6 @@ func (s *Solver) Install(pkgsref *[]*pkg.DefaultPackage) (*artifact.ArtifactsPac
 	pkgs := *pkgsref
 	// PRE: the input packages are with valid category/name strings.
 
-	searcher := wagon.NewSearcherSimple(s.Config)
 	searchOpts := &wagon.StonesSearchOpts{
 		Packages:         pkgs,
 		Categories:       []string{},
@@ -399,20 +396,15 @@ func (s *Solver) Install(pkgsref *[]*pkg.DefaultPackage) (*artifact.ArtifactsPac
 		OnlyPackages:     true,
 		IgnoreMasks:      s.Opts.IgnoreMasks,
 	}
-	s.Searcher = searcher
 
-	if !s.Opts.IgnoreMasks {
-		maskManager := mask.NewPackagesMaskManager(s.Config)
-		err := maskManager.LoadFiles()
-		if err != nil {
-			return nil, nil, err
-		}
-		s.Searcher.SetMaskManager(maskManager)
+	err := s.prepareSearcher()
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// For every package in list retrieve all available candidates
 	// and store the result on ArtifactsMap
-	reposArtifacts, err := searcher.SearchArtifacts(searchOpts)
+	reposArtifacts, err := s.Searcher.SearchArtifacts(searchOpts)
 	if err != nil {
 		return nil, nil, err
 	}

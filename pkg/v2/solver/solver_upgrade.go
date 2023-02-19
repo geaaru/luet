@@ -786,9 +786,7 @@ func (s *Solver) checkInstalledPackage(p *pkg.DefaultPackage) error {
 	return nil
 }
 
-func (s *Solver) analyzeInstalledPackages() error {
-	s.availableArtsMap = artifact.NewArtifactsMap()
-
+func (s *Solver) prepareSearcher() error {
 	if s.Searcher == nil {
 		s.Searcher = wagon.NewSearcherSimple(s.Config)
 		if !s.Opts.IgnoreMasks {
@@ -799,6 +797,16 @@ func (s *Solver) analyzeInstalledPackages() error {
 			}
 			s.Searcher.SetMaskManager(maskManager)
 		}
+	}
+	return nil
+}
+
+func (s *Solver) analyzeInstalledPackages() error {
+	s.availableArtsMap = artifact.NewArtifactsMap()
+
+	err := s.prepareSearcher()
+	if err != nil {
+		return err
 	}
 
 	waitGroup := &sync.WaitGroup{}
