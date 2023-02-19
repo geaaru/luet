@@ -11,7 +11,7 @@ require (
 	github.com/asdine/storm v0.0.0-20190418133842-e0f77eada154
 	github.com/briandowns/spinner v1.12.1-0.20201220203425-e201aaea0a31
 	github.com/cavaliercoder/grab v1.0.1-0.20201108051000-98a5bfe305ec
-	github.com/containerd/containerd v1.6.15
+	github.com/containerd/containerd v1.6.18
 	github.com/crillab/gophersat v1.3.2-0.20210701121804-72b19f5b6b38
 	github.com/docker/cli v20.10.21+incompatible
 	github.com/docker/distribution v2.8.1+incompatible
