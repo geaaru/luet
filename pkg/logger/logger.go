@@ -45,7 +45,7 @@ func GetAurora() Aurora {
 func Ask() bool {
 	var input string
 
-	Info("Do you want to continue with this operation? [y/N]: ")
+	Msg("info", true, false, "Do you want to continue with this operation? [y/N]: ")
 	_, err := fmt.Scanln(&input)
 	if err != nil {
 		return false
