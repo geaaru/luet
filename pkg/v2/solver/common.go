@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 Macaroni OS Linux
+Copyright © 2022-2023 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package solver
@@ -11,12 +11,6 @@ import (
 )
 
 type SolverType int
-
-const (
-	SingleCoreSimple = 0
-	SingleCoreV2     = 1
-	SingleCoreV3     = 2
-)
 
 const (
 	UpdatePackage = "U"
@@ -41,6 +35,7 @@ func NewSolverOpts() *SolverOpts {
 		IgnoreConflicts: false,
 		NoDeps:          false,
 		IgnoreMasks:     false,
+		Force:           false,
 	}
 }
 
@@ -48,7 +43,6 @@ func NewSolverOpts() *SolverOpts {
 type PackageSolver interface {
 	Install(p *[]*pkg.DefaultPackage) (*artifact.ArtifactsPack, *artifact.ArtifactsPack, error)
 	Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *artifact.ArtifactsPack, error)
-	GetType() SolverType
 	SetDatabase(pkg.PackageDatabase)
 	OrderOperations(p2i, p2u, p2r *artifact.ArtifactsPack) (*[]*Operation, error)
 }
