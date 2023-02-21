@@ -360,9 +360,9 @@ func (w *WagonRepository) ExplodeMetadata() error {
 				}
 
 				// Update annotations
-				if len(db.Annotations) > 0 || len(db.Annotations) != len(catalog.Index[idx].Runtime.Annotations) {
-					catalog.Index[idx].Runtime.Annotations = db.Annotations
-					catalog.Index[idx].CompileSpec.Package.Annotations = db.Annotations
+				if len(dp.Annotations) > 0 || len(dp.Annotations) != len(catalog.Index[idx].Runtime.Annotations) {
+					catalog.Index[idx].Runtime.Annotations = dp.Annotations
+					catalog.Index[idx].CompileSpec.Package.Annotations = dp.Annotations
 				}
 
 			} else if catalog.Index[idx].CompileSpec != nil && catalog.Index[idx].CompileSpec.Package != nil {
@@ -376,8 +376,8 @@ func (w *WagonRepository) ExplodeMetadata() error {
 				}
 
 				// Update annotations
-				if len(db.Annotations) > 0 || len(db.Annotations) != len(catalog.Index[idx].Runtime.Annotations) {
-					catalog.Index[idx].CompileSpec.Package.Annotations = db.Annotations
+				if len(dp.Annotations) > 0 || len(dp.Annotations) != len(catalog.Index[idx].Runtime.Annotations) {
+					catalog.Index[idx].CompileSpec.Package.Annotations = dp.Annotations
 				}
 			}
 
