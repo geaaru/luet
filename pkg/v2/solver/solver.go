@@ -555,7 +555,17 @@ func (s *Solver) Install(pkgsref *[]*pkg.DefaultPackage) (*artifact.ArtifactsPac
 	if s.Opts.NoDeps {
 		for _, pkg := range pkgs {
 			plist, _ := s.candidatesMap.Artifacts[pkg.PackageName()]
-			ans2Install.Artifacts = append(ans2Install.Artifacts, plist[0])
+			if len(plist) == 0 {
+				// POST: Check if the package is provided
+				plist = s.candidatesMap.GetProvides(pkg.PackageName())
+				if len(plist) == 0 {
+					Warning(fmt.Sprintf("No candidates found for %s", pkg.PackageName()))
+				} else {
+					ans2Install.Artifacts = append(ans2Install.Artifacts, plist[0])
+				}
+			} else {
+				ans2Install.Artifacts = append(ans2Install.Artifacts, plist[0])
+			}
 		}
 	} else {
 		for pkg, _ := range s.candidatesMap.Artifacts {

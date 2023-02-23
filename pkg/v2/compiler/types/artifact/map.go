@@ -123,6 +123,22 @@ func (am *ArtifactsMap) GetArtifactsByKey(k string) ([]*PackageArtifact, error) 
 	return val, nil
 }
 
+func (am *ArtifactsMap) GetProvides(p string) []*PackageArtifact {
+	ans := []*PackageArtifact{}
+
+	for k, arts := range am.Artifacts {
+		for _, a := range arts {
+			dp := a.GetPackage()
+			if dp.GetProvidePackage(p) != nil {
+				ans, _ = am.Artifacts[k]
+				break
+			}
+		}
+	}
+
+	return ans
+}
+
 func (am *ArtifactsMap) GetSortedArtifactsByKey(k string) ([]*PackageArtifact, error) {
 	ans := []*PackageArtifact{}
 
