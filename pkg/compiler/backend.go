@@ -26,6 +26,8 @@ func NewBackend(s string) (CompilerBackend, error) {
 		compilerBackend = backend.NewSimpleDockerBackend()
 	case backend.Dockerv2Backend:
 		compilerBackend = backend.NewDockerv2Backend()
+	case backend.Dockerv3Backend:
+		compilerBackend = backend.NewDockerv3Backend()
 	default:
 		return nil, errors.New("invalid backend. Unsupported")
 	}
@@ -51,29 +53,31 @@ type CompilerBackend interface {
 
 // GenerateChanges generates changes between two images using a backend by leveraging export/extractrootfs methods
 // example of json return: [
-//   {
-//     "Image1": "luet/base",
-//     "Image2": "alpine",
-//     "DiffType": "File",
-//     "Diff": {
-//       "Adds": null,
-//       "Dels": [
-//         {
-//           "Name": "/luetbuild",
-//           "Size": 5830706
-//         },
-//         {
-//           "Name": "/luetbuild/Dockerfile",
-//           "Size": 50
-//         },
-//         {
-//           "Name": "/luetbuild/output1",
-//           "Size": 5830656
-//         }
-//       ],
-//       "Mods": null
-//     }
-//   }
+//
+//	{
+//	  "Image1": "luet/base",
+//	  "Image2": "alpine",
+//	  "DiffType": "File",
+//	  "Diff": {
+//	    "Adds": null,
+//	    "Dels": [
+//	      {
+//	        "Name": "/luetbuild",
+//	        "Size": 5830706
+//	      },
+//	      {
+//	        "Name": "/luetbuild/Dockerfile",
+//	        "Size": 50
+//	      },
+//	      {
+//	        "Name": "/luetbuild/output1",
+//	        "Size": 5830656
+//	      }
+//	    ],
+//	    "Mods": null
+//	  }
+//	}
+//
 // ]
 func GenerateChanges(b CompilerBackend, fromImage, toImage backend.Options) ([]artifact.ArtifactLayer, error) {
 

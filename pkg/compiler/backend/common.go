@@ -29,6 +29,7 @@ const (
 	ImgBackend      = "img"
 	DockerBackend   = "docker"
 	Dockerv2Backend = "dockerv2"
+	Dockerv3Backend = "dockerv3"
 )
 
 func imageAvailable(image string) bool {
