@@ -26,10 +26,10 @@ jobs:
       - name: Login to quay with img
         run: echo ${{ secrets.DOCKER_TESTING_PASSWORD }} | sudo img login -u ${{ secrets.DOCKER_TESTING_USERNAME }} --password-stdin quay.io
 
-      - name: Tests with Img backend
+      - name: Tests with Dockerv3 backend
         run: |
             sudo -E env "PATH=$PATH" \
-                    env "LUET_BACKEND=img" \
+                    env "LUET_BACKEND=dockerv3" \
                     make test-integration
 
       - name: Tests with Dockerv2 backend
