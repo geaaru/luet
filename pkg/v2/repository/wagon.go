@@ -376,8 +376,10 @@ func (w *WagonRepository) ExplodeMetadata() error {
 				}
 
 				// Update annotations
-				if len(dp.Annotations) > 0 || len(dp.Annotations) != len(catalog.Index[idx].Runtime.Annotations) {
-					catalog.Index[idx].CompileSpec.Package.Annotations = dp.Annotations
+				if dp.Annotations != nil && catalog.Index[idx].CompileSpec.Package.Annotations != nil {
+					if len(dp.Annotations) > 0 || len(dp.Annotations) != len(catalog.Index[idx].CompileSpec.Package.Annotations) {
+						catalog.Index[idx].CompileSpec.Package.Annotations = dp.Annotations
+					}
 				}
 			}
 
