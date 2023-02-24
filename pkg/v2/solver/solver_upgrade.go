@@ -152,6 +152,8 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 
 			val, ok := s.systemMap.Packages[pname]
 			if ok {
+				// POST: Package to upgrade
+
 				// val is a DefaultPackage that I add to an empty
 				// artefact with only Runtime attribute.
 				// For remove is needed only to create a Stone object.
@@ -160,17 +162,34 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 						Runtime: val[0],
 					})
 
-				if plist[0].GetPackage().PackageName() != pname {
+				acandidate := plist[0]
+
+				if acandidate.GetPackage().PackageName() != pname {
 					// The provides replace the exiting package too.
 					// I add it if there is also the same package as update.
-					if _, present := s.candidatesMap.Artifacts[plist[0].GetPackage().PackageName()]; !present {
-						ans2Install.Artifacts = append(ans2Install.Artifacts, plist[0])
+					if _, present := s.candidatesMap.Artifacts[acandidate.GetPackage().PackageName()]; !present {
+						ans2Install.Artifacts = append(ans2Install.Artifacts, acandidate)
 					} // else ignoring it.
 				} else {
-					ans2Update.Artifacts = append(ans2Update.Artifacts, plist[0])
+					ans2Update.Artifacts = append(ans2Update.Artifacts, acandidate)
 				}
 
-				// POST: Package to upgrade
+				// Check if the package provides packages installed
+				if acandidate.GetPackage().HasProvides() {
+					for _, prov := range acandidate.GetPackage().GetProvides() {
+						if pr, present := s.systemMap.Packages[prov.PackageName()]; present {
+							Debug(fmt.Sprintf("[%s] provides and replace the existing %s.",
+								acandidate.GetPackage().PackageName(),
+								pr[0].HumanReadableString()))
+
+							ans2Remove.Artifacts = append(ans2Remove.Artifacts,
+								&artifact.PackageArtifact{
+									Runtime: pr[0],
+								})
+						}
+					}
+				}
+
 			} else {
 				// POST: New package.
 				ans2Install.Artifacts = append(ans2Install.Artifacts, plist[0])
