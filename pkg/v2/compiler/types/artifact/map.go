@@ -44,6 +44,15 @@ func (ap *ArtifactsPack) ToMap() *ArtifactsMap {
 	return ans
 }
 
+func (ap *ArtifactsPack) IsPresent(p *PackageArtifact) bool {
+	for _, a := range ap.Artifacts {
+		if a.GetPackage().PackageName() == p.GetPackage().PackageName() {
+			return true
+		}
+	}
+	return false
+}
+
 func (am *ArtifactsMap) MatchVersion(p *PackageArtifact) (*PackageArtifact, error) {
 	var ans *PackageArtifact = nil
 	var key string

@@ -182,10 +182,13 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 								acandidate.GetPackage().PackageName(),
 								pr[0].HumanReadableString()))
 
-							ans2Remove.Artifacts = append(ans2Remove.Artifacts,
-								&artifact.PackageArtifact{
-									Runtime: pr[0],
-								})
+							art2rm := &artifact.PackageArtifact{
+								Runtime: pr[0],
+							}
+
+							if !ans2Remove.IsPresent(art2rm) {
+								ans2Remove.Artifacts = append(ans2Remove.Artifacts, art2rm)
+							}
 						}
 					}
 				}
@@ -193,6 +196,9 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 			} else {
 				// POST: New package.
 				ans2Install.Artifacts = append(ans2Install.Artifacts, plist[0])
+
+				// TODO: Check if could be correct check if the package provides
+				//       packages installed in this use case.
 			}
 
 		}
