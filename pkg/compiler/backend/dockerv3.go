@@ -124,6 +124,10 @@ func (d *Dockerv3) ExportImage(opts Options) error {
 	var destPath string
 	if len(paths) > 2 {
 		destPath = strings.Join(paths[:len(paths)-1], "/")
+		err = os.MkdirAll(filepath.Join(dir, destPath), os.ModePerm)
+		if err != nil {
+			return errors.Wrap(err, "Error on prepare export directory")
+		}
 	} else {
 		destPath = opts.PackageDir
 	}
