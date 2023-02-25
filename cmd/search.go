@@ -106,11 +106,13 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 				Matches:          args,
 				Hidden:           hidden,
 				Names:            names,
+				Annotations:      annotations,
 				AndCondition:     !orCond,
 				WithFiles:        files,
 				WithRootfsPrefix: withRootfsPrefix,
 				Full:             full,
 			}
+
 			var res *[]*wagon.Stone
 			var err error
 

@@ -558,6 +558,10 @@ func (s *WagonStones) analyzePackageDir(
 	}
 
 	if len(opts.Annotations) > 0 {
+		if opts.AndCondition {
+			match = false
+		}
+
 		for _, a := range opts.Annotations {
 			if art.Runtime.HasAnnotation(a) {
 				match = true
