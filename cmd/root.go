@@ -154,7 +154,8 @@ func Execute() {
 			}
 
 			if len(os.Args) > 1 {
-				locked, err := lock.TryLock(os.Args[1], cfg)
+				locked, err := lock.TryLock(
+					strings.Split(cmd.Use, " ")[0], cfg)
 				if err != nil {
 					Fatal(err.Error())
 				} else if !locked {
