@@ -236,6 +236,7 @@ func (s *Solver) OrderOperations(p2i, p2u, p2r *artifact.ArtifactsPack) (*[]*Ope
 	mergedPack := artifact.NewArtifactsPack()
 	mergedPack.Artifacts = p2i.Artifacts
 	mergedPack.Artifacts = append(mergedPack.Artifacts, p2u.Artifacts...)
+	// Merge map contains all packages to add and/or update
 	mergedMap := mergedPack.ToMap()
 
 	if len(mergedPack.Artifacts) == 1 {
@@ -279,13 +280,14 @@ func (s *Solver) OrderOperations(p2i, p2u, p2r *artifact.ArtifactsPack) (*[]*Ope
 		pthinarr := s.createThinPkgsPlist(p2r, p2rmap)
 
 		if len(tmpOps) == 0 {
-			// POST: If there are packages to remove means
+			// POST: If there are packages to update/add it means
 			//       that there are only remove operations.
 			for _, a := range pthinarr {
 				val, _ := p2rmap.Artifacts[a.PackageName()]
 				ans = append(ans, NewOperation(RemovePackage, val[0]))
 			}
 		} else {
+			// POST: There are both packages to remove and to install/upgrade.
 
 			newRemoves := []*Operation{}
 
