@@ -5,6 +5,8 @@ See AUTHORS and LICENSE for the license details and contributors.
 package solver
 
 import (
+	"sort"
+
 	"github.com/geaaru/luet/pkg/config"
 	pkg "github.com/geaaru/luet/pkg/package"
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
@@ -67,4 +69,27 @@ func NewSolverImplementation(stype string, cfg *config.LuetConfig, opts *SolverO
 	}
 
 	return &s
+}
+
+func SortOperationsByName(ops *[]*Operation, reverse bool) {
+	o := *ops
+
+	sort.Slice(o[:], func(i, j int) bool {
+		pi := o[i].Artifact.GetPackage()
+		pj := o[j].Artifact.GetPackage()
+
+		if pi.PackageName() == pj.PackageName() {
+			if reverse {
+				return o[i].Action > o[j].Action
+			} else {
+				return o[i].Action < o[j].Action
+			}
+		}
+
+		if reverse {
+			return pi.PackageName() > pj.PackageName()
+		}
+
+		return pi.PackageName() < pj.PackageName()
+	})
 }
