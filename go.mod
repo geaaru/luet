@@ -23,6 +23,7 @@ require (
 	github.com/geaaru/tar-formers v0.6.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
+	github.com/gofrs/flock v0.8.1
 	github.com/google/go-containerregistry v0.5.1
 	github.com/google/renameio v1.0.0
 	github.com/google/uuid v1.3.0 // indirect
@@ -58,14 +59,10 @@ require (
 	go.uber.org/multierr v1.9.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/mod v0.8.0
+	golang.org/x/sync v0.1.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.11.1
-)
-
-require (
-	github.com/gofrs/flock v0.8.1
-	golang.org/x/sync v0.1.0
 )
 
 require (
