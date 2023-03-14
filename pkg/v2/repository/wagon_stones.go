@@ -250,6 +250,10 @@ func (s *Stone) GetName() string {
 	}
 }
 
+func (s *Stone) GetVersion() string {
+	return s.Version
+}
+
 func (s *WagonStones) analyzeCatDir(
 	categoryDir, categoryName string,
 	task *StonesSearchTask,
@@ -902,6 +906,12 @@ func (s *WagonStones) SearchArtifactsFromCatalog(
 
 		match := false
 
+		if len(opts.Names) > 0 {
+			if helpers.ContainsElem(&opts.Names, artifact.Runtime.Name) {
+				match = true
+			}
+		}
+
 		// For now only match category and name
 		if len(opts.Packages) > 0 {
 			for idx, _ := range opts.Packages {
@@ -981,6 +991,10 @@ func (s *WagonStones) SearchArtifactsFromCatalog(
 		}
 
 		if len(opts.Annotations) > 0 {
+			if opts.AndCondition {
+				match = false
+			}
+
 			for _, a := range opts.Annotations {
 				if artifact.Runtime.HasAnnotation(a) {
 					match = true
@@ -1011,7 +1025,9 @@ func (s *WagonStones) SearchArtifactsFromCatalog(
 			// Propagate repository information
 			if artifact.Runtime != nil {
 				artifact.Runtime.Repository = repoName
-			} else if artifact.CompileSpec != nil && artifact.CompileSpec.Package != nil {
+			}
+
+			if artifact.CompileSpec != nil && artifact.CompileSpec.Package != nil {
 				artifact.CompileSpec.Package.Repository = repoName
 			}
 
