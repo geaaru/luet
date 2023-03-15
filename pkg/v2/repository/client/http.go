@@ -89,7 +89,7 @@ func Round(input float64) float64 {
 	return math.Floor(input + 0.5)
 }
 
-func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) error {
+func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact, msg string) error {
 	var u *url.URL = nil
 	var err error
 	var req *grab.Request
@@ -134,11 +134,8 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) error {
 			bar := progressbar.NewOptions64(
 				resp.Size(),
 				progressbar.OptionSetDescription(
-					Emojize(fmt.Sprintf("[green]:package: %-65s - %-15s # [reset]",
-						fmt.Sprintf(
-							"%s::%s", a.GetPackage().PackageName(), a.GetPackage().Repository,
-						),
-						a.GetPackage().GetVersion(),
+					Emojize(fmt.Sprintf("[green]:package:%s # [reset]",
+						msg,
 					))),
 				//filepath.Base(resp.Request.HTTPRequest.URL.RequestURI()))),
 				//progressbar.OptionSetRenderBlankState(true),

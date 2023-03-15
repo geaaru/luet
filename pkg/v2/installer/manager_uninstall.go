@@ -6,13 +6,12 @@ package installer
 
 import (
 	"fmt"
-	"os"
 
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 	repos "github.com/geaaru/luet/pkg/v2/repository"
+	"github.com/logrusorgru/aurora"
 
-	"github.com/jedib0t/go-pretty/table"
 	"github.com/pkg/errors"
 )
 
@@ -24,23 +23,25 @@ type UninstallOpts struct {
 	SkipFinalizers              bool
 }
 
-func (m *ArtifactsManager) showRemovePkgsTable(list *[]*pkg.DefaultPackage) {
+func (m *ArtifactsManager) showPkgs2Remove(list *[]*pkg.DefaultPackage) {
+	n := len(*list)
 
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(
-		table.Row{
-			"Package", "Version", "Repository",
-		},
-	)
-
-	for _, p := range *list {
-		t.AppendRow([]interface{}{
-			p.PackageName(), p.GetVersion(), p.GetRepository(),
-		})
+	for idx, p := range *list {
+		repos := "::"
+		if p.GetRepository() != "" {
+			repos += p.GetRepository()
+		} else {
+			repos = ""
+		}
+		InfoC(fmt.Sprintf(":knife:[%s of %s] [%s] %-61s - %s",
+			aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", idx+1))),
+			aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", n))),
+			aurora.Bold(aurora.BrightYellow("D")),
+			aurora.Bold(aurora.BrightYellow(
+				fmt.Sprintf("%s%s", p.PackageName(), repos))),
+			aurora.Bold(aurora.BrightYellow(p.GetVersion())),
+		))
 	}
-
-	t.Render()
 }
 
 func (m *ArtifactsManager) Uninstall(opts *UninstallOpts, targetRootfs string, packs ...*pkg.DefaultPackage) error {
@@ -72,7 +73,7 @@ func (m *ArtifactsManager) Uninstall(opts *UninstallOpts, targetRootfs string, p
 	if len(matchedPkgs) > 0 {
 		if opts.NoDeps {
 
-			m.showRemovePkgsTable(&matchedPkgs)
+			m.showPkgs2Remove(&matchedPkgs)
 
 			if opts.Ask {
 				if !Ask() {
@@ -98,7 +99,7 @@ func (m *ArtifactsManager) Uninstall(opts *UninstallOpts, targetRootfs string, p
 				}
 			}
 
-			m.showRemovePkgsTable(&task.Matches)
+			m.showPkgs2Remove(&task.Matches)
 
 			if opts.Ask {
 				if !Ask() {
@@ -112,14 +113,31 @@ func (m *ArtifactsManager) Uninstall(opts *UninstallOpts, targetRootfs string, p
 	}
 
 	// TODO: parallelize this steps. does we need this?
-	for _, p := range pkgs2remove {
+	nPkgs := len(pkgs2remove)
+	for idx, p := range pkgs2remove {
 
 		stone := &repos.Stone{
 			Name:        p.GetName(),
 			Category:    p.GetCategory(),
 			Version:     p.GetVersion(),
 			Annotations: p.GetAnnotations(),
+			Repository:  p.GetRepository(),
 		}
+
+		repos := ""
+		if stone.Repository != "" {
+			repos = "::" + stone.Repository
+		}
+
+		msg := fmt.Sprintf(
+			"[%3d of %3d] %-65s - %-15s",
+			aurora.Bold(aurora.BrightMagenta(idx+1)),
+			aurora.Bold(aurora.BrightMagenta(nPkgs)),
+			fmt.Sprintf("%s%s", stone.GetName(),
+				repos,
+			),
+			stone.GetVersion())
+
 		err := m.RemovePackage(stone, targetRootfs,
 			opts.PreserveSystemEssentialData,
 			opts.SkipFinalizers,
@@ -136,6 +154,8 @@ func (m *ArtifactsManager) Uninstall(opts *UninstallOpts, targetRootfs string, p
 			} else {
 				lastErr = err
 			}
+		} else {
+			Info(fmt.Sprintf(":recycle: %s # uninstalled :check_mark:", msg))
 		}
 	}
 

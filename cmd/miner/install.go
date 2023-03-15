@@ -18,6 +18,7 @@ import (
 	installer "github.com/geaaru/luet/pkg/v2/installer"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 	"github.com/geaaru/luet/pkg/v2/repository/mask"
+	"github.com/logrusorgru/aurora"
 
 	"github.com/spf13/cobra"
 )
@@ -124,8 +125,22 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 
 			toFinalize := []*artifact.PackageArtifact{}
 
-			for _, a := range artifacts {
+			nPkgs := len(artifacts)
+			for idx, a := range artifacts {
 				a.ResolveCachePath()
+				repos := ""
+				if a.GetPackage().Repository != "" {
+					repos = "::" + a.GetPackage().Repository
+				}
+
+				msg := fmt.Sprintf(
+					"[%3d of %3d] %-65s - %-15s",
+					aurora.Bold(aurora.BrightMagenta(idx+1)),
+					aurora.Bold(aurora.BrightMagenta(nPkgs)),
+					fmt.Sprintf("%s%s", a.GetPackage().PackageName(),
+						repos,
+					),
+					a.GetPackage().GetVersion())
 
 				err = aManager.InstallPackage(a, r, config.GetSystem().Rootfs)
 				if err != nil {
@@ -134,10 +149,10 @@ func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
 						"Error on install artifact %s: %s",
 						a.Runtime.HumanReadableString(),
 						err.Error()))
-					Error(fmt.Sprintf("[%40s] install failed - :fire:", a.Runtime.HumanReadableString()))
+					Error(fmt.Sprintf(":package:%s # install failer :fire:", msg))
 					continue
 				} else {
-					Info(fmt.Sprintf("[%40s] installed - :heavy_check_mark:", a.Runtime.HumanReadableString()))
+					Info(fmt.Sprintf(":shortcake:%s # installed :check_mark:", msg))
 				}
 
 				err = aManager.RegisterPackage(a, r, force)

@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 Macaroni OS Linux
+Copyright © 2022-2023 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package installer
@@ -60,13 +60,13 @@ func (m *ArtifactsManager) Close() {
 	}
 }
 
-func (m *ArtifactsManager) DownloadPackage(p *artifact.PackageArtifact, r *repos.WagonRepository) error {
+func (m *ArtifactsManager) DownloadPackage(p *artifact.PackageArtifact, r *repos.WagonRepository, msg string) error {
 	c := r.Client()
 	if c == nil {
 		return errors.New("No client could be generated from repository")
 	}
 
-	err := c.DownloadArtifact(p)
+	err := c.DownloadArtifact(p, msg)
 	if err != nil {
 		return errors.Wrap(err, "Error on download artifact")
 	}
@@ -329,17 +329,6 @@ func (m *ArtifactsManager) RemovePackage(s *repos.Stone,
 	if err != nil && !force {
 		return errors.Wrap(err, "Failed removing package from database")
 	}
-
-	reposSep := ""
-	if p.Repository != "" {
-		reposSep = "::"
-	}
-
-	Info(fmt.Sprintf(":recycle:  %-65s - %-15s # removed :check_mark:",
-		fmt.Sprintf("%s%s%s", p.PackageName(),
-			reposSep, p.Repository,
-		),
-		p.GetVersion()))
 
 	return nil
 }

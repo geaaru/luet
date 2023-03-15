@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package client
 
@@ -23,7 +23,7 @@ func NewLocalClient(r *config.LuetRepository) *LocalClient {
 	return &LocalClient{Repository: r}
 }
 
-func (c *LocalClient) DownloadArtifact(a *artifact.PackageArtifact) error {
+func (c *LocalClient) DownloadArtifact(a *artifact.PackageArtifact, msg string) error {
 	var err error
 
 	rootfs := ""

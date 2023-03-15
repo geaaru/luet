@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package client
 
@@ -40,7 +40,7 @@ func NewDockerClient(r *config.LuetRepository) *DockerClient {
 	return &DockerClient{Repository: r, auth: auth}
 }
 
-func (c *DockerClient) DownloadArtifact(a *artifact.PackageArtifact) error {
+func (c *DockerClient) DownloadArtifact(a *artifact.PackageArtifact, msg string) error {
 	//var u *url.URL = nil
 	var err error
 	var temp string

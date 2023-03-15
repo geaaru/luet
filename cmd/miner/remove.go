@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 Macaroni OS Linux
+Copyright © 2022-2023 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package miner
@@ -15,6 +15,7 @@ import (
 	"github.com/geaaru/luet/pkg/subsets"
 	installer "github.com/geaaru/luet/pkg/v2/installer"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
+	"github.com/logrusorgru/aurora"
 
 	"github.com/spf13/cobra"
 )
@@ -81,7 +82,22 @@ func NewRemovePackage(config *cfg.LuetConfig) *cobra.Command {
 
 			fail := false
 
-			for _, s := range *stones {
+			nPkgs := len(*stones)
+			for idx, s := range *stones {
+				repos := ""
+				if s.Repository != "" {
+					repos = "::" + s.Repository
+				}
+
+				msg := fmt.Sprintf(
+					"[%3d of %3d] %-65s - %-15s",
+					aurora.Bold(aurora.BrightMagenta(idx+1)),
+					aurora.Bold(aurora.BrightMagenta(nPkgs)),
+					fmt.Sprintf("%s%s", s.GetName(),
+						repos,
+					),
+					s.GetVersion())
+
 				err = aManager.RemovePackage(
 					s, config.GetSystem().Rootfs,
 					preserveSystem,
@@ -94,7 +110,9 @@ func NewRemovePackage(config *cfg.LuetConfig) *cobra.Command {
 						"Error on uninstall artifact %s: %s",
 						s.HumanReadableString(),
 						err.Error()))
-					Error(fmt.Sprintf("[%40s] uninstall failed - :fire:", s.HumanReadableString()))
+					Error(fmt.Sprintf(":package:%s # uninstall failed - :fire:", msg))
+				} else {
+					Info(fmt.Sprintf(":recycle: %s # uninstalled :check_mark:", msg))
 				}
 
 			}

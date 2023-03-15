@@ -38,7 +38,7 @@ const (
 )
 
 type Client interface {
-	DownloadArtifact(*artifact.PackageArtifact) error
+	DownloadArtifact(*artifact.PackageArtifact, string) error
 	DownloadFile(string) (string, error)
 }
 

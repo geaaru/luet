@@ -15,6 +15,7 @@ import (
 	installer "github.com/geaaru/luet/pkg/v2/installer"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 	"github.com/geaaru/luet/pkg/v2/repository/mask"
+	"github.com/logrusorgru/aurora"
 
 	"github.com/spf13/cobra"
 )
@@ -90,17 +91,28 @@ func NewDownload(config *cfg.LuetConfig) *cobra.Command {
 			fail := false
 
 			artifacts := *artifactsRef
-			for _, a := range artifacts {
-				err = aManager.DownloadPackage(a, r)
+			ndownloads := len(artifacts)
+			for idx, a := range artifacts {
+
+				msg := fmt.Sprintf(
+					"[%3d of %3d] %-65s - %-15s",
+					aurora.Bold(aurora.BrightMagenta(idx+1)),
+					aurora.Bold(aurora.BrightMagenta(ndownloads)),
+					fmt.Sprintf("%s::%s", a.GetPackage().PackageName(),
+						a.GetPackage().Repository,
+					),
+					a.GetPackage().GetVersion())
+
+				err = aManager.DownloadPackage(a, r, msg)
 				if err != nil {
 					fail = true
 					fmt.Println(fmt.Sprintf(
 						"Error on download artifact %s: %s",
 						a.Runtime.HumanReadableString(),
 						err.Error()))
-					Error(fmt.Sprintf("[%40s] :fire:", a.Runtime.HumanReadableString()))
+					Error(fmt.Sprintf(":package:%s # download failed :fire:", msg))
 				} else {
-					Info(fmt.Sprintf("[%40s] :check_mark:", a.Runtime.HumanReadableString()))
+					Info(fmt.Sprintf(":package:%s # downloaded :check_mark:", msg))
 				}
 			}
 

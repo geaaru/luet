@@ -6,16 +6,126 @@ package installer
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	. "github.com/geaaru/luet/pkg/logger"
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 	solver "github.com/geaaru/luet/pkg/v2/solver"
-	"github.com/jedib0t/go-pretty/table"
+	"github.com/logrusorgru/aurora"
 	"github.com/pkg/errors"
 )
+
+func (m *ArtifactsManager) showPackagesSorted(
+	p2r *artifact.ArtifactsPack,
+	p2u *artifact.ArtifactsPack,
+	installOps *[]*solver.Operation,
+	withUpdateAndDelete bool) {
+
+	p2rmap := p2r.ToMap()
+	p2umap := p2u.ToMap()
+
+	aurora := GetAurora()
+
+	// TODO: Found a more precise
+	nOps := len(*installOps)
+	if withUpdateAndDelete {
+		nOps -= len(p2u.Artifacts)
+	}
+
+	idx := 0
+	for _, op := range *installOps {
+		p := op.Artifact.GetPackage()
+		switch op.Action {
+
+		case solver.RemovePackage:
+			if _, ok := p2umap.Artifacts[p.PackageName()]; !ok {
+				repos := "::"
+				if p.GetRepository() != "" {
+					repos += p.GetRepository()
+				} else {
+					repos = ""
+				}
+				InfoC(fmt.Sprintf(":knife:[%s of %s] [%s] %-61s - %s",
+					aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", idx+1))),
+					aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", nOps))),
+					aurora.Bold(aurora.BrightYellow("D")),
+					aurora.Bold(aurora.BrightYellow(
+						fmt.Sprintf("%s%s", p.PackageName(), repos))),
+					aurora.Bold(aurora.BrightYellow(p.GetVersion())),
+				))
+				idx++
+			}
+
+		case solver.AddPackage:
+			InfoC(fmt.Sprintf(":icecream:[%s of %s] [%s] %-61s - %s",
+				aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", idx+1))),
+				aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", nOps))),
+				aurora.Bold(aurora.BrightRed("N")),
+				aurora.Bold(aurora.BrightRed(
+					fmt.Sprintf("%s::%s", p.PackageName(),
+						p.GetRepository()))),
+				aurora.Bold(aurora.BrightRed(p.GetVersion())),
+			))
+			idx++
+
+		case solver.UpdatePackage:
+			pr, ok := p2rmap.Artifacts[p.PackageName()]
+			if ok {
+				repos := pr[0].GetRepository()
+				if repos == "" {
+					repos = "unknown"
+				}
+
+				version := p.GetVersion()
+				if pr[0].GetPackage().GetVersion() == version {
+					version = "*" + version
+				}
+
+				if repos == p.GetRepository() {
+					InfoC(fmt.Sprintf(":cupcake:[%s of %s] [%s] %-61s - %s [%s]",
+						aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", idx+1))),
+						aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", nOps))),
+						aurora.Bold(aurora.Green("U")),
+						aurora.Bold(
+							aurora.Green(
+								fmt.Sprintf("%s::%s",
+									p.PackageName(), p.GetRepository(),
+								),
+							),
+						),
+						aurora.Bold(aurora.Green(version)),
+						aurora.BrightCyan(pr[0].GetPackage().GetVersion()),
+					))
+				} else {
+					InfoC(fmt.Sprintf(":candy:[%s of %s] [%s] %-61s - %s [%s]",
+						aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", idx+1))),
+						aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", nOps))),
+						aurora.Bold(aurora.Green("U")),
+						aurora.Bold(aurora.Green(
+							fmt.Sprintf("%s::%s", p.PackageName(), p.GetRepository()),
+						)),
+						aurora.Bold(aurora.Green(version)),
+						aurora.BrightCyan(fmt.Sprintf("%s::%s", pr[0].GetPackage().GetVersion(), repos)),
+					))
+				}
+			} else {
+				// POST: Update without remove
+				InfoC(fmt.Sprintf(":pie:[%s of %s] [%s] %-61s - %s",
+					aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", idx+1))),
+					aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", nOps))),
+					aurora.Bold(aurora.BrightGreen("U")),
+					aurora.Bold(aurora.BrightGreen(fmt.Sprintf("%s::%s",
+						p.PackageName(), p.GetRepository()),
+					)),
+					aurora.Bold(aurora.BrightGreen(p.GetVersion())),
+				))
+			}
+			idx++
+		}
+	}
+
+}
 
 func (m *ArtifactsManager) showPackages2Update(
 	p2i *artifact.ArtifactsPack,
@@ -28,57 +138,23 @@ func (m *ArtifactsManager) showPackages2Update(
 	p2umap := p2u.ToMap()
 	p2rmap := p2r.ToMap()
 
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(
-		table.Row{
-			"Package", "Action", "Version", "Repository", "License",
-		},
-	)
+	// Create operation list sorted by package name
+
+	ops := []*solver.Operation{}
 
 	if len(p2i.Artifacts) > 0 {
 		for _, art := range p2i.Artifacts {
-			p := art.GetPackage()
-			license := p.License
-			if len(license) > 50 {
-				license = license[0:47] + "..."
-			}
-			t.AppendRow([]interface{}{
-				p.PackageName(), "N", p.GetVersion(), p.GetRepository(), license,
+			ops = append(ops, &solver.Operation{
+				Action:   "N",
+				Artifact: art,
 			})
 		}
 	}
 	if len(p2u.Artifacts) > 0 {
-		for pname, art := range p2umap.Artifacts {
-			pr, ok := p2rmap.Artifacts[pname]
-			p := art[0].GetPackage()
-			version := p.GetVersion()
-			license := p.License
-			repository := p.GetRepository()
-			if len(license) > 50 {
-				license = license[0:47] + "..."
-			}
-			if !ok {
-				Warning(fmt.Sprintf("For package %s to update not found package to remove",
-					pname))
-			} else {
-				if pr[0].GetPackage().GetVersion() == version {
-					version = "*" + version
-				} else {
-					version = pr[0].GetPackage().GetVersion() + " -> " + version
-				}
-
-				if repository != pr[0].GetRepository() {
-					if pr[0].GetRepository() == "" {
-						repository = "unknown -> " + repository
-					} else {
-						repository = pr[0].GetRepository() + " -> " + repository
-					}
-				}
-			}
-
-			t.AppendRow([]interface{}{
-				p.PackageName(), "U", version, repository, license,
+		for _, art := range p2umap.Artifacts {
+			ops = append(ops, &solver.Operation{
+				Action:   "U",
+				Artifact: art[0],
 			})
 		}
 	}
@@ -86,22 +162,17 @@ func (m *ArtifactsManager) showPackages2Update(
 	if len(p2r.Artifacts) > 0 {
 		for pname, art := range p2rmap.Artifacts {
 			if _, ok := p2umap.Artifacts[pname]; !ok {
-				p := art[0].GetPackage()
-				license := p.License
-				if len(license) > 50 {
-					license = license[0:47] + "..."
-				}
-				t.AppendRow([]interface{}{
-					p.PackageName(), "D", p.GetVersion(), p.GetRepository(), license,
+				ops = append(ops, &solver.Operation{
+					Action:   "D",
+					Artifact: art[0],
 				})
-
 			}
 		}
 	}
 
-	t.SortBy([]table.SortBy{{Name: "Package", Mode: table.Asc}})
-
-	t.Render()
+	InfoC(":party_popper:Upgrades:")
+	solver.SortOperationsByName(&ops, false)
+	m.showPackagesSorted(p2r, p2u, &ops, false)
 }
 
 func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error {
@@ -162,7 +233,7 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 		return nil
 	}
 
-	if opts.Ask {
+	if opts.Ask && !opts.ShowInstallOrder {
 		if !Ask() {
 			return errors.New("Packages upgrade cancelled by user.")
 		}
@@ -174,7 +245,8 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 		len(pkgs2Install.Artifacts)+len(pkgs2Update.Artifacts)))
 
 	pkgs2Download := append(pkgs2Install.Artifacts, pkgs2Update.Artifacts...)
-	for _, art := range pkgs2Download {
+	ndownloads := len(pkgs2Download)
+	for idx, art := range pkgs2Download {
 		repoName := art.GetRepository()
 
 		if repoName == "" {
@@ -210,24 +282,27 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 			wr = mapRepos[repoName]
 		}
 
-		err = m.DownloadPackage(art, wr)
+		msg := fmt.Sprintf(
+			"[%3d of %3d] %-65s - %-15s",
+			aurora.Bold(aurora.BrightMagenta(idx+1)),
+			aurora.Bold(aurora.BrightMagenta(ndownloads)),
+			fmt.Sprintf("%s::%s", art.GetPackage().PackageName(),
+				art.GetPackage().Repository,
+			),
+			art.GetPackage().GetVersion())
+
+		err = m.DownloadPackage(art, wr, msg)
 		if err != nil {
 			fail = true
 			fmt.Println(fmt.Sprintf(
 				"Error on download artifact %s: %s",
 				art.GetPackage().HumanReadableString(),
 				err.Error()))
-			Error(fmt.Sprintf(":package: %-65s - %-15s # download failed :fire:",
-				fmt.Sprintf("%s::%s", art.GetPackage().PackageName(),
-					art.GetPackage().Repository,
-				),
-				art.GetPackage().GetVersion()))
+			Error(fmt.Sprintf(":package:%s # download failed :fire:",
+				msg))
 		} else {
-			Info(fmt.Sprintf(":package: %-65s - %-15s # downloaded :check_mark:",
-				fmt.Sprintf("%s::%s", art.GetPackage().PackageName(),
-					art.GetPackage().Repository,
-				),
-				art.GetPackage().GetVersion()))
+			Info(fmt.Sprintf(":package:%s # downloaded :check_mark:",
+				msg))
 		}
 	}
 	pkgs2Download = nil
@@ -257,11 +332,33 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 	// Cleanup solver and memory
 	s = nil
 
+	if opts.ShowInstallOrder {
+		InfoC(":brain:Upgrade order:")
+		m.showPackagesSorted(pkgs2Remove, pkgs2Update, installOps, true)
+		return nil
+	}
+
 	InfoC(fmt.Sprintf(
 		":clinking_beer_mugs:Executing %d packages operations...",
 		len(*installOps)))
+	nOps := len(*installOps)
 
-	for _, op := range *installOps {
+	for idx, op := range *installOps {
+
+		repos := ""
+		if op.Artifact.GetPackage().Repository != "" {
+			repos = "::" + op.Artifact.GetPackage().Repository
+		}
+
+		msg := fmt.Sprintf(
+			"[%3d of %3d] %-65s - %-15s",
+			aurora.Bold(aurora.BrightMagenta(idx+1)),
+			aurora.Bold(aurora.BrightMagenta(nOps)),
+			fmt.Sprintf("%s%s", op.Artifact.GetPackage().PackageName(),
+				repos,
+			),
+			op.Artifact.GetPackage().GetVersion())
+
 		switch op.Action {
 		case solver.RemovePackage:
 			p := op.Artifact.GetPackage()
@@ -288,7 +385,10 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 				} else {
 					errs = append(errs, err)
 				}
+			} else {
+				Info(fmt.Sprintf(":recycle: %s # removed :check_mark:", msg))
 			}
+
 		case solver.AddPackage, solver.UpdatePackage:
 			art := op.Artifact
 			art.ResolveCachePath()
@@ -296,22 +396,14 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 
 			err = m.InstallPackage(art, r, targetRootfs)
 			if err != nil {
-				Error(fmt.Sprintf(":package: %-65s - %-15s # install failed :fire:",
-					fmt.Sprintf("%s::%s", art.GetPackage().PackageName(),
-						art.GetPackage().Repository,
-					),
-					art.GetPackage().GetVersion()))
+				Error(fmt.Sprintf(":package:%s # install failer :fire:", msg))
 				errs = append(errs, fmt.Errorf(
 					"%s::%s - error: %s", art.GetPackage().PackageName(),
 					art.GetPackage().Repository,
 					err.Error()))
 				fail = true
 			} else {
-				Info(fmt.Sprintf(":shortcake: %-65s - %-15s # installed :check_mark:",
-					fmt.Sprintf("%s::%s", art.GetPackage().PackageName(),
-						art.GetPackage().Repository,
-					),
-					art.GetPackage().GetVersion()))
+				Info(fmt.Sprintf(":shortcake:%s # installed :check_mark:", msg))
 			}
 
 			err = m.RegisterPackage(art, r, opts.Force)
