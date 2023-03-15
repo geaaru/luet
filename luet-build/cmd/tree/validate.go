@@ -202,10 +202,7 @@ func validatePackage(p pkg.Package, checkType string, opts *ValidateOpts, recipe
 		fmt.Sprintf("%s/%s-%s", p.GetCategory(), p.GetName(), p.GetVersion()),
 		"with", len(p.GetRequires()), "dependencies and", len(p.GetConflicts()), "conflicts.")
 
-	all := p.GetRequires()
-	all = append(all, p.GetConflicts()...)
-	for idx, r := range all {
-
+	processRelations := func(r *pkg.DefaultPackage, idx, tot int, conflict bool) {
 		var deps pkg.Packages
 		var err error
 		if r.IsSelector() {
@@ -221,6 +218,15 @@ func validatePackage(p pkg.Package, checkType string, opts *ValidateOpts, recipe
 		}
 
 		if err != nil || len(deps) < 1 {
+
+			if conflict {
+				Warning(fmt.Sprintf("[%9s] %s/%s-%s: Conflict %s-%s-%s not available. Ignoring.",
+					checkType,
+					p.GetCategory(), p.GetName(), p.GetVersion(),
+					r.GetCategory(), r.GetName(), r.GetVersion(),
+				))
+				return
+			}
 			if err != nil {
 				errstr = err.Error()
 			} else {
@@ -253,7 +259,7 @@ func validatePackage(p pkg.Package, checkType string, opts *ValidateOpts, recipe
 
 				Info(fmt.Sprintf("[%9s]  :soap: [%2d/%2d] %s/%s-%s: %s/%s-%s",
 					checkType,
-					idx+1, len(all),
+					idx+1, tot,
 					p.GetCategory(), p.GetName(), p.GetVersion(),
 					r.GetCategory(), r.GetName(), r.GetVersion(),
 				))
@@ -263,7 +269,7 @@ func validatePackage(p pkg.Package, checkType string, opts *ValidateOpts, recipe
 				if err == nil {
 					Debug(fmt.Sprintf("[%9s]  :direct_hit: Cache Hit for dep", checkType),
 						fmt.Sprintf("%s/%s-%s", r.GetCategory(), r.GetName(), r.GetVersion()))
-					continue
+					return
 				}
 
 				Spinner(32)
@@ -322,7 +328,18 @@ func validatePackage(p pkg.Package, checkType string, opts *ValidateOpts, recipe
 
 			}
 		}
+	} // end processRelations
 
+	all := p.GetRequires()
+	all = append(all, p.GetConflicts()...)
+	nTot := len(all)
+	all = nil
+	for idx, r := range p.GetRequires() {
+		processRelations(r, idx, nTot, false)
+	}
+
+	for idx, r := range p.GetConflicts() {
+		processRelations(r, idx, nTot, true)
 	}
 
 	if !validpkg {
