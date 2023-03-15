@@ -164,6 +164,10 @@ To force install a package:
 			); err != nil {
 				Fatal("Error: " + err.Error())
 			}
+
+			InfoC(fmt.Sprintf(":confetti_ball:%s",
+				Bold(Blue("All done."))))
+
 		},
 	}
 
