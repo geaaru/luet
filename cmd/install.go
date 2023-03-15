@@ -73,6 +73,7 @@ To force install a package:
 			skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
 			syncRepos, _ := cmd.Flags().GetBool("sync-repos")
 			ignoreMasks, _ := cmd.Flags().GetBool("ignore-masks")
+			showInstallOrder, _ := cmd.Flags().GetBool("show-install-order")
 
 			if syncRepos {
 				waitGroup := &sync.WaitGroup{}
@@ -157,6 +158,7 @@ To force install a package:
 				DownloadOnly:                downloadOnly,
 				CheckSystemFiles:            !skipCheckSystem,
 				IgnoreMasks:                 ignoreMasks,
+				ShowInstallOrder:            showInstallOrder,
 			}
 
 			if err := aManager.Install(opts, config.GetSystem().Rootfs,
@@ -193,6 +195,8 @@ To force install a package:
 	flags.Bool("sync-repos", false,
 		"Sync repositories before install. Note: If there are in memory repositories then the sync is done always.")
 	flags.Bool("ignore-masks", false, "Ignore packages masked.")
+	flags.Bool("show-install-order", false,
+		"In additional of the package to install, show the installation order and exit.")
 
 	return ans
 }
