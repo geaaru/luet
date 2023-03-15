@@ -50,6 +50,7 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 			skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
 			syncRepos, _ := cmd.Flags().GetBool("sync-repos")
 			ignoreMasks, _ := cmd.Flags().GetBool("ignore-masks")
+			showUpgradeOrder, _ := cmd.Flags().GetBool("show-upgrade-order")
 
 			// TODO: Move this inside the ArtifactManager or
 			//       to a common function.
@@ -127,6 +128,7 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 				DownloadOnly:                downloadOnly,
 				CheckSystemFiles:            !skipCheckSystem,
 				IgnoreMasks:                 ignoreMasks,
+				ShowInstallOrder:            showUpgradeOrder,
 			}
 			if err := aManager.Upgrade(opts, config.GetSystem().Rootfs); err != nil {
 				Fatal("Error: " + err.Error())
@@ -152,6 +154,8 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 	flags.Bool("sync-repos", false,
 		"Sync repositories before upgrade. Note: If there are in memory repositories then the sync is done always.")
 	flags.Bool("ignore-masks", false, "Ignore packages masked.")
+	flags.Bool("show-upgrade-order", false,
+		"In additional of the package to upgrade show the installation order and exit.")
 
 	return upgradeCmd
 }
