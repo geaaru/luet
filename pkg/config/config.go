@@ -339,8 +339,8 @@ func GenDefault(viper *v.Viper) {
 	viper.SetDefault("repos_confdir", []string{"/etc/luet/repos.conf.d"})
 	viper.SetDefault("config_protect_confdir", []string{"/etc/luet/config.protect.d"})
 	viper.SetDefault("packages_maskdir", []string{"/etc/luet/mask.d"})
-	viper.SetDefault("subsets_confdir", []string{})
-	viper.SetDefault("subsets_defdir", []string{})
+	viper.SetDefault("subsets_confdir", []string{"/etc/luet/subsets.conf.d"})
+	viper.SetDefault("subsets_defdir", []string{"/etc/luet/subsets.def.d"})
 	viper.SetDefault("config_protect_skip", false)
 	// TODO: Set default to false when we are ready for migration.
 	viper.SetDefault("config_from_host", true)
