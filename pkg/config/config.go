@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	LuetVersion     = "0.34.2"
+	LuetVersion     = "0.35.1"
 	LuetEnvPrefix   = "LUET"
 	LuetForkVersion = "geaaru"
 )
