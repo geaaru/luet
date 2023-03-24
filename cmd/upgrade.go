@@ -5,21 +5,18 @@ See AUTHORS and LICENSE for the license details and contributors.
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
-	"sync"
 
-	cmdrepo "github.com/geaaru/luet/cmd/repo"
 	"github.com/geaaru/luet/cmd/util"
 	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
 	"github.com/geaaru/luet/pkg/subsets"
 	installer "github.com/geaaru/luet/pkg/v2/installer"
+	wagon "github.com/geaaru/luet/pkg/v2/repository"
 
 	. "github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/semaphore"
 )
 
 func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
@@ -48,53 +45,19 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 			ignoreMasks, _ := cmd.Flags().GetBool("ignore-masks")
 			showUpgradeOrder, _ := cmd.Flags().GetBool("show-upgrade-order")
 
-			// TODO: Move this inside the ArtifactManager or
-			//       to a common function.
 			if syncRepos {
-				waitGroup := &sync.WaitGroup{}
-				sem := semaphore.NewWeighted(int64(config.GetGeneral().Concurrency))
-				ctx := context.TODO()
-
-				var ch chan util.ChannelRepoOpRes = make(
-					chan util.ChannelRepoOpRes,
-					config.GetGeneral().Concurrency,
-				)
-				// Using new way
-				nOps := 0
-
-				for idx, repo := range config.SystemRepositories {
-					if repo.Enable {
-						waitGroup.Add(1)
-						go cmdrepo.ProcessRepository(
-							&config.SystemRepositories[idx], config, ch, force, sem,
-							waitGroup, &ctx)
-						nOps++
-					}
+				optsRails := &wagon.SyncOpts{
+					Force:        force,
+					IgnoreErrors: false,
 				}
-
-				res := 0
-				if nOps > 0 {
-					for i := 0; i < nOps; i++ {
-						resp := <-ch
-						if resp.Error != nil && !force {
-							res = 1
-							Error("Error on update repository " + resp.Repo.Name + ": " +
-								resp.Error.Error())
-						}
-					}
-				} else {
-					fmt.Println("No repositories candidates found.")
+				rails := wagon.NewWagonsRails(config)
+				err := rails.SyncRepos([]string{}, optsRails)
+				if err != nil {
+					Error(err.Error())
+					os.Exit(1)
 				}
-
-				waitGroup.Wait()
-
-				if res != 0 {
-					os.Exit(res)
-				}
-
-				waitGroup = nil
-				ch = nil
-				sem = nil
+				rails = nil
+				optsRails = nil
 			}
 
 			// Load config protect configs

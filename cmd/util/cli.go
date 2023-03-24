@@ -26,11 +26,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type ChannelRepoOpRes struct {
-	Error error
-	Repo  *config.LuetRepository
-}
-
 func Version() string {
 	if config.BuildGoVersion != "" {
 		return fmt.Sprintf("%s-%s-g%s %s - %s",
