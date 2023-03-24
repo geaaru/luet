@@ -1,32 +1,21 @@
-// Copyright © 2019 Ettore Di Giacinto <mudler@gentoo.org>
-//                  Daniele Rondina <geaaru@sabayonlinux.org>
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, see <http://www.gnu.org/licenses/>.
+/*
+Copyright © 2019-2023 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
+*/
 
 package repository
 
 import (
-	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
 
-	"github.com/ghodss/yaml"
-
 	. "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
+
+	"gopkg.in/yaml.v3"
 )
 
 func LoadRepositories(c *LuetConfig) error {
@@ -48,13 +37,13 @@ func LoadRepositories(c *LuetConfig) error {
 
 		Debug("Parsing Repository Directory", rdir, "...")
 
-		files, err := ioutil.ReadDir(rdir)
+		dirEntries, err := os.ReadDir(rdir)
 		if err != nil {
 			Debug("Skip dir", rdir, ":", err.Error())
 			continue
 		}
 
-		for _, file := range files {
+		for _, file := range dirEntries {
 			if file.IsDir() {
 				continue
 			}
@@ -71,7 +60,7 @@ func LoadRepositories(c *LuetConfig) error {
 
 			repoFile := path.Join(rdir, file.Name())
 
-			content, err := ioutil.ReadFile(repoFile)
+			content, err := os.ReadFile(repoFile)
 			if err != nil {
 				Warning("On read file", file.Name(), ":", err.Error())
 				Warning("File", file.Name(), "skipped.")
