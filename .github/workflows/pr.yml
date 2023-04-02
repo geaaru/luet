@@ -10,13 +10,16 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
     - name: Install Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
         go-version: ${{ matrix.go-version }}
+
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+
     - name: setup-docker
-      uses: docker-practice/actions-setup-docker@0.0.1
+      uses: docker-practice/actions-setup-docker@master
+
     - name: Install deps
       run: |
             sudo apt-get install -y upx && sudo -E env "PATH=$PATH" make deps
@@ -34,13 +37,16 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
     - name: Install Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
         go-version: ${{ matrix.go-version }}
+
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+
     - name: setup-docker
-      uses: docker-practice/actions-setup-docker@0.0.1
+      uses: docker-practice/actions-setup-docker@master
+
     - name: Install deps
       run: |
             sudo apt-get install -y upx && sudo -E env "PATH=$PATH" make deps
@@ -48,8 +54,9 @@ jobs:
             sudo chmod a+x "/usr/bin/img"
             make build
             sudo cp -rf luet /usr/bin/luet
+
     - name: Install GoReleaser
-      uses: goreleaser/goreleaser-action@v2
+      uses: goreleaser/goreleaser-action@v4
       with:
         install-only: true
     - name: Build
