@@ -760,16 +760,6 @@ func (p *DefaultPackage) Admit(a *DefaultPackage) (bool, error) {
 		return true, nil
 	}
 
-	if p.AtomMatches(a) && !p.IsSelector() {
-		panic(fmt.Errorf(
-			"Trying to compare the %s package when is not a selector %s",
-			a.HumanReadableString(), p.HumanReadableString()))
-		return false,
-			fmt.Errorf(
-				"Trying to compare the %s package when is not a selector %s",
-				a.HumanReadableString(), p.HumanReadableString())
-	}
-
 	agentoo, err := a.ToGentooPackage()
 	if err != nil {
 		return false, err

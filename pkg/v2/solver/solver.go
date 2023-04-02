@@ -855,6 +855,10 @@ func (s *Solver) artefactAdmitByQueue(art *artifact.PackageArtifact) (bool, erro
 		for k, _ := range s.candidatesMap.Artifacts {
 			artInQueue := s.candidatesMap.Artifacts[k][0]
 
+			Debug(fmt.Sprintf("Checking if %s admits %s...",
+				artInQueue.GetPackage().HumanReadableString(),
+				art.GetPackage().HumanReadableString()))
+
 			admit, err := artInQueue.GetPackage().Admit(art.GetPackage())
 			if err != nil || !admit {
 				return admit, err
