@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
+	helpers "github.com/geaaru/luet/pkg/helpers/file"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -43,6 +45,16 @@ func (c *LuetSubsetsConfig) Write(f string) error {
 	if err != nil {
 		return fmt.Errorf(
 			"Error on marshal subsets config: %s", err.Error())
+	}
+
+	basedir := filepath.Dir(f)
+	if !helpers.Exists(basedir) {
+		err := os.MkdirAll(basedir, os.ModePerm)
+		if err != nil {
+			return fmt.Errorf(
+				"Error on create directory %s: %s", basedir,
+				err.Error())
+		}
 	}
 
 	err = os.WriteFile(f, data, os.ModePerm)
