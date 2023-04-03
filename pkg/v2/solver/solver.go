@@ -7,9 +7,9 @@ package solver
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/geaaru/luet/pkg/config"
 	"github.com/geaaru/luet/pkg/helpers"
@@ -84,38 +84,99 @@ func (s *Solver) createThinPkgsPlist(p2i *artifact.ArtifactsPack, p2imap *artifa
 	return pthinarr
 }
 
+func (s *Solver) recursiveCheckDeps(p *pkg.PackageThin,
+	stackRef *[]*pkg.PackageThin, queueRef *map[string]*pkg.PackageThin,
+	pinjectRef *map[string]bool) error {
+
+	Debug(fmt.Sprintf("[%s] with stack %s and requires %d", p, *stackRef, len(p.Requires)))
+	if pkg.PackageThinIsInList(p, stackRef) {
+		Warning(fmt.Sprintf(
+			":ambulance: Found deps cycle for package %s: %s. Trying to break it. Please, fix specs or open an issue!!!",
+			p.PackageName(), *stackRef))
+
+		p.BreakCyclesOnRequires(stackRef)
+	}
+	*stackRef = append(*stackRef, p)
+	queue := *queueRef
+	pinject := *pinjectRef
+
+	for _, r := range p.Requires {
+		// The requires of the package doesn't contain the dependencies.
+		// I need to use the queue element.
+
+		rq, ok := queue[r.PackageName()]
+		if !ok {
+			// Check if the dependencies is already injected
+			_, injected := pinject[r.PackageName()]
+
+			if !injected {
+				return fmt.Errorf("[%s] Error on retrieve requires %s on queue",
+					p.HumanReadableString(), r.PackageName())
+			}
+			// POST: Ignoring this dependency
+			Debug(fmt.Sprintf("[%s] Dependency %s already injected. Ignoring.",
+				p.HumanReadableString(), r.HumanReadableString()))
+			continue
+		}
+
+		err := s.recursiveCheckDeps(rq, stackRef, queueRef, pinjectRef)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+
+}
+
+func (s *Solver) depCycleDetector(queueRef *map[string]*pkg.PackageThin, pinjectRef *map[string]bool) error {
+	elems := []*pkg.PackageThin{}
+	queue := *queueRef
+	pinject := *pinjectRef
+
+	// Convert map to list
+	for _, p := range queue {
+		elems = append(elems, p)
+	}
+
+	// Sort elements list
+	pkg.SortPackageThinList4Requires(&elems)
+
+	nelems := len(elems)
+	for idx, p := range elems {
+		stack := []*pkg.PackageThin{}
+		Debug(fmt.Sprintf(
+			"[%d of %d] Checking %s with %d requires...", idx+1, nelems, p.HumanReadableString(),
+			len(p.Requires)))
+
+		err := s.recursiveCheckDeps(p, &stack, queueRef, pinjectRef)
+		if err != nil {
+			return err
+		}
+
+		// Check that all dependencies are availables.
+		for _, r := range p.Requires {
+			_, injected := pinject[r.PackageName()]
+			_, inQueue := queue[r.PackageName()]
+
+			if !injected && !inQueue {
+				return fmt.Errorf("[%s] Found dependency not resolvable %s",
+					p.PackageName(), r.HumanReadableString())
+			}
+		}
+	}
+
+	return nil
+}
+
 func (s *Solver) sortPkgsThinArr(refarr *[]*pkg.PackageThin) error {
 	ans := []*pkg.PackageThin{}
 	pinject := make(map[string]bool, 0)
 	queue := make(map[string]*pkg.PackageThin, 0)
 
-	arr := *refarr
+	pkg.SortPackageThinList4Requires(refarr)
 
-	// Sort packages to have at the begin packages with
-	// zero or less requires and at the end the packages
-	// with more requires. If the number of requires are
-	// equal then it uses the PackageName() for sorting.
-	sortPkgThin := func(i, j int) bool {
-		pi := arr[i]
-		pj := arr[j]
-		ireq := pi.HasRequires()
-		jreq := pj.HasRequires()
-
-		if ireq && jreq {
-			if len(pi.Requires) == len(pj.Requires) {
-				return pi.PackageName() < pj.PackageName()
-			}
-			return len(pi.Requires) < len(pj.Requires)
-		} else if !ireq && !jreq {
-			return pi.PackageName() < pj.PackageName()
-		} else if !ireq {
-			return true
-		}
-		return false
-	}
-
-	sort.Slice(arr[:], sortPkgThin)
-
+	start := time.Now()
 	for _, p := range *refarr {
 
 		injected := false
@@ -175,11 +236,39 @@ func (s *Solver) sortPkgsThinArr(refarr *[]*pkg.PackageThin) error {
 		}
 
 	} // end for
+	Debug(fmt.Sprintf("First sort iteration done in %d µs. Queue size is %d",
+		time.Now().Sub(start).Nanoseconds()/1e3, len(queue)))
 
 	if len(queue) > 0 {
 		// TODO: review with a more optimized logic
 
+		loopCyclesDetectorCounter := 0
+		lastQueueSize := 0
+		detectorExecuted := false
+
 		for len(queue) > 0 {
+			if len(queue) == lastQueueSize {
+				if loopCyclesDetectorCounter > 3 {
+					if detectorExecuted {
+						return fmt.Errorf(
+							"Unexpected error on sort queue of size %d",
+							len(queue))
+					}
+					detectorExecuted = true
+
+					err := s.depCycleDetector(&queue, &pinject)
+					if err != nil {
+						return err
+					}
+
+				} else {
+					loopCyclesDetectorCounter++
+				}
+			} else {
+				lastQueueSize = len(queue)
+				loopCyclesDetectorCounter = 0
+			}
+
 			pkgs2remove := []string{}
 			for k, p := range queue {
 
@@ -196,9 +285,14 @@ func (s *Solver) sortPkgsThinArr(refarr *[]*pkg.PackageThin) error {
 								p.HumanReadableString(), r.HumanReadableString()))
 							allReqok = true
 						} else {
+							Debug(fmt.Sprintf("[%s] The dependency %s has deps: %s",
+								p.HumanReadableString(), r.HumanReadableString(), r.Requires))
 							allReqok = false
 						}
 						break
+					} else {
+						Debug(fmt.Sprintf("[%s] Dependency %s already injected.", p.HumanReadableString(),
+							r.PackageName()))
 					}
 				}
 
@@ -232,6 +326,10 @@ func (s *Solver) OrderOperations(p2i, p2u, p2r *artifact.ArtifactsPack) (*[]*Ope
 		return &ans, errors.New("Invalid parameters to OrderOperations")
 	}
 
+	Debug(fmt.Sprintf(
+		"Sorting %d install, %d updates, %d removes.",
+		len(p2i.Artifacts), len(p2u.Artifacts), len(p2r.Artifacts)))
+
 	// Merge packages to install with packages to updates.
 	mergedPack := artifact.NewArtifactsPack()
 	mergedPack.Artifacts = p2i.Artifacts
@@ -247,7 +345,11 @@ func (s *Solver) OrderOperations(p2i, p2u, p2r *artifact.ArtifactsPack) (*[]*Ope
 		}
 	} else if len(mergedPack.Artifacts) > 1 {
 
+		start := time.Now()
 		pthinarr := s.createThinPkgsPlist(mergedPack, mergedMap)
+
+		Debug(fmt.Sprintf("Creation of %d thin pkgs list in %d µs.", len(pthinarr),
+			time.Now().Sub(start).Nanoseconds()/1e3))
 
 		err := s.sortPkgsThinArr(&pthinarr)
 		if err != nil {
@@ -849,18 +951,20 @@ func (s *Solver) processArtefactDeps(art *artifact.PackageArtifact, stack []stri
 }
 
 func (s *Solver) artefactAdmitByQueue(art *artifact.PackageArtifact) (bool, error) {
+
 	// Check if existing conflicts field are in
 	// conflicts with the selected artefact
 	if len(s.candidatesMap.Artifacts) > 0 {
 		for k, _ := range s.candidatesMap.Artifacts {
 			artInQueue := s.candidatesMap.Artifacts[k][0]
 
-			Debug(fmt.Sprintf("Checking if %s admits %s...",
-				artInQueue.GetPackage().HumanReadableString(),
-				art.GetPackage().HumanReadableString()))
-
 			admit, err := artInQueue.GetPackage().Admit(art.GetPackage())
-			if err != nil || !admit {
+			if err != nil {
+				return admit, err
+			} else if !admit {
+				Debug(fmt.Sprintf("%s NOT admits %s...",
+					artInQueue.GetPackage().HumanReadableString(),
+					art.GetPackage().HumanReadableString()))
 				return admit, err
 			}
 		}
