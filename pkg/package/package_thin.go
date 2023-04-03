@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"hash"
+	"sort"
 	"strings"
 
 	"github.com/geaaru/luet/pkg/helpers/tools"
@@ -134,4 +135,70 @@ func (p *PackageThin) GenerateHash() string {
 
 func (p *PackageThin) HumanReadableString() string {
 	return fmt.Sprintf("%s/%s-%s", p.Category, p.Name, p.Version)
+}
+
+func (p *PackageThin) String() string {
+	return p.HumanReadableString()
+}
+
+func (p *PackageThin) BreakCyclesOnRequires(stack *[]*PackageThin) {
+	newRequires := []*PackageThin{}
+
+	for _, r := range p.Requires {
+		present := false
+		for _, pr := range *stack {
+			if r.AtomMatches(pr) {
+				present = true
+				break
+			}
+		}
+
+		if !present {
+			newRequires = append(newRequires, r)
+		}
+	}
+
+	p.Requires = newRequires
+}
+
+func PackageThinIsInList(p *PackageThin, list *[]*PackageThin) bool {
+	ans := false
+
+	for _, pp := range *list {
+		if p.AtomMatches(pp) {
+			ans = true
+			break
+		}
+	}
+
+	return ans
+}
+
+// Sort packages to have at the begin packages with
+// zero or less requires and at the end the packages
+// with more requires. If the number of requires are
+// equal then it uses the PackageName() for sorting.
+func SortPackageThinList4Requires(list *[]*PackageThin) {
+	arr := *list
+
+	sortPkgThin := func(i, j int) bool {
+		pi := arr[i]
+		pj := arr[j]
+		ireq := pi.HasRequires()
+		jreq := pj.HasRequires()
+
+		if ireq && jreq {
+			if len(pi.Requires) == len(pj.Requires) {
+				return pi.PackageName() < pj.PackageName()
+			}
+			return len(pi.Requires) < len(pj.Requires)
+		} else if !ireq && !jreq {
+			return pi.PackageName() < pj.PackageName()
+		} else if !ireq {
+			return true
+		}
+		return false
+	}
+
+	sort.Slice(arr[:], sortPkgThin)
 }
