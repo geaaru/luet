@@ -26,14 +26,23 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 		Short:   "Upgrades Luet package",
 		Aliases: []string{"u"},
 		Long:    `Upgrades packages installed.`,
+		PreRun: func(cmd *cobra.Command, args []string) {
+			config.Viper.BindPFlag("onlydeps", cmd.Flags().Lookup("onlydeps"))
+			config.Viper.BindPFlag("nodeps", cmd.Flags().Lookup("nodeps"))
+			config.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
+			config.Viper.BindPFlag("yes", cmd.Flags().Lookup("yes"))
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 
 			InfoC(fmt.Sprintf(":rocket:%s %s",
 				Bold(Blue("Luet")), Bold(Blue(util.Version()))))
 
-			force, _ := cmd.Flags().GetBool("force")
-			nodeps, _ := cmd.Flags().GetBool("nodeps")
-			yes, _ := cmd.Flags().GetBool("yes")
+			force := config.Viper.GetBool("force")
+			nodeps := config.Viper.GetBool("nodeps")
+			yes := config.Viper.GetBool("yes")
+			//force, _ := cmd.Flags().GetBool("force")
+			//nodeps, _ := cmd.Flags().GetBool("nodeps")
+			//yes, _ := cmd.Flags().GetBool("yes")
 			skipCheckSystem, _ := cmd.Flags().GetBool("skip-check-system")
 			downloadOnly, _ := cmd.Flags().GetBool("download-only")
 			pretend, _ := cmd.Flags().GetBool("pretend")
