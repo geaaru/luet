@@ -35,10 +35,33 @@ func (l *LockGuard) TryLock(cmd string, cfg *config.LuetConfig) (bool, error) {
 		fpath := cfg.GetLockFilePath("luet.lock")
 		l.Lockfile = flock.New(fpath)
 
-		if !fhelpers.Exists(filepath.Dir(fpath)) {
-			err := os.MkdirAll(filepath.Dir(fpath), 0755)
-			if err != nil {
-				return false, err
+		lockDir := filepath.Dir(fpath)
+		if !fhelpers.Exists(lockDir) {
+			// Check if lock is a link to directory that doesn't exist.
+			if !fhelpers.ExistsLink(lockDir) {
+				err := os.MkdirAll(filepath.Dir(fpath), 0755)
+				if err != nil {
+					return false, err
+				}
+			} else {
+				// POST: The lock directory is a link. Checking if the link exists.
+				linkedLockDir, err := os.Readlink(lockDir)
+				if err != nil {
+					return false, err
+				}
+
+				// If the link is abs path
+				if !filepath.IsAbs(linkedLockDir) {
+					linkedLockDir = filepath.Join(filepath.Dir(lockDir), linkedLockDir)
+				}
+
+				if !fhelpers.Exists(linkedLockDir) {
+					err := os.MkdirAll(linkedLockDir, 0755)
+					if err != nil {
+						return false, err
+					}
+				}
+
 			}
 		}
 
@@ -56,8 +79,13 @@ func (l *LockGuard) Locked() (ans bool) {
 	return
 }
 
-func (l *LockGuard) Unlock() error {
+func (l *LockGuard) Unlock(cfg *config.LuetConfig) error {
 	if l.Lockfile != nil {
+		if l.Locked() {
+			// POST: Try to remove the file only when is been locked.
+			fpath := cfg.GetLockFilePath("luet.lock")
+			defer os.RemoveAll(fpath)
+		}
 		return l.Lockfile.Unlock()
 	}
 	return nil

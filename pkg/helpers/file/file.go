@@ -155,6 +155,15 @@ func Exists(name string) bool {
 	return true
 }
 
+func ExistsLink(name string) bool {
+	if _, err := os.Lstat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
+}
+
 func Read(file string) (string, error) {
 	dat, err := ioutil.ReadFile(file)
 	if err != nil {

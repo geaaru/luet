@@ -176,7 +176,7 @@ func Execute() {
 				Warning("failed on close database:", err.Error())
 			}
 
-			lock.Unlock()
+			lock.Unlock(cfg)
 		},
 		SilenceErrors: true,
 	}
