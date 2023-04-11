@@ -13,6 +13,7 @@ import (
 	"github.com/geaaru/luet/cmd/util"
 	cfg "github.com/geaaru/luet/pkg/config"
 	. "github.com/geaaru/luet/pkg/logger"
+	art "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	wagon "github.com/geaaru/luet/pkg/v2/repository"
 	mask "github.com/geaaru/luet/pkg/v2/repository/mask"
 
@@ -79,6 +80,15 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 		$ luet search -o yaml <regex> # YAML output
 	`,
 		Aliases: []string{"s"},
+		PreRun: func(cmd *cobra.Command, args []string) {
+			artifactView, _ := cmd.Flags().GetBool("artifacts")
+			installed, _ := cmd.Flags().GetBool("installed")
+			if installed && artifactView {
+				fmt.Println(
+					"Flags --installed and --artifacts not usable together.")
+				os.Exit(1)
+			}
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			//var results Results
 			if len(args) == 0 && len(packages) == 0 {
@@ -93,6 +103,7 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 			quiet, _ := cmd.Flags().GetBool("quiet")
 			full, _ := cmd.Flags().GetBool("full")
 			ignoreMasks, _ := cmd.Flags().GetBool("ignore-masks")
+			artifactView, _ := cmd.Flags().GetBool("artifacts")
 
 			util.SetSystemConfig()
 
@@ -114,6 +125,7 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 			}
 
 			var res *[]*wagon.Stone
+			var resArts *[]*art.PackageArtifact
 			var err error
 
 			if len(packages) > 0 {
@@ -155,7 +167,11 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 				}
 			} else {
 
-				res, err = searcher.SearchStones(searchOpts)
+				if artifactView {
+					resArts, err = searcher.SearchArtifacts(searchOpts)
+				} else {
+					res, err = searcher.SearchStones(searchOpts)
+				}
 				if err != nil {
 					fmt.Println("Error on retrieve installed packages ", err.Error())
 					os.Exit(1)
@@ -163,16 +179,30 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 			}
 
 			if out == "json" {
-				pack := wagon.StonesPack{*res}
-				data, err := json.Marshal(pack)
+				var data []byte
+
+				if artifactView {
+					pack := art.ArtifactsPack{*resArts}
+					data, err = json.Marshal(pack)
+				} else {
+					pack := wagon.StonesPack{*res}
+					data, err = json.Marshal(pack)
+				}
 				if err != nil {
 					fmt.Println("Error on marshal stones ", err.Error())
 					os.Exit(1)
 				}
 				fmt.Println(string(data))
 			} else if out == "yaml" {
-				pack := wagon.StonesPack{*res}
-				data, err := yaml.Marshal(pack)
+				var data []byte
+
+				if artifactView {
+					pack := art.ArtifactsPack{*resArts}
+					data, err = yaml.Marshal(pack)
+				} else {
+					pack := wagon.StonesPack{*res}
+					data, err = yaml.Marshal(pack)
+				}
 				if err != nil {
 					fmt.Println("Error on marshal stones ", err.Error())
 					os.Exit(1)
@@ -245,6 +275,7 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 	flags.Bool("quiet", false, "show output as list without version")
 	flags.Bool("full", false, "Show full informations.")
 	flags.Bool("ignore-masks", false, "Ignore packages masked.")
+	flags.Bool("artifacts", false, "Show full artefact data.")
 
 	return ans
 }
