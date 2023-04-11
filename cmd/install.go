@@ -49,7 +49,7 @@ To force install a package:
 			config.Viper.BindPFlag("force", cmd.Flags().Lookup("force"))
 			config.Viper.BindPFlag("yes", cmd.Flags().Lookup("yes"))
 			config.Viper.BindPFlag("general.overwrite_dir_perms",
-				cmd.Flags().Lookup("Overwrite exiting directories permissions."))
+				cmd.Flags().Lookup("overwrite-existing-dir-perms"))
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			var toInstall pkg.DefaultPackages
