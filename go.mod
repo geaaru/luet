@@ -52,7 +52,7 @@ require (
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/errors v0.9.1
 	github.com/schollz/progressbar/v3 v3.13.0
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
 	github.com/theupdateframework/notary v0.7.0
 	go.etcd.io/bbolt v1.3.7
