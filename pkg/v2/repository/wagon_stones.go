@@ -1051,9 +1051,18 @@ func (s *WagonStones) SearchFromCatalog(opts *StonesSearchOpts, repoName string)
 
 	if len(matches) > 0 {
 		for idx, _ := range matches {
-			ans = append(ans,
-				NewStone(matches[idx], repoName, opts.WithFiles, opts.Full),
-			)
+			stone := NewStone(matches[idx], repoName, opts.WithFiles, opts.Full)
+
+			if opts.WithRootfsPrefix {
+				// TODO: Check how i could avoid to use the global config variable.
+				files := []string{}
+				for _, f := range stone.Files {
+					files = append(files,
+						filepath.Join(config.LuetCfg.GetSystem().Rootfs, f))
+				}
+				stone.Files = files
+			}
+			ans = append(ans, stone)
 		}
 	}
 
@@ -1075,9 +1084,18 @@ func (s *WagonStones) Search(
 
 	if len(matches) > 0 {
 		for idx, _ := range matches {
-			ans = append(ans,
-				NewStone(matches[idx], repoName, opts.WithFiles, opts.Full),
-			)
+			stone := NewStone(matches[idx], repoName, opts.WithFiles, opts.Full)
+			if opts.WithRootfsPrefix {
+				// TODO: Check how i could avoid to use the global config variable.
+				files := []string{}
+				for _, f := range stone.Files {
+					files = append(files,
+						filepath.Join(config.LuetCfg.GetSystem().Rootfs, f))
+				}
+				stone.Files = files
+			}
+			ans = append(ans, stone)
+
 		}
 	}
 
