@@ -21,11 +21,13 @@ jobs:
 
       - name: Login to quay
         run: echo ${{ secrets.DOCKER_TESTING_PASSWORD }} | sudo -E docker login -u ${{ secrets.DOCKER_TESTING_USERNAME }} --password-stdin quay.io
+
       - name: Install deps
         run: |
             sudo apt-get install -y upx && sudo -E env "PATH=$PATH" make deps
             sudo curl -fSL "https://github.com/genuinetools/img/releases/download/v0.5.11/img-linux-amd64" -o "/usr/bin/img"
             sudo chmod a+x "/usr/bin/img"
+
       - name: Login to quay with img
         run: echo ${{ secrets.DOCKER_TESTING_PASSWORD }} | sudo img login -u ${{ secrets.DOCKER_TESTING_USERNAME }} --password-stdin quay.io
 
@@ -65,8 +67,8 @@ jobs:
       - name: setup-docker
         uses: docker-practice/actions-setup-docker@master
 
-      - name: Login to quay
-        run: echo ${{ secrets.DOCKER_TESTING_PASSWORD }} | sudo -E docker login -u ${{ secrets.DOCKER_TESTING_USERNAME }} --password-stdin quay.io
+      #- name: Login to quay
+      #  run: echo ${{ secrets.DOCKER_TESTING_PASSWORD }} | sudo -E docker login -u ${{ secrets.DOCKER_TESTING_USERNAME }} --password-stdin quay.io
 
       - name: Install deps
         run: |
@@ -82,6 +84,9 @@ jobs:
           distribution: goreleaser
           version: latest
           install-only: true
+
+      - name: Show GoReleaser version
+        run: goreleaser -v
 
       - name: Build test
         run: sudo -E env "PATH=$PATH" make multiarch-build-small
