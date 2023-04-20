@@ -45,7 +45,7 @@ require (
 	github.com/mudler/topsort v0.0.0-20201103161459-db5c7901c290
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/onsi/ginkgo/v2 v2.9.2
-	github.com/onsi/gomega v1.27.4
+	github.com/onsi/gomega v1.27.6
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.0-rc2
 	github.com/otiai10/copy v1.2.1-0.20200916181228-26f84a0b1578
