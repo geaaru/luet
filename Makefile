@@ -1,4 +1,3 @@
-GOLANG_VERSION=$(shell go env GOVERSION)
 
 # go tool nm ./luet | grep Commit
 override LDFLAGS += -X "github.com/geaaru/luet/pkg/config.BuildTime=$(shell date -u '+%Y-%m-%d %I:%M:%S %Z')"
@@ -54,7 +53,7 @@ deps:
 	go env
 	# Installing dependencies...
 	GO111MODULE=off go get golang.org/x/lint/golint
-	GO111MODULE=off go get github.com/mitchellh/gox
+	#GO111MODULE=off go get github.com/mitchellh/gox
 	GO111MODULE=on go install -mod=mod github.com/onsi/ginkgo/v2/ginkgo
 	GO111MODULE=off go get github.com/onsi/gomega/...
 	ginkgo version
