@@ -106,6 +106,13 @@ projects:
                   - mkdir /gopath/src/github.com/geaaru/ -p
                   - git clone ${mottainai_giturl} -b ${mottainai_branch} /gopath/src/github.com/geaaru/luet
 
+              - event: post-node-creation
+                commands:
+                  - |-
+                    echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list &&
+                    apt update &&
+                    apt install goreleaser -y &&
+                    apt-get clean
 
               - event: post-node-sync
                 flags:
@@ -142,6 +149,6 @@ projects:
                     GOPATH=/gopath \
                     GOBIN=$GOPATH/bin \
                     PATH=/usr/lib/go-${golang_version}/bin:$PATH:$GOBIN \
-                    make build coverage
+                    make build multiarch-build coverage
 
 {{ end }}
