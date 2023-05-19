@@ -17,8 +17,6 @@ package tarball
 import (
 	"archive/tar"
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -57,14 +55,15 @@ func (l *v1Layer) version() []byte {
 func v1LayerID(layer v1.Layer, parentID string, rawConfig []byte) (string, error) {
 	d, err := layer.Digest()
 	if err != nil {
-		return "", fmt.Errorf("unable to get layer digest to generate v1 layer ID: %v", err)
+		return "", fmt.Errorf("unable to get layer digest to generate v1 layer ID: %w", err)
 	}
 	s := fmt.Sprintf("%s %s", d.Hex, parentID)
 	if len(rawConfig) != 0 {
 		s = fmt.Sprintf("%s %s", s, string(rawConfig))
 	}
-	rawDigest := sha256.Sum256([]byte(s))
-	return hex.EncodeToString(rawDigest[:]), nil
+
+	h, _, _ := v1.SHA256(strings.NewReader(s))
+	return h.Hex, nil
 }
 
 // newTopV1Layer creates a new v1Layer for a layer other than the top layer in a v1 image tarball.
@@ -75,7 +74,7 @@ func newV1Layer(layer v1.Layer, parent *v1Layer, history v1.History) (*v1Layer, 
 	}
 	id, err := v1LayerID(layer, parentID, nil)
 	if err != nil {
-		return nil, fmt.Errorf("unable to generate v1 layer ID: %v", err)
+		return nil, fmt.Errorf("unable to generate v1 layer ID: %w", err)
 	}
 	result := &v1Layer{
 		layer: layer,
@@ -104,7 +103,7 @@ func newTopV1Layer(layer v1.Layer, parent *v1Layer, history v1.History, imgConfi
 	}
 	id, err := v1LayerID(layer, result.config.Parent, rawConfig)
 	if err != nil {
-		return nil, fmt.Errorf("unable to generate v1 layer ID for top layer: %v", err)
+		return nil, fmt.Errorf("unable to generate v1 layer ID for top layer: %w", err)
 	}
 	result.config.ID = id
 	result.config.Architecture = imgConfig.Architecture
@@ -187,9 +186,11 @@ func filterEmpty(h []v1.History) []v1.History {
 // One manifest.json file at the top level containing information about several images.
 // One repositories file mapping from the image <registry>/<repo name> to <tag> to the id of the top most layer.
 // For every layer, a directory named with the layer ID is created with the following contents:
-//   layer.tar - The uncompressed layer tarball.
-//   <layer id>.json- Layer metadata json.
-//   VERSION- Schema version string. Always set to "1.0".
+//
+//	layer.tar - The uncompressed layer tarball.
+//	<layer id>.json- Layer metadata json.
+//	VERSION- Schema version string. Always set to "1.0".
+//
 // One file for the config blob, named after its SHA.
 func MultiWrite(refToImage map[name.Reference]v1.Image, w io.Writer) error {
 	tf := tar.NewWriter(w)
@@ -240,7 +241,7 @@ func MultiWrite(refToImage map[name.Reference]v1.Image, w io.Writer) error {
 		var prev *v1Layer
 		for i, l := range layers {
 			if err := updateLayerSources(layerSources, l, img); err != nil {
-				return fmt.Errorf("unable to update image metadata to include undistributable layer source information: %v", err)
+				return fmt.Errorf("unable to update image metadata to include undistributable layer source information: %w", err)
 			}
 			var cur *v1Layer
 			if i < (len(layers) - 1) {

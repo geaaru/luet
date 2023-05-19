@@ -6,13 +6,14 @@ package docker
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 )
@@ -120,9 +121,18 @@ func cfgPaths(dockerConfigEnv string, homeEnv string) []string {
 	return nil
 }
 
-// NewAuthConfigurationsFromDockerCfg returns AuthConfigurations from
-// system config files. The following files are checked in the order listed:
-// - $DOCKER_CONFIG/config.json if DOCKER_CONFIG set in the environment,
+// NewAuthConfigurationsFromDockerCfg returns AuthConfigurations from system
+// config files. The following files are checked in the order listed:
+//
+// If the environment variable DOCKER_CONFIG is set to a non-empty string:
+//
+// - $DOCKER_CONFIG/plaintext-passwords.json
+// - $DOCKER_CONFIG/config.json
+//
+// Otherwise, it looks for files in the $HOME directory and the legacy
+// location:
+//
+// - $HOME/.docker/plaintext-passwords.json
 // - $HOME/.docker/config.json
 // - $HOME/.dockercfg
 func NewAuthConfigurationsFromDockerCfg() (*AuthConfigurations, error) {
@@ -253,16 +263,26 @@ type AuthStatus struct {
 //
 // See https://goo.gl/6nsZkH for more details.
 func (c *Client) AuthCheck(conf *AuthConfiguration) (AuthStatus, error) {
+	return c.AuthCheckWithContext(conf, context.TODO())
+}
+
+// AuthCheckWithContext validates the given credentials. It returns nil if successful. The context object
+// can be used to cancel the request.
+//
+// For Docker API versions >= 1.23, the AuthStatus struct will be populated, otherwise it will be empty.
+//
+// See https://goo.gl/6nsZkH for more details.
+func (c *Client) AuthCheckWithContext(conf *AuthConfiguration, ctx context.Context) (AuthStatus, error) {
 	var authStatus AuthStatus
 	if conf == nil {
 		return authStatus, errors.New("conf is nil")
 	}
-	resp, err := c.do(http.MethodPost, "/auth", doOptions{data: conf})
+	resp, err := c.do(http.MethodPost, "/auth", doOptions{data: conf, context: ctx})
 	if err != nil {
 		return authStatus, err
 	}
 	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return authStatus, err
 	}
@@ -273,4 +293,103 @@ func (c *Client) AuthCheck(conf *AuthConfiguration) (AuthStatus, error) {
 		return authStatus, err
 	}
 	return authStatus, nil
+}
+
+// helperCredentials represents credentials commit from an helper
+type helperCredentials struct {
+	Username string `json:"Username,omitempty"`
+	Secret   string `json:"Secret,omitempty"`
+}
+
+// NewAuthConfigurationsFromCredsHelpers returns AuthConfigurations from
+// installed credentials helpers
+func NewAuthConfigurationsFromCredsHelpers(registry string) (*AuthConfiguration, error) {
+	// Load docker configuration file in order to find a possible helper provider
+	pathsToTry := cfgPaths(os.Getenv("DOCKER_CONFIG"), os.Getenv("HOME"))
+	if len(pathsToTry) < 1 {
+		return nil, errors.New("no docker configuration found")
+	}
+
+	provider, err := getHelperProviderFromDockerCfg(pathsToTry, registry)
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := getCredentialsFromHelper(provider, registry)
+	if err != nil {
+		return nil, err
+	}
+
+	creds := new(AuthConfiguration)
+	creds.Username = c.Username
+	creds.Password = c.Secret
+	return creds, nil
+}
+
+func getHelperProviderFromDockerCfg(pathsToTry []string, registry string) (string, error) {
+	for _, path := range pathsToTry {
+		content, err := os.ReadFile(path)
+		if err != nil {
+			// if we can't read the file keep going
+			continue
+		}
+
+		provider, err := parseCredsDockerConfig(content, registry)
+		if err != nil {
+			continue
+		}
+		if provider != "" {
+			return provider, nil
+		}
+	}
+	return "", errors.New("no docker credentials provider found")
+}
+
+func parseCredsDockerConfig(config []byte, registry string) (string, error) {
+	creds := struct {
+		CredsStore  string            `json:"credsStore,omitempty"`
+		CredHelpers map[string]string `json:"credHelpers,omitempty"`
+	}{}
+	err := json.Unmarshal(config, &creds)
+	if err != nil {
+		return "", err
+	}
+
+	provider, ok := creds.CredHelpers[registry]
+	if ok {
+		return provider, nil
+	}
+	return creds.CredsStore, nil
+}
+
+// Run and parse the found credential helper
+func getCredentialsFromHelper(provider string, registry string) (*helperCredentials, error) {
+	helpercreds, err := runDockerCredentialsHelper(provider, registry)
+	if err != nil {
+		return nil, err
+	}
+
+	c := new(helperCredentials)
+	err = json.Unmarshal(helpercreds, c)
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
+func runDockerCredentialsHelper(provider string, registry string) ([]byte, error) {
+	cmd := exec.Command("docker-credential-"+provider, "get")
+
+	var stdout bytes.Buffer
+
+	cmd.Stdin = bytes.NewBuffer([]byte(registry))
+	cmd.Stdout = &stdout
+
+	err := cmd.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	return stdout.Bytes(), nil
 }
