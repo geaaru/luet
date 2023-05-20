@@ -14,10 +14,10 @@ import (
 	"github.com/geaaru/luet/pkg/config"
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 	. "github.com/geaaru/luet/pkg/logger"
-	dpkg "github.com/geaaru/luet/pkg/package"
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	"github.com/geaaru/luet/pkg/v2/repository/client"
 	"github.com/geaaru/luet/pkg/v2/repository/mask"
+	"github.com/geaaru/luet/pkg/v2/tree"
 
 	"github.com/pkg/errors"
 )
@@ -333,18 +333,9 @@ func (w *WagonRepository) ExplodeMetadata() error {
 			// As workaround I read the provides from definition.yaml that
 			// is always aligned to the last repository revision.
 
-			data, err := os.ReadFile(defFile)
+			dp, err := tree.ReadDefinitionFile(defFile)
 			if err != nil {
-				return errors.New(
-					fmt.Sprintf("Error on read file %s: %s",
-						defFile, err.Error()))
-			}
-
-			dp, err := dpkg.NewDefaultPackageFromYaml(data)
-			if err != nil {
-				return errors.New(
-					fmt.Sprintf("Error on parse file %s: %s",
-						defFile, err.Error()))
+				return err
 			}
 
 			// Always update provides and requires to fix broken metadata at least until
@@ -392,7 +383,6 @@ func (w *WagonRepository) ExplodeMetadata() error {
 			}
 
 			dp = nil
-			data = nil
 
 			err = catalog.Index[idx].WriteMetadataYaml(metaFile)
 			if err != nil {
