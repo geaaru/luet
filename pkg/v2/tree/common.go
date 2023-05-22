@@ -21,17 +21,19 @@ import (
 )
 
 const (
-	IDX_FILE = ".anise-idx.json.zstd"
+	IDX_FILE = ".anise-idx.json"
 )
 
 type TreeIdx struct {
 	Map map[string][]*TreeIdxPkg `json:"packages,omitempty" yaml:"packages,omitempty"`
 
+	Compress bool   `json:"-" yaml:"-"`
 	TreePath string `json:"-" yaml:"-"`
 }
 
 type GenOpts struct {
-	DryRun bool
+	DryRun   bool
+	Compress bool
 }
 
 type TreeIdxPkg struct {
@@ -39,11 +41,23 @@ type TreeIdxPkg struct {
 	Path    string `json:"path,omitempty" yaml:"path,omitempty"`
 }
 
-func NewTreeIdx(tpath string) *TreeIdx {
+func NewTreeIdx(tpath string, compress bool) *TreeIdx {
 	return &TreeIdx{
 		Map:      make(map[string][]*TreeIdxPkg, 0),
 		TreePath: tpath,
+		Compress: compress,
 	}
+}
+
+func (t *TreeIdx) DetectMode() *TreeIdx {
+	f := filepath.Join(t.TreePath, IDX_FILE)
+	if fileHelper.Exists(f) {
+		t.Compress = false
+	} else if fileHelper.Exists(f + ".zstd") {
+		t.Compress = true
+	}
+
+	return t
 }
 
 func (t *TreeIdx) AddPackage(name string, p *TreeIdxPkg) {
@@ -61,6 +75,10 @@ func (t *TreeIdx) GetPackageVersions(name string) ([]*TreeIdxPkg, bool) {
 
 func (t *TreeIdx) Write() error {
 	fpath := filepath.Join(t.TreePath, IDX_FILE)
+	if t.Compress {
+		fpath += ".zstd"
+	}
+
 	data, err := json.Marshal(t)
 	if err != nil {
 		return err
@@ -74,18 +92,25 @@ func (t *TreeIdx) Write() error {
 	}
 	defer dst.Close()
 
-	enc, err := zstd.NewWriter(dst)
-	if err != nil {
-		return err
-	}
+	if t.Compress {
+		enc, err := zstd.NewWriter(dst)
+		if err != nil {
+			return err
+		}
 
-	_, err = io.Copy(enc, buffer)
-	if err != nil {
-		enc.Close()
-		return err
-	}
-	if err := enc.Close(); err != nil {
-		return err
+		_, err = io.Copy(enc, buffer)
+		if err != nil {
+			enc.Close()
+			return err
+		}
+		if err := enc.Close(); err != nil {
+			return err
+		}
+	} else {
+		_, err = io.Copy(dst, buffer)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -113,6 +138,9 @@ func (t *TreeIdx) Read(treeDir string) error {
 	// that contains the packages of all sub-directories.
 
 	idxfile := filepath.Join(treeDir, IDX_FILE)
+	if t.Compress {
+		idxfile += ".zstd"
+	}
 
 	if !fileHelper.Exists(idxfile) {
 		return errors.New(fmt.Sprintf("File %s doesn't exists",
@@ -125,13 +153,20 @@ func (t *TreeIdx) Read(treeDir string) error {
 	}
 	defer idxf.Close()
 
-	d, err := zstd.NewReader(idxf)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
+	var reader io.Reader
+	if t.Compress {
+		d, err := zstd.NewReader(idxf)
+		if err != nil {
+			return err
+		}
+		defer d.Close()
 
-	data, err := io.ReadAll(d)
+		reader = d
+	} else {
+		reader = idxf
+	}
+
+	data, err := io.ReadAll(reader)
 	if err != nil {
 		return err
 	}
@@ -164,7 +199,7 @@ func (t *TreeIdx) Generate(treeDir string, opts *GenOpts) error {
 }
 
 func (t *TreeIdx) generateIdxDir(dir, base string, opts *GenOpts) (*TreeIdx, error) {
-	ans := NewTreeIdx(dir)
+	ans := NewTreeIdx(dir, t.Compress)
 
 	dirEntries, err := os.ReadDir(dir)
 	if err != nil {

@@ -23,6 +23,7 @@ func NewTreeGenIdx(config *cfg.LuetConfig) *cobra.Command {
 		Args:  cobra.OnlyValidArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			dryRun, _ := cmd.Flags().GetBool("dry-run")
+			compress, _ := cmd.Flags().GetBool("compress")
 			treePaths, _ := cmd.Flags().GetStringArray("tree")
 			output, _ := cmd.Flags().GetString("output")
 
@@ -32,7 +33,7 @@ func NewTreeGenIdx(config *cfg.LuetConfig) *cobra.Command {
 
 			for _, t := range treePaths {
 
-				ti := tree.NewTreeIdx(t)
+				ti := tree.NewTreeIdx(t, compress)
 				err := ti.Generate(t, opts)
 				if err != nil {
 					fmt.Println("Error on generate indexes: " + err.Error())
@@ -71,6 +72,8 @@ func NewTreeGenIdx(config *cfg.LuetConfig) *cobra.Command {
 	flags := ans.Flags()
 	flags.Bool("dry-run", false,
 		"Generate indexes without update and/or create files.")
+	flags.Bool("compress", true,
+		"Use compressed indexes (true) or not (false).")
 	flags.StringArrayP("tree", "t", []string{path},
 		"Path of the tree to use.")
 	ans.Flags().StringP("output", "o", "", "Output format ( Defaults: No output, available: json,yaml )")
