@@ -176,6 +176,8 @@ func (t *TreeIdx) Read(treeDir string) error {
 		return err
 	}
 
+	t.TreePath = treeDir
+
 	return nil
 }
 
