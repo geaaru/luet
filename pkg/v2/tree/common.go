@@ -8,10 +8,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
+	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 	pkg "github.com/geaaru/luet/pkg/package"
 
 	zstd "github.com/klauspost/compress/zstd"
@@ -105,8 +107,54 @@ func (t *TreeIdx) Merge(tI *TreeIdx) {
 	}
 }
 
+func (t *TreeIdx) Read(treeDir string) error {
+	// I consider that the tree will be
+	// with the index file of the upper directory
+	// that contains the packages of all sub-directories.
+
+	idxfile := filepath.Join(treeDir, IDX_FILE)
+
+	if !fileHelper.Exists(idxfile) {
+		return errors.New(fmt.Sprintf("File %s doesn't exists",
+			idxfile))
+	}
+
+	idxf, err := os.Open(idxfile)
+	if err != nil {
+		return err
+	}
+	defer idxf.Close()
+
+	d, err := zstd.NewReader(idxf)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+
+	data, err := io.ReadAll(d)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(data, t)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (t *TreeIdx) Generate(treeDir string, opts *GenOpts) error {
-	tm, err := t.generateIdxDir(treeDir, opts)
+	if treeDir == "" {
+		return errors.New("Invalid tree directory")
+	}
+
+	if treeDir[len(treeDir)-1:len(treeDir)] == "/" {
+		treeDir = treeDir[0 : len(treeDir)-1]
+	}
+
+	base := filepath.Dir(treeDir)
+	tm, err := t.generateIdxDir(treeDir, base, opts)
 	if err != nil {
 		return err
 	}
@@ -115,7 +163,7 @@ func (t *TreeIdx) Generate(treeDir string, opts *GenOpts) error {
 	return nil
 }
 
-func (t *TreeIdx) generateIdxDir(dir string, opts *GenOpts) (*TreeIdx, error) {
+func (t *TreeIdx) generateIdxDir(dir, base string, opts *GenOpts) (*TreeIdx, error) {
 	ans := NewTreeIdx(dir)
 
 	dirEntries, err := os.ReadDir(dir)
@@ -126,7 +174,7 @@ func (t *TreeIdx) generateIdxDir(dir string, opts *GenOpts) (*TreeIdx, error) {
 	for _, file := range dirEntries {
 		f := filepath.Join(dir, file.Name())
 		if file.IsDir() {
-			tChildren, err := t.generateIdxDir(f, opts)
+			tChildren, err := t.generateIdxDir(f, base, opts)
 			if err != nil {
 				return nil, err
 			}
@@ -139,9 +187,11 @@ func (t *TreeIdx) generateIdxDir(dir string, opts *GenOpts) (*TreeIdx, error) {
 				return nil, err
 			}
 
+			relf, _ := filepath.Rel(base, f)
+
 			ans.AddPackage(dp.PackageName(), &TreeIdxPkg{
 				Version: dp.GetVersion(),
-				Path:    f,
+				Path:    relf,
 			})
 
 		} else if file.Name() == pkg.PackageCollectionFile {
@@ -151,10 +201,12 @@ func (t *TreeIdx) generateIdxDir(dir string, opts *GenOpts) (*TreeIdx, error) {
 				return nil, err
 			}
 
+			relf, _ := filepath.Rel(base, f)
+
 			for _, p := range c.Packages {
 				ans.AddPackage(p.PackageName(), &TreeIdxPkg{
 					Version: p.GetVersion(),
-					Path:    f,
+					Path:    relf,
 				})
 			}
 		}
