@@ -26,9 +26,11 @@ func NewTreeGenIdx(config *cfg.LuetConfig) *cobra.Command {
 			compress, _ := cmd.Flags().GetBool("compress")
 			treePaths, _ := cmd.Flags().GetStringArray("tree")
 			output, _ := cmd.Flags().GetString("output")
+			onlyUpperLevel, _ := cmd.Flags().GetBool("only-upper-level")
 
 			opts := &tree.GenOpts{
-				DryRun: dryRun,
+				DryRun:   dryRun,
+				OnlyMain: onlyUpperLevel,
 			}
 
 			for _, t := range treePaths {
@@ -74,6 +76,8 @@ func NewTreeGenIdx(config *cfg.LuetConfig) *cobra.Command {
 		"Generate indexes without update and/or create files.")
 	flags.Bool("compress", true,
 		"Use compressed indexes (true) or not (false).")
+	flags.Bool("only-upper-level", false,
+		"Write index only the upper level index (true) or in all directories.")
 	flags.StringArrayP("tree", "t", []string{path},
 		"Path of the tree to use.")
 	ans.Flags().StringP("output", "o", "", "Output format ( Defaults: No output, available: json,yaml )")

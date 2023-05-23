@@ -34,7 +34,7 @@ type TreeIdx struct {
 
 type GenOpts struct {
 	DryRun   bool
-	Compress bool
+	OnlyMain bool
 }
 
 type TreeIdxPkg struct {
@@ -198,6 +198,8 @@ func (t *TreeIdx) Generate(treeDir string, opts *GenOpts) error {
 	}
 
 	t.Merge(tm)
+
+	t.BaseDir, _ = filepath.Rel(treeDir, base)
 	return nil
 }
 
@@ -253,10 +255,13 @@ func (t *TreeIdx) generateIdxDir(dir, base string, opts *GenOpts) (*TreeIdx, err
 
 	if !opts.DryRun {
 		ans.BaseDir, _ = filepath.Rel(dir, base)
-		// Write index file.
-		err = ans.Write()
-		if err != nil {
-			return nil, err
+
+		if !opts.OnlyMain || (opts.OnlyMain && ans.BaseDir == "..") {
+			// Write index file.
+			err = ans.Write()
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
