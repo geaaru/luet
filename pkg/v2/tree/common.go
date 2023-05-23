@@ -25,7 +25,8 @@ const (
 )
 
 type TreeIdx struct {
-	Map map[string][]*TreeIdxPkg `json:"packages,omitempty" yaml:"packages,omitempty"`
+	Map     map[string][]*TreeIdxPkg `json:"packages,omitempty" yaml:"packages,omitempty"`
+	BaseDir string                   `json:"basedir,omitempty" yaml:"basedir,omitempty"`
 
 	Compress bool   `json:"-" yaml:"-"`
 	TreePath string `json:"-" yaml:"-"`
@@ -251,6 +252,7 @@ func (t *TreeIdx) generateIdxDir(dir, base string, opts *GenOpts) (*TreeIdx, err
 	}
 
 	if !opts.DryRun {
+		ans.BaseDir, _ = filepath.Rel(dir, base)
 		// Write index file.
 		err = ans.Write()
 		if err != nil {
