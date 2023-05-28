@@ -405,6 +405,8 @@ github.com/fullsailor/pkcs7 v0.0.0-20190404230743-d7302db945fa/go.mod h1:KnogPXt
 github.com/garyburd/redigo v0.0.0-20150301180006-535138d7bcd7/go.mod h1:NR3MbYisc3/PwhQ00EMzDiPmrwpPxAn5GI05/YaO1SY=
 github.com/geaaru/pkgs-checker v0.13.1 h1:IszyiqOh7gd59MFEp0KhBaiJSWRa1lXcZ3GkfgxOLHA=
 github.com/geaaru/pkgs-checker v0.13.1/go.mod h1:zxXtLd0dah2P2y6h7szmOGWkz5EGr9N7gYHBiB2BmsY=
+github.com/geaaru/pkgs-checker v0.13.4 h1:gKqrU1q1qVniTkCOJ6AjI3nHSZeQT5tiwF6JsCV+I10=
+github.com/geaaru/pkgs-checker v0.13.4/go.mod h1:zxXtLd0dah2P2y6h7szmOGWkz5EGr9N7gYHBiB2BmsY=
 github.com/geaaru/tar-formers v0.6.0 h1:Vp3+FWNi4Ut8O+GcAKNQz4k6v73CgaCwSllRphc05sA=
 github.com/geaaru/tar-formers v0.6.0/go.mod h1:Ap1xameXhHtnDc+vlkFg0caiccwizfubf786x2eQXJQ=
 github.com/ghodss/yaml v0.0.0-20150909031657-73d445a93680/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
@@ -747,6 +749,8 @@ github.com/mattn/go-runewidth v0.0.14/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh
 github.com/mattn/go-shellwords v1.0.3/go.mod h1:3xCvwCdWdlDJUrvuMn7Wuy9eWs4pE8vqg+NOMyg4B2o=
 github.com/mattn/go-shellwords v1.0.6/go.mod h1:3xCvwCdWdlDJUrvuMn7Wuy9eWs4pE8vqg+NOMyg4B2o=
 github.com/mattn/go-sqlite3 v1.6.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
+github.com/mattn/go-sqlite3 v1.14.16 h1:yOQRA0RpS5PFz/oikGwBEqvAWhWg5ufRz4ETLjwpU1Y=
+github.com/mattn/go-sqlite3 v1.14.16/go.mod h1:2eHXhiwb8IkHr+BDWZGa96P6+rkvnG63S2DGjv9HUNg=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369/go.mod h1:BSXmuO+STAnVfrANrmjBb36TMTDstsz7MSK+HVaYKv4=
 github.com/matttproud/golang_protobuf_extensions v1.0.4 h1:mmDVorXM7PCGKw94cs5zkfA9PSy5pEvNWRP0ET0TIVo=

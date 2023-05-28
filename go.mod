@@ -19,7 +19,7 @@ require (
 	github.com/docker/go-units v0.5.0
 	github.com/ecooper/qlearning v0.0.0-20160612200101-3075011a69fd
 	github.com/fsouza/go-dockerclient v1.9.7
-	github.com/geaaru/pkgs-checker v0.13.1
+	github.com/geaaru/pkgs-checker v0.13.4
 	github.com/geaaru/tar-formers v0.6.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
@@ -114,6 +114,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect

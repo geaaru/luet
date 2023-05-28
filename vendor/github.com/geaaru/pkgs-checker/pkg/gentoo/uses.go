@@ -1,5 +1,4 @@
 /*
-
 Copyright (C) 2017-2021  Daniele Rondina <geaaru@sabayonlinux.org>
 
 This program is free software: you can redistribute it and/or modify
@@ -14,7 +13,6 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 */
 package gentoo
 
@@ -40,8 +38,10 @@ type PortageMetaData struct {
 	CFlags         string   `json:"cflags,omitempty"`
 	LdFlags        string   `json:"ldflags,omitempty"`
 	CHost          string   `json:"chost,omitempty"`
+	CC             string   `json:"cc,omitempty"`
 	BDEPEND        string   `json:"bdepend,omitempty"`
 	RDEPEND        string   `json:"rdepend,omitempty"`
+	PDEPEND        string   `json:"pdepend,omitempty"`
 	DEPEND         string   `json:"depend,omitempty"`
 	REQUIRES       string   `json:"requires,omitempty"`
 	KEYWORDS       string   `json:"keywords,omitempty"`
@@ -59,6 +59,7 @@ type PortageMetaData struct {
 	NEEDED_ELF2    string   `json:"needed_elf2,omitempty"`
 	PKGUSE         string   `json:"pkguse,omitempty"`
 	RESTRICT       string   `json:"restrict,omitempty"`
+	BINPKGMD5      string   `json:"binpkgmd5,omitempty"`
 
 	Ebuild string `json:"ebuild,omitempty"`
 
@@ -95,7 +96,9 @@ func NewPortageMetaData(pkg *GentooPackage) *PortageMetaData {
 		LdFlags:        "",
 		BDEPEND:        "",
 		RDEPEND:        "",
+		PDEPEND:        "",
 		DEPEND:         "",
+		CC:             "",
 		BUILD_TIME:     "",
 		CBUILD:         "",
 		COUNTER:        "",
@@ -109,6 +112,7 @@ func NewPortageMetaData(pkg *GentooPackage) *PortageMetaData {
 		PKGUSE:         "",
 		RESTRICT:       "",
 		REQUIRES:       "",
+		BINPKGMD5:      "",
 		SIZE:           "",
 		CONTENTS:       make([]PortageContentElem, 0),
 	}
@@ -279,6 +283,11 @@ func ParsePackageMetadataDir(dir string, opts *PortageUseParseOpts) (*PortageMet
 		return nil, err
 	}
 
+	ans.CC, err = parseMetaFile(filepath.Join(metaDir, "CC"), true)
+	if err != nil {
+		return nil, err
+	}
+
 	ans.RDEPEND, err = parseMetaFile(filepath.Join(metaDir, "RDEPEND"), true)
 	if err != nil {
 		return nil, err
@@ -289,7 +298,17 @@ func ParsePackageMetadataDir(dir string, opts *PortageUseParseOpts) (*PortageMet
 		return nil, err
 	}
 
+	ans.PDEPEND, err = parseMetaFile(filepath.Join(metaDir, "PDEPEND"), true)
+	if err != nil {
+		return nil, err
+	}
+
 	ans.BUILD_TIME, err = parseMetaFile(filepath.Join(metaDir, "BUILD_TIME"), true)
+	if err != nil {
+		return nil, err
+	}
+
+	ans.BINPKGMD5, err = parseMetaFile(filepath.Join(metaDir, "BINPKGMD5"), true)
 	if err != nil {
 		return nil, err
 	}
@@ -671,6 +690,16 @@ func (m *PortageMetaData) WriteMetadata2Dir(dir string, opts *PortageUseParseOpt
 		}
 	}
 
+	// Write BINPKGMD5 file
+	if m.BINPKGMD5 != "" {
+		err = os.WriteFile(filepath.Join(metadir, "BINPKGMD5"),
+			[]byte(m.BINPKGMD5+"\n"), 0644,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Write BUILD_TIME
 	err = os.WriteFile(filepath.Join(metadir, "BUILD_TIME"),
 		[]byte(m.BUILD_TIME+"\n"), 0644,
@@ -693,6 +722,16 @@ func (m *PortageMetaData) WriteMetadata2Dir(dir string, opts *PortageUseParseOpt
 	)
 	if err != nil {
 		return err
+	}
+
+	// Write CC file
+	if m.CC != "" {
+		err = os.WriteFile(filepath.Join(metadir, "CC"),
+			[]byte(m.CC+"\n"), 0644,
+		)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Write CFLAGS
@@ -860,6 +899,16 @@ func (m *PortageMetaData) WriteMetadata2Dir(dir string, opts *PortageUseParseOpt
 	if m.NEEDED_ELF2 != "" {
 		err = os.WriteFile(filepath.Join(metadir, "NEEDED.ELF.2"),
 			[]byte(m.NEEDED_ELF2+"\n"), 0644,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Write PDEPEND file
+	if m.PDEPEND != "" {
+		err = os.WriteFile(filepath.Join(metadir, "PDEPEND"),
+			[]byte(m.PDEPEND+"\n"), 0644,
 		)
 		if err != nil {
 			return err

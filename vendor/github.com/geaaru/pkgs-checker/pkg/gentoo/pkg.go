@@ -1,5 +1,4 @@
 /*
-
 Copyright (C) 2017-2021  Daniele Rondina <geaaru@sabayonlinux.org>
 
 This program is free software: you can redistribute it and/or modify
@@ -14,7 +13,6 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 */
 package gentoo
 
@@ -23,6 +21,7 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	version "github.com/hashicorp/go-version"
@@ -279,19 +278,39 @@ func (p *GentooPackage) GreaterThan(i *GentooPackage) (bool, error) {
 	}
 
 	if v1.Equal(v2) {
-		// Order suffix and VersionBuild
-		versionsSuffix := []string{
-			p.VersionSuffix + "+" + p.VersionBuild,
-			i.VersionSuffix + "+" + i.VersionBuild,
-		}
 
-		sort.Strings(versionsSuffix)
-		if versionsSuffix[0] == versionsSuffix[1] {
-			ans = false
-		} else if versionsSuffix[1] == p.VersionSuffix+"+"+p.VersionBuild {
-			ans = true
+		// Check if both version build are number to using the right
+		// sort method.
+		i1, err := strconv.Atoi(p.VersionBuild)
+		i2, err2 := strconv.Atoi(i.VersionBuild)
+
+		if err == nil && err2 == nil {
+
+			if i1 == i2 {
+				ans = false
+			} else if i1 > i2 {
+				ans = true
+			} else {
+				ans = false
+			}
+
 		} else {
-			ans = false
+
+			// Order suffix and VersionBuild
+			versionsSuffix := []string{
+				p.VersionSuffix + "+" + p.VersionBuild,
+				i.VersionSuffix + "+" + i.VersionBuild,
+			}
+
+			sort.Strings(versionsSuffix)
+			if versionsSuffix[0] == versionsSuffix[1] {
+				ans = false
+			} else if versionsSuffix[1] == p.VersionSuffix+"+"+p.VersionBuild {
+				ans = true
+			} else {
+				ans = false
+			}
+
 		}
 
 	} else {
@@ -312,19 +331,38 @@ func (p *GentooPackage) LessThan(i *GentooPackage) (bool, error) {
 	}
 
 	if v1.Equal(v2) {
-		// Order suffix and VersionBuild
-		versionsSuffix := []string{
-			p.VersionSuffix + "+" + p.VersionBuild,
-			i.VersionSuffix + "+" + i.VersionBuild,
-		}
 
-		sort.Strings(versionsSuffix)
-		if versionsSuffix[0] == versionsSuffix[1] {
-			ans = false
-		} else if versionsSuffix[0] == p.VersionSuffix+"+"+p.VersionBuild {
-			ans = true
+		// Check if both version build are number to using the right
+		// sort method.
+		i1, err := strconv.Atoi(p.VersionBuild)
+		i2, err2 := strconv.Atoi(i.VersionBuild)
+
+		if err == nil && err2 == nil {
+
+			if i1 == i2 {
+				ans = false
+			} else if i1 < i2 {
+				ans = true
+			} else {
+				ans = false
+			}
+
 		} else {
-			ans = false
+
+			// Order suffix and VersionBuild
+			versionsSuffix := []string{
+				p.VersionSuffix + "+" + p.VersionBuild,
+				i.VersionSuffix + "+" + i.VersionBuild,
+			}
+
+			sort.Strings(versionsSuffix)
+			if versionsSuffix[0] == versionsSuffix[1] {
+				ans = false
+			} else if versionsSuffix[0] == p.VersionSuffix+"+"+p.VersionBuild {
+				ans = true
+			} else {
+				ans = false
+			}
 		}
 
 	} else {
