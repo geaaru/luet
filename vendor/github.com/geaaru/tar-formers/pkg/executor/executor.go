@@ -1,6 +1,5 @@
 /*
-
-Copyright (C) 2021  Daniele Rondina <geaaru@sabayonlinux.org>
+Copyright (C) 2021-2023  Daniele Rondina <geaaru@gmail.org>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -14,7 +13,6 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 */
 package executor
 
@@ -24,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -52,19 +51,24 @@ type TarFileHandlerFunc func(path, dst string,
 	header *tar.Header, content io.Reader,
 	opts *TarFileOperation, t *TarFormers) error
 
+type TarFileWriterHandlerFunc func(path, newpath string,
+	header *tar.Header, tw *tar.Writer,
+	opts *TarFileOperation, t *TarFormers) error
+
 type TarFormers struct {
 	Config *specs.Config `yaml:"config" json:"config"`
 	Logger *log.Logger   `yaml:"-" json:"-"`
 
-	writer      io.Writer          `yaml:"-" json:"-"`
 	reader      io.Reader          `yaml:"-" json:"-"`
 	fileHandler TarFileHandlerFunc `yaml:"-" json:"-"`
 
+	writer            io.Writer                `yaml:"-" json:"-"`
+	fileWriterHandler TarFileWriterHandlerFunc `yaml:"-" json:"-"`
+
 	Task       *specs.SpecFile `yaml:"task,omitempty" json:"task,omitempty"`
 	TaskWriter *specs.SpecFile `yaml:"task_writer,omitempty" json:"task_writer,omitempty"`
-	ExportDir  string          `yaml:"export_dir,omitempty" json:"export_dir,omitempty"`
 
-	// Using wait group to run f.Sync in parallel
+	//Using wait group to run f.Sync in parallel
 	// Run f.Sync kills time processing.
 	waitGroup *sync.WaitGroup
 	Ctx       *context.Context
@@ -91,7 +95,6 @@ func NewTarFormersWithLog(config *specs.Config, defLog bool) *TarFormers {
 		Config:    config,
 		Logger:    log.NewLogger(config),
 		Task:      nil,
-		ExportDir: "",
 		waitGroup: &sync.WaitGroup{},
 	}
 
@@ -125,8 +128,232 @@ func (t *TarFormers) HasFileHandler() bool {
 	}
 }
 
+func (t *TarFormers) HasFileWriterHandler() bool {
+	if t.fileWriterHandler != nil {
+		return true
+	} else {
+		return false
+	}
+}
+
 func (t *TarFormers) SetFileHandler(f TarFileHandlerFunc) {
 	t.fileHandler = f
+}
+
+func (t *TarFormers) SetFileWriterHandler(f TarFileWriterHandlerFunc) {
+	t.fileWriterHandler = f
+}
+
+func (t *TarFormers) RunTaskWriter(task *specs.SpecFile) error {
+	if task == nil || task.Writer == nil {
+		return errors.New("Invalid task")
+	}
+
+	if len(task.Writer.ArchiveDirs) == 0 && len(task.Writer.ArchiveFiles) == 0 {
+
+		return errors.New("No archive dirs or files defined on task")
+	}
+
+	t.TaskWriter = task
+	t.TaskWriter.Prepare()
+
+	tarWriter := tar.NewWriter(t.writer)
+	defer tarWriter.Close()
+
+	err := t.HandleTarFlowWriter(tarWriter)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *TarFormers) RunTaskBridge(in, out *specs.SpecFile) error {
+	if in == nil {
+		return errors.New("Invalid input task")
+	}
+
+	if out == nil || out.Writer == nil {
+		return errors.New("Invalid out task")
+	}
+
+	t.TaskWriter = out
+	t.Task = in
+
+	t.Task.Prepare()
+	t.TaskWriter.Prepare()
+
+	tarWriter := tar.NewWriter(t.writer)
+	defer tarWriter.Close()
+
+	tarReader := tar.NewReader(t.reader)
+
+	err := t.HandlerTarBridgeFlow(tarReader, tarWriter)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *TarFormers) HandlerTarBridgeFlow(
+	tarReader *tar.Reader, tarWriter *tar.Writer) error {
+	var ans error = nil
+
+	for {
+		header, err := tarReader.Next()
+
+		if err == io.EOF {
+			err = nil
+			break
+		}
+
+		if err != nil {
+			ans = err
+			break
+		}
+
+		name := header.Name
+
+		// Call file handler also for file that could be skipped and permit
+		// to notify this to users.
+		if t.HasFileHandler() && t.Task.IsFileTriggered(name) {
+			opts := TarFileOperation{
+				Rename:  false,
+				NewName: "",
+				Skip:    false,
+			}
+
+			err := t.fileHandler(name, "", header, tarReader, &opts, t)
+			if err != nil {
+				return err
+			}
+
+			if opts.Skip {
+				t.Logger.Debug(fmt.Sprintf(
+					"File %s skipped from reader callback.", header.Name))
+				continue
+			}
+
+			if opts.Rename {
+				name = opts.NewName
+				t.Logger.Debug(fmt.Sprintf(
+					"File %s renamed in %s from reader callback.",
+					header.Name, name))
+			}
+		}
+
+		if t.Task.IsPath2Skip(name) {
+			t.Logger.Debug(fmt.Sprintf("File %s skipped by reader.", name))
+			continue
+		}
+
+		fnewname := t.TaskWriter.GetRename(name)
+
+		// Call file handler also for file that could be skipped
+		// and permit to notify this to users
+		if t.HasFileWriterHandler() && t.TaskWriter.IsFileTriggered(name) {
+			opts := TarFileOperation{
+				Rename:  false,
+				NewName: "",
+				Skip:    false,
+			}
+
+			err := t.fileWriterHandler(name, fnewname, header, tarWriter, &opts, t)
+			if err != nil {
+				return fmt.Errorf(
+					"Error returned from user handler for file %s: %s",
+					name, err.Error())
+			}
+
+			if opts.Skip {
+				t.Logger.Debug(fmt.Sprintf(
+					"File %s skipped from writer callback.", name))
+				return nil
+			}
+
+			if opts.Rename {
+				name = opts.NewName
+			} else {
+				name = fnewname
+			}
+		} else if name != fnewname {
+			name = fnewname
+		}
+
+		if t.TaskWriter.IsPath2Skip(name) {
+			t.Logger.Debug(fmt.Sprintf("File %s skipped by writer.", name))
+			continue
+		}
+
+		t.Logger.Debug(fmt.Sprintf("Processing file %s -> %s of type %d",
+			header.Name, name, header.Typeflag))
+
+		header.Name = name
+
+		// Write tar header
+		err = tarWriter.WriteHeader(header)
+		if err != nil {
+			return fmt.Errorf(
+				"Error on write header for file '%s': %s'",
+				name, err.Error())
+		}
+
+		switch header.Typeflag {
+		case tar.TypeReg, tar.TypeRegA:
+			nb, err := io.Copy(tarWriter, tarReader)
+			if err != nil {
+				return fmt.Errorf(
+					"Error on write file %s: %s", name, err.Error())
+			}
+			if nb != header.Size {
+				return fmt.Errorf(
+					"For file %s written %s instead of %s bytes.",
+					nb, header.Size)
+			}
+		}
+
+	}
+
+	tarWriter.Flush()
+
+	return ans
+}
+
+func (t *TarFormers) HandleTarFlowWriter(tarWriter *tar.Writer) error {
+	imap := make(map[inodeResource]string, 0)
+
+	// Write all directories selected
+	if len(t.TaskWriter.Writer.ArchiveDirs) > 0 {
+		for _, d := range t.TaskWriter.Writer.ArchiveDirs {
+			err := t.InjectDir2Writer(tarWriter, d, &imap)
+			if err != nil {
+				return fmt.Errorf(
+					"Error on inject directory %s: %s", d,
+					err.Error())
+			}
+		}
+
+	}
+
+	// Write all files selected
+	if len(t.TaskWriter.Writer.ArchiveFiles) > 0 {
+		for _, f := range t.TaskWriter.Writer.ArchiveFiles {
+			info, err := os.Stat(f)
+			if err != nil {
+				return fmt.Errorf(
+					"Error on stat file %s: %s", f, err.Error())
+			}
+			err = t.InjectFile2Writer(tarWriter,
+				f, t.TaskWriter.GetRename(f), &info, &imap)
+			if err != nil {
+				return fmt.Errorf(
+					"Error on inject file %s: %s", f, err.Error())
+			}
+		}
+	}
+
+	return nil
 }
 
 func (t *TarFormers) RunTask(task *specs.SpecFile, dir string) error {
@@ -243,17 +470,18 @@ func (t *TarFormers) HandleTarFlow(tarReader *tar.Reader, dir string) error {
 		info := header.FileInfo()
 
 		if t.Config.GetLogging().Level == "debug" {
-			t.Logger.Debug(fmt.Sprintf("Parsing file %s [%s - %d, %s - %d] %s (%s).",
-				name, header.Uname, header.Uid, header.Gname, header.Gid, info.Mode(), header.Linkname))
+			t.Logger.Debug(fmt.Sprintf(
+				"Parsing file %s [%s - %d, %s - %d] %s (%s).",
+				name, header.Uname, header.Uid, header.Gname,
+				header.Gid, info.Mode(), header.Linkname))
 		}
 
 		switch header.Typeflag {
 		case tar.TypeDir:
 			newDir, err = t.CreateDir(targetPath, info.Mode())
 			if err != nil {
-				return errors.New(
-					fmt.Sprintf("Error on create directory %s: %s",
-						targetPath, err.Error()))
+				return fmt.Errorf("Error on create directory %s: %s",
+					targetPath, err.Error())
 			}
 		case tar.TypeReg, tar.TypeRegA:
 			err = t.CreateFile(dir, name, info.Mode(), tarReader, header)

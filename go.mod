@@ -20,7 +20,7 @@ require (
 	github.com/ecooper/qlearning v0.0.0-20160612200101-3075011a69fd
 	github.com/fsouza/go-dockerclient v1.9.7
 	github.com/geaaru/pkgs-checker v0.13.4
-	github.com/geaaru/tar-formers v0.6.0
+	github.com/geaaru/tar-formers v0.8.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/gofrs/flock v0.8.1
@@ -34,7 +34,7 @@ require (
 	github.com/jedib0t/go-pretty v4.3.0+incompatible
 	github.com/jinzhu/copier v0.0.0-20180308034124-7e38e58719c3
 	github.com/klauspost/compress v1.16.5
-	github.com/klauspost/pgzip v1.2.1
+	github.com/klauspost/pgzip v1.2.5
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
 	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/logrusorgru/aurora v2.0.3+incompatible
@@ -84,6 +84,7 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/docker/libtrust v0.0.0-20160708172513-aabc10ec26b7 // indirect
+	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
@@ -147,6 +148,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
+	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/urfave/cli v1.22.12 // indirect
 	github.com/vbatts/go-mtree v0.4.4 // indirect
 	github.com/vbatts/tar-split v0.11.2 // indirect
