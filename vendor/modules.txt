@@ -206,8 +206,8 @@ github.com/fsouza/go-dockerclient
 # github.com/geaaru/pkgs-checker v0.13.4
 ## explicit; go 1.18
 github.com/geaaru/pkgs-checker/pkg/gentoo
-# github.com/geaaru/tar-formers v0.8.0
-## explicit; go 1.18
+# github.com/geaaru/tar-formers v0.8.2
+## explicit; go 1.19
 github.com/geaaru/tar-formers/pkg/executor
 github.com/geaaru/tar-formers/pkg/logger
 github.com/geaaru/tar-formers/pkg/specs
@@ -264,6 +264,7 @@ github.com/gogo/protobuf/sortkeys
 github.com/golang/groupcache/lru
 # github.com/golang/protobuf v1.5.3
 ## explicit; go 1.9
+github.com/golang/protobuf/jsonpb
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
@@ -386,7 +387,7 @@ github.com/klauspost/compress/internal/cpuinfo
 github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
-# github.com/klauspost/pgzip v1.2.5
+# github.com/klauspost/pgzip v1.2.6
 ## explicit
 github.com/klauspost/pgzip
 # github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
@@ -476,7 +477,7 @@ github.com/munnerz/goautoneg
 # github.com/olekukonko/tablewriter v0.0.5
 ## explicit; go 1.12
 github.com/olekukonko/tablewriter
-# github.com/onsi/ginkgo/v2 v2.9.2
+# github.com/onsi/ginkgo/v2 v2.9.5
 ## explicit; go 1.18
 github.com/onsi/ginkgo/v2
 github.com/onsi/ginkgo/v2/config
@@ -542,7 +543,7 @@ github.com/opencontainers/runtime-spec/specs-go
 # github.com/otiai10/copy v1.2.1-0.20200916181228-26f84a0b1578
 ## explicit; go 1.12
 github.com/otiai10/copy
-# github.com/pelletier/go-toml/v2 v2.0.7
+# github.com/pelletier/go-toml/v2 v2.0.8
 ## explicit; go 1.16
 github.com/pelletier/go-toml/v2
 github.com/pelletier/go-toml/v2/internal/characters
@@ -596,7 +597,7 @@ github.com/sirupsen/logrus
 github.com/spf13/afero
 github.com/spf13/afero/internal/common
 github.com/spf13/afero/mem
-# github.com/spf13/cast v1.5.0
+# github.com/spf13/cast v1.5.1
 ## explicit; go 1.18
 github.com/spf13/cast
 # github.com/spf13/cobra v1.7.0
@@ -608,7 +609,7 @@ github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.5
 ## explicit; go 1.12
 github.com/spf13/pflag
-# github.com/spf13/viper v1.15.0
+# github.com/spf13/viper v1.16.0
 ## explicit; go 1.17
 github.com/spf13/viper
 github.com/spf13/viper/internal/encoding
@@ -683,7 +684,7 @@ go.opencensus.io/internal
 go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/tracestate
-# go.uber.org/atomic v1.10.0
+# go.uber.org/atomic v1.11.0
 ## explicit; go 1.18
 go.uber.org/atomic
 # go.uber.org/multierr v1.11.0
@@ -698,7 +699,7 @@ go.uber.org/zap/internal/bufferpool
 go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
-# golang.org/x/crypto v0.5.0
+# golang.org/x/crypto v0.9.0
 ## explicit; go 1.17
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
@@ -720,7 +721,7 @@ golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
-# golang.org/x/oauth2 v0.6.0
+# golang.org/x/oauth2 v0.7.0
 ## explicit; go 1.17
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
@@ -791,22 +792,34 @@ google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/urlfetch
-# google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4
+# google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.53.0
+# google.golang.org/grpc v1.55.0
 ## explicit; go 1.17
+google.golang.org/grpc/attributes
 google.golang.org/grpc/codes
+google.golang.org/grpc/connectivity
+google.golang.org/grpc/credentials
+google.golang.org/grpc/grpclog
+google.golang.org/grpc/internal
+google.golang.org/grpc/internal/credentials
+google.golang.org/grpc/internal/grpclog
+google.golang.org/grpc/internal/pretty
 google.golang.org/grpc/internal/status
+google.golang.org/grpc/resolver
+google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/status
-# google.golang.org/protobuf v1.29.1
+# google.golang.org/protobuf v1.30.0
 ## explicit; go 1.11
+google.golang.org/protobuf/encoding/protojson
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
 google.golang.org/protobuf/internal/descfmt
 google.golang.org/protobuf/internal/descopts
 google.golang.org/protobuf/internal/detrand
 google.golang.org/protobuf/internal/encoding/defval
+google.golang.org/protobuf/internal/encoding/json
 google.golang.org/protobuf/internal/encoding/messageset
 google.golang.org/protobuf/internal/encoding/tag
 google.golang.org/protobuf/internal/encoding/text
