@@ -10,6 +10,7 @@ import (
 	"os"
 
 	pkg "github.com/geaaru/luet/pkg/package"
+	spectooling "github.com/geaaru/luet/pkg/spectooling"
 )
 
 func ReadDefinitionFile(defFile string) (*pkg.DefaultPackage, error) {
@@ -28,4 +29,17 @@ func ReadDefinitionFile(defFile string) (*pkg.DefaultPackage, error) {
 	}
 
 	return ans, nil
+}
+
+func WriteDefinitionFile(p pkg.Package, definitionFilePath string) error {
+	data, err := spectooling.NewDefaultPackageSanitized(p).Yaml()
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(definitionFilePath, data, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
