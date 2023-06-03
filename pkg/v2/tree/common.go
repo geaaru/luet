@@ -74,6 +74,16 @@ func (t *TreeIdx) GetPackageVersions(name string) ([]*TreeIdxPkg, bool) {
 	return val, ok
 }
 
+func (t *TreeIdx) GetPackageVersion(name, version string) (*TreeIdxPkg, bool) {
+	val, ok := t.Map[name]
+	for _, v := range val {
+		if v.Version == version {
+			return v, ok
+		}
+	}
+	return nil, false
+}
+
 func (t *TreeIdx) Write() error {
 	fpath := filepath.Join(t.TreePath, IDX_FILE)
 	if t.Compress {
