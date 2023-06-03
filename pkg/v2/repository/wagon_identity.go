@@ -7,6 +7,8 @@ package repository
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/geaaru/luet/pkg/config"
 	fhelpers "github.com/geaaru/luet/pkg/helpers/file"
@@ -26,25 +28,34 @@ type WagonDocument struct {
 type WagonIdentity struct {
 	*config.LuetRepository `yaml:",inline" json:",inline"`
 
-	IdentityFile    string                    `yaml:-" json:"-"`
+	IdentityFile    string                    `yaml:"-" json:"-"`
 	RepositoryFiles map[string]*WagonDocument `yaml:"repo_files,omitempty" json:"repo_files,omitempty"`
 }
 
 func NewWagonIdentify(l *config.LuetRepository) *WagonIdentity {
 	return &WagonIdentity{
-		LuetRepository: l,
+		LuetRepository:  l,
+		IdentityFile:    "",
+		RepositoryFiles: make(map[string]*WagonDocument, 0),
 	}
 }
 
-func (w *WagonIdentity) Valid() bool {
-	_, hasMeta := w.RepositoryFiles[REPOFILE_META_KEY]
-	if !hasMeta {
-		return false
-	}
+func (w *WagonIdentity) PurgeFiles() {
+	w.RepositoryFiles = make(map[string]*WagonDocument, 0)
+}
 
-	_, hasTree := w.RepositoryFiles[REPOFILE_TREE_KEY]
-	if !hasTree {
-		return false
+func (w *WagonIdentity) Valid() bool {
+	_, hasTreev2 := w.RepositoryFiles[REPOFILE_TREEV2_KEY]
+	if !hasTreev2 {
+		_, hasMeta := w.RepositoryFiles[REPOFILE_META_KEY]
+		if !hasMeta {
+			return false
+		}
+
+		_, hasTree := w.RepositoryFiles[REPOFILE_TREE_KEY]
+		if !hasTree {
+			return false
+		}
 	}
 
 	return true
@@ -69,6 +80,30 @@ func (w *WagonIdentity) GetAuthentication() map[string]string {
 
 func (w *WagonIdentity) IncrementRevision() {
 	w.LuetRepository.Revision++
+}
+
+func (w *WagonIdentity) BumpRevision() {
+	w.IncrementRevision()
+	w.LuetRepository.LastUpdate = strconv.FormatInt(time.Now().Unix(), 10)
+}
+
+func (w *WagonIdentity) Yaml() ([]byte, error) {
+	return yaml.Marshal(w)
+}
+
+func (w *WagonIdentity) Write(f string) error {
+	data, err := w.Yaml()
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(f, data, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("Error on write identify file %s: %s",
+			f, err.Error())
+	}
+
+	return nil
 }
 
 func (w *WagonIdentity) Load(f string) error {

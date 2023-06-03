@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022-2023 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package repository
 
@@ -8,6 +8,14 @@ import (
 	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
 	compression "github.com/geaaru/luet/pkg/v2/compiler/types/compression"
 )
+
+func NewWagonDocument(f string) *WagonDocument {
+	return &WagonDocument{
+		FileName:        f,
+		CompressionType: compression.None,
+		Checksums:       make(map[string]string, 0),
+	}
+}
 
 // SetFileName sets the name of the repository file.
 // Each repository can ship arbitrary file that will be downloaded by the client

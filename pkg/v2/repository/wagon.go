@@ -29,6 +29,7 @@ const (
 	COMPILERTREE_TARBALL = "compilertree.tar"
 
 	REPOFILE_TREE_KEY          = "tree"
+	REPOFILE_TREEV2_KEY        = "treev2"
 	REPOFILE_COMPILER_TREE_KEY = "compilertree"
 	REPOFILE_META_KEY          = "meta"
 
