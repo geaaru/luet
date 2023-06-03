@@ -16,6 +16,7 @@
 package file
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"io/fs"
@@ -302,4 +303,19 @@ func Rel2Abs(s string) (string, error) {
 		pathToSet = abs
 	}
 	return pathToSet, nil
+}
+
+func Sha256Sum(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
