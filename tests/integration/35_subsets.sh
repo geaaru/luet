@@ -27,30 +27,34 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-    mkdir $tmpdir/testbuild
-    $LUET_BUILD build \
-      --config $tmpdir/luet-build.yaml \
-      --tree "$ROOT_DIR/tests/fixtures/subsets" \
-      --destination $tmpdir/testbuild --compression zstd subset/a
-    buildst=$?
-    assertEquals 'builds successfully' "$buildst" "0"
-    assertTrue 'create package' "[ -e '$tmpdir/testbuild/a-subset-1.0.package.tar.zst' ]"
+  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/subsets"
+  genidx=$?
+  assertEquals 'genidx successfully' "$genidx" "0"
+
+  mkdir $tmpdir/testbuild
+  $LUET_BUILD build \
+    --config $tmpdir/luet-build.yaml \
+    --tree "$ROOT_DIR/tests/fixtures/subsets" \
+    --destination $tmpdir/testbuild --compression zstd subset/a
+  buildst=$?
+  assertEquals 'builds successfully' "$buildst" "0"
+  assertTrue 'create package' "[ -e '$tmpdir/testbuild/a-subset-1.0.package.tar.zst' ]"
 }
 
 testRepo() {
-    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET_BUILD create-repo \
-      --config $tmpdir/luet-build.yaml \
-      --tree "$ROOT_DIR/tests/fixtures/subsets" \
-      --output $tmpdir/testbuild \
-      --packages $tmpdir/testbuild \
-      --name "test" \
-      --descr "Test Repo" \
-      --urls $tmpdir/testrootfs \
-      --type disk
-    createst=$?
-    assertEquals 'create repo successfully' "$createst" "0"
-    assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
+  assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
+  $LUET_BUILD create-repo \
+    --config $tmpdir/luet-build.yaml \
+    --tree "$ROOT_DIR/tests/fixtures/subsets" \
+    --output $tmpdir/testbuild \
+    --packages $tmpdir/testbuild \
+    --name "test" \
+    --descr "Test Repo" \
+    --urls $tmpdir/testrootfs \
+    --type disk
+  createst=$?
+  assertEquals 'create repo successfully' "$createst" "0"
+  assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
 }
 
 testConfig() {

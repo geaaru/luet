@@ -1,8 +1,7 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
     export tmpdir="$(mktemp -d)"

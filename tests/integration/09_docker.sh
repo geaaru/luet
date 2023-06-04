@@ -1,38 +1,41 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
 }
 
 oneTimeTearDown() {
-    rm -rf "$tmpdir"
+  rm -rf "$tmpdir"
 }
 
 testBuild() {
-    mkdir $tmpdir/testbuild
-    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/docker" --destination $tmpdir/testbuild --compression gzip --all > /dev/null
-    buildst=$?
-    assertEquals 'builds successfully' "$buildst" "0"
-    assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-seed-1.0.package.tar.gz' ]"
+  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/docker"
+  genidx=$?
+  assertEquals 'genidx successfully' "$genidx" "0"
+
+  mkdir $tmpdir/testbuild
+  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/docker" --destination $tmpdir/testbuild --compression gzip --all > ${OUTPUT}
+  buildst=$?
+  assertEquals 'builds successfully' "$buildst" "0"
+  assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-seed-1.0.package.tar.gz' ]"
 }
 
 testRepo() {
-    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/docker" \
-    --output $tmpdir/testbuild \
-    --packages $tmpdir/testbuild \
-    --name "test" \
-    --descr "Test Repo" \
-    --urls $tmpdir/testrootfs \
-    --type disk > /dev/null
+  assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
+  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/docker" \
+  --output $tmpdir/testbuild \
+  --packages $tmpdir/testbuild \
+  --name "test" \
+  --descr "Test Repo" \
+  --urls $tmpdir/testrootfs \
+  --type disk > ${OUTPUT}
 
-    createst=$?
-    assertEquals 'create repo successfully' "$createst" "0"
-    assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
+  createst=$?
+  assertEquals 'create repo successfully' "$createst" "0"
+  assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
 }
 
 testConfig() {

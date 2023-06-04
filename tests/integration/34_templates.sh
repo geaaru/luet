@@ -1,39 +1,42 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
-export tmpdir="$(mktemp -d)"
+  export tmpdir="$(mktemp -d)"
 }
 
 oneTimeTearDown() {
-    rm -rf "$tmpdir"
+  rm -rf "$tmpdir"
 }
 
 testBuild() {
-    mkdir $tmpdir/testbuild
-    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/shared_templates" --destination $tmpdir/testbuild --compression gzip --all
-    buildst=$?
-    assertEquals 'builds successfully' "$buildst" "0"
-    assertTrue 'create packages' "[ -e '$tmpdir/testbuild/foo-test-1.0.package.tar.gz' ]"
-    assertTrue 'create packages' "[ -e '$tmpdir/testbuild/bar-test-1.0.package.tar.gz' ]"
+  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/shared_templates"
+  genidx=$?
+  assertEquals 'genidx successfully' "$genidx" "0"
+
+  mkdir $tmpdir/testbuild
+  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/shared_templates" --destination $tmpdir/testbuild --compression gzip --all
+  buildst=$?
+  assertEquals 'builds successfully' "$buildst" "0"
+  assertTrue 'create packages' "[ -e '$tmpdir/testbuild/foo-test-1.0.package.tar.gz' ]"
+  assertTrue 'create packages' "[ -e '$tmpdir/testbuild/bar-test-1.0.package.tar.gz' ]"
 }
 
 testRepo() {
-    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/shared_templates" \
-    --output $tmpdir/testbuild \
-    --packages $tmpdir/testbuild \
-    --name "test" \
-    --descr "Test Repo" \
-    --urls $tmpdir/testrootfs \
-    --type disk > /dev/null
+  assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
+  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/shared_templates" \
+  --output $tmpdir/testbuild \
+  --packages $tmpdir/testbuild \
+  --name "test" \
+  --descr "Test Repo" \
+  --urls $tmpdir/testrootfs \
+  --type disk > ${OUTPUT}
 
-    createst=$?
-    assertEquals 'create repo successfully' "$createst" "0"
-    assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
+  createst=$?
+  assertEquals 'create repo successfully' "$createst" "0"
+  assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
 }
 
 testConfig() {

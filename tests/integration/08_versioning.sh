@@ -1,8 +1,7 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -29,48 +28,51 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-    mkdir $tmpdir/testbuild
-    $LUET_BUILD build --config $tmpdir/luet-build.yaml \
-      --tree "$ROOT_DIR/tests/fixtures/versioning" \
-      --destination $tmpdir/testbuild \
-      --compression gzip \
-      --all
-    buildst=$?
-    assertEquals 'builds successfully' "0" "$buildst"
+  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/versioning"
+  genidx=$?
+  assertEquals 'genidx successfully' "$genidx" "0"
 
-    $LUET_BUILD build --config $tmpdir/luet-build.yaml \
-      --tree "$ROOT_DIR/tests/fixtures/versioning" \
-      --destination $tmpdir/testbuild \
-      --compression gzip \
-      media-libs/libsndfile
-    buildst=$?
-    assertEquals 'builds successfully' "0" "$buildst"
+  mkdir $tmpdir/testbuild
+  $LUET_BUILD build --config $tmpdir/luet-build.yaml \
+    --tree "$ROOT_DIR/tests/fixtures/versioning" \
+    --destination $tmpdir/testbuild \
+    --compression gzip \
+    --all > ${OUTPUT}
+  buildst=$?
+  assertEquals 'builds successfully' "0" "$buildst"
 
+  $LUET_BUILD build --config $tmpdir/luet-build.yaml \
+    --tree "$ROOT_DIR/tests/fixtures/versioning" \
+    --destination $tmpdir/testbuild \
+    --compression gzip \
+    media-libs/libsndfile
+  buildst=$?
+  assertEquals 'builds successfully' "0" "$buildst"
 
-    $LUET_BUILD build --config $tmpdir/luet-build.yaml \
-      --tree "$ROOT_DIR/tests/fixtures/versioning" \
-      --destination $tmpdir/testbuild \
-      --compression gzip \
-      '=dev-libs/libsigc++-2-2.10.1+1'
-    buildst=$?
-    assertEquals 'builds successfully' "0" "$buildst"
+  $LUET_BUILD build --config $tmpdir/luet-build.yaml \
+    --tree "$ROOT_DIR/tests/fixtures/versioning" \
+    --destination $tmpdir/testbuild \
+    --compression gzip \
+    '=dev-libs/libsigc++-2-2.10.1+1'
+  buildst=$?
+  assertEquals 'builds successfully' "0" "$buildst"
 }
 
 testRepo() {
-    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET_BUILD create-repo \
-      --config $tmpdir/luet-build.yaml \
-      --tree "$ROOT_DIR/tests/fixtures/versioning" \
-      --output $tmpdir/testbuild \
-      --packages $tmpdir/testbuild \
-      --name "test" \
-      --descr "Test Repo" \
-      --urls $tmpdir/testrootfs \
-      --type disk
+  assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
+  $LUET_BUILD create-repo \
+    --config $tmpdir/luet-build.yaml \
+    --tree "$ROOT_DIR/tests/fixtures/versioning" \
+    --output $tmpdir/testbuild \
+    --packages $tmpdir/testbuild \
+    --name "test" \
+    --descr "Test Repo" \
+    --urls $tmpdir/testrootfs \
+    --type disk
 
-    createst=$?
-    assertEquals 'create repo successfully' "0" "$createst"
-    assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
+  createst=$?
+  assertEquals 'create repo successfully' "0" "$createst"
+  assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
 }
 
 testConfig() {

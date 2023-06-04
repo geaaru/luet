@@ -1,8 +1,7 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
@@ -30,26 +29,30 @@ repos_confdir:
   - "$tmpdir/repos"
 EOF
 
-    mkdir $tmpdir/testbuild
-    ${LUET_BUILD} build --config $tmpdir/luet-build.yaml --tree "$ROOT_DIR/tests/fixtures/finalizers_envs" --destination $tmpdir/testbuild --compression gzip --all
-    buildst=$?
-    assertEquals 'builds successfully' "$buildst" "0"
-    assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-finalizer-envs-seed-1.0.package.tar.gz' ]"
+  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/finalizer_envs"
+  genidx=$?
+  assertEquals 'genidx successfully' "$genidx" "0"
+
+  mkdir $tmpdir/testbuild
+  ${LUET_BUILD} build --config $tmpdir/luet-build.yaml --tree "$ROOT_DIR/tests/fixtures/finalizers_envs" --destination $tmpdir/testbuild --compression gzip --all > ${OUTPUT}
+  buildst=$?
+  assertEquals 'builds successfully' "$buildst" "0"
+  assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-finalizer-envs-seed-1.0.package.tar.gz' ]"
 }
 
 testRepo() {
-    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    ${LUET_BUILD} create-repo --tree "$ROOT_DIR/tests/fixtures/finalizers_envs" \
-    --output $tmpdir/testbuild \
-    --packages $tmpdir/testbuild \
-    --name "test" \
-    --descr "Test Repo" \
-    --urls $tmpdir/testrootfs \
-    --type disk > /dev/null
+  assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
+  ${LUET_BUILD} create-repo --tree "$ROOT_DIR/tests/fixtures/finalizers_envs" \
+  --output $tmpdir/testbuild \
+  --packages $tmpdir/testbuild \
+  --name "test" \
+  --descr "Test Repo" \
+  --urls $tmpdir/testrootfs \
+  --type disk > ${OUTPUT}
 
-    createst=$?
-    assertEquals 'create repo successfully' "$createst" "0"
-    assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
+  createst=$?
+  assertEquals 'create repo successfully' "$createst" "0"
+  assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
 }
 
 testConfig() {
@@ -83,22 +86,21 @@ EOF
 }
 
 testInstall() {
-    $LUET install --sync-repos -y --finalizer-env "CLI_ENV=1" --config $tmpdir/luet.yaml seed/alpine-finalizer-envs@1.0
-    installst=$?
-    assertEquals 'install test successfully' "$installst" "0"
-    assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"
-    assertTrue 'finalizer does not run' "[ -e '$tmpdir/testrootfs/tmp/foo' ]"
-    assertTrue 'finalizer env var is not present' "[ ! -e '$tmpdir/testrootfs/tmp/foo2' ]"
-    assertTrue 'finalizer env var cli is not present' "[ ! -e '$tmpdir/testrootfs/tmp/foo3' ]"
+  $LUET install --sync-repos -y --finalizer-env "CLI_ENV=1" --config $tmpdir/luet.yaml seed/alpine-finalizer-envs@1.0
+  installst=$?
+  assertEquals 'install test successfully' "$installst" "0"
+  assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"
+  assertTrue 'finalizer does not run' "[ -e '$tmpdir/testrootfs/tmp/foo' ]"
+  assertTrue 'finalizer env var is not present' "[ ! -e '$tmpdir/testrootfs/tmp/foo2' ]"
+  assertTrue 'finalizer env var cli is not present' "[ ! -e '$tmpdir/testrootfs/tmp/foo3' ]"
 }
 
 
 testCleanup() {
-    ${LUET} cleanup --config $tmpdir/luet.yaml
-    installst=$?
-    assertEquals 'install test successfully' "$installst" "0"
+  ${LUET} cleanup --config $tmpdir/luet.yaml
+  installst=$?
+  assertEquals 'install test successfully' "$installst" "0"
 }
 
 # Load shUnit2.
 . "$ROOT_DIR/tests/integration/shunit2"/shunit2
-

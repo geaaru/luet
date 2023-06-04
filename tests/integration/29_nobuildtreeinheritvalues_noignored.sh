@@ -1,6 +1,7 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
     export tmpdir="$(mktemp -d)"

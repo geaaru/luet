@@ -1,8 +1,7 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
   export tmpdir="$(mktemp -d)"
@@ -15,7 +14,7 @@ oneTimeTearDown() {
 }
 
 testConfig() {
-    [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
+  [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
     mkdir $tmpdir/testrootfs
     cat <<EOF > $tmpdir/luet.yaml
@@ -72,8 +71,6 @@ testRepo() {
     --tree-compression zstd \
     --tree-filename foo.tar \
     --tree "$tmpdir/empty" --config $tmpdir/luet.yaml --from-repositories \
-    --meta-filename repository.meta.tar \
-    --meta-compression zstd \
     --type docker --push-images --force-push --debug
 
     createst=$?

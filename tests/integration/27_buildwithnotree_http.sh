@@ -1,42 +1,45 @@
 #!/bin/bash
 
-export LUET_NOLOCK=true
-export LUET_BUILD=luet-build
-export LUET=luet
+testsourcedir=$(dirname "${BASH_SOURCE[0]}")
+source ${testsourcedir}/_common.sh
 TEST_PORT="${TEST_PORT:-9090}"
 
 oneTimeSetUp() {
-export tmpdir="$(mktemp -d)"
+  export tmpdir="$(mktemp -d)"
 }
 
 oneTimeTearDown() {
-    rm -rf "$tmpdir"
-    kill '%1' || true
+  rm -rf "$tmpdir"
+  kill '%1' || true
 }
 
 testBuild() {
-    mkdir $tmpdir/testbuild
-    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/buildableseed" --destination $tmpdir/testbuild --compression gzip test/c
-    buildst=$?
-    assertEquals 'builds successfully' "$buildst" "0"
-    assertTrue 'create package dep B' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
-    assertTrue 'create package' "[ -e '$tmpdir/testbuild/c-test-1.0.package.tar.gz' ]"
+  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/buildableseed"
+  genidx=$?
+  assertEquals 'genidx successfully' "$genidx" "0"
+
+  mkdir $tmpdir/testbuild
+  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/buildableseed" --destination $tmpdir/testbuild --compression gzip test/c
+  buildst=$?
+  assertEquals 'builds successfully' "$buildst" "0"
+  assertTrue 'create package dep B' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
+  assertTrue 'create package' "[ -e '$tmpdir/testbuild/c-test-1.0.package.tar.gz' ]"
 }
 
 testRepo() {
-    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/buildableseed" \
-    --output $tmpdir/testbuild \
-    --packages $tmpdir/testbuild \
-    --name "test" \
-    --descr "Test Repo" \
-    --urls $tmpdir/testrootfs \
-    --type disk > /dev/null
+  assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
+  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/buildableseed" \
+  --output $tmpdir/testbuild \
+  --packages $tmpdir/testbuild \
+  --name "test" \
+  --descr "Test Repo" \
+  --urls $tmpdir/testrootfs \
+  --type disk > ${OUTPUT}
 
-    createst=$?
-    assertEquals 'create repo successfully' "$createst" "0"
-    assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET_BUILD serve-repo --dir $tmpdir/testbuild --port $TEST_PORT &
+  createst=$?
+  assertEquals 'create repo successfully' "$createst" "0"
+  assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
+  $LUET_BUILD serve-repo --dir $tmpdir/testbuild --port $TEST_PORT &
 }
 
 testConfig() {
