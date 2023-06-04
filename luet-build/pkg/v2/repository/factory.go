@@ -200,6 +200,14 @@ func (w *WagonFactory) createPackage(f string, idx *[]*tree.TreeIdx,
 		}
 	}
 
+	// Check exists finalize.yaml
+	finalizeFile := ""
+	if fileHelper.Exists(filepath.Join(
+		filepath.Dir(definitionFile), "finalize.yaml")) {
+		finalizeFile = filepath.Join(
+			filepath.Dir(definitionFile), "finalize.yaml")
+	}
+
 	// Users could update package definition.yaml without
 	// the need to bump a new version. This method merge
 	// definition.yaml values over the artefact structure.
@@ -224,15 +232,26 @@ func (w *WagonFactory) createPackage(f string, idx *[]*tree.TreeIdx,
 	metaJsonFile := filepath.Join(treePkgdir, "metadata.json")
 	err = art.WriteMetadataJson(metaJsonFile)
 	if err != nil {
-		return errors.New(fmt.Sprintf(
-			"Error on create file %s: %s", metaJsonFile, err.Error()))
+		return fmt.Errorf(
+			"Error on create file %s: %s", metaJsonFile, err.Error())
 	}
 
 	treeDefFile := filepath.Join(treePkgdir, "definition.yaml")
 	err = tree.WriteDefinitionFile(dp, treeDefFile)
 	if err != nil {
-		return errors.New(fmt.Sprintf(
-			"Error on create file %s: %s", treeDefFile, err.Error()))
+		return fmt.Errorf(
+			"Error on create file %s: %s", treeDefFile, err.Error())
+	}
+
+	if finalizeFile != "" {
+		// Copy finalize
+		err := fileHelper.CopyFile(finalizeFile,
+			filepath.Join(treePkgdir, "finalize.yaml"))
+		if err != nil {
+			return fmt.Errorf(
+				"Error on copy finalize of pkg %s: %s",
+				dp.HumanReadableString(), err.Error())
+		}
 	}
 
 	return nil
