@@ -196,24 +196,40 @@ func (w *WagonRepository) Sync(force bool) error {
 	newIdentity.LuetRepository.MetaPath = metafs
 	newIdentity.LuetRepository.TreePath = treefs
 
+	repoV2 := newIdentity.HasDocument(REPOFILE_TREEV2_KEY)
 	// treeFile and metaFile must be present, they aren't optional
 	if toUpdate || force {
 
-		treeFileArtifact, err := newIdentity.DownloadDocument(c, REPOFILE_TREE_KEY)
-		if err != nil {
-			return errors.Wrapf(err, "while fetching '%s'", REPOFILE_TREE_KEY)
+		var treeFileArtifact, metaFileArtifact *artifact.PackageArtifact
+
+		if repoV2 {
+			// POST: New implementation
+
+			treeFileArtifact, err = newIdentity.DownloadDocument(c, REPOFILE_TREEV2_KEY)
+			if err != nil {
+				return errors.Wrapf(err, "while fetching '%s'", REPOFILE_TREEV2_KEY)
+			}
+			defer os.Remove(treeFileArtifact.Path)
+
+			Debug("Treev2 tarball for the repository " + w.Identity.GetName() + " downloaded correctly.")
+
+		} else {
+			treeFileArtifact, err = newIdentity.DownloadDocument(c, REPOFILE_TREE_KEY)
+			if err != nil {
+				return errors.Wrapf(err, "while fetching '%s'", REPOFILE_TREE_KEY)
+			}
+			defer os.Remove(treeFileArtifact.Path)
+
+			Debug("Tree tarball for the repository " + w.Identity.GetName() + " downloaded correctly.")
+
+			metaFileArtifact, err = newIdentity.DownloadDocument(c, REPOFILE_META_KEY)
+			if err != nil {
+				return errors.Wrapf(err, "while fetching '%s'", REPOFILE_META_KEY)
+			}
+			defer os.Remove(metaFileArtifact.Path)
+
+			Debug("Metadata tarball for the repository " + w.Identity.GetName() + " downloaded correctly.")
 		}
-		defer os.Remove(treeFileArtifact.Path)
-
-		Debug("Tree tarball for the repository " + w.Identity.GetName() + " downloaded correctly.")
-
-		metaFileArtifact, err := newIdentity.DownloadDocument(c, REPOFILE_META_KEY)
-		if err != nil {
-			return errors.Wrapf(err, "while fetching '%s'", REPOFILE_META_KEY)
-		}
-		defer os.Remove(metaFileArtifact.Path)
-
-		Debug("Metadata tarball for the repository " + w.Identity.GetName() + " downloaded correctly.")
 
 		// Copy updated repository.yaml file to repo dir now that the tree is synced.
 		newIdentity.IdentityFile = filepath.Join(repobasedir, REPOSITORY_SPECFILE)
@@ -233,12 +249,14 @@ func (w *WagonRepository) Sync(force bool) error {
 			return errors.Wrap(err, "Error met while unpacking tree")
 		}
 
-		// FIXME: It seems that tar with only one file doesn't create destination
-		//       directory. I create directory directly for now.
-		os.MkdirAll(metafs, os.ModePerm)
-		err = metaFileArtifact.Unpack(metafs, false)
-		if err != nil {
-			return errors.Wrap(err, "Error met while unpacking metadata")
+		if !repoV2 {
+			// FIXME: It seems that tar with only one file doesn't create destination
+			//       directory. I create directory directly for now.
+			os.MkdirAll(metafs, os.ModePerm)
+			err = metaFileArtifact.Unpack(metafs, false)
+			if err != nil {
+				return errors.Wrap(err, "Error met while unpacking metadata")
+			}
 		}
 
 		tsec, _ := strconv.ParseInt(newIdentity.GetLastUpdate(), 10, 64)
@@ -254,19 +272,21 @@ func (w *WagonRepository) Sync(force bool) error {
 
 		w.Identity = newIdentity
 
-		// Build metadata for package. This will be handled from a new tarball
-		// in the near future. In particolar, i will write a metadata.yaml file
-		// under <cache_dir>/repos/treefs/<cat>/<name>/<version>/metadata.yaml
-		// to avoid the parsing of metadata stream every time. It's something
-		// that consume too memory when i have more of >2k packages on a repo.
-		//
-		// In additional, it's generated a provides.yaml with all provides map
-		// of the repository. This speedup Searcher and reduce i/o operations.
-		err = w.ExplodeMetadata()
-		if err != nil {
-			return err
+		if !repoV2 {
+			// Build metadata for package. This will be handled from a new tarball
+			// in the near future. In particolar, i will write a metadata.yaml file
+			// under <cache_dir>/repos/treefs/<cat>/<name>/<version>/metadata.yaml
+			// to avoid the parsing of metadata stream every time. It's something
+			// that consume too memory when i have more of >2k packages on a repo.
+			//
+			// In additional, it's generated a provides.yaml with all provides map
+			// of the repository. This speedup Searcher and reduce i/o operations.
+			err = w.ExplodeMetadata()
+			if err != nil {
+				return err
+			}
+			w.ClearCatalog()
 		}
-		w.ClearCatalog()
 
 	} else {
 		InfoC(
