@@ -132,7 +132,6 @@ func (w *WagonFactory) createPackage(f string, idx *[]*tree.TreeIdx,
 					art.CompileSpec.Package.Name,
 					art.CompileSpec.Package.Version,
 					f,
-					packageFilename,
 				))
 				return nil
 			}
