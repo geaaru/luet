@@ -356,6 +356,9 @@ func (w *WagonFactory) createCompilerTreeTarball(opts *WagonFactoryOpts,
 	if err != nil {
 		return nil, err
 	}
+	// We need to close file else the sha is not elaborated
+	// correctly.
+	topts.Close()
 
 	// Generate sha of the tarball
 	tarballSha, err := fileHelper.Sha256Sum(tarball)
@@ -364,6 +367,9 @@ func (w *WagonFactory) createCompilerTreeTarball(opts *WagonFactoryOpts,
 	}
 
 	document.Checksums[string(artifact.SHA256)] = tarballSha
+
+	Debug(fmt.Sprintf("[%s] Generated %s with sha256 %s",
+		w.Repository.Name, tarball, tarballSha))
 
 	return document, nil
 }
@@ -436,6 +442,9 @@ func (w *WagonFactory) createTreeTarball(opts *WagonFactoryOpts,
 	if err != nil {
 		return nil, err
 	}
+	// We need to close file else the sha is not elaborated
+	// correctly.
+	topts.Close()
 
 	// Generate sha of the tarball
 	tarballSha, err = fileHelper.Sha256Sum(tarball)
@@ -444,6 +453,9 @@ func (w *WagonFactory) createTreeTarball(opts *WagonFactoryOpts,
 	}
 
 	document.Checksums[string(artifact.SHA256)] = tarballSha
+
+	Debug(fmt.Sprintf("[%s] Generated %s with sha256 %s",
+		w.Repository.Name, tarball, tarballSha))
 
 	return document, nil
 }
