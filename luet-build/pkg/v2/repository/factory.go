@@ -11,8 +11,10 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	cfg "github.com/geaaru/luet/pkg/config"
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
@@ -448,6 +450,7 @@ func (w *WagonFactory) createTreeTarball(opts *WagonFactoryOpts,
 }
 
 func (w *WagonFactory) BumpRevision(treePaths []string, opts *WagonFactoryOpts) error {
+	aurora := GetAurora()
 	// NOTE: To bump a repository the indexes must be available.
 	//       This speedup process and memory consume.
 
@@ -482,20 +485,23 @@ func (w *WagonFactory) BumpRevision(treePaths []string, opts *WagonFactoryOpts) 
 	repo := w.Repository.Clone()
 	repo.Authentication = make(map[string]string, 0)
 
-	wIdentify := wagon.NewWagonIdentify(repo)
+	wIdentity := wagon.NewWagonIdentify(repo)
 
 	// If exist repository.yaml retrieve wagon identify
 	prevReposFile := filepath.Join(opts.PackagesDir, "repository.yaml")
 	if fileHelper.Exists(prevReposFile) {
-		wIdentify.Load(prevReposFile)
-		Info(fmt.Sprintf(
-			"[%s] Found previous revision %d and date %s",
-			wIdentify.GetName(),
-			wIdentify.GetRevision(),
-			wIdentify.GetLastUpdate(),
-		))
+		wIdentity.Load(prevReposFile)
+		tsec, _ := strconv.ParseInt(wIdentity.GetLastUpdate(), 10, 64)
+		InfoC(
+			aurora.Bold(
+				aurora.Red(fmt.Sprintf(
+					":house:Repository: %s existing revision %s and last update %s...",
+					aurora.Bold(aurora.Green(wIdentity.GetName())).String(),
+					aurora.Bold(aurora.Green(fmt.Sprintf("%3d", wIdentity.GetRevision()))).String(),
+					aurora.Bold(aurora.Green(time.Unix(tsec, 0).String())).String(),
+				))))
 	}
-	wIdentify.PurgeFiles()
+	wIdentity.PurgeFiles()
 
 	// Create working dir where build tree tarball.
 	treefsDir, err := w.Config.GetSystem().TempDir("tree")
@@ -529,25 +535,28 @@ func (w *WagonFactory) BumpRevision(treePaths []string, opts *WagonFactoryOpts) 
 		if err != nil {
 			return err
 		}
-		wIdentify.RepositoryFiles[wagon.REPOFILE_COMPILER_TREE_KEY] = docCompiler
+		wIdentity.RepositoryFiles[wagon.REPOFILE_COMPILER_TREE_KEY] = docCompiler
 	}
 
 	// Update Identify file
-	wIdentify.RepositoryFiles[wagon.REPOFILE_TREEV2_KEY] = docTree
-	wIdentify.BumpRevision()
+	wIdentity.RepositoryFiles[wagon.REPOFILE_TREEV2_KEY] = docTree
+	wIdentity.BumpRevision()
 	if opts.ResetRevision {
-		wIdentify.LuetRepository.Revision = 1
+		wIdentity.LuetRepository.Revision = 1
 	}
 
-	Info(fmt.Sprintf(
-		"Repository %s: creating revision %d and last update %s...",
-		wIdentify.GetName(), wIdentify.GetRevision(),
-		wIdentify.GetLastUpdate(),
-	))
-
+	tsec, _ := strconv.ParseInt(wIdentity.GetLastUpdate(), 10, 64)
+	InfoC(
+		aurora.Bold(
+			aurora.Red(fmt.Sprintf(
+				":house:Repository: %s creating revision %s and last update %s...",
+				aurora.Bold(aurora.Green(wIdentity.GetName())).String(),
+				aurora.Bold(aurora.Green(fmt.Sprintf("%3d", wIdentity.GetRevision()))).String(),
+				aurora.Bold(aurora.Green(time.Unix(tsec, 0).String())).String(),
+			))))
 	// Write identify file
 	identifyFilePath := filepath.Join(opts.OutputDir, "repository.yaml")
-	err = wIdentify.Write(identifyFilePath)
+	err = wIdentity.Write(identifyFilePath)
 	if err != nil {
 		return err
 	}
