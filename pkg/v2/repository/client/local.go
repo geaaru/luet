@@ -46,7 +46,7 @@ func (c *LocalClient) DownloadArtifact(a *artifact.PackageArtifact, msg string) 
 
 			uri = filepath.Join(rootfs, uri)
 
-			Info("Downloading artifact", artifactName, "from", uri)
+			Debug("Downloading artifact", artifactName, "from", uri)
 
 			//defer os.Remove(file.Name())
 			err = fileHelper.CopyFile(filepath.Join(uri, artifactName), cacheFile)
@@ -84,7 +84,7 @@ func (c *LocalClient) DownloadFile(name string) (string, error) {
 
 		uri = filepath.Join(rootfs, uri)
 
-		Info("Downloading file", name, "from", uri)
+		Debug("Downloading file", name, "from", uri)
 		file, err = config.LuetCfg.GetSystem().TempFile("localclient")
 		if err != nil {
 			continue
