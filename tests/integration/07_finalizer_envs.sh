@@ -29,7 +29,7 @@ repos_confdir:
   - "$tmpdir/repos"
 EOF
 
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/finalizer_envs"
+  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/finalizers_envs/"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
