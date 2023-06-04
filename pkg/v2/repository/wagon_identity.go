@@ -61,6 +61,11 @@ func (w *WagonIdentity) Valid() bool {
 	return true
 }
 
+func (w *WagonIdentity) HasDocument(s string) bool {
+	_, hasDoc := w.RepositoryFiles[s]
+	return hasDoc
+}
+
 func (w *WagonIdentity) GetTreePath() string   { return w.LuetRepository.TreePath }
 func (w *WagonIdentity) GetMetaPath() string   { return w.LuetRepository.MetaPath }
 func (w *WagonIdentity) GetName() string       { return w.LuetRepository.Name }
