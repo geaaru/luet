@@ -12,7 +12,7 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/buildableseed"
+  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/fileconflicts"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
