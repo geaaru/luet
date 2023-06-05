@@ -47,7 +47,7 @@ func NewSubsetsListCommand(config *cfg.LuetConfig) *cobra.Command {
 						if ok {
 							InfoC(Yellow(fmt.Sprintf(
 								`   %s
-    Num. Rules: %d`, sdef.Description, sdef.Rules)))
+    Num. Rules: %d`, sdef.Description, len(sdef.Rules))))
 						} else if s == "portage" {
 							InfoC(Yellow(
 								`   Portage metadata and files.

@@ -15,12 +15,16 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-    mkdir $tmpdir/testbuild
-    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/buildableseed" --destination $tmpdir/testbuild --compression zstd test/c@1.0 > /dev/null
-    buildst=$?
-    assertEquals 'builds successfully' "$buildst" "0"
-    assertTrue 'create package dep B' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.zst' ]"
-    assertTrue 'create package' "[ -e '$tmpdir/testbuild/c-test-1.0.package.tar.zst' ]"
+  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/buildableseed"
+  genidx=$?
+  assertEquals 'genidx successfully' "$genidx" "0"
+
+  mkdir $tmpdir/testbuild
+  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/buildableseed" --destination $tmpdir/testbuild --compression zstd test/c@1.0 > ${OUTPUT}
+  buildst=$?
+  assertEquals 'builds successfully' "$buildst" "0"
+  assertTrue 'create package dep B' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.zst' ]"
+  assertTrue 'create package' "[ -e '$tmpdir/testbuild/c-test-1.0.package.tar.zst' ]"
 }
 
 testRepo() {
@@ -32,9 +36,7 @@ testRepo() {
     --urls $tmpdir/testrootfs \
     --tree-compression zstd \
     --tree-filename foo.tar \
-    --meta-filename repository.meta.tar \
-    --meta-compression zstd \
-    --type disk
+    --type disk > ${OUTPUT}
 
     createst=$?
     assertEquals 'create repo successfully' "$createst" "0"

@@ -12,26 +12,30 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-    mkdir $tmpdir/testbuild
-    $LUET_BUILD build -d --tree "$ROOT_DIR/tests/fixtures/caps" --same-owner=true --destination $tmpdir/testbuild --compression gzip --full
-    buildst=$?
-    assertTrue 'create package caps 0.1' "[ -e '$tmpdir/testbuild/caps-test-0.1.package.tar.gz' ]"
-    assertEquals 'builds successfully' "$buildst" "0"
+  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/caps"
+  genidx=$?
+  assertEquals 'genidx successfully' "$genidx" "0"
+
+  mkdir $tmpdir/testbuild
+  $LUET_BUILD build -d --tree "$ROOT_DIR/tests/fixtures/caps" --same-owner=true --destination $tmpdir/testbuild --compression gzip --full
+  buildst=$?
+  assertTrue 'create package caps 0.1' "[ -e '$tmpdir/testbuild/caps-test-0.1.package.tar.gz' ]"
+  assertEquals 'builds successfully' "$buildst" "0"
 }
 
 testRepo() {
-    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/caps" \
-    --output $tmpdir/testbuild \
-    --packages $tmpdir/testbuild \
-    --name "test" \
-    --descr "Test Repo" \
-    --urls $tmpdir/testrootfs \
-    --type http
+  assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
+  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/caps" \
+  --output $tmpdir/testbuild \
+  --packages $tmpdir/testbuild \
+  --name "test" \
+  --descr "Test Repo" \
+  --urls $tmpdir/testrootfs \
+  --type http
 
-    createst=$?
-    assertEquals 'create repo successfully' "$createst" "0"
-    assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
+  createst=$?
+  assertEquals 'create repo successfully' "$createst" "0"
+  assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
 }
 
 testConfig() {

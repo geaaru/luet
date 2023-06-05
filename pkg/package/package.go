@@ -246,7 +246,7 @@ func GetRawPackages(yml []byte) (rawPackages, error) {
 }
 
 type Collection struct {
-	Packages []DefaultPackage `json:"packages"`
+	Packages []DefaultPackage `json:"packages" yaml:"packages"`
 }
 
 func DefaultPackagesFromYAML(yml []byte) ([]DefaultPackage, error) {
@@ -285,33 +285,33 @@ func (d *DefaultPackage) GetMetadataFilePath() string {
 
 // DefaultPackage represent a standard package definition
 type DefaultPackage struct {
-	ID               int               `storm:"id,increment" json:"id"` // primary key with auto increment
-	Name             string            `json:"name"`                    // Affects YAML field names too.
-	Version          string            `json:"version"`                 // Affects YAML field names too.
-	Category         string            `json:"category"`                // Affects YAML field names too.
-	UseFlags         []string          `json:"use_flags,omitempty"`     // Affects YAML field names too.
-	State            State             `json:"state,omitempty"`
-	PackageRequires  []*DefaultPackage `json:"requires"`           // Affects YAML field names too.
-	PackageConflicts []*DefaultPackage `json:"conflicts"`          // Affects YAML field names too.
-	Provides         []*DefaultPackage `json:"provides,omitempty"` // Affects YAML field names too.
-	Hidden           bool              `json:"hidden,omitempty"`   // Affects YAML field names too.
+	ID               int               `storm:"id,increment" json:"id" yaml:"id,omitempty"`    // primary key with auto increment
+	Name             string            `json:"name" yaml:"name"`                               // Affects YAML field names too.
+	Version          string            `json:"version" yaml:"version,omitempty"`               // Affects YAML field names too.
+	Category         string            `json:"category" yaml:"category"`                       // Affects YAML field names too.
+	UseFlags         []string          `json:"use_flags,omitempty" yaml:"use_flags,omitempty"` // Affects YAML field names too.
+	State            State             `json:"state,omitempty" yaml:"state,omitempty"`
+	PackageRequires  []*DefaultPackage `json:"requires" yaml:"requires,omitempty"`           // Affects YAML field names too.
+	PackageConflicts []*DefaultPackage `json:"conflicts" yaml:"conflicts,omitempty"`         // Affects YAML field names too.
+	Provides         []*DefaultPackage `json:"provides,omitempty" yaml:"provides,omitempty"` // Affects YAML field names too.
+	Hidden           bool              `json:"hidden,omitempty" yaml:"hidden,omitempty"`     // Affects YAML field names too.
 
 	// Annotations are used for core features/options
-	Annotations map[string]interface{} `json:"annotations,omitempty"` // Affects YAML field names too
+	Annotations map[string]interface{} `json:"annotations,omitempty" yaml:"annotations,omitempty"` // Affects YAML field names too
 
 	// Path is set only internally when tree is loaded from disk
-	Path string `json:"path,omitempty"`
+	Path string `json:"path,omitempty" yaml:"path,omitempty"`
 
-	Description    string   `json:"description,omitempty"`
-	Uri            []string `json:"uri,omitempty"`
-	License        string   `json:"license,omitempty"`
-	BuildTimestamp string   `json:"buildtimestamp,omitempty"`
+	Description    string   `json:"description,omitempty" yaml:"description,omitempty"`
+	Uri            []string `json:"uri,omitempty" yaml:"uri,omitempty"`
+	License        string   `json:"license,omitempty" yaml:"license,omitempty"`
+	BuildTimestamp string   `json:"buildtimestamp,omitempty" yaml:"buildtimestamp,omitempty"`
 
-	Labels map[string]string `json:"labels,omitempty"` // Affects YAML field names too.
+	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"` // Affects YAML field names too.
 
-	TreeDir string `json:"treedir,omitempty"`
+	TreeDir string `json:"treedir,omitempty" yaml:"treedir,omitempty"`
 
-	Repository string `json:"repository,omitempty"`
+	Repository string `json:"repository,omitempty" yaml:"repository,omitempty"`
 }
 
 // State represent the package state

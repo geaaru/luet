@@ -20,6 +20,11 @@ testBuild() {
 extra: "bar"
 foo: "baz"
 EOF
+
+    $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/docker_repo"
+    genidx=$?
+    assertEquals 'genidx successfully' "$genidx" "0"
+
     mkdir $tmpdir/testbuild
     $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/docker_repo" \
                --destination $tmpdir/testbuild --concurrency 1 \
@@ -45,9 +50,7 @@ testRepo() {
     --descr "Test Repo" \
     --urls $tmpdir/testrootfs \
     --tree-compression zstd \
-    --tree-filename foo.tar \
-    --meta-filename repository.meta.tar \
-    --meta-compression zstd \
+    --tree-filename foo.tar.zst \
     --type docker --push-images --force-push)
 
     createst=$?

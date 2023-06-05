@@ -1,5 +1,4 @@
 /*
-
 Copyright (C) 2021-2022  Daniele Rondina <geaaru@funtoo.org>
 
 This program is free software: you can redistribute it and/or modify
@@ -14,7 +13,6 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 */
 package specs
 
@@ -66,6 +64,14 @@ type SpecFile struct {
 
 	// Validate extract when the file is been closed.
 	Validate bool `yaml:"validate,omitempty" json:"validate,omitempty"`
+
+	// Writer specific section
+	Writer *WriterRules `yaml:"writer,omitempty" json:"writer,omitempty"`
+}
+
+type WriterRules struct {
+	ArchiveDirs  []string `yaml:"dirs,omitempty" json:"dirs,omitempty"`
+	ArchiveFiles []string `yaml:"files,omitempty" json:"files,omitempty"`
 }
 
 type RenameRule struct {

@@ -12,45 +12,51 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-    mkdir $tmpdir/testbuild
-    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo" --destination $tmpdir/testbuild --compression gzip --full
-    buildst=$?
-    assertTrue 'create package B 1.0' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
-    assertEquals 'builds successfully' "$buildst" "0"
+  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/upgrade_old_repo" \
+    -t "$ROOT_DIR/tests/fixtures/upgrade_old_repo_revision"
+  genidx=$?
+  assertEquals 'genidx successfully' "$genidx" "0"
 
-    mkdir $tmpdir/testbuild_revision
-    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo_revision" --destination $tmpdir/testbuild_revision --compression gzip --full
-    buildst=$?
-    assertTrue 'create package B 1.0' "[ -e '$tmpdir/testbuild_revision/b-test-1.0.package.tar.gz' ]"
-    assertEquals 'builds successfully' "$buildst" "0"
+
+  mkdir $tmpdir/testbuild
+  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo" --destination $tmpdir/testbuild --compression gzip --full
+  buildst=$?
+  assertTrue 'create package B 1.0' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
+  assertEquals 'builds successfully' "$buildst" "0"
+
+  mkdir $tmpdir/testbuild_revision
+  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo_revision" --destination $tmpdir/testbuild_revision --compression gzip --full
+  buildst=$?
+  assertTrue 'create package B 1.0' "[ -e '$tmpdir/testbuild_revision/b-test-1.0.package.tar.gz' ]"
+  assertEquals 'builds successfully' "$buildst" "0"
 }
 
 testRepo() {
-    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo" \
-    --output $tmpdir/testbuild \
-    --packages $tmpdir/testbuild \
-    --name "test" \
-    --descr "Test Repo" \
-    --urls $tmpdir/testrootfs \
-    --type http
+  assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
+  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo" \
+  --output $tmpdir/testbuild \
+  --packages $tmpdir/testbuild \
+  --name "test" \
+  --descr "Test Repo" \
+  --urls $tmpdir/testrootfs \
+  --type http
 
-    createst=$?
-    assertEquals 'create repo successfully' "$createst" "0"
-    assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
+  createst=$?
+  assertEquals 'create repo successfully' "$createst" "0"
+  assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
 
-    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild_revision/repository.yaml' ]"
-    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo_revision" \
-    --output $tmpdir/testbuild_revision \
-    --packages $tmpdir/testbuild_revision \
-    --name "test" \
-    --descr "Test Repo" \
-    --urls $tmpdir/testrootfs \
-    --type http
+  assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild_revision/repository.yaml' ]"
+  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo_revision" \
+  --output $tmpdir/testbuild_revision \
+  --packages $tmpdir/testbuild_revision \
+  --name "test" \
+  --descr "Test Repo" \
+  --urls $tmpdir/testrootfs \
+  --type http
 
-    createst=$?
-    assertEquals 'create repo successfully' "$createst" "0"
-    assertTrue 'create repository' "[ -e '$tmpdir/testbuild_revision/repository.yaml' ]"
+  createst=$?
+  assertEquals 'create repo successfully' "$createst" "0"
+  assertTrue 'create repository' "[ -e '$tmpdir/testbuild_revision/repository.yaml' ]"
 }
 
 testConfig() {

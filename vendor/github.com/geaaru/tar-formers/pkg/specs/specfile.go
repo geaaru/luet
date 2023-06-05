@@ -1,5 +1,4 @@
 /*
-
 Copyright (C) 2021-2022  Daniele Rondina <geaaru@funtoo.org>
 
 This program is free software: you can redistribute it and/or modify
@@ -14,7 +13,6 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 */
 package specs
 
@@ -51,6 +49,8 @@ func NewSpecFile() *SpecFile {
 
 		mapModifier:   make(map[string]bool, 0),
 		ignoreRegexes: []*regexp.Regexp{},
+
+		Writer: nil,
 	}
 }
 
@@ -189,4 +189,19 @@ func NewFileMeta(header *tar.Header) FileMeta {
 
 func (m *FileMeta) GetFileMode() fs.FileMode {
 	return m.FileInfo.Mode()
+}
+
+func NewWriter() *WriterRules {
+	return &WriterRules{
+		ArchiveDirs:  []string{},
+		ArchiveFiles: []string{},
+	}
+}
+
+func (w *WriterRules) AddDir(dir string) {
+	w.ArchiveDirs = append(w.ArchiveDirs, dir)
+}
+
+func (w *WriterRules) AddFile(f string) {
+	w.ArchiveFiles = append(w.ArchiveFiles, f)
 }

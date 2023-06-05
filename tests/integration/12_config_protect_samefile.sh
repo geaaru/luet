@@ -14,27 +14,31 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-    mkdir $tmpdir/testrootfs/testbuild -p
-    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/config_protect" \
-      --destination $tmpdir/testrootfs/testbuild --compression gzip test/a
-    buildst=$?
-    assertEquals 'builds successfully' "$buildst" "0"
-    assertTrue 'create package' "[ -e '$tmpdir/testrootfs/testbuild/a-test-1.0.package.tar.gz' ]"
+  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/config_protect"
+  genidx=$?
+  assertEquals 'genidx successfully' "$genidx" "0"
+
+  mkdir $tmpdir/testrootfs/testbuild -p
+  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/config_protect" \
+    --destination $tmpdir/testrootfs/testbuild --compression gzip test/a
+  buildst=$?
+  assertEquals 'builds successfully' "$buildst" "0"
+  assertTrue 'create package' "[ -e '$tmpdir/testrootfs/testbuild/a-test-1.0.package.tar.gz' ]"
 }
 
 testRepo() {
-    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/config_protect" \
-    --output $tmpdir/testrootfs/testbuild \
-    --packages $tmpdir/testrootfs/testbuild \
-    --name "test" \
-    --descr "Test Repo" \
-    --urls $tmpdir/testrootfs \
-    --type disk > /dev/null
+  assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
+  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/config_protect" \
+  --output $tmpdir/testrootfs/testbuild \
+  --packages $tmpdir/testrootfs/testbuild \
+  --name "test" \
+  --descr "Test Repo" \
+  --urls $tmpdir/testrootfs \
+  --type disk > ${OUTPUT}
 
-    createst=$?
-    assertEquals 'create repo successfully' "$createst" "0"
-    assertTrue 'create repository' "[ -e '$tmpdir/testrootfs/testbuild/repository.yaml' ]"
+  createst=$?
+  assertEquals 'create repo successfully' "$createst" "0"
+  assertTrue 'create repository' "[ -e '$tmpdir/testrootfs/testbuild/repository.yaml' ]"
 }
 
 testConfig() {

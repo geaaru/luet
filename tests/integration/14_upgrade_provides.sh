@@ -12,48 +12,53 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-    mkdir $tmpdir/testbuild
-    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_provides" --destination $tmpdir/testbuild --compression gzip --full
-    buildst=$?
-    assertTrue 'create package C 1.0' "[ -e '$tmpdir/testbuild/c-test-1.0.package.tar.gz' ]"
-    assertTrue 'create package A 1.1' "[ -e '$tmpdir/testbuild/a-test-1.1.package.tar.gz' ]"
-    assertTrue 'create package B 1.0' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
-    assertTrue 'create package E 1.0' "[ -e '$tmpdir/testbuild/e-test-1.0.package.tar.gz' ]"
-    assertEquals 'builds successfully' "$buildst" "0"
+  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/upgrade_provides" \
+    -t "$ROOT_DIR/tests/fixtures/upgrade_provides_new"
+  genidx=$?
+  assertEquals 'genidx successfully' "$genidx" "0"
 
-    mkdir $tmpdir/testbuild_provides
-    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_provides_new" --destination $tmpdir/testbuild_provides --compression gzip --full
-    buildst=$?
-    assertTrue 'create package D 2.0' "[ -e '$tmpdir/testbuild_provides/d-test-2.0.package.tar.gz' ]"
-    assertEquals 'builds successfully' "$buildst" "0"
+  mkdir $tmpdir/testbuild
+  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_provides" --destination $tmpdir/testbuild --compression gzip --full > ${OUTPUT}
+  buildst=$?
+  assertTrue 'create package C 1.0' "[ -e '$tmpdir/testbuild/c-test-1.0.package.tar.gz' ]"
+  assertTrue 'create package A 1.1' "[ -e '$tmpdir/testbuild/a-test-1.1.package.tar.gz' ]"
+  assertTrue 'create package B 1.0' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
+  assertTrue 'create package E 1.0' "[ -e '$tmpdir/testbuild/e-test-1.0.package.tar.gz' ]"
+  assertEquals 'builds successfully' "$buildst" "0"
+
+  mkdir $tmpdir/testbuild_provides
+  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_provides_new" --destination $tmpdir/testbuild_provides --compression gzip --full > ${OUTPUT}
+  buildst=$?
+  assertTrue 'create package D 2.0' "[ -e '$tmpdir/testbuild_provides/d-test-2.0.package.tar.gz' ]"
+  assertEquals 'builds successfully' "$buildst" "0"
 }
 
 testRepo() {
-    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_provides" \
-    --output $tmpdir/testbuild \
-    --packages $tmpdir/testbuild \
-    --name "test" \
-    --descr "Test Repo" \
-    --urls $tmpdir/testrootfs \
-    --type http
+  assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
+  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_provides" \
+  --output $tmpdir/testbuild \
+  --packages $tmpdir/testbuild \
+  --name "test" \
+  --descr "Test Repo" \
+  --urls $tmpdir/testrootfs \
+  --type http
 
-    createst=$?
-    assertEquals 'create repo successfully' "$createst" "0"
-    assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
+  createst=$?
+  assertEquals 'create repo successfully' "$createst" "0"
+  assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
 
-    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild_provides/repository.yaml' ]"
-    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_provides_new" \
-    --output $tmpdir/testbuild_provides \
-    --packages $tmpdir/testbuild_provides \
-    --name "test" \
-    --descr "Test Repo" \
-    --urls $tmpdir/testrootfs \
-    --type http
+  assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild_provides/repository.yaml' ]"
+  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_provides_new" \
+  --output $tmpdir/testbuild_provides \
+  --packages $tmpdir/testbuild_provides \
+  --name "test" \
+  --descr "Test Repo" \
+  --urls $tmpdir/testrootfs \
+  --type http
 
-    createst=$?
-    assertEquals 'create repo successfully' "$createst" "0"
-    assertTrue 'create repository' "[ -e '$tmpdir/testbuild_provides/repository.yaml' ]"
+  createst=$?
+  assertEquals 'create repo successfully' "$createst" "0"
+  assertTrue 'create repository' "[ -e '$tmpdir/testbuild_provides/repository.yaml' ]"
 }
 
 testConfig() {

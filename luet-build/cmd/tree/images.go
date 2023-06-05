@@ -35,6 +35,18 @@ import (
 	"github.com/spf13/viper"
 )
 
+type TreePackageResult struct {
+	Name     string `json:"name"`
+	Category string `json:"category"`
+	Version  string `json:"version"`
+	Path     string `json:"path"`
+	Image    string `json:"image"`
+}
+
+type TreeResults struct {
+	Packages []TreePackageResult `json:"packages"`
+}
+
 func NewTreeImageCommand() *cobra.Command {
 
 	var ans = &cobra.Command{

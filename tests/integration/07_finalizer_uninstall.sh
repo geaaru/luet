@@ -14,29 +14,33 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-    mkdir $tmpdir/testbuild
-    export LUET_TAR_FLOWS__MAX_OPENFILES=10
-    export LUET_TAR_FLOWS__COPY_BUFFER_SIZE=64
-    $LUET_BUILD build --concurrency 1 --tree "$ROOT_DIR/tests/fixtures/finalizers_uninstall" --destination $tmpdir/testbuild --compression gzip --all
-    buildst=$?
-    assertEquals 'builds successfully' "$buildst" "0"
-    assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-seed-1.0.package.tar.gz' ]"
-    assertTrue 'create package' "[ -e '$tmpdir/testbuild/pkg1-app-1.0.package.tar.gz' ]"
+  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/finalizers_uninstall"
+  genidx=$?
+  assertEquals 'genidx successfully' "$genidx" "0"
+
+  mkdir $tmpdir/testbuild
+  export LUET_TAR_FLOWS__MAX_OPENFILES=10
+  export LUET_TAR_FLOWS__COPY_BUFFER_SIZE=64
+  $LUET_BUILD build --concurrency 1 --tree "$ROOT_DIR/tests/fixtures/finalizers_uninstall" --destination $tmpdir/testbuild --compression gzip --all > ${OUTPUT}
+  buildst=$?
+  assertEquals 'builds successfully' "$buildst" "0"
+  assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-seed-1.0.package.tar.gz' ]"
+  assertTrue 'create package' "[ -e '$tmpdir/testbuild/pkg1-app-1.0.package.tar.gz' ]"
 }
 
 testRepo() {
-    assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/finalizers_uninstall" \
-    --output $tmpdir/testbuild \
-    --packages $tmpdir/testbuild \
-    --name "test" \
-    --descr "Test Repo" \
-    --urls $tmpdir/testrootfs \
-    --type disk > /dev/null
+  assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
+  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/finalizers_uninstall" \
+  --output $tmpdir/testbuild \
+  --packages $tmpdir/testbuild \
+  --name "test" \
+  --descr "Test Repo" \
+  --urls $tmpdir/testrootfs \
+  --type disk > ${OUTPUT}
 
-    createst=$?
-    assertEquals 'create repo successfully' "$createst" "0"
-    assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
+  createst=$?
+  assertEquals 'create repo successfully' "$createst" "0"
+  assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
 }
 
 testConfig() {
@@ -70,14 +74,14 @@ EOF
 }
 
 testInstall() {
-    $LUET repo update --config $tmpdir/luet.yaml
-    $LUET miner d --config $tmpdir/luet.yaml main seed/alpine-1.0 app/pkg1
-    $LUET miner i --config $tmpdir/luet.yaml main seed/alpine-1.0 app/pkg1
-    #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
-    installst=$?
-    assertEquals 'install test successfully' "$installst" "0"
-    assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"
-    assertTrue 'finalizer does not run' "[ -e '$tmpdir/testrootfs/tmp/foo' ]"
+  $LUET repo update --config $tmpdir/luet.yaml
+  $LUET miner d --config $tmpdir/luet.yaml main seed/alpine-1.0 app/pkg1
+  $LUET miner i --config $tmpdir/luet.yaml main seed/alpine-1.0 app/pkg1
+  #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
+  installst=$?
+  assertEquals 'install test successfully' "$installst" "0"
+  assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"
+  assertTrue 'finalizer does not run' "[ -e '$tmpdir/testrootfs/tmp/foo' ]"
 }
 
 

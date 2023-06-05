@@ -162,14 +162,18 @@ func Execute() {
 
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {
+			avoidCleanupTmpdir, _ := cmd.Parent().PersistentFlags().GetBool("avoid-cleanup-tmpdir")
+
 			// Cleanup all tmp directories used by luet
-			err := cfg.GetSystem().CleanupTmpDir()
-			if err != nil {
-				Warning("failed on cleanup tmpdir:", err.Error())
+			if !avoidCleanupTmpdir {
+				err := cfg.GetSystem().CleanupTmpDir()
+				if err != nil {
+					Warning("failed on cleanup tmpdir:", err.Error())
+				}
 			}
 
 			systemDB := cfg.GetSystemDB()
-			err = systemDB.Close()
+			err := systemDB.Close()
 			if err != nil {
 				Warning("failed on close database:", err.Error())
 			}
@@ -193,6 +197,7 @@ func initCommand(rootCmd *cobra.Command, cfg *config.LuetConfig) {
 	pflags.BoolP("debug", "d", false, "verbose output")
 	pflags.Bool("fatal", false, "Enables Warnings to exit")
 	pflags.Bool("enable-logfile", false, "Enable log to file")
+	pflags.Bool("avoid-cleanup-tmpdir", false, "For debugging could help to see the content of temporary dirs.")
 	pflags.Bool("no-spinner", false, "Disable spinner.")
 	pflags.Bool("color", cfg.Viper.GetBool("logging.color"), "Enable/Disable color.")
 	pflags.Bool("emoji", cfg.Viper.GetBool("logging.enable_emoji"), "Enable/Disable emoji.")
