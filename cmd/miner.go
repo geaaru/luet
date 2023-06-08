@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022-2023 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd
 
@@ -15,7 +15,7 @@ func newMinerCommand(config *cfg.LuetConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:    "miner [command] [OPTIONS]",
 		Hidden: true,
-		Short:  "Develpers only commands.",
+		Short:  "Advance Users/Develpers only commands.",
 	}
 
 	ans.AddCommand(
@@ -23,6 +23,7 @@ func newMinerCommand(config *cfg.LuetConfig) *cobra.Command {
 		NewInstallPackage(config),
 		NewRemovePackage(config),
 		NewReinstallPackage(config),
+		NewReplacePackage(config),
 	)
 
 	return ans
