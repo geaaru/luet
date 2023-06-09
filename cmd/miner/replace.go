@@ -24,6 +24,7 @@ import (
 
 func NewReplacePackage(config *cfg.LuetConfig) *cobra.Command {
 
+	var forArgs []string
 	var ans = &cobra.Command{
 		Use:     "replace-package <pkg1> --for <pkg2>,<pkgN>",
 		Short:   `Replace a package without others packages in conflicts.`,
@@ -32,6 +33,9 @@ func NewReplacePackage(config *cfg.LuetConfig) *cobra.Command {
 			if len(args) < 1 {
 				fmt.Println("Missing arguments.")
 				os.Exit(1)
+			}
+			if len(forPkgs) < 1 {
+				fmt.Println("Missing --for arguments.")
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -43,15 +47,17 @@ func NewReplacePackage(config *cfg.LuetConfig) *cobra.Command {
 			skipFinalizers, _ := cmd.Flags().GetBool("skip-finalizers")
 			skipCheckSystem, _ := cmd.Flags().GetBool("skip-check-system")
 			force, _ := cmd.Flags().GetBool("force")
-			forArgs, _ := cmd.Flags().GetStringArray("for")
 			withDeps, _ := cmd.Flags().GetBool("with-deps")
 			ignoreMasks, _ := cmd.Flags().GetBool("ignore-masks")
+
+			InfoC(fmt.Sprintf(":rocket:%s %s",
+				Bold(Blue("Luet")), Bold(Blue(util.Version()))))
 
 			// Parse package to replace
 			for _, pstr := range args {
 				p, err := helpers.ParsePackageStr(config, pstr)
 				if err != nil {
-					fmt.Println("Error on parse package string " + pstr + ": " +
+					Error(":firecracker:Error on parse package string " + pstr + ": " +
 						err.Error())
 					os.Exit(1)
 				}
@@ -63,7 +69,7 @@ func NewReplacePackage(config *cfg.LuetConfig) *cobra.Command {
 			for _, pstr := range forArgs {
 				p, err := helpers.ParsePackageStr(config, pstr)
 				if err != nil {
-					fmt.Println("Error on parse package string " + pstr + ": " +
+					Error(":firecracker:Error on parse package string " + pstr + ": " +
 						err.Error())
 					os.Exit(1)
 				}
@@ -108,13 +114,19 @@ func NewReplacePackage(config *cfg.LuetConfig) *cobra.Command {
 			subsets.LoadSubsetsConfig(config)
 
 			if len(*stones) != len(args) {
-				Error("Not all packages selected for the replacement are installed.")
-				Info("Matched packages are:")
-				for _, s := range *stones {
-					Info(s.HumanReadableString())
+				Error(":fire:Not all packages selected for the replacement are installed.")
+				if len(*stones) == 0 {
+					Info("No packages selected.")
+				} else {
+					Info("Matched packages are:")
+					for _, s := range *stones {
+						Info(s.HumanReadableString())
+					}
 				}
 				os.Exit(1)
 			}
+
+			searchOpts.Packages = forPkgs
 
 			// Searching the packages over the existing repos used
 			// to replace the selected packages.
@@ -125,15 +137,19 @@ func NewReplacePackage(config *cfg.LuetConfig) *cobra.Command {
 			}
 
 			if len(*reposArtifacts) != len(forPkgs) {
-				Error("Not all packages defined for the replacement are availables.")
-				Info("Missed packages:")
-				aPack := &artifact.ArtifactsPack{
-					Artifacts: (*reposArtifacts),
-				}
-				mapArtifacts := aPack.ToMap()
-				for _, p := range forPkgs {
-					if !mapArtifacts.HasKey(p.PackageName()) {
-						Info(p.PackageName())
+				Error(":fire:Not all packages defined for the replacement are availables.")
+				if len(*reposArtifacts) == 0 {
+					Info("No packages available for the replacements.")
+				} else {
+					Info("Missed packages:")
+					aPack := &artifact.ArtifactsPack{
+						Artifacts: (*reposArtifacts),
+					}
+					mapArtifacts := aPack.ToMap()
+					for _, p := range forPkgs {
+						if !mapArtifacts.HasKey(p.PackageName()) {
+							Info(p.PackageName())
+						}
 					}
 				}
 				os.Exit(1)
@@ -230,7 +246,7 @@ func NewReplacePackage(config *cfg.LuetConfig) *cobra.Command {
 		"Skip the execution of the finalizers.")
 	flags.Bool("force", false, "Skip errors and force reinstall.")
 	flags.Bool("ignore-masks", false, "Ignore packages masked.")
-	flags.StringArray("for", []string{},
+	flags.StringSliceVar(&forArgs, "for", []string{},
 		"List of the package to install as replacement.")
 	return ans
 }
