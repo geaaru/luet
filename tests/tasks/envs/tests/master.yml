@@ -61,6 +61,7 @@ projects:
         common_profiles:
           - default
           - net-mottainai0
+          - docker
 
         # Create the environment container as ephemeral or not.
         ephemeral: true
@@ -93,11 +94,13 @@ projects:
                   - echo "deb http://archive.ubuntu.com/ubuntu jammy-backports main universe multiverse restricted" >> /etc/apt/sources.list
                   - apt-get update
                   - apt-get upgrade -y
-                  - apt-get install -y software-properties-common
+                  - apt-get install -y software-properties-common apt-transport-https ca-certificates curl
+                  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+                  - add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
                   - apt-get update
                   - add-apt-repository ${ppa_golang_repo} -y
                   - apt-get update
-                  - apt-get install -y git make pip curl docker.io
+                  - apt-get install -y git make pip docker-ce
                   - apt-get install -y gcc-arm-linux-gnueabi libc6-dev-armel-cross
                   - apt-get install -y libc6-armel-cross libc6-dev golang-${golang_version}-go
                   - apt-get install -y libc6-dev-i386 libc6-dev-armel-cross linux-headers-generic
