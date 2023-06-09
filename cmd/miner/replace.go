@@ -23,8 +23,8 @@ import (
 )
 
 func NewReplacePackage(config *cfg.LuetConfig) *cobra.Command {
-
 	var forArgs []string
+
 	var ans = &cobra.Command{
 		Use:     "replace-package <pkg1> --for <pkg2>,<pkgN>",
 		Short:   `Replace a package without others packages in conflicts.`,
@@ -34,7 +34,7 @@ func NewReplacePackage(config *cfg.LuetConfig) *cobra.Command {
 				fmt.Println("Missing arguments.")
 				os.Exit(1)
 			}
-			if len(forPkgs) < 1 {
+			if len(forArgs) < 1 {
 				fmt.Println("Missing --for arguments.")
 			}
 		},
