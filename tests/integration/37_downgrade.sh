@@ -66,7 +66,7 @@ testConfig() {
     mkdir $tmpdir/testrootfs
     cat <<EOF > $tmpdir/luet.yaml
 general:
-  debug: ${DEBUG}
+  debug: ${DEBUG_ENABLE}
 system:
   rootfs: $tmpdir/testrootfs
   database_path: "/"
@@ -93,7 +93,7 @@ testUpgrade() {
 
     cat <<EOF > $tmpdir/luet.yaml
 general:
-  debug: ${DEBUG}
+  debug: ${DEBUG_ENABLE}
 system:
   rootfs: $tmpdir/testrootfs
   database_path: "/"
@@ -128,7 +128,7 @@ EOF
 testDowngrade() {
     cat <<EOF > $tmpdir/luet.yaml
 general:
-  debug: ${DEBUG}
+  debug: ${DEBUG_ENABLE}
 system:
   rootfs: $tmpdir/testrootfs
   database_path: "/"
