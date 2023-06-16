@@ -208,6 +208,13 @@ func (p *GentooPackage) GetPF() string {
 	return fmt.Sprintf("%s-%s", p.GetPN(), p.GetPVR())
 }
 
+func (p *GentooPackage) GetPFB() string {
+	if p.VersionBuild != "" {
+		return fmt.Sprintf("%s-%s+%s", p.GetPN(), p.GetPVR(), p.VersionBuild)
+	}
+	return fmt.Sprintf("%s-%s", p.GetPN(), p.GetPVR())
+}
+
 func (p *GentooPackage) getVersions(i *GentooPackage) (*version.Version, *version.Version, error) {
 	var v1 *version.Version = nil
 	var v2 *version.Version = nil
