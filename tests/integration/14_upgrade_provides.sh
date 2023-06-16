@@ -8,7 +8,9 @@ oneTimeSetUp() {
 }
 
 oneTimeTearDown() {
-  rm -rf "$tmpdir"
+  if [ -z "${SKIP_CLEAN}" ] ; then
+    rm -rf "$tmpdir"
+  fi
 }
 
 testBuild() {
@@ -65,19 +67,19 @@ testConfig() {
     mkdir $tmpdir/testrootfs
     cat <<EOF > $tmpdir/luet.yaml
 general:
-  debug: true
+  debug: ${DEBUG_ENABLE}
 system:
   rootfs: $tmpdir/testrootfs
   database_path: "/"
   database_engine: "boltdb"
-config_from_host: true
+config_from_host: false
 repositories:
    - name: "main"
      type: "disk"
      enable: true
      cached: true
      urls:
-       - "$tmpdir/testbuild"
+       - "../testbuild"
 EOF
     $LUET config --config $tmpdir/luet.yaml
     res=$?
@@ -92,18 +94,19 @@ testUpgrade() {
 
     cat <<EOF > $tmpdir/luet.yaml
 general:
-  debug: true
+  debug: ${DEBUG_ENABLE}
 system:
   rootfs: $tmpdir/testrootfs
   database_path: "/"
   database_engine: "boltdb"
+config_from_host: false
 repositories:
    - name: "main2"
      type: "disk"
      enable: true
      cached: true
      urls:
-       - "$tmpdir/testbuild_provides"
+       - "../testbuild_provides"
 EOF
 
     $LUET cleanup --config $tmpdir/luet.yaml
