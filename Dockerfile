@@ -1,5 +1,6 @@
-FROM golang as builder
-RUN apt-get update && apt-get install -y upx
+FROM macaronios/terragon-minimal:latest-amd64 as builder
+RUN luet i -y --sync-repos make upx-bin go ca-certificates git && \
+      luet cleanup --purge-repos && mkdir /tmp
 ADD . /luet
 RUN cd /luet && make build-small
 
