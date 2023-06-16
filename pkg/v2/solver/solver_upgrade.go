@@ -278,6 +278,7 @@ func (s *Solver) checkCandidate2Upgrade(pkgstr string, stack []string) error {
 	pHash := dp[0].GetComparitionHash()
 
 	foundMatched := false
+	foundEqual := false
 	// The following code is pretty similar to initial upgrades check
 	// but with the mission to validate the result to all other installed
 	// packages.
@@ -412,6 +413,7 @@ func (s *Solver) checkCandidate2Upgrade(pkgstr string, stack []string) error {
 		} else if val, _ := gpS.Equal(gpI); val {
 
 			// NOTE: if the version is the same
+			foundEqual = true
 
 			aHash := candidate.GetComparitionHash()
 
@@ -443,6 +445,49 @@ func (s *Solver) checkCandidate2Upgrade(pkgstr string, stack []string) error {
 				//       of the packages installed and/or to install.
 				break
 			}
+
+		} else if s.Opts.Deep && !foundEqual {
+			// POST: the candidate is good to downgrade of the exiting
+			//       package
+
+			// Check if the selected package is in conflicts with
+			// existing tree.
+			// The conflicts related to the new packages are checked by the
+			// artefactAdmitByQueue in order of processing order and
+			// by the Admit method.
+			if !s.Opts.IgnoreConflicts && s.artefactIsInConflict(art) {
+				bannedVersion[candidate.GetVersion()] = true
+				continue
+			}
+
+			// Validate the selected package with new packages
+			// in queue.
+			admit, err := s.artefactAdmitByQueue(art)
+			if err != nil {
+				return err
+			}
+
+			if !admit {
+				bannedVersion[candidate.GetVersion()] = true
+				continue
+			}
+
+			ss := append(stack, art.GetPackage().PackageName())
+			// Check and in queue all package dependencies
+			admittedDeps, err := s.processArtefactDeps4Upgrade(art, ss)
+			if err != nil {
+				return err
+			}
+
+			if !admittedDeps {
+				// POST: Not all packages dependencies are admit by
+				//       the current system.
+				bannedVersion[candidate.GetVersion()] = true
+				continue
+			}
+
+			foundMatched = true
+			break
 
 		} else {
 			// TODO: Maybe i need to elaborated yet things to get
@@ -726,7 +771,7 @@ func (s *Solver) checkInstalledPackage(p *pkg.DefaultPackage) error {
 	// Store candidate name to print the name of the package
 	// that provides the searched package.
 	candidateName := ""
-	for _, a := range *reposArtifacts {
+	for idx, a := range *reposArtifacts {
 
 		provides := false
 		ap := a.GetPackage()
@@ -790,6 +835,29 @@ func (s *Solver) checkInstalledPackage(p *pkg.DefaultPackage) error {
 					Debug(fmt.Sprintf(
 						":brain:Package %s has a new hash.",
 						gpI.GetPF()))
+				}
+				candidateName = a.GetPackage().PackageName()
+				foundNewVersion = true
+				break
+			}
+		} else if s.Opts.Deep && idx == 0 {
+			// Checking only if idx == 0 because else
+			// means that there is an equal release and I
+			// don't need to downgrade.
+
+			if val, _ = gpR.LessThan(gpI); val {
+				// POST: There aren't version greather or equal then
+				//       the installed version but the deep
+				//       option is enabled and I'm searching for
+				//       the package to downgrade.
+				if provides {
+					Debug(fmt.Sprintf(
+						":brain:Provide %s less than %s.",
+						gpR.GetPFB(), gpI.GetPFB()))
+				} else {
+					Debug(fmt.Sprintf(
+						":brain:Package %s less than %s.",
+						gpR.GetPFB(), gpI.GetPFB()))
 				}
 				candidateName = a.GetPackage().PackageName()
 				foundNewVersion = true

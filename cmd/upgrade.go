@@ -53,6 +53,7 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 			syncRepos, _ := cmd.Flags().GetBool("sync-repos")
 			ignoreMasks, _ := cmd.Flags().GetBool("ignore-masks")
 			showUpgradeOrder, _ := cmd.Flags().GetBool("show-upgrade-order")
+			deep, _ := cmd.Flags().GetBool("deep")
 
 			if syncRepos {
 				optsRails := &wagon.SyncOpts{
@@ -97,6 +98,7 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 				CheckSystemFiles:            !skipCheckSystem,
 				IgnoreMasks:                 ignoreMasks,
 				ShowInstallOrder:            showUpgradeOrder,
+				Deep:                        deep,
 			}
 			if err := aManager.Upgrade(opts, config.GetSystem().Rootfs); err != nil {
 				Fatal("Error: " + err.Error())
@@ -116,6 +118,7 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 		"Set finalizer environment in the format key=value.")
 	flags.Bool("preserve-system-essentials", true, "Preserve system luet files")
 	flags.BoolP("yes", "y", false, "Don't ask questions")
+	flags.Bool("deep", false, "Deep analyzing with downgrade.")
 	flags.Bool("download-only", false, "Download only")
 	flags.Bool("skip-finalizers", false,
 		"Skip the execution of the finalizers.")

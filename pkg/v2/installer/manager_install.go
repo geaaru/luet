@@ -31,6 +31,7 @@ type InstallOpts struct {
 	CheckSystemFiles            bool
 	IgnoreMasks                 bool
 	ShowInstallOrder            bool
+	Deep                        bool
 }
 
 func (m *ArtifactsManager) sortPackages2Install(

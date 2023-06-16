@@ -15,9 +15,10 @@ import (
 type SolverType int
 
 const (
-	UpdatePackage = "U"
-	AddPackage    = "N"
-	RemovePackage = "D"
+	UpdatePackage    = "U"
+	AddPackage       = "N"
+	RemovePackage    = "D"
+	DowngradePackage = "u"
 )
 
 type SolverOpts struct {
@@ -25,6 +26,7 @@ type SolverOpts struct {
 	Force           bool
 	NoDeps          bool
 	IgnoreMasks     bool
+	Deep            bool
 }
 
 type Operation struct {
@@ -38,6 +40,7 @@ func NewSolverOpts() *SolverOpts {
 		NoDeps:          false,
 		IgnoreMasks:     false,
 		Force:           false,
+		Deep:            false,
 	}
 }
 

@@ -49,7 +49,7 @@ func (m *ArtifactsManager) showPackagesSorted(
 				InfoC(fmt.Sprintf(":knife:[%s of %s] [%s] %-61s - %s",
 					aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", idx+1))),
 					aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", nOps))),
-					aurora.Bold(aurora.BrightYellow("D")),
+					aurora.Bold(aurora.BrightYellow(solver.RemovePackage)),
 					aurora.Bold(aurora.BrightYellow(
 						fmt.Sprintf("%s%s", p.PackageName(), repos))),
 					aurora.Bold(aurora.BrightYellow(p.GetVersion())),
@@ -61,7 +61,7 @@ func (m *ArtifactsManager) showPackagesSorted(
 			InfoC(fmt.Sprintf(":icecream:[%s of %s] [%s] %-61s - %s",
 				aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", idx+1))),
 				aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", nOps))),
-				aurora.Bold(aurora.BrightRed("N")),
+				aurora.Bold(aurora.BrightRed(solver.AddPackage)),
 				aurora.Bold(aurora.BrightRed(
 					fmt.Sprintf("%s::%s", p.PackageName(),
 						p.GetRepository()))),
@@ -86,7 +86,7 @@ func (m *ArtifactsManager) showPackagesSorted(
 					InfoC(fmt.Sprintf(":cupcake:[%s of %s] [%s] %-61s - %s [%s]",
 						aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", idx+1))),
 						aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", nOps))),
-						aurora.Bold(aurora.Green("U")),
+						aurora.Bold(aurora.Green(solver.UpdatePackage)),
 						aurora.Bold(
 							aurora.Green(
 								fmt.Sprintf("%s::%s",
@@ -101,7 +101,7 @@ func (m *ArtifactsManager) showPackagesSorted(
 					InfoC(fmt.Sprintf(":candy:[%s of %s] [%s] %-61s - %s [%s]",
 						aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", idx+1))),
 						aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", nOps))),
-						aurora.Bold(aurora.Green("U")),
+						aurora.Bold(aurora.Green(solver.UpdatePackage)),
 						aurora.Bold(aurora.Green(
 							fmt.Sprintf("%s::%s", p.PackageName(), p.GetRepository()),
 						)),
@@ -114,7 +114,7 @@ func (m *ArtifactsManager) showPackagesSorted(
 				InfoC(fmt.Sprintf(":pie:[%s of %s] [%s] %-61s - %s",
 					aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", idx+1))),
 					aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", nOps))),
-					aurora.Bold(aurora.BrightGreen("U")),
+					aurora.Bold(aurora.BrightGreen(solver.UpdatePackage)),
 					aurora.Bold(aurora.BrightGreen(fmt.Sprintf("%s::%s",
 						p.PackageName(), p.GetRepository()),
 					)),
@@ -122,6 +122,45 @@ func (m *ArtifactsManager) showPackagesSorted(
 				))
 			}
 			idx++
+
+		case solver.DowngradePackage:
+			pr, _ := p2rmap.Artifacts[p.PackageName()]
+			repos := pr[0].GetRepository()
+			if repos == "" {
+				repos = "unknown"
+			}
+
+			version := p.GetVersion()
+
+			if repos == p.GetRepository() {
+				InfoC(fmt.Sprintf(":doughnut:[%s of %s] [%s] %-61s - %s [%s]",
+					aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", idx+1))),
+					aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", nOps))),
+					aurora.Bold(aurora.BrightBlue(solver.DowngradePackage)),
+					aurora.Bold(
+						aurora.BrightBlue(
+							fmt.Sprintf("%s::%s",
+								p.PackageName(), p.GetRepository(),
+							),
+						),
+					),
+					aurora.Bold(aurora.BrightBlue(version)),
+					aurora.BrightCyan(pr[0].GetPackage().GetVersion()),
+				))
+			} else {
+				InfoC(fmt.Sprintf(":lollipop:[%s of %s] [%s] %-61s - %s [%s]",
+					aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", idx+1))),
+					aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", nOps))),
+					aurora.Bold(aurora.BrightBlue(solver.DowngradePackage)),
+					aurora.Bold(aurora.BrightBlue(
+						fmt.Sprintf("%s::%s", p.PackageName(), p.GetRepository()),
+					)),
+					aurora.Bold(aurora.BrightBlue(version)),
+					aurora.BrightCyan(fmt.Sprintf("%s::%s", pr[0].GetPackage().GetVersion(), repos)),
+				))
+			}
+			idx++
+
 		}
 	}
 
@@ -145,15 +184,33 @@ func (m *ArtifactsManager) showPackages2Update(
 	if len(p2i.Artifacts) > 0 {
 		for _, art := range p2i.Artifacts {
 			ops = append(ops, &solver.Operation{
-				Action:   "N",
+				Action:   solver.AddPackage,
 				Artifact: art,
 			})
 		}
 	}
 	if len(p2u.Artifacts) > 0 {
 		for _, art := range p2umap.Artifacts {
+			gp, _ := art[0].GetPackage().ToGentooPackage()
+
+			// Check if the package removed has a version
+			// greather then the new.
+			pr, err := p2rmap.GetArtifactsByKey(
+				art[0].GetPackage().PackageName())
+
+			if err == nil {
+				gpr, _ := pr[0].GetPackage().ToGentooPackage()
+				if val, err := gpr.GreaterThan(gp); err == nil && val {
+					ops = append(ops, &solver.Operation{
+						Action:   solver.DowngradePackage,
+						Artifact: art[0],
+					})
+					continue
+				}
+			}
+
 			ops = append(ops, &solver.Operation{
-				Action:   "U",
+				Action:   solver.UpdatePackage,
 				Artifact: art[0],
 			})
 		}
@@ -163,7 +220,7 @@ func (m *ArtifactsManager) showPackages2Update(
 		for pname, art := range p2rmap.Artifacts {
 			if _, ok := p2umap.Artifacts[pname]; !ok {
 				ops = append(ops, &solver.Operation{
-					Action:   "D",
+					Action:   solver.RemovePackage,
 					Artifact: art[0],
 				})
 			}
@@ -194,6 +251,7 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 		IgnoreConflicts: opts.IgnoreConflicts,
 		Force:           opts.Force,
 		NoDeps:          opts.NoDeps,
+		Deep:            opts.Deep,
 	}
 
 	s := solver.NewSolverImplementation("solverv2", m.Config, solverOpts)
@@ -389,7 +447,7 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 				Info(fmt.Sprintf(":recycle: %s # removed :check_mark:", msg))
 			}
 
-		case solver.AddPackage, solver.UpdatePackage:
+		case solver.AddPackage, solver.UpdatePackage, solver.DowngradePackage:
 			art := op.Artifact
 			art.ResolveCachePath()
 			r := mapRepos[art.GetRepository()]
