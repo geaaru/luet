@@ -221,21 +221,48 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 					})
 					table.SetAutoWrapText(false)
 
-					for _, s := range *res {
-						table.Append([]string{
-							fmt.Sprintf("%s/%s", s.Category, s.Name),
-							s.Version,
-							s.Repository,
-						})
+					if artifactView {
+						for _, s := range *resArts {
+							table.Append([]string{
+								fmt.Sprintf("%s/%s",
+									s.GetPackage().Category,
+									s.GetPackage().Name),
+								s.GetPackage().Version,
+								s.GetPackage().Repository,
+							})
+						}
+					} else {
+						for _, s := range *res {
+							table.Append([]string{
+								fmt.Sprintf("%s/%s", s.Category, s.Name),
+								s.Version,
+								s.Repository,
+							})
+						}
 					}
 
 					table.Render()
 				} else {
-					for _, s := range *res {
-						if quiet {
-							fmt.Println(fmt.Sprintf("%s/%s", s.Category, s.Name))
-						} else {
-							fmt.Println(fmt.Sprintf("%s/%s-%s", s.Category, s.Name, s.Version))
+					if artifactView {
+						for _, s := range *resArts {
+							if quiet {
+								fmt.Println(fmt.Sprintf("%s/%s",
+									s.GetPackage().Category,
+									s.GetPackage().Name))
+							} else {
+								fmt.Println(fmt.Sprintf("%s/%s-%s",
+									s.GetPackage().Category,
+									s.GetPackage().Name,
+									s.GetPackage().Version))
+							}
+						}
+					} else {
+						for _, s := range *res {
+							if quiet {
+								fmt.Println(fmt.Sprintf("%s/%s", s.Category, s.Name))
+							} else {
+								fmt.Println(fmt.Sprintf("%s/%s-%s", s.Category, s.Name, s.Version))
+							}
 						}
 					}
 				}
