@@ -136,7 +136,7 @@ func NewReplacePackage(config *cfg.LuetConfig) *cobra.Command {
 				os.Exit(1)
 			}
 
-			if len(*reposArtifacts) != len(forPkgs) {
+			if len(*reposArtifacts) < len(forPkgs) {
 				Error(":fire:Not all packages defined for the replacement are availables.")
 				if len(*reposArtifacts) == 0 {
 					Info("No packages available for the replacements.")
