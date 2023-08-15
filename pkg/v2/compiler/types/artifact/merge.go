@@ -20,6 +20,11 @@ func (a *PackageArtifact) MergeDefinition(dp *pkg.DefaultPackage) {
 			a.CompileSpec.Package.PackageRequires = dp.PackageRequires
 		}
 
+		if len(db.PackageConflicts) > 0 || len(dp.PackageConflicts) != len(a.Runtime.PackageConflicts) {
+			a.Runtime.PackageConflicts = dp.PackageConflicts
+			a.CompileSpec.Package.PackageConflicts = dp.PackageConflicts
+		}
+
 		// Update annotations
 		if len(dp.Annotations) > 0 || len(dp.Annotations) != len(a.Runtime.Annotations) {
 			a.Runtime.Annotations = dp.Annotations
@@ -34,6 +39,10 @@ func (a *PackageArtifact) MergeDefinition(dp *pkg.DefaultPackage) {
 
 		if len(dp.PackageRequires) > 0 || len(dp.PackageRequires) != len(a.CompileSpec.Package.PackageRequires) {
 			a.CompileSpec.Package.PackageRequires = dp.PackageRequires
+		}
+
+		if len(db.PackageConflicts) > 0 || len(dp.PackageConflicts) != len(a.CompileSpec.Package.PackageConflicts) {
+			a.CompileSpec.Package.PackageConflicts = dp.PackageConflicts
 		}
 
 		// Update annotations
