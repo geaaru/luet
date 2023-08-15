@@ -54,23 +54,24 @@ archives:
   - id: luet
     builds:
       - luet
-    replacements:
-      linux: Linux
-      386: i386
-      amd64: x86_64
-
     format: binary # this removes the tar of the archives, leaving the binaries alone
-    name_template: luet-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
+    name_template: >-
+      luet-{{ .Tag }}-{{ .Os }}-
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{ if .Arm }}v{{ .Arm }}{{ end }}
 
   - id: luet-build
     builds:
       - luet-build
     format: binary
-    name_template: luet-build-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
-    replacements:
-      linux: Linux
-      386: i386
-      amd64: x86_64
+    name_template: >-
+      luet-build-{{ .Tag }}-{{ .Os }}-
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{ if .Arm }}v{{ .Arm }}{{ end }}
 
 changelog:
   sort: asc
