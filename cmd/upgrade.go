@@ -54,6 +54,8 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 			ignoreMasks, _ := cmd.Flags().GetBool("ignore-masks")
 			showUpgradeOrder, _ := cmd.Flags().GetBool("show-upgrade-order")
 			deep, _ := cmd.Flags().GetBool("deep")
+			purge, _ := cmd.Flags().GetBool("purge-repos")
+			cleanup, _ := cmd.Flags().GetBool("cleanup")
 
 			if syncRepos {
 				optsRails := &wagon.SyncOpts{
@@ -103,6 +105,20 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 			if err := aManager.Upgrade(opts, config.GetSystem().Rootfs); err != nil {
 				Fatal("Error: " + err.Error())
 			}
+
+			if cleanup {
+				err = aManager.CleanLocalPackagesCache()
+				if err != nil {
+					Fatal(err.Error())
+				}
+
+				if purge {
+					err = aManager.PurgeLocalReposCache()
+					if err != nil {
+						Fatal(err.Error())
+					}
+				}
+			}
 		},
 	}
 
@@ -127,6 +143,9 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 	flags.Bool("ignore-masks", false, "Ignore packages masked.")
 	flags.Bool("show-upgrade-order", false,
 		"In additional of the package to upgrade show the installation order and exit.")
+	flags.Bool("cleanup", false, "Cleanup local packages cache.")
+	flags.Bool("purge-repos", false,
+		"Remove all repos files. This impacts on searching packages too. Needs --cleanup.")
 
 	return upgradeCmd
 }

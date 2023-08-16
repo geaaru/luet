@@ -1,5 +1,6 @@
 // Copyright © 2019 Ettore Di Giacinto <mudler@gentoo.org>
-//                  Daniele Rondina <geaaru@sabayonlinux.org>
+//
+//	Daniele Rondina <geaaru@sabayonlinux.org>
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,14 +17,10 @@
 package cmd
 
 import (
-	"io/ioutil"
-	"os"
-	"path/filepath"
-
 	"github.com/geaaru/luet/cmd/util"
 	cfg "github.com/geaaru/luet/pkg/config"
-	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
 	. "github.com/geaaru/luet/pkg/logger"
+	installer "github.com/geaaru/luet/pkg/v2/installer"
 
 	"github.com/spf13/cobra"
 )
@@ -38,72 +35,23 @@ func newCleanupCommand(config *cfg.LuetConfig) *cobra.Command {
 			util.BindSystemFlags(cmd)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			var cleaned int = 0
 			util.SetSystemConfig()
 
 			purge, _ := cmd.Flags().GetBool("purge-repos")
 
-			// Check if cache dir exists
-			if fileHelper.Exists(config.GetSystem().GetSystemPkgsCacheDirPath()) {
+			aManager := installer.NewArtifactsManager(config)
+			defer aManager.Close()
 
-				files, err := ioutil.ReadDir(config.GetSystem().GetSystemPkgsCacheDirPath())
-				if err != nil {
-					Fatal("Error on read cachedir ", err.Error())
-				}
-
-				for _, file := range files {
-					if file.IsDir() {
-						continue
-					}
-
-					if config.GetGeneral().Debug {
-						Info("Removing ", file.Name())
-					}
-
-					err := os.RemoveAll(
-						filepath.Join(config.GetSystem().GetSystemPkgsCacheDirPath(), file.Name()))
-					if err != nil {
-						Fatal("Error on removing", file.Name())
-					}
-					cleaned++
-				}
+			err := aManager.CleanLocalPackagesCache()
+			if err != nil {
+				Fatal(err.Error())
 			}
 
-			Info("Cleaned: ", cleaned, "packages.")
-
 			if purge {
-
-				reposDir := config.GetSystem().GetSystemReposDirPath()
-				cnt := 0
-
-				Debug("Repositories dir:", reposDir)
-
-				if fileHelper.Exists(reposDir) {
-
-					files, err := ioutil.ReadDir(reposDir)
-					if err != nil {
-						Fatal("Error on read reposdir", err.Error())
-					}
-
-					for _, file := range files {
-						if !file.IsDir() {
-							continue
-						}
-
-						d := filepath.Join(reposDir, file.Name())
-
-						err := os.RemoveAll(d)
-						if err != nil {
-							Fatal("Error on removing dir", d)
-						}
-
-						cnt++
-					}
-
-					Info("Repos Cleaned: ", cnt)
-
+				err = aManager.PurgeLocalReposCache()
+				if err != nil {
+					Fatal(err.Error())
 				}
-
 			}
 		},
 	}

@@ -71,6 +71,8 @@ To force install a package:
 			syncRepos, _ := cmd.Flags().GetBool("sync-repos")
 			ignoreMasks, _ := cmd.Flags().GetBool("ignore-masks")
 			showInstallOrder, _ := cmd.Flags().GetBool("show-install-order")
+			purge, _ := cmd.Flags().GetBool("purge-repos")
+			cleanup, _ := cmd.Flags().GetBool("cleanup")
 
 			if syncRepos {
 				optsRails := &wagon.SyncOpts{
@@ -134,6 +136,20 @@ To force install a package:
 			InfoC(fmt.Sprintf(":confetti_ball:%s",
 				Bold(Blue("All done."))))
 
+			if cleanup {
+				err = aManager.CleanLocalPackagesCache()
+				if err != nil {
+					Fatal(err.Error())
+				}
+
+				if purge {
+					err = aManager.PurgeLocalReposCache()
+					if err != nil {
+						Fatal(err.Error())
+					}
+				}
+			}
+
 		},
 	}
 
@@ -161,6 +177,9 @@ To force install a package:
 	flags.Bool("ignore-masks", false, "Ignore packages masked.")
 	flags.Bool("show-install-order", false,
 		"In additional of the package to install, show the installation order and exit.")
+	ans.Flags().Bool("cleanup", false, "Cleanup local packages cache.")
+	ans.Flags().Bool("purge-repos", false,
+		"Remove all repos files. This impacts on searching packages too. Needs --cleanup.")
 
 	return ans
 }
