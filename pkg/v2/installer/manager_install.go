@@ -109,7 +109,7 @@ func (m *ArtifactsManager) ShowReposRevision() error {
 				aurora.Red(fmt.Sprintf(
 					":house:Repository: %30s Revision: ",
 					wr.Identity.GetName()))).String() +
-				aurora.Bold(aurora.Green(fmt.Sprintf("%3d", wr.GetRevision()))).String() + " - " +
+				aurora.Bold(aurora.Green(fmt.Sprintf("%4d", wr.GetRevision()))).String() + " - " +
 				aurora.Bold(aurora.Green(time.Unix(tsec, 0).String())).String(),
 		)
 	}

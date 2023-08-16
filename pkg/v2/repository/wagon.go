@@ -266,7 +266,7 @@ func (w *WagonRepository) Sync(force bool) error {
 				aurora.Red(fmt.Sprintf(
 					":house:Repository: %30s Revision: ",
 					w.Identity.GetName()))).String() +
-				aurora.Bold(aurora.Green(fmt.Sprintf("%3d", newIdentity.GetRevision()))).String() + " - " +
+				aurora.Bold(aurora.Green(fmt.Sprintf("%4d", newIdentity.GetRevision()))).String() + " - " +
 				aurora.Bold(aurora.Green(time.Unix(tsec, 0).String())).String(),
 		)
 
