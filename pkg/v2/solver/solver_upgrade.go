@@ -149,6 +149,7 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 	} else {
 		for pname, _ := range s.candidatesMap.Artifacts {
 			plist, _ := s.candidatesMap.Artifacts[pname]
+			acandidate := plist[0]
 
 			val, ok := s.systemMap.Packages[pname]
 			if ok {
@@ -161,8 +162,6 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 					&artifact.PackageArtifact{
 						Runtime: val[0],
 					})
-
-				acandidate := plist[0]
 
 				if acandidate.GetPackage().PackageName() != pname {
 					// The provides replace the exiting package too.
@@ -195,10 +194,33 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 
 			} else {
 				// POST: New package.
-				ans2Install.Artifacts = append(ans2Install.Artifacts, plist[0])
 
-				// TODO: Check if could be correct check if the package provides
-				//       packages installed in this use case.
+				// Check if the package provides packages installed.
+				// This could happens for example when a new package is available
+				// and this replace an old package with a different slot.
+				// For example: sys-libs/libunwind:7 (funtoo 1.4) to sys-libs/libunwind.
+				// NOTE: In this case the sys-libs/libunwind is injected as candidate
+				//       because is a dependency of another installed package and so,
+				//       the upgrade process doesn't see it as an upgrade.
+				if acandidate.GetPackage().HasProvides() {
+					for _, prov := range acandidate.GetPackage().GetProvides() {
+						if pr, present := s.systemMap.Packages[prov.PackageName()]; present {
+							Debug(fmt.Sprintf("[%s] provides and replace the existing %s.",
+								acandidate.GetPackage().PackageName(),
+								pr[0].HumanReadableString()))
+
+							art2rm := &artifact.PackageArtifact{
+								Runtime: pr[0],
+							}
+
+							if !ans2Remove.IsPresent(art2rm) {
+								ans2Remove.Artifacts = append(ans2Remove.Artifacts, art2rm)
+							}
+						}
+					}
+				}
+
+				ans2Install.Artifacts = append(ans2Install.Artifacts, acandidate)
 			}
 
 		}
