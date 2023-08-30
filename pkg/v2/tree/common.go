@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 
 	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 
 	zstd "github.com/klauspost/compress/zstd"
@@ -193,6 +194,8 @@ func (t *TreeIdx) Read(treeDir string) error {
 }
 
 func (t *TreeIdx) Generate(treeDir string, opts *GenOpts) error {
+	var err error
+
 	if treeDir == "" {
 		return errors.New("Invalid tree directory")
 	}
@@ -201,7 +204,16 @@ func (t *TreeIdx) Generate(treeDir string, opts *GenOpts) error {
 		treeDir = treeDir[0 : len(treeDir)-1]
 	}
 
+	if !filepath.IsAbs(treeDir) {
+		treeDir, err = filepath.Abs(treeDir)
+		if err != nil {
+			return err
+		}
+	}
 	base := filepath.Dir(treeDir)
+
+	Debug(fmt.Sprintf("Generating tree %s (base %s)...", treeDir, base))
+
 	tm, err := t.generateIdxDir(treeDir, base, opts)
 	if err != nil {
 		return err
@@ -237,7 +249,10 @@ func (t *TreeIdx) generateIdxDir(dir, base string, opts *GenOpts) (*TreeIdx, err
 				return nil, err
 			}
 
-			relf, _ := filepath.Rel(base, f)
+			relf, err := filepath.Rel(base, f)
+			if err != nil {
+				return nil, err
+			}
 
 			ans.AddPackage(dp.PackageName(), &TreeIdxPkg{
 				Version: dp.GetVersion(),
