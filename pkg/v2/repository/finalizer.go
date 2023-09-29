@@ -1,6 +1,6 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2022-2023 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package repository
 
@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	box "github.com/geaaru/luet/pkg/box"
 	. "github.com/geaaru/luet/pkg/config"
@@ -71,6 +72,11 @@ func (f *LuetFinalizer) RunInstall(targetRootfs string) error {
 	// inside the luet command.
 	envs = append(envs, fmt.Sprintf("LUET_VERSION=%s", LuetVersion))
 
+	// Add environment variable with the list of the subsets enabled
+	envs = append(envs,
+		fmt.Sprintf("ANISE_SUBSETS=%s",
+			strings.Join(LuetCfg.Subsets.Enabled, " ")))
+
 	for _, c := range f.Install {
 		err := f.runCommand(cmd, args, envs, c, targetRootfs)
 		if err != nil {
@@ -88,6 +94,11 @@ func (f *LuetFinalizer) RunUninstall(targetRootfs string) error {
 	// what is the luet version and that the script is running
 	// inside the luet command.
 	envs = append(envs, fmt.Sprintf("LUET_VERSION=%s", LuetVersion))
+
+	// Add environment variable with the list of the subsets enabled
+	envs = append(envs,
+		fmt.Sprintf("ANISE_SUBSETS=%s",
+			strings.Join(LuetCfg.Subsets.Enabled, " ")))
 
 	for _, c := range f.Uninstall {
 		err := f.runCommand(cmd, args, envs, c, targetRootfs)
