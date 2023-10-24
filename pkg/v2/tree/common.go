@@ -144,6 +144,10 @@ func (t *TreeIdx) Merge(tI *TreeIdx) {
 	}
 }
 
+func (t *TreeIdx) HasPackages() bool {
+	return len(t.Map) > 0
+}
+
 func (t *TreeIdx) Read(treeDir string) error {
 	// I consider that the tree will be
 	// with the index file of the upper directory
