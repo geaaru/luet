@@ -24,6 +24,7 @@ func newTreeCommand(config *cfg.LuetConfig) *cobra.Command {
 		NewTreeValidateCommand(),
 		NewTreeBumpCommand(),
 		NewTreeImageCommand(),
+		NewTreeRender(config),
 	)
 
 	return treeGroupCmd

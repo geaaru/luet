@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	cfg "github.com/geaaru/luet/pkg/config"
+	"github.com/geaaru/luet/pkg/helpers"
 	. "github.com/geaaru/luet/pkg/logger"
 	pkg "github.com/geaaru/luet/pkg/package"
 	"github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
@@ -18,45 +19,6 @@ import (
 
 	_gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 )
-
-func packageData(p string) (string, string, _gentoo.PackageCond) {
-	cat := ""
-	name := ""
-	cond := _gentoo.PackageCond(_gentoo.PkgCondInvalid)
-
-	if strings.Contains(p, "/") {
-		gp, _ := _gentoo.ParsePackageStr(p)
-		cond = gp.Condition
-		cat = gp.Category
-		name = gp.Name
-	} else {
-		name = p
-	}
-	return cat, name, cond
-}
-
-func gentooVersion(gp *_gentoo.GentooPackage) string {
-
-	condition := gp.Condition.String()
-	if condition == "=" {
-		condition = ""
-	}
-
-	pkgVersion := fmt.Sprintf("%s%s%s",
-		condition,
-		gp.Version,
-		gp.VersionSuffix,
-	)
-	if gp.VersionBuild != "" {
-		pkgVersion = fmt.Sprintf("%s%s%s+%s",
-			condition,
-			gp.Version,
-			gp.VersionSuffix,
-			gp.VersionBuild,
-		)
-	}
-	return pkgVersion
-}
 
 func resolveCategory(config *cfg.LuetConfig, name string) (string, error) {
 	ans := ""
@@ -121,7 +83,7 @@ func ParsePackageStr(config *cfg.LuetConfig, p string) (*pkg.DefaultPackage, err
 		if len(packageinfo) > 1 {
 			ver = packageinfo[1]
 		}
-		cat, name, cond = packageData(packageinfo[0])
+		cat, name, cond = helpers.PackageResolveSplit(packageinfo[0])
 		if cond != _gentoo.PkgCondInvalid && ver != "" {
 			ver = cond.String() + ver
 		}
@@ -146,7 +108,7 @@ func ParsePackageStr(config *cfg.LuetConfig, p string) (*pkg.DefaultPackage, err
 			gp.Condition = _gentoo.PkgCondGreaterEqual
 		}
 
-		ver = gentooVersion(gp)
+		ver = helpers.GentooVersion(gp)
 		cat = gp.Category
 		name = gp.Name
 	}
