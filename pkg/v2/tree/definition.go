@@ -11,6 +11,7 @@ import (
 
 	pkg "github.com/geaaru/luet/pkg/package"
 	spectooling "github.com/geaaru/luet/pkg/spectooling"
+	"gopkg.in/yaml.v3"
 )
 
 func ReadDefinitionFile(defFile string) (*pkg.DefaultPackage, error) {
@@ -29,6 +30,25 @@ func ReadDefinitionFile(defFile string) (*pkg.DefaultPackage, error) {
 	}
 
 	return ans, nil
+}
+
+func ReadDefinitionFileAsMap(defFile string) (*map[string]interface{}, error) {
+	data, err := os.ReadFile(defFile)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"Error on read file %s: %s",
+			defFile, err.Error())
+	}
+
+	ans := make(map[string]interface{}, 0)
+	err = yaml.Unmarshal(data, &ans)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"Error on unmarshal data of file %s: %s",
+			defFile, err.Error())
+	}
+
+	return &ans, nil
 }
 
 func WriteDefinitionFile(p pkg.Package, definitionFilePath string) error {
