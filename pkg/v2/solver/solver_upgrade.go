@@ -155,21 +155,41 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 			if ok {
 				// POST: Package to upgrade
 
-				// val is a DefaultPackage that I add to an empty
+				// val[0] is a DefaultPackage that I add to an empty
 				// artefact with only Runtime attribute.
-				// For remove is needed only to create a Stone object.
-				ans2Remove.Artifacts = append(ans2Remove.Artifacts,
-					&artifact.PackageArtifact{
-						Runtime: val[0],
-					})
+				// For remove is needed only to create a Stone object
+				// and i add the val[0] as Runtime of the PackageArtifact.
+				art2rm := &artifact.PackageArtifact{
+					Runtime: val[0],
+				}
 
 				if acandidate.GetPackage().PackageName() != pname {
+
+					// When pname is different from the package name of the
+					// candidate means that the package is been replaced by
+					// another that provides it. But the same new package
+					// could be also injected as dependency from another package
+					// and handled as a new package. In this case, the candidate
+					// could be present with the "pname" of the replaced package
+					// and with the "pname" of itself.
+					// To avoid to inject two times the remove operation of the
+					// replaced package I need to check if the package is already
+					// in the remove queue but i want to avoid this check every
+					// time and reduce cpu cycles. Eventually this could be
+					// resolved also with a map that consumes more memory.
+					if !ans2Remove.IsPresent(art2rm) {
+						ans2Remove.Artifacts = append(ans2Remove.Artifacts, art2rm)
+					}
+
 					// The provides replace the exiting package too.
 					// I add it if there is also the same package as update.
 					if _, present := s.candidatesMap.Artifacts[acandidate.GetPackage().PackageName()]; !present {
 						ans2Install.Artifacts = append(ans2Install.Artifacts, acandidate)
 					} // else ignoring it.
 				} else {
+
+					ans2Remove.Artifacts = append(ans2Remove.Artifacts, art2rm)
+
 					ans2Update.Artifacts = append(ans2Update.Artifacts, acandidate)
 				}
 
@@ -181,7 +201,7 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 								acandidate.GetPackage().PackageName(),
 								pr[0].HumanReadableString()))
 
-							art2rm := &artifact.PackageArtifact{
+							art2rm = &artifact.PackageArtifact{
 								Runtime: pr[0],
 							}
 
