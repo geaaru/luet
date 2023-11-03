@@ -119,7 +119,10 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone,
 		// Retrieve files from database
 		files, err = m.Database.GetPackageFiles(p)
 		if err != nil {
-			return err
+			return fmt.Errorf(
+				"error on retrieving files list of the package %s: %s",
+				s.HumanReadableString(),
+				err)
 		}
 	}
 
