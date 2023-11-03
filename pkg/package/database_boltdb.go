@@ -24,10 +24,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
-
 	storm "github.com/asdine/storm"
 	"github.com/asdine/storm/q"
+	"github.com/pkg/errors"
 	"go.etcd.io/bbolt"
 )
 
@@ -397,7 +396,7 @@ func (db *BoltDatabase) GetPackageFiles(p Package) ([]string, error) {
 	var pf PackageFile
 	err = files.One("PackageFingerprint", p.GetFingerPrint(), &pf)
 	if err != nil {
-		return []string{}, errors.Wrap(err, "While finding files")
+		return []string{}, errors.Wrap(err, "While retrieving files")
 	}
 	return pf.Files, nil
 }
