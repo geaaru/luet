@@ -373,6 +373,7 @@ func (s *Solver) OrderOperations(p2i, p2u, p2r *artifact.ArtifactsPack) (*[]*Ope
 			tmpOps = append(tmpOps, op)
 		}
 		pthinarr = nil
+
 	}
 
 	if len(p2r.Artifacts) > 0 {
@@ -395,6 +396,7 @@ func (s *Solver) OrderOperations(p2i, p2u, p2r *artifact.ArtifactsPack) (*[]*Ope
 
 			// Check and Add all packages not available
 			// between new install/updates in the right order.
+			// The packages to remove are added at the head of the list.
 			for _, a := range p2r.Artifacts {
 				p := a.GetPackage()
 				if _, present := mergedMap.Artifacts[p.PackageName()]; !present {
@@ -429,7 +431,12 @@ func (s *Solver) OrderOperations(p2i, p2u, p2r *artifact.ArtifactsPack) (*[]*Ope
 								p.PackageName(), pp.PackageName(), err.Error()))
 						} else {
 							if !admit {
+								Debug(fmt.Sprintf(
+									"[%s] Conflicts with %s (at pos %d).",
+									p.PackageName(), pp.HumanReadableString(), idx))
 								idxConflict = idx
+								// We consider the last conflicts the point
+								// where add the uninstall of the package before
 							}
 						}
 					}
@@ -448,10 +455,23 @@ func (s *Solver) OrderOperations(p2i, p2u, p2r *artifact.ArtifactsPack) (*[]*Ope
 							}...)
 						idxOps++
 					} else {
+
+						// NOTE: Using slice and modify the linked array modify the slice too.
+						//       So, i using tmpAns and copy every operation with a for. maybe we could find
+						//       a better solution?
 						segment := ans[idxConflict:]
-						ans = append(ans[0:idxConflict], NewOperation(RemovePackage, pr[0]))
-						ans = append(ans, segment...)
-						ans = append(ans, tmpOps[tidx])
+
+						tmpAns := make([]*Operation, idxConflict)
+						for idx := 0; idx < idxConflict; idx++ {
+							tmpAns[idx] = ans[idx]
+						}
+						tmpAns = append(tmpAns, NewOperation(RemovePackage, pr[0]))
+
+						// I need to add 1 because this is a pointer to the
+						// existing array.
+						tmpAns = append(tmpAns, segment...)
+						tmpAns = append(tmpAns, tmpOps[tidx])
+						ans = tmpAns
 						idxOps++
 					}
 				} else {

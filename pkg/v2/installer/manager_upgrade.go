@@ -36,9 +36,13 @@ func (m *ArtifactsManager) showPackagesSorted(
 	idx := 0
 	for _, op := range *installOps {
 		p := op.Artifact.GetPackage()
+
+		Debug(fmt.Sprintf("Operation %d: %s %s", idx+1, op.Action, p.HumanReadableString()))
+
 		switch op.Action {
 
 		case solver.RemovePackage:
+
 			if _, ok := p2umap.Artifacts[p.PackageName()]; !ok {
 				repos := "::"
 				if p.GetRepository() != "" {
@@ -46,6 +50,7 @@ func (m *ArtifactsManager) showPackagesSorted(
 				} else {
 					repos = ""
 				}
+
 				InfoC(fmt.Sprintf(":knife:[%s of %s] [%s] %-61s - %s",
 					aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", idx+1))),
 					aurora.Bold(aurora.BrightMagenta(fmt.Sprintf("%3d", nOps))),

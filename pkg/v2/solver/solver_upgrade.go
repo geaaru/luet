@@ -147,6 +147,7 @@ func (s *Solver) Upgrade() (*artifact.ArtifactsPack, *artifact.ArtifactsPack, *a
 
 		}
 	} else {
+
 		for pname, _ := range s.candidatesMap.Artifacts {
 			plist, _ := s.candidatesMap.Artifacts[pname]
 			acandidate := plist[0]
@@ -578,6 +579,9 @@ func (s *Solver) processArtefactDeps4Upgrade(art *artifact.PackageArtifact, stac
 	}
 
 	for _, p := range candidate.PackageRequires {
+
+		Debug(fmt.Sprintf("[%s] Analyzing dependency %s...",
+			candidate.PackageName(), p.PackageName()))
 
 		val, ok := s.systemMap.Packages[p.PackageName()]
 		if ok {
