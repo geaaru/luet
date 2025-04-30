@@ -1,7 +1,7 @@
 GOLANG_VERSION=$(shell go env GOVERSION)
 
 # go tool nm ./luet | grep Commit
-override LDFLAGS += -X "github.com/geaaru/luet/pkg/config.BuildTime=$(shell date -u '+%Y-%m-%d %I:%M:%S %Z')"
+override LDFLAGS += -X "github.com/geaaru/luet/pkg/config.BuildTime=$(shell date -u '+%Y-%m-%d %H:%M:%S %Z')"
 override LDFLAGS += -X "github.com/geaaru/luet/pkg/config.BuildCommit=$(shell git rev-parse HEAD)"
 override LDFLAGS += -X "github.com/geaaru/luet/pkg/config.BuildGoVersion=$(GOLANG_VERSION)"
 
