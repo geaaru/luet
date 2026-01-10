@@ -85,7 +85,7 @@ func RenderHelm(files []*chart.File, values, d map[string]interface{}) (string, 
 
 	// We slurp all the files into one here. This is not elegant, but still works.
 	// As a reminder, the files passed here have on the head the templates in the 'templates/' folder
-	// of each luet tree, and it have at the bottom the package buildpsec to be templated.
+	// of each anise tree, and it have at the bottom the package buildpsec to be templated.
 	// TODO: Replace by correctly populating the files so that the helm render engine templates it
 	// correctly
 	toTemplate := ""

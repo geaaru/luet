@@ -161,7 +161,7 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone,
 			(strings.HasPrefix(f, m.Config.GetSystem().GetSystemPkgsCacheDirPath()) ||
 				strings.HasPrefix(f, m.Config.GetSystem().GetSystemRepoDatabaseDirPath())) {
 			Warning("Preserve ", f,
-				" which is required by luet ( you have to delete it manually if you really need to)")
+				" which is required by anise ( you have to delete it manually if you really need to)")
 			continue
 		}
 
@@ -242,7 +242,7 @@ func (m *ArtifactsManager) removePackageFiles(s *repos.Stone,
 			strings.HasPrefix(f, m.Config.GetSystem().GetSystemPkgsCacheDirPath()) ||
 			strings.HasPrefix(f, m.Config.GetSystem().GetSystemRepoDatabaseDirPath()) {
 			Warning("Preserve ", f,
-				" which is required by luet ( you have to delete it manually if you really need to)")
+				" which is required by anise ( you have to delete it manually if you really need to)")
 			continue
 		}
 
@@ -427,7 +427,7 @@ func (m *ArtifactsManager) RegisterPackage(p *artifact.PackageArtifact, r *repos
 
 	// Set finalizer if present
 	if r != nil {
-		// NOTE: r is nil when the package is sync from luet-portage-converter.
+		// NOTE: r is nil when the package is sync from anise-portage-converter.
 
 		repoTreefs := r.GetTreePath(m.Config.GetSystem().GetSystemReposDirPath())
 		pkgdir := p.GetPackageTreePath(repoTreefs)

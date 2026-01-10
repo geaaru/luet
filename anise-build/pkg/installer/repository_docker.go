@@ -163,7 +163,7 @@ func (d *dockerRepositoryGenerator) pushImageFromArtifact(a *artifact.PackageArt
 	}
 }
 
-// Generate creates a Docker luet repository
+// Generate creates a Docker anise repository
 func (d *dockerRepositoryGenerator) Generate(r *AniseSystemRepository, imagePrefix string, resetRevision bool) error {
 	// - Iterate over meta, build final images, push them if necessary
 	//   - while pushing, check if image already exists, and if exist push them only if --force is supplied

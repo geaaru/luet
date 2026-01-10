@@ -56,27 +56,27 @@ func newBuildOldCommand(config *cfg.AniseConfig) *cobra.Command {
 		Short: "build a package or a tree",
 		Long: `Builds one or more packages from a tree (current directory is implied):
 
-		$ luet build utils/busybox utils/yq ...
+		$ anise build utils/busybox utils/yq ...
 
 	Builds all packages
 
-		$ luet build --all
+		$ anise build --all
 
 	Builds only the leaf packages:
 
-		$ luet build --full
+		$ anise build --full
 
 	Build package revdeps:
 
-		$ luet build --revdeps utils/yq
+		$ anise build --revdeps utils/yq
 
 	Build package without dependencies (needs the images already in the host, or either need to be available online):
 
-		$ luet build --nodeps utils/yq ...
+		$ anise build --nodeps utils/yq ...
 
 	Build packages specifying multiple definition trees:
 
-		$ luet build --tree overlay/path --tree overlay/path2 utils/yq ...
+		$ anise build --tree overlay/path --tree overlay/path2 utils/yq ...
 	`, PreRun: func(cmd *cobra.Command, args []string) {
 			config.Viper.BindPFlag("tree", cmd.Flags().Lookup("tree"))
 			config.Viper.BindPFlag("destination", cmd.Flags().Lookup("destination"))
@@ -165,7 +165,7 @@ func newBuildOldCommand(config *cfg.AniseConfig) *cobra.Command {
 
 			Debug("Solver", opts.CompactString())
 
-			luetCompiler := compiler.NewAniseCompiler(compilerBackend,
+			aniseCompiler := compiler.NewAniseCompiler(compilerBackend,
 				generalRecipe.GetDatabase(),
 				options.NoDeps(nodeps),
 				options.WithBackendType(backendType),
@@ -186,7 +186,7 @@ func newBuildOldCommand(config *cfg.AniseConfig) *cobra.Command {
 			)
 
 			if full {
-				specs, err := luetCompiler.FromDatabase(generalRecipe.GetDatabase(), true, dst)
+				specs, err := aniseCompiler.FromDatabase(generalRecipe.GetDatabase(), true, dst)
 				if err != nil {
 					Fatal(err.Error())
 				}
@@ -202,7 +202,7 @@ func newBuildOldCommand(config *cfg.AniseConfig) *cobra.Command {
 						Fatal("Invalid package string ", a, ": ", err.Error())
 					}
 
-					spec, err := luetCompiler.FromPackage(pack)
+					spec, err := aniseCompiler.FromPackage(pack)
 					if err != nil {
 						Fatal("Error: " + err.Error())
 					}
@@ -214,7 +214,7 @@ func newBuildOldCommand(config *cfg.AniseConfig) *cobra.Command {
 				w := generalRecipe.GetDatabase().World()
 
 				for _, p := range w {
-					spec, err := luetCompiler.FromPackage(p)
+					spec, err := aniseCompiler.FromPackage(p)
 					if err != nil {
 						Fatal("Error: " + err.Error())
 					}
@@ -227,13 +227,13 @@ func newBuildOldCommand(config *cfg.AniseConfig) *cobra.Command {
 			var artifact []*artifact.PackageArtifact
 			var errs []error
 			if revdeps {
-				artifact, errs = luetCompiler.CompileWithReverseDeps(privileged, compilerSpecs)
+				artifact, errs = aniseCompiler.CompileWithReverseDeps(privileged, compilerSpecs)
 
 			} else if pretend {
 				toCalculate := []*compilerspec.AniseCompilationSpec{}
 				if full {
 					var err error
-					toCalculate, err = luetCompiler.ComputeMinimumCompilableSet(compilerSpecs.All()...)
+					toCalculate, err = aniseCompiler.ComputeMinimumCompilableSet(compilerSpecs.All()...)
 					if err != nil {
 						errs = append(errs, err)
 					}
@@ -243,7 +243,7 @@ func newBuildOldCommand(config *cfg.AniseConfig) *cobra.Command {
 
 				for _, sp := range toCalculate {
 					ht := compiler.NewHashTree(generalRecipe.GetDatabase())
-					hashTree, err := ht.Query(luetCompiler, sp)
+					hashTree, err := ht.Query(aniseCompiler, sp)
 					if err != nil {
 						errs = append(errs, err)
 					}
@@ -282,7 +282,7 @@ func newBuildOldCommand(config *cfg.AniseConfig) *cobra.Command {
 				}
 			} else {
 
-				artifact, errs = luetCompiler.CompileParallel(privileged, compilerSpecs)
+				artifact, errs = aniseCompiler.CompileParallel(privileged, compilerSpecs)
 			}
 			if len(errs) != 0 {
 				for _, e := range errs {
@@ -314,7 +314,7 @@ func newBuildOldCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	flags.String("destination", filepath.Join(path, "build"), "Destination folder")
 	flags.String("compression", "none", "Compression alg: none, gzip, zstd")
-	flags.String("image-repository", "luet/cache", "Default base image string for generated image")
+	flags.String("image-repository", "anise/cache", "Default base image string for generated image")
 	flags.Bool("push", false, "Push images to a hub")
 	flags.Bool("pull", false, "Pull images from a hub")
 	flags.Bool("wait", false, "Don't build all intermediate images, but wait for them until they are available")

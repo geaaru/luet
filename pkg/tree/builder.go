@@ -9,7 +9,7 @@ import (
 	pkg "github.com/macaroni-os/anise/pkg/package"
 )
 
-// reads a luet tree and generates the package lists
+// reads a anise tree and generates the package lists
 type Builder interface {
 	Save(string) error // A tree might be saved to a folder structure (human editable)
 	Load(string) error // A tree might be loaded from a db (e.g. bolt) and written to folder

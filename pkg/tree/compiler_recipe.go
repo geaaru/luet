@@ -62,7 +62,7 @@ func (r *CompilerRecipe) Save(path string) error {
 func (r *CompilerRecipe) Load(path string) error {
 
 	r.SourcePath = append(r.SourcePath, path)
-	//tmpfile, err := ioutil.TempFile("", "luet")
+	//tmpfile, err := ioutil.TempFile("", "anise")
 	//if err != nil {
 	//	return err
 	//}

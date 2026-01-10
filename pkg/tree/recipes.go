@@ -59,7 +59,7 @@ func (r *Recipe) Save(path string) error {
 
 func (r *Recipe) Load(path string) error {
 
-	// tmpfile, err := ioutil.TempFile("", "luet")
+	// tmpfile, err := ioutil.TempFile("", "anise")
 	// if err != nil {
 	// 	return err
 	// }

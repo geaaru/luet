@@ -14,7 +14,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Solver is the default solver for luet
+// Solver is the default solver for anise
 type Solver struct {
 	DefinitionDatabase pkg.PackageDatabase
 	SolverDatabase     pkg.PackageDatabase

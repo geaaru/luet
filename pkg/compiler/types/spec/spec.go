@@ -325,8 +325,8 @@ func (cs *AniseCompilationSpec) CopyRetrieves(dest string) error {
 func (cs *AniseCompilationSpec) genDockerfile(image string, steps []string) string {
 	spec := `
 FROM ` + image + `
-COPY . /luetbuild
-WORKDIR /luetbuild
+COPY . /anisebuild
+WORKDIR /anisebuild
 ENV PACKAGE_NAME=` + cs.Package.GetName() + `
 ENV PACKAGE_VERSION=` + cs.Package.GetVersion() + `
 ENV PACKAGE_CATEGORY=` + cs.Package.GetCategory()
@@ -340,7 +340,7 @@ ENV PACKAGE_CATEGORY=` + cs.Package.GetCategory()
 			// 	file = cs.Rel(s)
 			// }
 			spec = spec + `
-ADD ` + s + ` /luetbuild/`
+ADD ` + s + ` /anisebuild/`
 		}
 	}
 

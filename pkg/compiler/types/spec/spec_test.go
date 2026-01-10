@@ -135,7 +135,7 @@ var _ = Describe("Spec", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(lspec.Steps).To(Equal([]string{"echo foo > /test", "echo bar > /test2"}))
-			Expect(lspec.Image).To(Equal("luet/base"))
+			Expect(lspec.Image).To(Equal("anise/base"))
 			Expect(lspec.Seed).To(Equal("alpine"))
 			tmpdir, err := ioutil.TempDir("", "tree")
 			Expect(err).ToNot(HaveOccurred())
@@ -148,8 +148,8 @@ var _ = Describe("Spec", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(dockerfile).To(Equal(`
 FROM alpine
-COPY . /luetbuild
-WORKDIR /luetbuild
+COPY . /anisebuild
+WORKDIR /anisebuild
 ENV PACKAGE_NAME=enman
 ENV PACKAGE_VERSION=1.4.0
 ENV PACKAGE_CATEGORY=app-admin
@@ -160,9 +160,9 @@ ENV test=1`))
 			dockerfile, err = fileHelper.Read(filepath.Join(tmpdir, "Dockerfile"))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(dockerfile).To(Equal(`
-FROM luet/base
-COPY . /luetbuild
-WORKDIR /luetbuild
+FROM anise/base
+COPY . /anisebuild
+WORKDIR /anisebuild
 ENV PACKAGE_NAME=enman
 ENV PACKAGE_VERSION=1.4.0
 ENV PACKAGE_CATEGORY=app-admin
@@ -187,7 +187,7 @@ RUN echo bar > /test2`))
 		Expect(err).ToNot(HaveOccurred())
 
 		Expect(lspec.Steps).To(Equal([]string{"echo foo > /test", "echo bar > /test2"}))
-		Expect(lspec.Image).To(Equal("luet/base"))
+		Expect(lspec.Image).To(Equal("anise/base"))
 		Expect(lspec.Seed).To(Equal("alpine"))
 		tmpdir, err := ioutil.TempDir("", "tree")
 		Expect(err).ToNot(HaveOccurred())
@@ -199,13 +199,13 @@ RUN echo bar > /test2`))
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dockerfile).To(Equal(`
 FROM alpine
-COPY . /luetbuild
-WORKDIR /luetbuild
+COPY . /anisebuild
+WORKDIR /anisebuild
 ENV PACKAGE_NAME=a
 ENV PACKAGE_VERSION=1.0
 ENV PACKAGE_CATEGORY=test
-ADD test /luetbuild/
-ADD http://www.google.com /luetbuild/
+ADD test /anisebuild/
+ADD http://www.google.com /anisebuild/
 ENV test=1`))
 
 		lspec.SetOutputPath("/foo/bar")
@@ -216,13 +216,13 @@ ENV test=1`))
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dockerfile).To(Equal(`
 FROM alpine
-COPY . /luetbuild
-WORKDIR /luetbuild
+COPY . /anisebuild
+WORKDIR /anisebuild
 ENV PACKAGE_NAME=a
 ENV PACKAGE_VERSION=1.0
 ENV PACKAGE_CATEGORY=test
-ADD test /luetbuild/
-ADD http://www.google.com /luetbuild/
+ADD test /anisebuild/
+ADD http://www.google.com /anisebuild/
 ENV test=1`))
 
 		err = lspec.WriteStepImageDefinition(lspec.Image, filepath.Join(tmpdir, "Dockerfile"))
@@ -231,14 +231,14 @@ ENV test=1`))
 		Expect(err).ToNot(HaveOccurred())
 
 		Expect(dockerfile).To(Equal(`
-FROM luet/base
-COPY . /luetbuild
-WORKDIR /luetbuild
+FROM anise/base
+COPY . /anisebuild
+WORKDIR /anisebuild
 ENV PACKAGE_NAME=a
 ENV PACKAGE_VERSION=1.0
 ENV PACKAGE_CATEGORY=test
-ADD test /luetbuild/
-ADD http://www.google.com /luetbuild/
+ADD test /anisebuild/
+ADD http://www.google.com /anisebuild/
 ENV test=1
 RUN echo foo > /test
 RUN echo bar > /test2`))

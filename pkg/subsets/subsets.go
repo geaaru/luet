@@ -59,7 +59,7 @@ func LoadSubsetsConfig(c *AniseConfig) error {
 			}
 
 			if len(sc.Enabled) == 0 {
-				// On using luet subsets disable we could have no subsets defined.
+				// On using anise subsets disable we could have no subsets defined.
 				// just ignoring the file.
 				continue
 			}

@@ -347,7 +347,7 @@ func (w *WagonRepository) ExplodeMetadata() error {
 		if fileHelper.Exists(pkgDir) {
 			//Debug(fmt.Sprintf("Creating file %s", metaFile))
 
-			// TODO: Review this logic on luet-build too.
+			// TODO: Review this logic on anise-build too.
 			// At the moment the creation of metadata.yaml file of the
 			// build package doesn't permit to update package provides,requires
 			// and/or conflicts without a new build of the package.

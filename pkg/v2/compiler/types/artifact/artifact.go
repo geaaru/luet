@@ -165,7 +165,7 @@ func (a *PackageArtifact) GetPackage() *pkg.DefaultPackage {
 
 func (a *PackageArtifact) GetPackageTreePath(treefs string) string {
 	// NOTE: treefs is the directory of the tree of the local repository.
-	//       Normally /var/cache/luet/<repo>/treefs
+	//       Normally /var/cache/anise/<repo>/treefs
 	ans := ""
 	var pkg *pkg.DefaultPackage = nil
 	// TODO: Check if it's correct that sometime a.Runtime is not present.

@@ -39,10 +39,10 @@ func (f *AniseFinalizer) RunInstall(s *System) error {
 	}
 
 	envs := AniseCfg.GetFinalizerEnvs()
-	// Add LUET_VERSION env so finalizer are able to know
-	// what is the luet version and that the script is running
-	// inside the luet command.
-	envs = append(envs, fmt.Sprintf("LUET_VERSION=%s", AniseVersion))
+	// Add ANISE_VERSION env so finalizer are able to know
+	// what is the anise version and that the script is running
+	// inside the anise command.
+	envs = append(envs, fmt.Sprintf("ANISE_VERSION=%s", AniseVersion))
 
 	for _, c := range f.Install {
 		toRun := append(args, c)

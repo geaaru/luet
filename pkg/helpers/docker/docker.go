@@ -53,7 +53,7 @@ func verifyImage(image string, authConfig *types.AuthConfig) (string, error) {
 			return "", errors.New("failed to resolve image digest using content trust: reference is not tagged")
 		}
 
-		resolvedImage, err := trustedResolveDigest(context.Background(), taggedRef, authConfig, "luet")
+		resolvedImage, err := trustedResolveDigest(context.Background(), taggedRef, authConfig, "anise")
 		if err != nil {
 			return "", errors.Wrap(err, "failed to resolve image digest using content trust")
 		}

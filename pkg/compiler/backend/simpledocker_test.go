@@ -38,7 +38,7 @@ var _ = Describe("Docker backend", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(lspec.Steps).To(Equal([]string{"echo foo > /test", "echo bar > /test2"}))
-			Expect(lspec.Image).To(Equal("luet/base"))
+			Expect(lspec.Image).To(Equal("anise/base"))
 			Expect(lspec.Seed).To(Equal("alpine"))
 			tmpdir, err := ioutil.TempDir(os.TempDir(), "tree")
 			Expect(err).ToNot(HaveOccurred())
@@ -54,14 +54,14 @@ var _ = Describe("Docker backend", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(dockerfile).To(Equal(`
 FROM alpine
-COPY . /luetbuild
-WORKDIR /luetbuild
+COPY . /anisebuild
+WORKDIR /anisebuild
 ENV PACKAGE_NAME=enman
 ENV PACKAGE_VERSION=1.4.0
 ENV PACKAGE_CATEGORY=app-admin`))
 			b := NewSimpleDockerBackend()
 			opts := backend.Options{
-				ImageName:      "luet/base",
+				ImageName:      "anise/base",
 				SourcePath:     tmpdir,
 				DockerFileName: "Dockerfile",
 				Destination:    filepath.Join(tmpdir2, "output1.tar"),
@@ -76,9 +76,9 @@ ENV PACKAGE_CATEGORY=app-admin`))
 			dockerfile, err = fileHelper.Read(filepath.Join(tmpdir, "AniseDockerfile"))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(dockerfile).To(Equal(`
-FROM luet/base
-COPY . /luetbuild
-WORKDIR /luetbuild
+FROM anise/base
+COPY . /anisebuild
+WORKDIR /anisebuild
 ENV PACKAGE_NAME=enman
 ENV PACKAGE_VERSION=1.4.0
 ENV PACKAGE_CATEGORY=app-admin
@@ -96,7 +96,7 @@ RUN echo bar > /test2`))
 			Expect(fileHelper.Exists(filepath.Join(tmpdir, "output2.tar"))).To(BeTrue())
 
 			artifacts := []artifact.ArtifactNode{{
-				Name: "/luetbuild/AniseDockerfile",
+				Name: "/anisebuild/AniseDockerfile",
 				Size: 175,
 			}}
 			if os.Getenv("DOCKER_BUILDKIT") == "1" {
@@ -107,7 +107,7 @@ RUN echo bar > /test2`))
 
 			Expect(compiler.GenerateChanges(b, opts, opts2)).To(Equal(
 				[]artifact.ArtifactLayer{{
-					FromImage: "luet/base",
+					FromImage: "anise/base",
 					ToImage:   "test",
 					Diffs: artifact.ArtifactDiffs{
 						Additions: artifacts,

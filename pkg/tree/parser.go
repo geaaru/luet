@@ -9,5 +9,5 @@ import pkg "github.com/macaroni-os/anise/pkg/package"
 
 // parses ebuilds (?) and generates data which is readable by the builder
 type Parser interface {
-	Generate(string) (pkg.PackageDatabase, error) // Generate scannable luet tree (by builder)
+	Generate(string) (pkg.PackageDatabase, error) // Generate scannable anise tree (by builder)
 }

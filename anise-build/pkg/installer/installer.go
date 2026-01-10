@@ -132,7 +132,7 @@ func (l *AniseInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pk
 		for _, p := range s.Database.World() {
 			matches := syncedRepos.PackageMatches(pkg.Packages{p})
 			if len(matches) == 0 {
-				// Package missing. the user should run luet upgrade --universe
+				// Package missing. the user should run anise upgrade --universe
 				continue
 			}
 			for _, artefact := range matches[0].Repo.GetIndex() {
@@ -1219,7 +1219,7 @@ func (l *AniseInstaller) uninstall(p pkg.Package, s *System) error {
 			strings.HasPrefix(f, config.AniseCfg.GetSystem().GetSystemPkgsCacheDirPath()) ||
 			strings.HasPrefix(f, config.AniseCfg.GetSystem().GetSystemRepoDatabaseDirPath()) {
 			Warning("Preserve ", f,
-				" which is required by luet ( you have to delete it manually if you really need to)")
+				" which is required by anise ( you have to delete it manually if you really need to)")
 			continue
 		}
 
@@ -1287,7 +1287,7 @@ func (l *AniseInstaller) uninstall(p pkg.Package, s *System) error {
 			strings.HasPrefix(f, config.AniseCfg.GetSystem().GetSystemPkgsCacheDirPath()) ||
 			strings.HasPrefix(f, config.AniseCfg.GetSystem().GetSystemRepoDatabaseDirPath()) {
 			Warning("Preserve ", f,
-				" which is required by luet ( you have to delete it manually if you really need to)")
+				" which is required by anise ( you have to delete it manually if you really need to)")
 			continue
 		}
 

@@ -69,10 +69,10 @@ func (f *AniseFinalizer) RunInstall(targetRootfs string) error {
 	cmd, args := f.getShell()
 
 	envs := AniseCfg.GetFinalizerEnvs()
-	// Add LUET_VERSION env so finalizer are able to know
-	// what is the luet version and that the script is running
-	// inside the luet command.
-	envs = append(envs, fmt.Sprintf("LUET_VERSION=%s", AniseVersion))
+	// Add ANISE_VERSION env so finalizer are able to know
+	// what is the anise version and that the script is running
+	// inside the anise command.
+	envs = append(envs, fmt.Sprintf("ANISE_VERSION=%s", AniseVersion))
 
 	// Add environment variable with the list of the subsets enabled
 	envs = append(envs,
@@ -92,10 +92,10 @@ func (f *AniseFinalizer) RunUninstall(targetRootfs string) error {
 	cmd, args := f.getShell()
 
 	envs := AniseCfg.GetFinalizerEnvs()
-	// Add LUET_VERSION env so finalizer are able to know
-	// what is the luet version and that the script is running
-	// inside the luet command.
-	envs = append(envs, fmt.Sprintf("LUET_VERSION=%s", AniseVersion))
+	// Add ANISE_VERSION env so finalizer are able to know
+	// what is the anise version and that the script is running
+	// inside the anise command.
+	envs = append(envs, fmt.Sprintf("ANISE_VERSION=%s", AniseVersion))
 
 	// Add environment variable with the list of the subsets enabled
 	envs = append(envs,

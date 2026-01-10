@@ -60,22 +60,22 @@ type CompilerBackend interface {
 // example of json return: [
 //
 //	{
-//	  "Image1": "luet/base",
+//	  "Image1": "anise/base",
 //	  "Image2": "alpine",
 //	  "DiffType": "File",
 //	  "Diff": {
 //	    "Adds": null,
 //	    "Dels": [
 //	      {
-//	        "Name": "/luetbuild",
+//	        "Name": "/anisebuild",
 //	        "Size": 5830706
 //	      },
 //	      {
-//	        "Name": "/luetbuild/Dockerfile",
+//	        "Name": "/anisebuild/Dockerfile",
 //	        "Size": 50
 //	      },
 //	      {
-//	        "Name": "/luetbuild/output1",
+//	        "Name": "/anisebuild/output1",
 //	        "Size": 5830656
 //	      }
 //	    ],

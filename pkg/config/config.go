@@ -314,7 +314,7 @@ func NewAniseConfig(viper *v.Viper) *AniseConfig {
 func GenDefault(viper *v.Viper) {
 	viper.SetDefault("logging.level", "info")
 	viper.SetDefault("logging.enable_logfile", false)
-	viper.SetDefault("logging.path", "/var/log/luet.log")
+	viper.SetDefault("logging.path", "/var/log/anise.log")
 	viper.SetDefault("logging.json_format", false)
 	viper.SetDefault("logging.enable_emoji", true)
 	viper.SetDefault("logging.color", true)
@@ -340,16 +340,16 @@ func GenDefault(viper *v.Viper) {
 	}
 
 	viper.SetDefault("system.database_engine", "boltdb")
-	viper.SetDefault("system.database_path", "/var/cache/luet")
+	viper.SetDefault("system.database_path", "/var/cache/anise")
 	viper.SetDefault("system.rootfs", "/")
-	viper.SetDefault("system.tmpdir_base", filepath.Join(os.TempDir(), "tmpluet"))
+	viper.SetDefault("system.tmpdir_base", filepath.Join(os.TempDir(), "tmpanise"))
 	viper.SetDefault("system.pkgs_cache_path", "packages")
 
-	viper.SetDefault("repos_confdir", []string{"/etc/luet/repos.conf.d"})
-	viper.SetDefault("config_protect_confdir", []string{"/etc/luet/config.protect.d"})
-	viper.SetDefault("packages_maskdir", []string{"/etc/luet/mask.d"})
-	viper.SetDefault("subsets_confdir", []string{"/etc/luet/subsets.conf.d"})
-	viper.SetDefault("subsets_defdir", []string{"/etc/luet/subsets.def.d"})
+	viper.SetDefault("repos_confdir", []string{"/etc/anise/repos.conf.d"})
+	viper.SetDefault("config_protect_confdir", []string{"/etc/anise/config.protect.d"})
+	viper.SetDefault("packages_maskdir", []string{"/etc/anise/mask.d"})
+	viper.SetDefault("subsets_confdir", []string{"/etc/anise/subsets.conf.d"})
+	viper.SetDefault("subsets_defdir", []string{"/etc/anise/subsets.def.d"})
 	viper.SetDefault("config_protect_skip", false)
 	// TODO: Set default to false when we are ready for migration.
 	viper.SetDefault("config_from_host", true)
@@ -372,7 +372,7 @@ func (c *AniseConfig) GetSystemDB() pkg.PackageDatabase {
 	switch AniseCfg.GetSystem().DatabaseEngine {
 	case "boltdb":
 		return pkg.NewBoltDatabase(
-			filepath.Join(AniseCfg.GetSystem().GetSystemRepoDatabaseDirPath(), "luet.db"))
+			filepath.Join(AniseCfg.GetSystem().GetSystemRepoDatabaseDirPath(), "anise.db"))
 	default:
 		return pkg.NewInMemoryDatabase(true)
 	}

@@ -78,7 +78,7 @@ func NewTreeImageCommand() *cobra.Command {
 			compilerBackend := backend.NewSimpleDockerBackend()
 
 			opts := *AniseCfg.GetSolverOptions()
-			luetCompiler := compiler.NewAniseCompiler(
+			aniseCompiler := compiler.NewAniseCompiler(
 				compilerBackend,
 				reciper.GetDatabase(),
 				options.WithBuildValues(values),
@@ -95,13 +95,13 @@ func NewTreeImageCommand() *cobra.Command {
 				Fatal("Invalid package string ", a, ": ", err.Error())
 			}
 
-			spec, err := luetCompiler.FromPackage(pack)
+			spec, err := aniseCompiler.FromPackage(pack)
 			if err != nil {
 				Fatal("Error: " + err.Error())
 			}
 
 			ht := compiler.NewHashTree(reciper.GetDatabase())
-			hashtree, err := ht.Query(luetCompiler, spec)
+			hashtree, err := ht.Query(aniseCompiler, spec)
 			if err != nil {
 				Fatal("Error: " + err.Error())
 			}
@@ -147,7 +147,7 @@ func NewTreeImageCommand() *cobra.Command {
 	}
 	ans.Flags().StringP("output", "o", "terminal", "Output format ( Defaults: terminal, available: json,yaml )")
 	ans.Flags().StringArrayP("tree", "t", []string{path}, "Path of the tree to use.")
-	ans.Flags().String("image-repository", "luet/cache", "Default base image string for generated image")
+	ans.Flags().String("image-repository", "anise/cache", "Default base image string for generated image")
 	ans.Flags().StringArrayP("pull-repository", "p", []string{}, "A list of repositories to pull the cache from")
 
 	return ans

@@ -26,7 +26,7 @@ var _ = Describe("Config", func() {
 
 			tmpDir, err := config.AniseCfg.GetSystem().TempDir("test1")
 			Expect(err).ToNot(HaveOccurred())
-			Expect(strings.HasPrefix(tmpDir, filepath.Join(os.TempDir(), "tmpluet"))).To(BeTrue())
+			Expect(strings.HasPrefix(tmpDir, filepath.Join(os.TempDir(), "tmpanise"))).To(BeTrue())
 			Expect(fileHelper.Exists(tmpDir)).To(BeTrue())
 
 			defer os.RemoveAll(tmpDir)
@@ -37,7 +37,7 @@ var _ = Describe("Config", func() {
 
 			tmpFile, err := config.AniseCfg.GetSystem().TempFile("testfile1")
 			Expect(err).ToNot(HaveOccurred())
-			Expect(strings.HasPrefix(tmpFile.Name(), filepath.Join(os.TempDir(), "tmpluet"))).To(BeTrue())
+			Expect(strings.HasPrefix(tmpFile.Name(), filepath.Join(os.TempDir(), "tmpanise"))).To(BeTrue())
 			Expect(fileHelper.Exists(tmpFile.Name())).To(BeTrue())
 
 			defer os.Remove(tmpFile.Name())

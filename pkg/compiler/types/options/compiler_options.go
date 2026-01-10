@@ -39,7 +39,7 @@ type Compiler struct {
 
 func NewDefaultCompiler() *Compiler {
 	return &Compiler{
-		PushImageRepository: "luet/cache",
+		PushImageRepository: "anise/cache",
 		PullFirst:           false,
 		Push:                false,
 		CompressionType:     compression.None,
