@@ -1,12 +1,12 @@
 /*
-Copyright © 2022-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package specs
 
 import (
-	pkg "github.com/geaaru/luet/pkg/package"
-	"github.com/geaaru/luet/pkg/v2/compiler/types/options"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	"github.com/macaroni-os/anise/pkg/v2/compiler/types/options"
 )
 
 type CopyField struct {

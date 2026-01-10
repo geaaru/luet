@@ -1,5 +1,5 @@
 /*
-Copyright © 2021-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd_subsets
@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	cfg "github.com/geaaru/luet/pkg/config"
-	helpers "github.com/geaaru/luet/pkg/helpers/file"
-	. "github.com/geaaru/luet/pkg/logger"
-	"github.com/geaaru/luet/pkg/subsets"
+	cfg "github.com/macaroni-os/anise/pkg/config"
+	helpers "github.com/macaroni-os/anise/pkg/helpers/file"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	"github.com/macaroni-os/anise/pkg/subsets"
 
 	"github.com/spf13/cobra"
 )
@@ -23,12 +23,12 @@ func NewSubsetsDisableCommand(config *cfg.LuetConfig) *cobra.Command {
 		Short: "Disable one or more subsets.",
 		Long: `Disable one or more subsets as subsets config file.
 
-	$> luet subsets disable devel portage mysubset
+	$> anise subsets disable devel portage mysubset
 
-	$> luet subsets disable -f my devel portage mysubset
+	$> anise subsets disable -f my devel portage mysubset
 
 The filename is used to write/update the file under the first
-directory defined on subsets_confdir option (for example /etc/luet/subsets.conf.d/my.yml else main.yml is used).
+directory defined on subsets_confdir option (for example /etc/anise/subsets.conf.d/my.yml else main.yml is used).
 `,
 		Args: cobra.OnlyValidArgs,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -65,7 +65,7 @@ directory defined on subsets_confdir option (for example /etc/luet/subsets.conf.
 				Error(fmt.Sprintf(
 					"The subsets config file %s doesn't exist.",
 					filepath.Base(conffile)))
-				Fatal("Maybe the subsets is enabled in another file or on luet.yaml?")
+				Fatal("Maybe the subsets is enabled in another file or on anise.yaml?")
 			}
 
 			sc, err := cfg.NewSubsetsConfigFromFile(conffile)

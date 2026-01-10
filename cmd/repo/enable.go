@@ -1,5 +1,5 @@
 /*
-Copyright © 2021-2022 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd_repo
@@ -9,8 +9,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	cfg "github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
+	cfg "github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/logger"
 
 	. "github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"

@@ -1,3 +1,8 @@
+/*
+Copyright © 2019-2026 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
+*/
+
 package helpers
 
 import (
@@ -5,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
+	fileHelper "github.com/macaroni-os/anise/pkg/helpers/file"
 
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"

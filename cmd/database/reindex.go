@@ -1,13 +1,13 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2019-2026 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd_database
 
 import (
-	"github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
-	installer "github.com/geaaru/luet/pkg/v2/installer"
+	"github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	installer "github.com/macaroni-os/anise/pkg/v2/installer"
 
 	"github.com/spf13/cobra"
 )

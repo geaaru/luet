@@ -1,5 +1,5 @@
 /*
-Copyright © 2022-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package specs
@@ -11,10 +11,9 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	pkg "github.com/geaaru/luet/pkg/package"
-	"github.com/geaaru/luet/pkg/v2/compiler/types/options"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	"github.com/macaroni-os/anise/pkg/v2/compiler/types/options"
 
-	//"github.com/ghodss/yaml"
 	"github.com/mitchellh/hashstructure/v2"
 	"github.com/otiai10/copy"
 	"golang.org/x/mod/sumdb/dirhash"

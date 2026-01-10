@@ -1,3 +1,8 @@
+/*
+Copyright © 2019-2026 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
+*/
+
 package compiler
 
 import (
@@ -7,13 +12,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	artifact "github.com/geaaru/luet/pkg/compiler/types/artifact"
+	artifact "github.com/macaroni-os/anise/pkg/compiler/types/artifact"
 
-	"github.com/geaaru/luet/pkg/compiler/backend"
-	"github.com/geaaru/luet/pkg/config"
+	"github.com/macaroni-os/anise/pkg/compiler/backend"
+	"github.com/macaroni-os/anise/pkg/config"
 	"github.com/pkg/errors"
 
-	. "github.com/geaaru/luet/pkg/logger"
+	. "github.com/macaroni-os/anise/pkg/logger"
 )
 
 func NewBackend(s string) (CompilerBackend, error) {

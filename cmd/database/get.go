@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd_database
@@ -7,9 +7,9 @@ package cmd_database
 import (
 	"fmt"
 
-	helpers "github.com/geaaru/luet/cmd/helpers"
-	"github.com/geaaru/luet/pkg/config"
-	installer "github.com/geaaru/luet/pkg/v2/installer"
+	helpers "github.com/macaroni-os/anise/cmd/helpers"
+	"github.com/macaroni-os/anise/pkg/config"
+	installer "github.com/macaroni-os/anise/pkg/v2/installer"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -21,10 +21,10 @@ func NewDatabaseGetCommand(cfg *config.LuetConfig) *cobra.Command {
 		Short: "Get a package in the system DB as yaml",
 		Long: `Get a package in the system database in the YAML format:
 
-		$ luet database get system/foo
+		$ anise database get system/foo
 
 To return also files:
-		$ luet database get --files system/foo`,
+		$ anise database get --files system/foo`,
 		Args: cobra.OnlyValidArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			showFiles, _ := cmd.Flags().GetBool("files")

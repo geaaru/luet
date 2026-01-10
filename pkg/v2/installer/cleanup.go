@@ -1,5 +1,5 @@
 /*
-Copyright © 2022-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package installer
@@ -10,8 +10,8 @@ import (
 	"os"
 	"path/filepath"
 
-	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	. "github.com/geaaru/luet/pkg/logger"
+	fileHelper "github.com/macaroni-os/anise/pkg/helpers/file"
+	. "github.com/macaroni-os/anise/pkg/logger"
 )
 
 func (a *ArtifactsManager) CleanLocalPackagesCache() error {

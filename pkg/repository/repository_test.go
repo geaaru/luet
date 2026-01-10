@@ -1,13 +1,13 @@
 /*
-Copyright © 2019-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 
 package repository_test
 
 import (
-	. "github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/repository"
+	. "github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/repository"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

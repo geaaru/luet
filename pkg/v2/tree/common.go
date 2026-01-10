@@ -1,5 +1,5 @@
 /*
-Copyright © 2019-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package tree
@@ -14,11 +14,11 @@ import (
 	"path/filepath"
 	"sort"
 
-	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
-	"github.com/geaaru/pkgs-checker/pkg/gentoo"
+	fileHelper "github.com/macaroni-os/anise/pkg/helpers/file"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	pkg "github.com/macaroni-os/anise/pkg/package"
 
+	"github.com/geaaru/pkgs-checker/pkg/gentoo"
 	zstd "github.com/klauspost/compress/zstd"
 	"gopkg.in/yaml.v3"
 )

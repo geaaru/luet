@@ -1,5 +1,5 @@
 /*
-Copyright © 2019-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package tree
@@ -11,7 +11,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	pkg "github.com/geaaru/luet/pkg/package"
+	pkg "github.com/macaroni-os/anise/pkg/package"
 )
 
 type CollectionRender struct {

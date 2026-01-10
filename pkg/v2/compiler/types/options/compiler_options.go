@@ -1,5 +1,5 @@
 /*
-Copyright © 2022-2024 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package options
@@ -7,7 +7,7 @@ package options
 import (
 	"runtime"
 
-	"github.com/geaaru/luet/pkg/v2/compiler/types/compression"
+	"github.com/macaroni-os/anise/pkg/v2/compiler/types/compression"
 )
 
 type Compiler struct {

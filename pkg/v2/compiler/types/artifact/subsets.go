@@ -1,5 +1,5 @@
 /*
-Copyright © 2021-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package artifact
@@ -7,10 +7,10 @@ package artifact
 import (
 	"fmt"
 
-	. "github.com/geaaru/luet/pkg/config"
-	"github.com/geaaru/luet/pkg/helpers"
-	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
+	. "github.com/macaroni-os/anise/pkg/config"
+	"github.com/macaroni-os/anise/pkg/helpers"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	pkg "github.com/macaroni-os/anise/pkg/package"
 
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
 )

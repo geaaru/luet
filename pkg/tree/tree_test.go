@@ -1,23 +1,8 @@
-// Copyright © 2019 Ettore Di Giacinto <mudler@gentoo.org>
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, see <http://www.gnu.org/licenses/>.
+/*
+Copyright © 2019-2026 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
+*/
 
-// Recipe is a builder imeplementation.
-
-// It reads a Tree and spit it in human readable form (YAML), called recipe,
-// It also loads a tree (recipe) from a YAML (to a db, e.g. BoltDB), allowing to query it
-// with the solver, using the package object.
 package tree_test
 
 import (
@@ -28,9 +13,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	pkg "github.com/geaaru/luet/pkg/package"
-	"github.com/geaaru/luet/pkg/solver"
-	. "github.com/geaaru/luet/pkg/tree"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	"github.com/macaroni-os/anise/pkg/solver"
+	. "github.com/macaroni-os/anise/pkg/tree"
 )
 
 var _ = Describe("Tree", func() {

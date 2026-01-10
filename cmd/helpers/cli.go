@@ -1,5 +1,5 @@
 /*
-Copyright © 2022-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 
@@ -10,12 +10,12 @@ import (
 	"fmt"
 	"strings"
 
-	cfg "github.com/geaaru/luet/pkg/config"
-	"github.com/geaaru/luet/pkg/helpers"
-	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
-	"github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
-	wagon "github.com/geaaru/luet/pkg/v2/repository"
+	cfg "github.com/macaroni-os/anise/pkg/config"
+	"github.com/macaroni-os/anise/pkg/helpers"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	"github.com/macaroni-os/anise/pkg/v2/compiler/types/artifact"
+	wagon "github.com/macaroni-os/anise/pkg/v2/repository"
 
 	_gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 )

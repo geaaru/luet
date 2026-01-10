@@ -1,5 +1,5 @@
 /*
-Copyright © 2021-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 
@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"regexp"
 
-	. "github.com/geaaru/luet/pkg/config"
-	"github.com/geaaru/luet/pkg/helpers"
-	. "github.com/geaaru/luet/pkg/logger"
+	. "github.com/macaroni-os/anise/pkg/config"
+	"github.com/macaroni-os/anise/pkg/helpers"
+	. "github.com/macaroni-os/anise/pkg/logger"
 
 	"gopkg.in/yaml.v3"
 )

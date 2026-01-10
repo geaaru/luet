@@ -39,13 +39,13 @@ jobs:
       - name: Tests with Dockerv3 backend
         run: |
             sudo -E env "PATH=$PATH" \
-                    env "LUET_BACKEND=dockerv3" \
+                    env "ANISE_BACKEND=dockerv3" \
                     make test-integration
 
       #- name: Tests with Dockerv2 backend
       #  run: |
       #      sudo -E env "PATH=$PATH" \
-      #              env "LUET_BACKEND=dockerv2" \
+      #              env "ANISE_BACKEND=dockerv2" \
       #              make test-integration
 
       - name: Tests
@@ -64,7 +64,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.22.x
+          go-version: 1.24.x
 
       - name: Checkout code
         uses: actions/checkout@v3
@@ -76,7 +76,7 @@ jobs:
             sudo chmod a+x "/usr/bin/img"
             make deps
             make build
-            sudo cp -rf luet /usr/bin/luet
+            sudo cp -rf anise /usr/bin/anise
 
       - name: Install GoReleaser
         uses: goreleaser/goreleaser-action@v4

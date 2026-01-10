@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package installer
@@ -7,11 +7,11 @@ package installer
 import (
 	"fmt"
 
-	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
-	repos "github.com/geaaru/luet/pkg/v2/repository"
-	"github.com/logrusorgru/aurora"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	repos "github.com/macaroni-os/anise/pkg/v2/repository"
 
+	"github.com/logrusorgru/aurora"
 	"github.com/pkg/errors"
 )
 

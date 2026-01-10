@@ -1,17 +1,17 @@
 /*
-	Copyright © 2022 Macaroni OS Linux
-	See AUTHORS and LICENSE for the license details and contributors.
+Copyright © 2019-2026 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd_database
 
 import (
 	"io/ioutil"
 
-	"github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
-	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
-	installer "github.com/geaaru/luet/pkg/v2/installer"
+	"github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	artifact "github.com/macaroni-os/anise/pkg/v2/compiler/types/artifact"
+	installer "github.com/macaroni-os/anise/pkg/v2/installer"
 
 	"github.com/spf13/cobra"
 )
@@ -22,15 +22,15 @@ func NewDatabaseCreateCommand(cfg *config.LuetConfig) *cobra.Command {
 		Short: "Insert a package in the system DB",
 		Long: `Inserts a package in the system database:
 
-		$ luet database create foo.yaml
+		$ anise database create foo.yaml
 
-"luet database create" injects a package in the system database without actually installing it, use it with caution.
+"anise database create" injects a package in the system database without actually installing it, use it with caution.
 
 This commands takes multiple yaml input file representing package artifacts, that are usually generated while building packages.
 
 The yaml must contain the package definition, and the file list at least.
 
-For reference, inspect a "metadata.yaml" file generated while running "luet build"`,
+For reference, inspect a "metadata.yaml" file generated while running "anise-build build"`,
 		Args: cobra.OnlyValidArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 

@@ -5,7 +5,7 @@ jobs:
   tests-integration:
     strategy:
       matrix:
-        go-version: [1.22.x]
+        go-version: [1.24.x]
         platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
     steps:
@@ -29,7 +29,7 @@ jobs:
     - name: Tests
       run: |
         sudo -E env "PATH=$PATH" \
-        env "LUET_BACKEND=dockerv3" \
+        env "ANISE_BACKEND=dockerv3" \
         make test-integration
 
   tests-unit:
@@ -56,7 +56,7 @@ jobs:
             sudo curl -fSL "https://github.com/genuinetools/img/releases/download/v0.5.11/img-linux-amd64" -o "/usr/bin/img"
             sudo chmod a+x "/usr/bin/img"
             make build
-            sudo cp -rf luet /usr/bin/luet
+            sudo cp -rf anise /usr/bin/anise
 
     - name: Install GoReleaser
       uses: goreleaser/goreleaser-action@v4

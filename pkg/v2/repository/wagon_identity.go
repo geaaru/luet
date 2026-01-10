@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package repository
@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/geaaru/luet/pkg/config"
-	fhelpers "github.com/geaaru/luet/pkg/helpers/file"
-	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
-	compression "github.com/geaaru/luet/pkg/v2/compiler/types/compression"
+	"github.com/macaroni-os/anise/pkg/config"
+	fhelpers "github.com/macaroni-os/anise/pkg/helpers/file"
+	artifact "github.com/macaroni-os/anise/pkg/v2/compiler/types/artifact"
+	compression "github.com/macaroni-os/anise/pkg/v2/compiler/types/compression"
 
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"

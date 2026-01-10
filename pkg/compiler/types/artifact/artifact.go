@@ -1,18 +1,7 @@
-// Copyright © 2019-2021 Ettore Di Giacinto <mudler@gentoo.org>
-//                       Daniele Rondina <geaaru@sabayonlinux.org>
-//
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along
-// with this program; if not, see <http://www.gnu.org/licenses/>.
+/*
+Copyright © 2019-2026 Macaroni OS Linux
+See AUTHORS and LICENSE for the license details and contributors.
+*/
 
 package artifact
 
@@ -37,22 +26,23 @@ import (
 	"strings"
 	"sync"
 
-	backend "github.com/geaaru/luet/pkg/compiler/backend"
-	compression "github.com/geaaru/luet/pkg/compiler/types/compression"
-	compilerspec "github.com/geaaru/luet/pkg/compiler/types/spec"
-	. "github.com/geaaru/luet/pkg/config"
-	"github.com/geaaru/luet/pkg/helpers"
-	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
-	"github.com/geaaru/luet/pkg/solver"
 	tarf "github.com/geaaru/tar-formers/pkg/executor"
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
+	backend "github.com/macaroni-os/anise/pkg/compiler/backend"
+	compression "github.com/macaroni-os/anise/pkg/compiler/types/compression"
+	compilerspec "github.com/macaroni-os/anise/pkg/compiler/types/spec"
+	. "github.com/macaroni-os/anise/pkg/config"
+	"github.com/macaroni-os/anise/pkg/helpers"
+	fileHelper "github.com/macaroni-os/anise/pkg/helpers/file"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	"github.com/macaroni-os/anise/pkg/solver"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
 
-//  When compiling, we write also a fingerprint.metadata.yaml file with PackageArtifact. In this way we can have another command to create the repository
+//	When compiling, we write also a fingerprint.metadata.yaml file with PackageArtifact. In this way we can have another command to create the repository
+//
 // which will consist in just of an repository.yaml which is just the repository structure with the list of package artifact.
 // In this way a generic client can fetch the packages and, after unpacking the tree, performing queries to install packages.
 type PackageArtifact struct {

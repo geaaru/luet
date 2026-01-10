@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package client
@@ -17,10 +17,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/geaaru/luet/pkg/config"
-	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	. "github.com/geaaru/luet/pkg/logger"
-	"github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
+	"github.com/macaroni-os/anise/pkg/config"
+	fileHelper "github.com/macaroni-os/anise/pkg/helpers/file"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	"github.com/macaroni-os/anise/pkg/v2/compiler/types/artifact"
 	"github.com/pkg/errors"
 
 	"github.com/cavaliercoder/grab"

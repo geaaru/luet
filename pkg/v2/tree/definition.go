@@ -1,5 +1,5 @@
 /*
-Copyright © 2019-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package tree
@@ -9,8 +9,9 @@ import (
 	"fmt"
 	"os"
 
-	pkg "github.com/geaaru/luet/pkg/package"
-	spectooling "github.com/geaaru/luet/pkg/spectooling"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	spectooling "github.com/macaroni-os/anise/pkg/spectooling"
+
 	"gopkg.in/yaml.v3"
 )
 

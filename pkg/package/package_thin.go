@@ -1,5 +1,5 @@
 /*
-Copyright © 2022-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package pkg
@@ -14,8 +14,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/geaaru/luet/pkg/helpers/tools"
 	gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
+	"github.com/macaroni-os/anise/pkg/helpers/tools"
 )
 
 // PackageThin is a thin representation

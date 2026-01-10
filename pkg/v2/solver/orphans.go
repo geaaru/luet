@@ -1,5 +1,5 @@
 /*
-Copyright © 2022-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package solver
@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/geaaru/luet/pkg/helpers"
-	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
-	wagon "github.com/geaaru/luet/pkg/v2/repository"
+	"github.com/macaroni-os/anise/pkg/helpers"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	wagon "github.com/macaroni-os/anise/pkg/v2/repository"
 	"golang.org/x/sync/semaphore"
 )
 

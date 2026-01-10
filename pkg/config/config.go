@@ -1,5 +1,5 @@
 /*
-Copyright © 2021-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package config
@@ -13,8 +13,8 @@ import (
 	"runtime"
 	"time"
 
-	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	pkg "github.com/geaaru/luet/pkg/package"
+	fileHelper "github.com/macaroni-os/anise/pkg/helpers/file"
+	pkg "github.com/macaroni-os/anise/pkg/package"
 
 	"github.com/pkg/errors"
 	v "github.com/spf13/viper"

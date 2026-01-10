@@ -1,5 +1,5 @@
 /*
-Copyright © 2021-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package config
@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	helpers "github.com/geaaru/luet/pkg/helpers/file"
+	helpers "github.com/macaroni-os/anise/pkg/helpers/file"
 
 	"gopkg.in/yaml.v3"
 )

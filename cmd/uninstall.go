@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd
@@ -7,13 +7,13 @@ package cmd
 import (
 	"fmt"
 
-	helpers "github.com/geaaru/luet/cmd/helpers"
-	"github.com/geaaru/luet/cmd/util"
-	cfg "github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
-	"github.com/geaaru/luet/pkg/subsets"
-	installer "github.com/geaaru/luet/pkg/v2/installer"
+	helpers "github.com/macaroni-os/anise/cmd/helpers"
+	"github.com/macaroni-os/anise/cmd/util"
+	cfg "github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	"github.com/macaroni-os/anise/pkg/subsets"
+	installer "github.com/macaroni-os/anise/pkg/v2/installer"
 
 	. "github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
@@ -26,24 +26,24 @@ func newUninstallCommand(config *cfg.LuetConfig) *cobra.Command {
 		Long: `
 Remove one or more package and his dependencies recursively
 
-	$ luet uninstall cat/foo1 ... cat/foo2
+	$ anise uninstall cat/foo1 ... cat/foo2
 
 Remove one or more packages without dependencies
 
-	$ luet uninstall cat/foo1 ... --nodeps
+	$ anise uninstall cat/foo1 ... --nodeps
 
 Remove one or more packages and skip errors
 
-	$ luet uninstall cat/foo1 ... --force
+	$ anise uninstall cat/foo1 ... --force
 
 Remove one or more packages without ask confirm
 
-	$ luet uninstall cat/foo1 ... --yes
+	$ anise uninstall cat/foo1 ... --yes
 
 Remove one or more packages without ask confirm and skip execution
 of the finalizers.
 
-	$ luet uninstall cat/foo1 ... --yes --skip-finalizers
+	$ anise uninstall cat/foo1 ... --yes --skip-finalizers
 `,
 		Aliases: []string{"rm", "un"},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -109,7 +109,7 @@ of the finalizers.
 	flags.Bool("force", false, "Force uninstall")
 	flags.BoolP("yes", "y", false, "Don't ask questions")
 	flags.BoolP("keep-protected-files", "k", false, "Keep package protected files around")
-	flags.Bool("preserve-system-essentials", true, "Preserve system luet files")
+	flags.Bool("preserve-system-essentials", true, "Preserve system anise files")
 	ans.Flags().StringArray("finalizer-env", []string{},
 		"Set finalizer environment in the format key=value.")
 	ans.Flags().Bool("skip-finalizers", false,

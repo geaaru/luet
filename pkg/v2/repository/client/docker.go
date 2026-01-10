@@ -1,5 +1,5 @@
 /*
-Copyright © 2022 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package client
@@ -15,11 +15,11 @@ import (
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
 
-	"github.com/geaaru/luet/pkg/config"
-	"github.com/geaaru/luet/pkg/helpers/docker"
-	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	. "github.com/geaaru/luet/pkg/logger"
-	"github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
+	"github.com/macaroni-os/anise/pkg/config"
+	"github.com/macaroni-os/anise/pkg/helpers/docker"
+	fileHelper "github.com/macaroni-os/anise/pkg/helpers/file"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	"github.com/macaroni-os/anise/pkg/v2/compiler/types/artifact"
 )
 
 const (

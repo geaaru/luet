@@ -1,11 +1,11 @@
 /*
-Copyright © 2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package artifact
 
 import (
-	pkg "github.com/geaaru/luet/pkg/package"
+	pkg "github.com/macaroni-os/anise/pkg/package"
 )
 
 func (a *PackageArtifact) MergeDefinition(dp *pkg.DefaultPackage) {

@@ -1,5 +1,5 @@
 /*
-Copyright © 2021-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package util
@@ -8,9 +8,9 @@ import (
 	"os"
 	"path/filepath"
 
-	config "github.com/geaaru/luet/pkg/config"
-	"github.com/geaaru/luet/pkg/helpers"
-	fhelpers "github.com/geaaru/luet/pkg/helpers/file"
+	config "github.com/macaroni-os/anise/pkg/config"
+	"github.com/macaroni-os/anise/pkg/helpers"
+	fhelpers "github.com/macaroni-os/anise/pkg/helpers/file"
 
 	"github.com/gofrs/flock"
 )
@@ -28,11 +28,11 @@ func NewLockGuard() *LockGuard {
 }
 
 func (l *LockGuard) TryLock(cmd string, cfg *config.LuetConfig) (bool, error) {
-	envNoLock := os.Getenv("LUET_NOLOCK") == "true"
+	envNoLock := os.Getenv("ANISE_NOLOCK") == "true"
 	if !envNoLock && helpers.ContainsElem(&LockedCommands, cmd) {
 		// Using the rootfs directory for locking.
 		// This permits to avoid locking between different rootfs.
-		fpath := cfg.GetLockFilePath("luet.lock")
+		fpath := cfg.GetLockFilePath("anise.lock")
 		l.Lockfile = flock.New(fpath)
 
 		lockDir := filepath.Dir(fpath)
@@ -83,7 +83,7 @@ func (l *LockGuard) Unlock(cfg *config.LuetConfig) error {
 	if l.Lockfile != nil {
 		if l.Locked() {
 			// POST: Try to remove the file only when is been locked.
-			fpath := cfg.GetLockFilePath("luet.lock")
+			fpath := cfg.GetLockFilePath("anise.lock")
 			defer os.RemoveAll(fpath)
 		}
 		return l.Lockfile.Unlock()

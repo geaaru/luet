@@ -1,11 +1,11 @@
 GOLANG_VERSION=$(shell go env GOVERSION)
 
-# go tool nm ./luet | grep Commit
-override LDFLAGS += -X "github.com/geaaru/luet/pkg/config.BuildTime=$(shell date -u '+%Y-%m-%d %H:%M:%S %Z')"
-override LDFLAGS += -X "github.com/geaaru/luet/pkg/config.BuildCommit=$(shell git rev-parse HEAD)"
-override LDFLAGS += -X "github.com/geaaru/luet/pkg/config.BuildGoVersion=$(GOLANG_VERSION)"
+# go tool nm ./anise | grep Commit
+override LDFLAGS += -X "github.com/macaroni-os/anise/pkg/config.BuildTime=$(shell date -u '+%Y-%m-%d %H:%M:%S %Z')"
+override LDFLAGS += -X "github.com/macaroni-os/anise/pkg/config.BuildCommit=$(shell git rev-parse HEAD)"
+override LDFLAGS += -X "github.com/macaroni-os/anise/pkg/config.BuildGoVersion=$(GOLANG_VERSION)"
 
-NAME ?= luet
+NAME ?= anise
 PACKAGE_NAME ?= $(NAME)
 PACKAGE_CONFLICT ?= $(PACKAGE_NAME)-beta
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -65,7 +65,7 @@ build:
 
 .PHONY: build-build
 build-build:
-	CGO_ENABLED=0 go build -ldflags '$(LDFLAGS)' -o ./luet-build/luet-build ./luet-build
+	CGO_ENABLED=0 go build -ldflags '$(LDFLAGS)' -o ./anise-build/anise-build ./anise-build
 
 .PHONY: build-small
 build-small:
@@ -75,11 +75,11 @@ build-small:
 .PHONY: build-build-small
 build-build-small:
 	@$(MAKE) LDFLAGS+="-s -w" build-build
-	upx --brute -1 luet-build/$(NAME)-build
+	upx --brute -1 anise-build/$(NAME)-build
 
 .PHONY: image
 image:
-	docker build --rm -t luet/base .
+	docker build --rm -t anise/base .
 
 .PHONY: lint
 lint:
@@ -91,8 +91,8 @@ vendor:
 
 .PHONY: test-docker
 test-docker:
-	docker run -v $(ROOT_DIR):/go/src/github.com/geaaru/luet \
-				--workdir /go/src/github.com/geaaru/luet -ti golang:latest \
+	docker run -v $(ROOT_DIR):/go/src/github.com/macaroni-os/anise \
+				--workdir /go/src/github.com/macaroni-os/anise -ti golang:latest \
 				bash -c "make test"
 
 multiarch-build:
@@ -105,4 +105,4 @@ multiarch-build-small:
 	done
 
 run-tasks: build
-	@cd tests/tasks && lxd-compose a luet-ubuntu --destroy
+	@cd tests/tasks && lxd-compose a anise-ubuntu --destroy

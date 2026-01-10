@@ -1,7 +1,8 @@
 /*
-Copyright © 2022 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
+
 package artifact
 
 import (
@@ -21,14 +22,14 @@ import (
 	"strings"
 	"sync"
 
-	backend "github.com/geaaru/luet/pkg/compiler/backend"
-	. "github.com/geaaru/luet/pkg/config"
-	"github.com/geaaru/luet/pkg/helpers"
-	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
-	compression "github.com/geaaru/luet/pkg/v2/compiler/types/compression"
-	compilerspec "github.com/geaaru/luet/pkg/v2/compiler/types/specs"
+	backend "github.com/macaroni-os/anise/pkg/compiler/backend"
+	. "github.com/macaroni-os/anise/pkg/config"
+	"github.com/macaroni-os/anise/pkg/helpers"
+	fileHelper "github.com/macaroni-os/anise/pkg/helpers/file"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	compression "github.com/macaroni-os/anise/pkg/v2/compiler/types/compression"
+	compilerspec "github.com/macaroni-os/anise/pkg/v2/compiler/types/specs"
 
 	tarf "github.com/geaaru/tar-formers/pkg/executor"
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"

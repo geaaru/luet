@@ -1,5 +1,5 @@
 /*
-Copyright © 2019-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd
@@ -7,10 +7,10 @@ package cmd
 import (
 	"fmt"
 
-	config "github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
-	"github.com/geaaru/luet/pkg/subsets"
-	installer "github.com/geaaru/luet/pkg/v2/installer"
+	config "github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	"github.com/macaroni-os/anise/pkg/subsets"
+	installer "github.com/macaroni-os/anise/pkg/v2/installer"
 
 	"github.com/spf13/cobra"
 )
@@ -19,7 +19,7 @@ func newConfigCommand(cfg *config.LuetConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:     "config",
 		Short:   "Print config",
-		Long:    `Show luet configuration`,
+		Long:    `Show anise configuration`,
 		Aliases: []string{"c"},
 		Run: func(cmd *cobra.Command, args []string) {
 			// Load config protect configs

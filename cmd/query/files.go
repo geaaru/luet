@@ -1,5 +1,5 @@
 /*
-Copyright © 2021-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd_query
@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"os"
 
-	helpers "github.com/geaaru/luet/cmd/helpers"
-	"github.com/geaaru/luet/cmd/util"
-	cfg "github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
-	wagon "github.com/geaaru/luet/pkg/v2/repository"
+	helpers "github.com/macaroni-os/anise/cmd/helpers"
+	"github.com/macaroni-os/anise/cmd/util"
+	cfg "github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	wagon "github.com/macaroni-os/anise/pkg/v2/repository"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"

@@ -1,12 +1,12 @@
 /*
-Copyright © 2022-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package repository
 
 import (
-	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
-	compression "github.com/geaaru/luet/pkg/v2/compiler/types/compression"
+	artifact "github.com/macaroni-os/anise/pkg/v2/compiler/types/artifact"
+	compression "github.com/macaroni-os/anise/pkg/v2/compiler/types/compression"
 )
 
 func NewWagonDocument(f string) *WagonDocument {

@@ -1,5 +1,5 @@
 /*
-Copyright © 2022-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd
@@ -9,13 +9,13 @@ import (
 	"fmt"
 	"os"
 
-	helpers "github.com/geaaru/luet/cmd/helpers"
-	"github.com/geaaru/luet/cmd/util"
-	cfg "github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
-	art "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
-	wagon "github.com/geaaru/luet/pkg/v2/repository"
-	mask "github.com/geaaru/luet/pkg/v2/repository/mask"
+	helpers "github.com/macaroni-os/anise/cmd/helpers"
+	"github.com/macaroni-os/anise/cmd/util"
+	cfg "github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	art "github.com/macaroni-os/anise/pkg/v2/compiler/types/artifact"
+	wagon "github.com/macaroni-os/anise/pkg/v2/repository"
+	mask "github.com/macaroni-os/anise/pkg/v2/repository/mask"
 
 	tablewriter "github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -38,46 +38,46 @@ func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
 		
 	To search a package in the repositories:
 
-		$ luet search <regex1> ... <regexN>
+		$ anise search <regex1> ... <regexN>
 
 	To search a package and display results in a table (wide screens):
 
-		$ luet search --table <regex>
+		$ anise search --table <regex>
 
 	To look into the installed packages:
 
-		$ luet search --installed <regex>
+		$ anise search --installed <regex>
 
 	Note: the regex argument is optional, if omitted implies "all"
 
 	To search a package by label:
 
-		$ luet search --label <label1>,<label2>...,<labelN>
+		$ anise search --label <label1>,<label2>...,<labelN>
 
 	or by regex against the label:
 
-		$ luet search --rlabel <regex-label1>,..,<regex-labelN>
+		$ anise search --rlabel <regex-label1>,..,<regex-labelN>
 
 	or by categories:
 
-		$ luet search --category <cat1>,..,<catN>
+		$ anise search --category <cat1>,..,<catN>
 
 	or by names:
 
-		$ luet search --name|-n <name1>,..,<nameN>
+		$ anise search --name|-n <name1>,..,<nameN>
 
 	or by annotations:
 
-		$ luet search --annotation <annotation1>,..,<annotationN>
+		$ anise search --annotation <annotation1>,..,<annotationN>
 
 	or by package (used only category and package name for name in the format cat/foo)
 
-	  $ luet search -p <cat/foo>,<cat/foo2>
+	  $ anise search -p <cat/foo>,<cat/foo2>
 
 	Search can also return results in the terminal in different ways: as terminal output, as json or as yaml.
 
-		$ luet search -o json <regex> # JSON output
-		$ luet search -o yaml <regex> # YAML output
+		$ anise search -o json <regex> # JSON output
+		$ anise search -o yaml <regex> # YAML output
 	`,
 		Aliases: []string{"s"},
 		PreRun: func(cmd *cobra.Command, args []string) {

@@ -1,5 +1,5 @@
 /*
-Copyright © 2021-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 
@@ -13,12 +13,12 @@ import (
 	"runtime"
 	"strings"
 
-	util "github.com/geaaru/luet/cmd/util"
-	config "github.com/geaaru/luet/pkg/config"
-	helpers "github.com/geaaru/luet/pkg/helpers"
-	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	. "github.com/geaaru/luet/pkg/logger"
-	repo "github.com/geaaru/luet/pkg/repository"
+	util "github.com/macaroni-os/anise/cmd/util"
+	config "github.com/macaroni-os/anise/pkg/config"
+	helpers "github.com/macaroni-os/anise/pkg/helpers"
+	fileHelper "github.com/macaroni-os/anise/pkg/helpers/file"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	repo "github.com/macaroni-os/anise/pkg/repository"
 
 	tarf "github.com/geaaru/tar-formers/pkg/executor"
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
@@ -92,25 +92,25 @@ func Execute() {
 
 	// RootCmd represents the base command when called without any subcommands
 	var RootCmd = &cobra.Command{
-		Use:   "luet",
+		Use:   "anise",
 		Short: "Container based package manager",
 		Long: `Luet is a single-binary package manager based on containers to build packages.
 		
 	To install a package:
 
-		$ luet install package
+		$ anise install package
 
 	To search for a package in the repositories:
 
-	$ luet search package
+	$ anise search package
 
 	To list all packages installed in the system:
 
-		$ luet search --installed .
+		$ anise search --installed .
 
 	To show hidden packages:
 
-		$ luet search --hidden package
+		$ anise search --hidden package
 		
 	`,
 		Version: util.Version(),
@@ -129,15 +129,15 @@ func Execute() {
 				}
 				homeDir := helpers.GetHomeDir()
 
-				if fileHelper.Exists(filepath.Join(pwdDir, ".luet.yaml")) || (homeDir != "" && fileHelper.Exists(filepath.Join(homeDir, ".luet.yaml"))) {
+				if fileHelper.Exists(filepath.Join(pwdDir, ".anise.yaml")) || (homeDir != "" && fileHelper.Exists(filepath.Join(homeDir, ".anise.yaml"))) {
 					cfg.Viper.AddConfigPath(".")
 					if homeDir != "" {
 						cfg.Viper.AddConfigPath(homeDir)
 					}
-					cfg.Viper.SetConfigName(".luet")
+					cfg.Viper.SetConfigName(".anise")
 				} else {
-					cfg.Viper.SetConfigName("luet")
-					cfg.Viper.AddConfigPath("/etc/luet")
+					cfg.Viper.SetConfigName("anise")
+					cfg.Viper.AddConfigPath("/etc/anise")
 				}
 			}
 
@@ -159,12 +159,12 @@ func Execute() {
 				if err != nil {
 					Fatal(err.Error())
 				} else if !locked {
-					Fatal("Error on lock luet.lock file. Another process is running?")
+					Fatal("Error on lock anise.lock file. Another process is running?")
 				}
 			}
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {
-			// Cleanup all tmp directories used by luet
+			// Cleanup all tmp directories used by anise
 			err := cfg.GetSystem().CleanupTmpDir()
 			if err != nil {
 				Warning("failed on cleanup tmpdir:", err.Error())
@@ -191,7 +191,7 @@ func Execute() {
 
 func initCommand(rootCmd *cobra.Command, cfg *config.LuetConfig) {
 	pflags := rootCmd.PersistentFlags()
-	pflags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.luet.yaml)")
+	pflags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.anise.yaml)")
 	pflags.BoolP("debug", "d", false, "verbose output")
 	pflags.Bool("fatal", false, "Enables Warnings to exit")
 	pflags.Bool("enable-logfile", false, "Enable log to file")
@@ -257,9 +257,9 @@ func initCommand(rootCmd *cobra.Command, cfg *config.LuetConfig) {
 func initConfig(cfg *config.LuetConfig) {
 	// Luet support these priorities on read configuration file:
 	// - command line option (if available)
-	// - $PWD/.luet.yaml
-	// - $HOME/.luet.yaml
-	// - /etc/luet/luet.yaml
+	// - $PWD/.anise.yaml
+	// - $HOME/.anise.yaml
+	// - /etc/anise/anise.yaml
 	//
 	// Note: currently a single viper instance support only one config name.
 

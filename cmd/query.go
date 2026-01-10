@@ -1,13 +1,13 @@
 /*
-Copyright © 2021-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 
 package cmd
 
 import (
-	. "github.com/geaaru/luet/cmd/query"
-	cfg "github.com/geaaru/luet/pkg/config"
+	. "github.com/macaroni-os/anise/cmd/query"
+	cfg "github.com/macaroni-os/anise/pkg/config"
 
 	"github.com/spf13/cobra"
 )

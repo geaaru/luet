@@ -1,5 +1,5 @@
 /*
-Copyright © 2022-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package repository
@@ -10,12 +10,12 @@ import (
 	"os/exec"
 	"strings"
 
-	box "github.com/geaaru/luet/pkg/box"
-	. "github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
-	"gopkg.in/yaml.v3"
+	box "github.com/macaroni-os/anise/pkg/box"
+	. "github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/logger"
 
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v3"
 )
 
 type LuetFinalizer struct {

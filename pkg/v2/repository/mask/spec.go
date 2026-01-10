@@ -1,11 +1,11 @@
 /*
-Copyright © 2022-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package mask
 
 import (
-	cfg "github.com/geaaru/luet/pkg/config"
+	cfg "github.com/macaroni-os/anise/pkg/config"
 
 	gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 )

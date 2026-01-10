@@ -1,14 +1,14 @@
 /*
-Copyright © 2022 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd_database
 
 import (
-	helpers "github.com/geaaru/luet/cmd/helpers"
-	"github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
-	installer "github.com/geaaru/luet/pkg/v2/installer"
+	helpers "github.com/macaroni-os/anise/cmd/helpers"
+	"github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	installer "github.com/macaroni-os/anise/pkg/v2/installer"
 
 	"github.com/spf13/cobra"
 )
@@ -19,7 +19,7 @@ func NewDatabaseRemoveCommand(cfg *config.LuetConfig) *cobra.Command {
 		Short: "Remove a package from the system DB (forcefully - you normally don't want to do that)",
 		Long: `Removes a package in the system database without actually uninstalling it:
 
-		$ luet database remove foo/bar
+		$ anise database remove foo/bar
 
 This commands takes multiple packages as arguments and prunes their entries from the system database.
 `,

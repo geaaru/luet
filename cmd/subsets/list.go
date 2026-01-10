@@ -1,5 +1,5 @@
 /*
-Copyright © 2021-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd_subsets
@@ -7,9 +7,9 @@ package cmd_subsets
 import (
 	"fmt"
 
-	cfg "github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
-	"github.com/geaaru/luet/pkg/subsets"
+	cfg "github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	"github.com/macaroni-os/anise/pkg/subsets"
 
 	. "github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"

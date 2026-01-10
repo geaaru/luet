@@ -1,5 +1,5 @@
 /*
-Copyright © 2022-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package repository
@@ -16,13 +16,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/geaaru/luet/pkg/config"
-	"github.com/geaaru/luet/pkg/helpers"
-	fileHelper "github.com/geaaru/luet/pkg/helpers/file"
-	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
-	artifact "github.com/geaaru/luet/pkg/v2/compiler/types/artifact"
-	"github.com/geaaru/luet/pkg/v2/repository/mask"
+	"github.com/macaroni-os/anise/pkg/config"
+	"github.com/macaroni-os/anise/pkg/helpers"
+	fileHelper "github.com/macaroni-os/anise/pkg/helpers/file"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	artifact "github.com/macaroni-os/anise/pkg/v2/compiler/types/artifact"
+	"github.com/macaroni-os/anise/pkg/v2/repository/mask"
 
 	"github.com/pkg/errors"
 	"golang.org/x/sync/semaphore"

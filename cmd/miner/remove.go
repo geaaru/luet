@@ -1,5 +1,5 @@
 /*
-Copyright © 2022-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package miner
@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"os"
 
-	helpers "github.com/geaaru/luet/cmd/helpers"
-	cfg "github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
-	"github.com/geaaru/luet/pkg/subsets"
-	installer "github.com/geaaru/luet/pkg/v2/installer"
-	wagon "github.com/geaaru/luet/pkg/v2/repository"
 	"github.com/logrusorgru/aurora"
+	helpers "github.com/macaroni-os/anise/cmd/helpers"
+	cfg "github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	"github.com/macaroni-os/anise/pkg/subsets"
+	installer "github.com/macaroni-os/anise/pkg/v2/installer"
+	wagon "github.com/macaroni-os/anise/pkg/v2/repository"
 
 	"github.com/spf13/cobra"
 )

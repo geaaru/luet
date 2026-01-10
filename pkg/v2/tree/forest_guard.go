@@ -1,5 +1,5 @@
 /*
-Copyright © 2023-2024 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package tree
@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"strings"
 
-	cfg "github.com/geaaru/luet/pkg/config"
-	"github.com/geaaru/luet/pkg/helpers"
-	pkg "github.com/geaaru/luet/pkg/package"
+	cfg "github.com/macaroni-os/anise/pkg/config"
+	"github.com/macaroni-os/anise/pkg/helpers"
+	pkg "github.com/macaroni-os/anise/pkg/package"
 
 	_gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 )

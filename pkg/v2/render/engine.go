@@ -1,5 +1,5 @@
 /*
-Copyright © 2019-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package render
@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/geaaru/luet/pkg/config"
-	fhelpers "github.com/geaaru/luet/pkg/helpers/file"
+	"github.com/macaroni-os/anise/pkg/config"
+	fhelpers "github.com/macaroni-os/anise/pkg/helpers/file"
 
 	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/chart"

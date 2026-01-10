@@ -1,4 +1,4 @@
-module github.com/geaaru/luet
+module github.com/macaroni-os/anise
 
 go 1.21.0
 

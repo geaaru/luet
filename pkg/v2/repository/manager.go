@@ -1,5 +1,5 @@
 /*
-Copyright © 2019-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package repository
@@ -8,9 +8,9 @@ import (
 	"context"
 	"sync"
 
-	"github.com/geaaru/luet/pkg/config"
-	cfg "github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
+	"github.com/macaroni-os/anise/pkg/config"
+	cfg "github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/logger"
 
 	"github.com/pkg/errors"
 	"golang.org/x/sync/semaphore"

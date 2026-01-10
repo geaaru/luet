@@ -1,5 +1,5 @@
 /*
-Copyright © 2019-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package tree
@@ -10,9 +10,9 @@ import (
 	"os"
 	"path/filepath"
 
-	pkg "github.com/geaaru/luet/pkg/package"
-	"github.com/geaaru/luet/pkg/v2/compiler/types/specs"
-	render "github.com/geaaru/luet/pkg/v2/render"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	"github.com/macaroni-os/anise/pkg/v2/compiler/types/specs"
+	render "github.com/macaroni-os/anise/pkg/v2/render"
 
 	"gopkg.in/yaml.v3"
 )

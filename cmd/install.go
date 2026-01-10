@@ -1,5 +1,5 @@
 /*
-Copyright © 2019-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd
@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"os"
 
-	helpers "github.com/geaaru/luet/cmd/helpers"
-	"github.com/geaaru/luet/cmd/util"
-	cfg "github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
-	pkg "github.com/geaaru/luet/pkg/package"
-	"github.com/geaaru/luet/pkg/subsets"
-	installer "github.com/geaaru/luet/pkg/v2/installer"
-	wagon "github.com/geaaru/luet/pkg/v2/repository"
+	helpers "github.com/macaroni-os/anise/cmd/helpers"
+	"github.com/macaroni-os/anise/cmd/util"
+	cfg "github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	pkg "github.com/macaroni-os/anise/pkg/package"
+	"github.com/macaroni-os/anise/pkg/subsets"
+	installer "github.com/macaroni-os/anise/pkg/v2/installer"
+	wagon "github.com/macaroni-os/anise/pkg/v2/repository"
 
 	. "github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
@@ -28,19 +28,19 @@ func newInstallCommand(config *cfg.LuetConfig) *cobra.Command {
 		Short: "Install a package",
 		Long: `Installs one or more packages without asking questions:
 
-	$ luet install -y utils/busybox utils/yq ...
+	$ anise install -y utils/busybox utils/yq ...
 	
 To install only deps of a package:
 	
-	$ luet install --onlydeps utils/busybox ...
+	$ anise install --onlydeps utils/busybox ...
 	
 To not install deps of a package:
 	
-	$ luet install --nodeps utils/busybox ...
+	$ anise install --nodeps utils/busybox ...
 
 To force install a package:
 	
-	$ luet install --force utils/busybox ...
+	$ anise install --force utils/busybox ...
 `,
 		Aliases: []string{"i"},
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -163,7 +163,7 @@ To force install a package:
 
 	//flags.Bool("onlydeps", false, "Consider **only** package dependencies")
 	flags.Bool("force", false, "Skip errors and keep going (potentially harmful)")
-	flags.Bool("preserve-system-essentials", true, "Preserve system luet files")
+	flags.Bool("preserve-system-essentials", true, "Preserve system anise files")
 	flags.BoolP("yes", "y", false, "Don't ask questions")
 	flags.Bool("download-only", false, "Download only")
 	flags.StringArray("finalizer-env", []string{},

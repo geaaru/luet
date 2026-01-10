@@ -1,5 +1,5 @@
 /*
-Copyright © 2019-2023 Macaroni OS Linux
+Copyright © 2019-2026 Macaroni OS Linux
 See AUTHORS and LICENSE for the license details and contributors.
 */
 package cmd
@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/geaaru/luet/cmd/util"
-	cfg "github.com/geaaru/luet/pkg/config"
-	. "github.com/geaaru/luet/pkg/logger"
-	"github.com/geaaru/luet/pkg/subsets"
-	installer "github.com/geaaru/luet/pkg/v2/installer"
-	wagon "github.com/geaaru/luet/pkg/v2/repository"
+	"github.com/macaroni-os/anise/cmd/util"
+	cfg "github.com/macaroni-os/anise/pkg/config"
+	. "github.com/macaroni-os/anise/pkg/logger"
+	"github.com/macaroni-os/anise/pkg/subsets"
+	installer "github.com/macaroni-os/anise/pkg/v2/installer"
+	wagon "github.com/macaroni-os/anise/pkg/v2/repository"
 
 	. "github.com/logrusorgru/aurora"
 	"github.com/spf13/cobra"
@@ -23,7 +23,7 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 
 	var upgradeCmd = &cobra.Command{
 		Use:     "upgrade",
-		Short:   "Upgrades Luet package",
+		Short:   "Upgrades anise package",
 		Aliases: []string{"u"},
 		Long:    `Upgrades packages installed.`,
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -132,7 +132,7 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 	flags.Bool("force", false, "Force upgrade by ignoring errors")
 	flags.StringArray("finalizer-env", []string{},
 		"Set finalizer environment in the format key=value.")
-	flags.Bool("preserve-system-essentials", true, "Preserve system luet files")
+	flags.Bool("preserve-system-essentials", true, "Preserve system anise files")
 	flags.BoolP("yes", "y", false, "Don't ask questions")
 	flags.Bool("deep", false, "Deep analyzing with downgrade.")
 	flags.Bool("download-only", false, "Download only")
