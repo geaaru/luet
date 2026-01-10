@@ -18,7 +18,7 @@ import (
 	"github.com/containerd/containerd/images"
 	"github.com/docker/cli/cli/trust"
 	"github.com/docker/distribution/reference"
-	"github.com/docker/docker/api/types"
+	tregistry "github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/registry"
 	tarf "github.com/geaaru/tar-formers/pkg/executor"
 	tarf_specs "github.com/geaaru/tar-formers/pkg/specs"
@@ -35,7 +35,7 @@ import (
 
 // See also https://github.com/docker/cli/blob/88c6089300a82d3373892adf6845a4fed1a4ba8d/cli/command/image/trust.go#L171
 
-func verifyImage(image string, authConfig *types.AuthConfig) (string, error) {
+func verifyImage(image string, authConfig *tregistry.AuthConfig) (string, error) {
 	ref, err := reference.ParseAnyReference(image)
 	if err != nil {
 		return "", errors.Wrapf(err, "invalid reference %s", image)
@@ -64,7 +64,7 @@ func verifyImage(image string, authConfig *types.AuthConfig) (string, error) {
 	return "", nil
 }
 
-func trustedResolveDigest(ctx context.Context, ref reference.NamedTagged, authConfig *types.AuthConfig, useragent string) (reference.Canonical, error) {
+func trustedResolveDigest(ctx context.Context, ref reference.NamedTagged, authConfig *tregistry.AuthConfig, useragent string) (reference.Canonical, error) {
 	repoInfo, err := registry.ParseRepositoryInfo(ref)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func trustedResolveDigest(ctx context.Context, ref reference.NamedTagged, authCo
 }
 
 type staticAuth struct {
-	auth *types.AuthConfig
+	auth *tregistry.AuthConfig
 }
 
 func (s staticAuth) Authorization() (*authn.AuthConfig, error) {
@@ -114,7 +114,7 @@ func (s staticAuth) Authorization() (*authn.AuthConfig, error) {
 }
 
 // UnarchiveLayers extract layers with archive.Untar from docker instead of containerd
-func UnarchiveLayers(temp string, img v1.Image, image, dest string, auth *types.AuthConfig, verify bool) (int64, error) {
+func UnarchiveLayers(temp string, img v1.Image, image, dest string, auth *tregistry.AuthConfig, verify bool) (int64, error) {
 	layers, err := img.Layers()
 	if err != nil {
 		return 0, fmt.Errorf("reading layers from '%s' image failed: %v", image, err)
@@ -156,7 +156,7 @@ func UnarchiveLayers(temp string, img v1.Image, image, dest string, auth *types.
 }
 
 // DownloadAndExtractDockerImage extracts a container image natively. It supports privileged/unprivileged mode
-func DownloadAndExtractDockerImage(temp, image, dest string, auth *types.AuthConfig, verify bool) (*images.Image, error) {
+func DownloadAndExtractDockerImage(temp, image, dest string, auth *tregistry.AuthConfig, verify bool) (*images.Image, error) {
 	if verify {
 		img, err := verifyImage(image, auth)
 		if err != nil {

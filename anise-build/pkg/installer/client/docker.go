@@ -12,7 +12,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/go-units"
 	"github.com/pkg/errors"
 
@@ -29,12 +29,12 @@ const (
 
 type DockerClient struct {
 	RepoData RepoData
-	auth     *types.AuthConfig
+	auth     *registry.AuthConfig
 	verify   bool
 }
 
 func NewDockerClient(r RepoData) *DockerClient {
-	auth := &types.AuthConfig{}
+	auth := &registry.AuthConfig{}
 
 	dat, _ := json.Marshal(r.Authentication)
 	json.Unmarshal(dat, auth)
