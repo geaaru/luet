@@ -28,14 +28,14 @@ import (
 )
 
 type Dockerv3 struct {
-	Config *cfg.LuetConfig
+	Config *cfg.AniseConfig
 }
 
 // Mutex to avoid errors on parallel
 // setup of the viper object.
 var mutex sync.Mutex
 
-func NewDockerv3Backend(c *cfg.LuetConfig) BackendCompiler {
+func NewDockerv3Backend(c *cfg.AniseConfig) BackendCompiler {
 	return &Dockerv3{
 		Config: c,
 	}

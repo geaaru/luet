@@ -67,9 +67,9 @@ func (d *Dockerv3) createTarFormers() *tarf.TarFormers {
 	defer mutex.Unlock()
 
 	// Create config
-	cfg := tarf_specs.NewConfig(config.LuetCfg.Viper)
-	cfg.GetGeneral().Debug = config.LuetCfg.GetGeneral().Debug
-	cfg.GetLogging().Level = config.LuetCfg.GetLogging().Level
+	cfg := tarf_specs.NewConfig(config.AniseCfg.Viper)
+	cfg.GetGeneral().Debug = config.AniseCfg.GetGeneral().Debug
+	cfg.GetLogging().Level = config.AniseCfg.GetLogging().Level
 
 	ans := tarf.NewTarFormers(cfg)
 

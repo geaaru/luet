@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewSubsetsEnableCommand(config *cfg.LuetConfig) *cobra.Command {
+func NewSubsetsEnableCommand(config *cfg.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "enable [OPTIONS] <subset1> ... <subsetN>",
 		Short: "Enable one or more subsets.",
@@ -60,7 +60,7 @@ directory defined on subsets_confdir option (for example /etc/anise/subsets.conf
 				conffile = filepath.Join(rootfs, sconfdir, filename+".yml")
 			}
 
-			var sc *cfg.LuetSubsetsConfig
+			var sc *cfg.AniseSubsetsConfig
 
 			// Read the file if exists
 			if helpers.Exists(conffile) {
@@ -69,7 +69,7 @@ directory defined on subsets_confdir option (for example /etc/anise/subsets.conf
 					Fatal(err)
 				}
 			} else {
-				sc = cfg.NewLuetSubsetsConfig()
+				sc = cfg.NewAniseSubsetsConfig()
 			}
 
 			for _, s := range args {

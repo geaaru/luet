@@ -23,34 +23,34 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newBuildCommand(config *cfg.LuetConfig) *cobra.Command {
+func newBuildCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var buildCmd = &cobra.Command{
 		Use:   "build <package name> <package name> <package name> ...",
 		Short: "build a package or a tree",
 		Long: `Builds one or more packages from a tree (current directory is implied):
 
-		$ luet build utils/busybox utils/yq ...
+		$ anise-build build utils/busybox utils/yq ...
 
 	Builds all packages
 
-		$ luet build --all
+		$ anise-build build --all
 
 	Builds only the leaf packages:
 
-		$ luet build --full
+		$ anise-build build --full
 
 	Build package revdeps:
 
-		$ luet build --revdeps utils/yq
+		$ anise-build build --revdeps utils/yq
 
 	Build package without dependencies (needs the images already in the host, or either need to be available online):
 
-		$ luet build --nodeps utils/yq ...
+		$ anise-build build --nodeps utils/yq ...
 
 	Build packages specifying multiple definition trees:
 
-		$ luet build --tree overlay/path --tree overlay/path2 utils/yq ...
+		$ anise-build build --tree overlay/path --tree overlay/path2 utils/yq ...
 	`, PreRun: func(cmd *cobra.Command, args []string) {
 			config.Viper.BindPFlag("tree", cmd.Flags().Lookup("tree"))
 			config.Viper.BindPFlag("destination", cmd.Flags().Lookup("destination"))
@@ -229,7 +229,7 @@ func newBuildCommand(config *cfg.LuetConfig) *cobra.Command {
 
 	flags.String("destination", filepath.Join(path, "build"), "Destination folder")
 	flags.String("compression", "none", "Compression alg: none, gzip, zstd")
-	flags.String("image-repository", "luet/cache", "Default base image string for generated image")
+	flags.String("image-repository", "anise-build/cache", "Default base image string for generated image")
 	flags.Bool("push", false, "Push images to a hub")
 	flags.Bool("pull", false, "Pull images from a hub")
 	flags.Bool("keep-images", true, "Keep built docker images in the host")

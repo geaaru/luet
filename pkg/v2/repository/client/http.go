@@ -28,15 +28,15 @@ import (
 )
 
 type HttpClient struct {
-	Repository *config.LuetRepository
+	Repository *config.AniseRepository
 }
 
-func NewHttpClient(r *config.LuetRepository) *HttpClient {
+func NewHttpClient(r *config.AniseRepository) *HttpClient {
 	return &HttpClient{Repository: r}
 }
 
 func NewGrabClient() *grab.Client {
-	httpTimeout := config.LuetCfg.GetGeneral().ClientTimeout
+	httpTimeout := config.AniseCfg.GetGeneral().ClientTimeout
 	timeout := os.Getenv("HTTP_TIMEOUT")
 	if timeout != "" {
 		timeoutI, err := strconv.Atoi(timeout)
@@ -71,7 +71,7 @@ func (c *HttpClient) PrepareReq(dst, url string) (*grab.Request, error) {
 
 	// TODO: Workaround for CDN77 object-store resource
 	//       Need a better solution.
-	if config.LuetCfg.GetGeneral().ClientEncodeURL {
+	if config.AniseCfg.GetGeneral().ClientEncodeURL {
 		url = strings.ReplaceAll(url, "+", "%2B")
 	}
 
@@ -104,7 +104,7 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact, msg string) e
 
 	artifactName := path.Base(a.Path)
 	cacheFile := filepath.Join(
-		config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath(),
+		config.AniseCfg.GetSystem().GetSystemPkgsCacheDirPath(),
 		artifactName,
 	)
 	ok := false
@@ -114,7 +114,7 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact, msg string) e
 		Debug("Use artifact", artifactName, "from cache.")
 	} else {
 
-		temp, err = config.LuetCfg.GetSystem().TempDir("tree")
+		temp, err = config.AniseCfg.GetSystem().TempDir("tree")
 		if err != nil {
 			return err
 		}
@@ -146,7 +146,7 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact, msg string) e
 					))),
 				//filepath.Base(resp.Request.HTTPRequest.URL.RequestURI()))),
 				//progressbar.OptionSetRenderBlankState(true),
-				progressbar.OptionEnableColorCodes(config.LuetCfg.GetLogging().Color),
+				progressbar.OptionEnableColorCodes(config.AniseCfg.GetLogging().Color),
 				progressbar.OptionClearOnFinish(),
 				progressbar.OptionShowBytes(true),
 				progressbar.OptionShowCount(),
@@ -227,7 +227,7 @@ func (c *HttpClient) DownloadFile(name string) (string, error) {
 
 	ok := false
 
-	temp, err = config.LuetCfg.GetSystem().TempDir("tree")
+	temp, err = config.AniseCfg.GetSystem().TempDir("tree")
 	if err != nil {
 		return "", err
 	}
@@ -236,7 +236,7 @@ func (c *HttpClient) DownloadFile(name string) (string, error) {
 
 	for _, uri := range c.Repository.Urls {
 
-		file, err = config.LuetCfg.GetSystem().TempFile("HttpClient")
+		file, err = config.AniseCfg.GetSystem().TempFile("HttpClient")
 		if err != nil {
 			continue
 		}

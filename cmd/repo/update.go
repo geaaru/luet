@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewRepoUpdateCommand(config *cfg.LuetConfig) *cobra.Command {
+func NewRepoUpdateCommand(config *cfg.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "update [repo1] [repo2] [OPTIONS]",
 		Short: "Update a specific cached repository or all cached repositories.",

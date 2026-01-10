@@ -8,15 +8,15 @@ source:
 checksum:
   name_template: '{{ .ProjectName }}-{{ .Tag }}-checksums.txt'
 builds:
-  - id: luet
-    binary: luet
+  - id: anise
+    binary: anise
     env:
       - CGO_ENABLED=0
     ldflags:
       - -s -w
-      - -X 'github.com/geaaru/luet/pkg/config.BuildTime={{ time "2006-01-02 15:04:05 MST" }}'
-      - -X 'github.com/geaaru/luet/pkg/config.BuildCommit={{ .FullCommit }}'
-      - -X 'github.com/geaaru/luet/pkg/config.BuildGoVersion={{ .Env.GOVERSION }}'
+      - -X 'github.com/macaroni-os/anise/pkg/config.BuildTime={{ time "2006-01-02 15:04:05 MST" }}'
+      - -X 'github.com/macaroni-os/anise/pkg/config.BuildCommit={{ .FullCommit }}'
+      - -X 'github.com/macaroni-os/anise/pkg/config.BuildGoVersion={{ .Env.GOVERSION }}'
     goos:
       - linux
     goarch:
@@ -28,16 +28,16 @@ builds:
       - 6
       - 7
 
-  - id: luet-build
-    dir: luet-build
-    binary: luet-build
+  - id: anise-build
+    dir: anise-build
+    binary: anise-build
     env:
       - CGO_ENABLED=0
     ldflags:
       - -s -w
-      - -X 'github.com/geaaru/luet/pkg/config.BuildTime={{ time "2006-01-02 15:04:05 MST" }}'
-      - -X 'github.com/geaaru/luet/pkg/config.BuildCommit={{ .FullCommit }}'
-      - -X 'github.com/geaaru/luet/pkg/config.BuildGoVersion={{ .Env.GOVERSION }}'
+      - -X 'github.com/macaroni-os/anise/pkg/config.BuildTime={{ time "2006-01-02 15:04:05 MST" }}'
+      - -X 'github.com/macaroni-os/anise/pkg/config.BuildCommit={{ .FullCommit }}'
+      - -X 'github.com/macaroni-os/anise/pkg/config.BuildGoVersion={{ .Env.GOVERSION }}'
     goos:
       - linux
     goarch:
@@ -51,23 +51,23 @@ builds:
 
 
 archives:
-  - id: luet
+  - id: anise
     builds:
-      - luet
+      - anise
     format: binary # this removes the tar of the archives, leaving the binaries alone
     name_template: >-
-      luet-{{ .Tag }}-{{ .Os }}-
+      anise-{{ .Tag }}-{{ .Os }}-
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{ if .Arm }}v{{ .Arm }}{{ end }}
 
-  - id: luet-build
+  - id: anise-build
     builds:
-      - luet-build
+      - anise-build
     format: binary
     name_template: >-
-      luet-build-{{ .Tag }}-{{ .Os }}-
+      anise-build-{{ .Tag }}-{{ .Os }}-
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}

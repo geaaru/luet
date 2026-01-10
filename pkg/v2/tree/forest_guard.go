@@ -18,11 +18,11 @@ import (
 // The ForestGuard object is used to
 // analize and iterate over TreeIdx objects.
 type ForestGuard struct {
-	Config *cfg.LuetConfig
+	Config *cfg.AniseConfig
 	Trees  []*TreeIdx
 }
 
-func NewForestGuard(config *cfg.LuetConfig) *ForestGuard {
+func NewForestGuard(config *cfg.AniseConfig) *ForestGuard {
 	return &ForestGuard{
 		Config: config,
 		Trees:  []*TreeIdx{},

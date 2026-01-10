@@ -21,7 +21,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewTreeRender(config *cfg.LuetConfig) *cobra.Command {
+func NewTreeRender(config *cfg.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "render [OPTIONS] <package-selector>",
 		Short: "Show rendered build.yaml file of a selected package.",

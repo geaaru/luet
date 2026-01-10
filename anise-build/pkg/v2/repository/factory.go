@@ -56,8 +56,8 @@ type WagonFactoryOpts struct {
 }
 
 type WagonFactory struct {
-	Config     *cfg.LuetConfig
-	Repository *cfg.LuetRepository
+	Config     *cfg.AniseConfig
+	Repository *cfg.AniseRepository
 	Provides   *wagon.WagonProvides
 
 	mutex *sync.Mutex
@@ -75,7 +75,7 @@ func NewWagonFactoryOpts() *WagonFactoryOpts {
 	}
 }
 
-func NewWagonFactory(config *cfg.LuetConfig, repo *cfg.LuetRepository) *WagonFactory {
+func NewWagonFactory(config *cfg.AniseConfig, repo *cfg.AniseRepository) *WagonFactory {
 	return &WagonFactory{
 		Config:     config,
 		Repository: repo,
@@ -567,7 +567,7 @@ func (w *WagonFactory) BumpRevision(treePaths []string, opts *WagonFactoryOpts) 
 	wIdentity.RepositoryFiles[wagon.REPOFILE_TREEV2_KEY] = docTree
 	wIdentity.BumpRevision()
 	if opts.ResetRevision {
-		wIdentity.LuetRepository.Revision = 1
+		wIdentity.AniseRepository.Revision = 1
 	}
 
 	tsec, _ := strconv.ParseInt(wIdentity.GetLastUpdate(), 10, 64)

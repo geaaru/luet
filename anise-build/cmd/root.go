@@ -29,15 +29,15 @@ var Verbose bool
 func version() string {
 	if config.BuildGoVersion != "" {
 		return fmt.Sprintf("%s-%s-g%s %s - %s",
-			config.LuetVersion, config.LuetForkVersion,
+			config.AniseVersion, config.AniseForkVersion,
 			config.BuildCommit, config.BuildTime, config.BuildGoVersion)
 	} else {
-		return fmt.Sprintf("%s-%s-g%s %s", config.LuetVersion,
-			config.LuetForkVersion, config.BuildCommit, config.BuildTime)
+		return fmt.Sprintf("%s-%s-g%s %s", config.AniseVersion,
+			config.AniseForkVersion, config.BuildCommit, config.BuildTime)
 	}
 }
 
-func LoadConfig(c *config.LuetConfig) error {
+func LoadConfig(c *config.AniseConfig) error {
 	// If a config file is found, read it in.
 	err := c.Viper.ReadInConfig()
 	if err != nil {
@@ -93,7 +93,7 @@ func LoadConfig(c *config.LuetConfig) error {
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	var cfg *config.LuetConfig = config.LuetCfg
+	var cfg *config.AniseConfig = config.AniseCfg
 
 	initConfig(cfg)
 
@@ -101,11 +101,11 @@ func Execute() {
 	var RootCmd = &cobra.Command{
 		Use:   "anise-build",
 		Short: "Container based package manager",
-		Long: `Luet build is the build module of the luset package manager based on containers to build packages.
+		Long: `Anise build is the build module of the luset package manager based on containers to build packages.
 		
 	To build a package, from a tree definition:
 
-		$ luet build --tree tree/path package
+		$ anise-build build --tree tree/path package
 		
 	`,
 		Version: version(),
@@ -124,15 +124,15 @@ func Execute() {
 				}
 				homeDir := helpers.GetHomeDir()
 
-				if fileHelper.Exists(filepath.Join(pwdDir, ".luet.yaml")) || (homeDir != "" && fileHelper.Exists(filepath.Join(homeDir, ".luet.yaml"))) {
+				if fileHelper.Exists(filepath.Join(pwdDir, ".anise.yaml")) || (homeDir != "" && fileHelper.Exists(filepath.Join(homeDir, ".anise.yaml"))) {
 					cfg.Viper.AddConfigPath(".")
 					if homeDir != "" {
 						cfg.Viper.AddConfigPath(homeDir)
 					}
-					cfg.Viper.SetConfigName(".luet")
+					cfg.Viper.SetConfigName(".anise")
 				} else {
-					cfg.Viper.SetConfigName("luet")
-					cfg.Viper.AddConfigPath("/etc/luet")
+					cfg.Viper.SetConfigName("anise")
+					cfg.Viper.AddConfigPath("/etc/anise")
 				}
 			}
 
@@ -152,7 +152,7 @@ func Execute() {
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {
 			avoidCleanupTmpdir, _ := cmd.Parent().PersistentFlags().GetBool("avoid-cleanup-tmpdir")
 
-			// Cleanup all tmp directories used by luet
+			// Cleanup all tmp directories used by anise
 			if !avoidCleanupTmpdir {
 				err := cfg.GetSystem().CleanupTmpDir()
 				if err != nil {
@@ -178,10 +178,10 @@ func Execute() {
 	}
 }
 
-func initCommand(rootCmd *cobra.Command, cfg *config.LuetConfig) {
+func initCommand(rootCmd *cobra.Command, cfg *config.AniseConfig) {
 
 	pflags := rootCmd.PersistentFlags()
-	pflags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.luet.yaml)")
+	pflags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.anise.yaml)")
 	pflags.BoolP("debug", "d", false, "verbose output")
 	pflags.Bool("fatal", false, "Enables Warnings to exit")
 	pflags.Bool("enable-logfile", false, "Enable log to file")
@@ -240,16 +240,16 @@ func initCommand(rootCmd *cobra.Command, cfg *config.LuetConfig) {
 }
 
 // initConfig reads in config file and ENV variables if set.
-func initConfig(cfg *config.LuetConfig) {
-	// Luet support these priorities on read configuration file:
+func initConfig(cfg *config.AniseConfig) {
+	// Anise support these priorities on read configuration file:
 	// - command line option (if available)
-	// - $PWD/.luet.yaml
-	// - $HOME/.luet.yaml
-	// - /etc/luet/luet.yaml
+	// - $PWD/.anise.yaml
+	// - $HOME/.anise.yaml
+	// - /etc/anise/anise.yaml
 	//
 	// Note: currently a single viper instance support only one config name.
 
-	cfg.Viper.SetEnvPrefix(config.LuetEnvPrefix)
+	cfg.Viper.SetEnvPrefix(config.AniseEnvPrefix)
 
 	cfg.Viper.BindEnv("config")
 	cfg.Viper.SetDefault("config", "")

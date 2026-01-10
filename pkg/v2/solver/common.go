@@ -60,7 +60,7 @@ func NewOperation(action string, art *artifact.PackageArtifact) *Operation {
 	}
 }
 
-func NewSolverImplementation(stype string, cfg *config.LuetConfig, opts *SolverOpts) *PackageSolver {
+func NewSolverImplementation(stype string, cfg *config.AniseConfig, opts *SolverOpts) *PackageSolver {
 	var s PackageSolver
 
 	switch stype {

@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newConfigCommand(cfg *config.LuetConfig) *cobra.Command {
+func newConfigCommand(cfg *config.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:     "config",
 		Short:   "Print config",

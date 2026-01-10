@@ -19,7 +19,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func NewQueryBelongsCommand(config *cfg.LuetConfig) *cobra.Command {
+func NewQueryBelongsCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var ans = &cobra.Command{
 		Use:     "belongs <file1> ... <fileN> [OPTIONS]",

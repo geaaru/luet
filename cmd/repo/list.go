@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewRepoListCommand(config *cfg.LuetConfig) *cobra.Command {
+func NewRepoListCommand(config *cfg.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "list [OPTIONS]",
 		Short: "List of the configured repositories.",

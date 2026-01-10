@@ -22,7 +22,7 @@ import (
 // which identifies a Package in a HashTree
 type ImageHashTree struct {
 	Database      pkg.PackageDatabase
-	SolverOptions config.LuetSolverOptions
+	SolverOptions config.AniseSolverOptions
 }
 
 // PackageImageHashTree represent the Package into a given image hash tree
@@ -68,8 +68,8 @@ func (ht *PackageImageHashTree) String() string {
 // PackageImageHashTree contains all the informations to resolve the spec build images in order to
 // reproducibly re-build images from packages
 func (ht *ImageHashTree) Query(
-	cs *LuetCompiler,
-	p *compilerspec.LuetCompilationSpec,
+	cs *AniseCompiler,
+	p *compilerspec.AniseCompilationSpec,
 ) (*PackageImageHashTree, error) {
 
 	assertions, err := ht.resolve(cs, p)
@@ -106,7 +106,7 @@ func (ht *ImageHashTree) Query(
 	}, nil
 }
 
-func (ht *ImageHashTree) genBuilderImageTag(p *compilerspec.LuetCompilationSpec, packageImage string) string {
+func (ht *ImageHashTree) genBuilderImageTag(p *compilerspec.AniseCompilationSpec, packageImage string) string {
 	// Use packageImage as salt into the fp being used
 	// so the hash is unique also in cases where
 	// some package deps does have completely different
@@ -116,7 +116,7 @@ func (ht *ImageHashTree) genBuilderImageTag(p *compilerspec.LuetCompilationSpec,
 
 // resolve computes the dependency tree of a compilation spec and returns solver assertions
 // in order to be able to compile the spec.
-func (ht *ImageHashTree) resolve(cs *LuetCompiler, p *compilerspec.LuetCompilationSpec) (solver.PackagesAssertions, error) {
+func (ht *ImageHashTree) resolve(cs *AniseCompiler, p *compilerspec.AniseCompilationSpec) (solver.PackagesAssertions, error) {
 	dependencies, err := cs.ComputeDepTree(p)
 	if err != nil {
 		return nil, errors.Wrap(err, "While computing a solution for "+p.GetPackage().HumanReadableString())

@@ -11,11 +11,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newDatabaseCommand(cfg *config.LuetConfig) *cobra.Command {
+func newDatabaseCommand(cfg *config.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "database [command] [OPTIONS]",
 		Short: "Manage system database (dangerous commands ahead!)",
-		Long: `Allows to manipulate Luet internal database of installed packages. Use with caution!
+		Long: `Allows to manipulate Anise internal database of installed packages. Use with caution!
 
 	Removing packages by hand from the database can result in a broken system, and thus it's not reccomended.
 	`,

@@ -14,7 +14,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func (c *LuetSubsetsConfig) HasSubset(s string) bool {
+func (c *AniseSubsetsConfig) HasSubset(s string) bool {
 	ans := false
 	for _, e := range c.Enabled {
 		if e == s {
@@ -26,11 +26,11 @@ func (c *LuetSubsetsConfig) HasSubset(s string) bool {
 	return ans
 }
 
-func (c *LuetSubsetsConfig) AddSubset(s string) {
+func (c *AniseSubsetsConfig) AddSubset(s string) {
 	c.Enabled = append(c.Enabled, s)
 }
 
-func (c *LuetSubsetsConfig) DelSubset(s string) {
+func (c *AniseSubsetsConfig) DelSubset(s string) {
 	enabled := []string{}
 	for _, e := range c.Enabled {
 		if e != s {
@@ -40,7 +40,7 @@ func (c *LuetSubsetsConfig) DelSubset(s string) {
 	c.Enabled = enabled
 }
 
-func (c *LuetSubsetsConfig) Write(f string) error {
+func (c *AniseSubsetsConfig) Write(f string) error {
 	data, err := yaml.Marshal(c)
 	if err != nil {
 		return fmt.Errorf(
@@ -66,14 +66,14 @@ func (c *LuetSubsetsConfig) Write(f string) error {
 	return nil
 }
 
-func NewLuetSubsetsConfig() *LuetSubsetsConfig {
-	return &LuetSubsetsConfig{
+func NewAniseSubsetsConfig() *AniseSubsetsConfig {
+	return &AniseSubsetsConfig{
 		Enabled: []string{},
 	}
 }
 
-func NewSubsetsConfig(data []byte) (*LuetSubsetsConfig, error) {
-	ans := NewLuetSubsetsConfig()
+func NewSubsetsConfig(data []byte) (*AniseSubsetsConfig, error) {
+	ans := NewAniseSubsetsConfig()
 	err := yaml.Unmarshal(data, &ans)
 	if err != nil {
 		return nil, err
@@ -82,13 +82,13 @@ func NewSubsetsConfig(data []byte) (*LuetSubsetsConfig, error) {
 	return ans, nil
 }
 
-func NewLuetSubsetsDefinition() *LuetSubsetsDefinition {
-	return &LuetSubsetsDefinition{
-		Definitions: make(map[string]*LuetSubsetDefinition, 0),
+func NewAniseSubsetsDefinition() *AniseSubsetsDefinition {
+	return &AniseSubsetsDefinition{
+		Definitions: make(map[string]*AniseSubsetDefinition, 0),
 	}
 }
 
-func NewSubsetsConfigFromFile(f string) (*LuetSubsetsConfig, error) {
+func NewSubsetsConfigFromFile(f string) (*AniseSubsetsConfig, error) {
 	fname := filepath.Base(f)
 
 	content, err := os.ReadFile(f)

@@ -17,6 +17,6 @@ import (
 
 func TestTree(t *testing.T) {
 	RegisterFailHandler(Fail)
-	LoadConfig(config.LuetCfg)
+	LoadConfig(config.AniseCfg)
 	RunSpecs(t, "Tree Suite")
 }

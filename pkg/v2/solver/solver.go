@@ -20,8 +20,8 @@ import (
 )
 
 type Solver struct {
-	Config *config.LuetConfig `yaml:",inline" json:",inline"`
-	Opts   *SolverOpts        `yaml:"opts" json:"opts"`
+	Config *config.AniseConfig `yaml:",inline" json:",inline"`
+	Opts   *SolverOpts         `yaml:"opts" json:"opts"`
 
 	Database pkg.PackageDatabase               `yaml:"-" json:"-"`
 	Searcher wagon.Searcher                    `yaml:"-" json:"-"`
@@ -37,7 +37,7 @@ type Solver struct {
 	mutex *sync.Mutex `yaml:"-" json:"-'`
 }
 
-func NewSolver(cfg *config.LuetConfig, opts *SolverOpts) *Solver {
+func NewSolver(cfg *config.AniseConfig, opts *SolverOpts) *Solver {
 	return &Solver{
 		Config:        cfg,
 		Opts:          opts,

@@ -26,7 +26,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func stubRepo(tmpdir, tree string) (*LuetSystemRepository, error) {
+func stubRepo(tmpdir, tree string) (*AniseSystemRepository, error) {
 	return GenerateRepository(
 		WithName("test"),
 		WithDescription("description"),
@@ -43,7 +43,7 @@ var _ = Describe("Installer", func() {
 
 	Context("Writes a repository definition", func() {
 		It("Writes a repo and can install packages from it", func() {
-			//repo:=NewLuetSystemRepository()
+			//repo:=NewAniseSystemRepository()
 
 			tmpdir, err := ioutil.TempDir("", "tree")
 			Expect(err).ToNot(HaveOccurred())
@@ -56,7 +56,7 @@ var _ = Describe("Installer", func() {
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(3))
 
-			c := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(),
+			c := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(),
 				generalRecipe.GetDatabase(),
 				options.Concurrency(2))
 
@@ -111,8 +111,8 @@ var _ = Describe("Installer", func() {
 			Expect(err).ToNot(HaveOccurred())
 			defer os.RemoveAll(fakeroot) // clean up
 
-			inst := NewLuetInstaller(LuetInstallerOptions{Concurrency: 1})
-			repo2, err := NewLuetSystemRepositoryFromYaml([]byte(`
+			inst := NewAniseInstaller(AniseInstallerOptions{Concurrency: 1})
+			repo2, err := NewAniseSystemRepositoryFromYaml([]byte(`
 name: "test"
 type: "disk"
 urls:
@@ -159,7 +159,7 @@ urls:
 
 	Context("Writes a repository definition without compression", func() {
 		It("Writes a repo and can install packages from it", func() {
-			//repo:=NewLuetSystemRepository()
+			//repo:=NewAniseSystemRepository()
 
 			tmpdir, err := ioutil.TempDir("", "tree")
 			Expect(err).ToNot(HaveOccurred())
@@ -172,7 +172,7 @@ urls:
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(3))
 
-			c := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(),
+			c := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(),
 				generalRecipe.GetDatabase(), options.Concurrency(2))
 
 			spec, err := c.FromPackage(&pkg.DefaultPackage{Name: "b", Category: "test", Version: "1.0"})
@@ -231,8 +231,8 @@ urls:
 			Expect(err).ToNot(HaveOccurred())
 			defer os.RemoveAll(fakeroot) // clean up
 
-			inst := NewLuetInstaller(LuetInstallerOptions{Concurrency: 1})
-			repo2, err := NewLuetSystemRepositoryFromYaml([]byte(`
+			inst := NewAniseInstaller(AniseInstallerOptions{Concurrency: 1})
+			repo2, err := NewAniseSystemRepositoryFromYaml([]byte(`
 name: "test"
 type: "disk"
 urls:
@@ -279,7 +279,7 @@ urls:
 
 	Context("Installation", func() {
 		It("Installs in a system with a persistent db", func() {
-			//repo:=NewLuetSystemRepository()
+			//repo:=NewAniseSystemRepository()
 
 			tmpdir, err := ioutil.TempDir("", "tree")
 			Expect(err).ToNot(HaveOccurred())
@@ -292,7 +292,7 @@ urls:
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(3))
 
-			c := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase(),
+			c := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase(),
 				options.Concurrency(2))
 
 			spec, err := c.FromPackage(&pkg.DefaultPackage{Name: "b", Category: "test", Version: "1.0"})
@@ -355,8 +355,8 @@ urls:
 			Expect(err).ToNot(HaveOccurred())
 			defer os.RemoveAll(fakeroot) // clean up
 
-			inst := NewLuetInstaller(LuetInstallerOptions{Concurrency: 1})
-			repo2, err := NewLuetSystemRepositoryFromYaml([]byte(`
+			inst := NewAniseInstaller(AniseInstallerOptions{Concurrency: 1})
+			repo2, err := NewAniseSystemRepositoryFromYaml([]byte(`
 name: "test"
 type: "disk"
 urls:
@@ -406,7 +406,7 @@ urls:
 		})
 
 		It("Installs new packages from a syste with others installed", func() {
-			//repo:=NewLuetSystemRepository()
+			//repo:=NewAniseSystemRepository()
 
 			tmpdir, err := ioutil.TempDir("", "tree")
 			Expect(err).ToNot(HaveOccurred())
@@ -419,7 +419,7 @@ urls:
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(3))
 
-			c := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase(),
+			c := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase(),
 				options.Concurrency(2))
 
 			spec, err := c.FromPackage(&pkg.DefaultPackage{Name: "b", Category: "test", Version: "1.0"})
@@ -482,8 +482,8 @@ urls:
 			Expect(err).ToNot(HaveOccurred())
 			defer os.RemoveAll(fakeroot) // clean up
 
-			inst := NewLuetInstaller(LuetInstallerOptions{Concurrency: 1})
-			repo2, err := NewLuetSystemRepositoryFromYaml([]byte(`
+			inst := NewAniseInstaller(AniseInstallerOptions{Concurrency: 1})
+			repo2, err := NewAniseSystemRepositoryFromYaml([]byte(`
 name: "test"
 type: "disk"
 urls:
@@ -515,7 +515,7 @@ urls:
 
 			Expect(len(generalRecipe2.GetDatabase().GetPackages())).To(Equal(1))
 
-			c = compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe2.GetDatabase(), options.Concurrency(2))
+			c = compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe2.GetDatabase(), options.Concurrency(2))
 
 			spec, err = c.FromPackage(&pkg.DefaultPackage{Name: "alpine", Category: "seed", Version: "1.0"})
 			Expect(err).ToNot(HaveOccurred())
@@ -537,8 +537,8 @@ urls:
 			Expect(err).ToNot(HaveOccurred())
 			defer os.RemoveAll(fakeroot) // clean up
 
-			inst = NewLuetInstaller(LuetInstallerOptions{Concurrency: 1})
-			repo2, err = NewLuetSystemRepositoryFromYaml([]byte(`
+			inst = NewAniseInstaller(AniseInstallerOptions{Concurrency: 1})
+			repo2, err = NewAniseSystemRepositoryFromYaml([]byte(`
 name: "test"
 type: "disk"
 urls:
@@ -560,7 +560,7 @@ urls:
 
 	Context("Simple upgrades", func() {
 		It("Installs packages and Upgrades a system with a persistent db", func() {
-			//repo:=NewLuetSystemRepository()
+			//repo:=NewAniseSystemRepository()
 
 			tmpdir, err := ioutil.TempDir("", "tree")
 			Expect(err).ToNot(HaveOccurred())
@@ -573,7 +573,7 @@ urls:
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(4))
 
-			c := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase(), options.Concurrency(2))
+			c := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase(), options.Concurrency(2))
 
 			spec, err := c.FromPackage(&pkg.DefaultPackage{Name: "b", Category: "test", Version: "1.0"})
 			Expect(err).ToNot(HaveOccurred())
@@ -592,7 +592,7 @@ urls:
 			spec2.SetOutputPath(tmpdir)
 			spec3.SetOutputPath(tmpdir)
 
-			_, errs := c.CompileParallel(false, compilerspec.NewLuetCompilationspecs(spec, spec2, spec3))
+			_, errs := c.CompileParallel(false, compilerspec.NewAniseCompilationspecs(spec, spec2, spec3))
 
 			Expect(errs).To(BeEmpty())
 
@@ -615,8 +615,8 @@ urls:
 			Expect(err).ToNot(HaveOccurred())
 			defer os.RemoveAll(fakeroot) // clean up
 
-			inst := NewLuetInstaller(LuetInstallerOptions{Concurrency: 1})
-			repo2, err := NewLuetSystemRepositoryFromYaml([]byte(`
+			inst := NewAniseInstaller(AniseInstallerOptions{Concurrency: 1})
+			repo2, err := NewAniseSystemRepositoryFromYaml([]byte(`
 name: "test"
 type: "disk"
 urls:
@@ -672,7 +672,7 @@ urls:
 		})
 
 		It("Handles package drops", func() {
-			//repo:=NewLuetSystemRepository()
+			//repo:=NewAniseSystemRepository()
 
 			tmpdir, err := ioutil.TempDir("", "tree")
 			Expect(err).ToNot(HaveOccurred())
@@ -690,8 +690,8 @@ urls:
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(3))
 			Expect(len(generalRecipeNewRepo.GetDatabase().GetPackages())).To(Equal(3))
 
-			c := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase(), options.Concurrency(2))
-			c2 := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipeNewRepo.GetDatabase())
+			c := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase(), options.Concurrency(2))
+			c2 := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipeNewRepo.GetDatabase())
 
 			spec, err := c.FromPackage(&pkg.DefaultPackage{Name: "b", Category: "test", Version: "1.0"})
 			Expect(err).ToNot(HaveOccurred())
@@ -714,11 +714,11 @@ urls:
 			spec2.SetOutputPath(tmpdirnewrepo)
 			spec3.SetOutputPath(tmpdir)
 
-			_, errs := c.CompileParallel(false, compilerspec.NewLuetCompilationspecs(spec, spec3))
+			_, errs := c.CompileParallel(false, compilerspec.NewAniseCompilationspecs(spec, spec3))
 
 			Expect(errs).To(BeEmpty())
 
-			_, errs = c2.CompileParallel(false, compilerspec.NewLuetCompilationspecs(spec2))
+			_, errs = c2.CompileParallel(false, compilerspec.NewAniseCompilationspecs(spec2))
 			Expect(errs).To(BeEmpty())
 
 			repo, err := stubRepo(tmpdir, "../../../tests/fixtures/upgrade_old_repo")
@@ -739,8 +739,8 @@ urls:
 			Expect(err).ToNot(HaveOccurred())
 			defer os.RemoveAll(fakeroot) // clean up
 
-			inst := NewLuetInstaller(LuetInstallerOptions{Concurrency: 1})
-			repo2, err := NewLuetSystemRepositoryFromYaml([]byte(`
+			inst := NewAniseInstaller(AniseInstallerOptions{Concurrency: 1})
+			repo2, err := NewAniseSystemRepositoryFromYaml([]byte(`
 name: "test"
 type: "disk"
 urls:
@@ -748,7 +748,7 @@ urls:
 `), pkg.NewInMemoryDatabase(false))
 			Expect(err).ToNot(HaveOccurred())
 
-			repoupgrade2, err := NewLuetSystemRepositoryFromYaml([]byte(`
+			repoupgrade2, err := NewAniseSystemRepositoryFromYaml([]byte(`
 name: "test"
 type: "disk"
 urls:
@@ -808,7 +808,7 @@ urls:
 
 	Context("Compressed packages", func() {
 		It("Installs", func() {
-			//repo:=NewLuetSystemRepository()
+			//repo:=NewAniseSystemRepository()
 
 			tmpdir, err := ioutil.TempDir("", "tree")
 			Expect(err).ToNot(HaveOccurred())
@@ -821,7 +821,7 @@ urls:
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(4))
 
-			c := compiler.NewLuetCompiler(
+			c := compiler.NewAniseCompiler(
 				backend.NewSimpleDockerBackend(),
 				generalRecipe.GetDatabase(),
 				options.Concurrency(2),
@@ -844,7 +844,7 @@ urls:
 			spec2.SetOutputPath(tmpdir)
 			spec3.SetOutputPath(tmpdir)
 
-			_, errs := c.CompileParallel(false, compilerspec.NewLuetCompilationspecs(spec, spec2, spec3))
+			_, errs := c.CompileParallel(false, compilerspec.NewAniseCompilationspecs(spec, spec2, spec3))
 
 			Expect(errs).To(BeEmpty())
 
@@ -869,8 +869,8 @@ urls:
 			Expect(err).ToNot(HaveOccurred())
 			defer os.RemoveAll(fakeroot) // clean up
 
-			inst := NewLuetInstaller(LuetInstallerOptions{Concurrency: 1})
-			repo2, err := NewLuetSystemRepositoryFromYaml([]byte(`
+			inst := NewAniseInstaller(AniseInstallerOptions{Concurrency: 1})
+			repo2, err := NewAniseSystemRepositoryFromYaml([]byte(`
 name: "test"
 type: "disk"
 urls:
@@ -940,7 +940,7 @@ urls:
 			systemDB := pkg.NewBoltDatabase(filepath.Join(bolt, "db.db"))
 			system := &System{Database: systemDB, Target: fakeroot}
 
-			inst := NewLuetInstaller(LuetInstallerOptions{Concurrency: 1, CheckConflicts: true})
+			inst := NewAniseInstaller(AniseInstallerOptions{Concurrency: 1, CheckConflicts: true})
 
 			D := pkg.NewPackage("D", "", []*pkg.DefaultPackage{}, []*pkg.DefaultPackage{})
 			B := pkg.NewPackage("calamares", "", []*pkg.DefaultPackage{D}, []*pkg.DefaultPackage{})
@@ -970,7 +970,7 @@ urls:
 
 	Context("Existing files", func() {
 		It("Reclaims them", func() {
-			//repo:=NewLuetSystemRepository()
+			//repo:=NewAniseSystemRepository()
 
 			tmpdir, err := ioutil.TempDir("", "tree")
 			Expect(err).ToNot(HaveOccurred())
@@ -983,7 +983,7 @@ urls:
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(4))
 
-			c := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase(),
+			c := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase(),
 				options.Concurrency(2),
 				options.WithCompressionType(compression.GZip))
 
@@ -1002,7 +1002,7 @@ urls:
 			spec.SetOutputPath(tmpdir)
 			spec2.SetOutputPath(tmpdir)
 			spec3.SetOutputPath(tmpdir)
-			_, errs := c.CompileParallel(false, compilerspec.NewLuetCompilationspecs(spec, spec2, spec3))
+			_, errs := c.CompileParallel(false, compilerspec.NewAniseCompilationspecs(spec, spec2, spec3))
 
 			Expect(errs).To(BeEmpty())
 
@@ -1027,8 +1027,8 @@ urls:
 			Expect(err).ToNot(HaveOccurred())
 			defer os.RemoveAll(fakeroot) // clean up
 
-			inst := NewLuetInstaller(LuetInstallerOptions{Concurrency: 1})
-			repo2, err := NewLuetSystemRepositoryFromYaml([]byte(`
+			inst := NewAniseInstaller(AniseInstallerOptions{Concurrency: 1})
+			repo2, err := NewAniseSystemRepositoryFromYaml([]byte(`
 name: "test"
 type: "disk"
 urls:
@@ -1075,7 +1075,7 @@ urls:
 		})
 
 		It("Upgrades reclaimed packages", func() {
-			//repo:=NewLuetSystemRepository()
+			//repo:=NewAniseSystemRepository()
 
 			tmpdir, err := ioutil.TempDir("", "tree")
 			Expect(err).ToNot(HaveOccurred())
@@ -1088,7 +1088,7 @@ urls:
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(3))
 
-			c := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase(),
+			c := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase(),
 				options.WithCompressionType(compression.GZip))
 
 			spec, err := c.FromPackage(&pkg.DefaultPackage{Name: "b", Category: "test", Version: "1.0"})
@@ -1103,7 +1103,7 @@ urls:
 			defer os.RemoveAll(tmpdir) // clean up
 			spec.SetOutputPath(tmpdir)
 			spec3.SetOutputPath(tmpdir)
-			_, errs := c.CompileParallel(false, compilerspec.NewLuetCompilationspecs(spec, spec3))
+			_, errs := c.CompileParallel(false, compilerspec.NewAniseCompilationspecs(spec, spec3))
 
 			Expect(errs).To(BeEmpty())
 
@@ -1126,8 +1126,8 @@ urls:
 			Expect(err).ToNot(HaveOccurred())
 			defer os.RemoveAll(fakeroot) // clean up
 
-			inst := NewLuetInstaller(LuetInstallerOptions{Concurrency: 1})
-			repo2, err := NewLuetSystemRepositoryFromYaml([]byte(`
+			inst := NewAniseInstaller(AniseInstallerOptions{Concurrency: 1})
+			repo2, err := NewAniseSystemRepositoryFromYaml([]byte(`
 name: "test"
 type: "disk"
 urls:
@@ -1179,7 +1179,7 @@ urls:
 
 			Expect(len(generalRecipe2.GetDatabase().GetPackages())).To(Equal(3))
 
-			c = compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe2.GetDatabase())
+			c = compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe2.GetDatabase())
 
 			spec, err = c.FromPackage(&pkg.DefaultPackage{Name: "b", Category: "test", Version: "1.1"})
 			Expect(err).ToNot(HaveOccurred())
@@ -1189,7 +1189,7 @@ urls:
 			defer os.RemoveAll(tmpdir2) // clean up
 			spec.SetOutputPath(tmpdir2)
 
-			_, errs = c.CompileParallel(false, compilerspec.NewLuetCompilationspecs(spec))
+			_, errs = c.CompileParallel(false, compilerspec.NewAniseCompilationspecs(spec))
 
 			Expect(errs).To(BeEmpty())
 
@@ -1199,8 +1199,8 @@ urls:
 			err = repo.Write(tmpdir2, false, false)
 			Expect(err).ToNot(HaveOccurred())
 
-			inst = NewLuetInstaller(LuetInstallerOptions{Concurrency: 1})
-			repo2, err = NewLuetSystemRepositoryFromYaml([]byte(`
+			inst = NewAniseInstaller(AniseInstallerOptions{Concurrency: 1})
+			repo2, err = NewAniseSystemRepositoryFromYaml([]byte(`
 name: "test"
 type: "disk"
 urls:

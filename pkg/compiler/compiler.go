@@ -50,21 +50,21 @@ func (i ArtifactIndex) CleanPath() ArtifactIndex {
 	return newIndex
 }
 
-type LuetCompiler struct {
+type AniseCompiler struct {
 	//*tree.CompilerRecipe
 	Backend  CompilerBackend
 	Database pkg.PackageDatabase
 	Options  options.Compiler
 }
 
-func NewCompiler(p ...options.Option) *LuetCompiler {
+func NewCompiler(p ...options.Option) *AniseCompiler {
 	c := options.NewDefaultCompiler()
 	c.Apply(p...)
 
-	return &LuetCompiler{Options: *c}
+	return &AniseCompiler{Options: *c}
 }
 
-func NewLuetCompiler(backend CompilerBackend, db pkg.PackageDatabase, compilerOpts ...options.Option) *LuetCompiler {
+func NewAniseCompiler(backend CompilerBackend, db pkg.PackageDatabase, compilerOpts ...options.Option) *AniseCompiler {
 	// The CompilerRecipe will gives us a tree with only build deps listed.
 
 	c := NewCompiler(compilerOpts...)
@@ -78,7 +78,7 @@ func NewLuetCompiler(backend CompilerBackend, db pkg.PackageDatabase, compilerOp
 	return c
 }
 
-func (cs *LuetCompiler) compilerWorker(i int, wg *sync.WaitGroup, cspecs chan *compilerspec.LuetCompilationSpec, a *[]*artifact.PackageArtifact, m *sync.Mutex, concurrency int, keepPermissions bool, errors chan error) {
+func (cs *AniseCompiler) compilerWorker(i int, wg *sync.WaitGroup, cspecs chan *compilerspec.AniseCompilationSpec, a *[]*artifact.PackageArtifact, m *sync.Mutex, concurrency int, keepPermissions bool, errors chan error) {
 	defer wg.Done()
 
 	for s := range cspecs {
@@ -94,14 +94,14 @@ func (cs *LuetCompiler) compilerWorker(i int, wg *sync.WaitGroup, cspecs chan *c
 }
 
 // CompileWithReverseDeps compiles the supplied compilationspecs and their reverse dependencies
-func (cs *LuetCompiler) CompileWithReverseDeps(keepPermissions bool, ps *compilerspec.LuetCompilationspecs) ([]*artifact.PackageArtifact, []error) {
+func (cs *AniseCompiler) CompileWithReverseDeps(keepPermissions bool, ps *compilerspec.AniseCompilationspecs) ([]*artifact.PackageArtifact, []error) {
 	artifacts, err := cs.CompileParallel(keepPermissions, ps)
 	if len(err) != 0 {
 		return artifacts, err
 	}
 
 	Info(":ant: Resolving reverse dependencies")
-	toCompile := compilerspec.NewLuetCompilationspecs()
+	toCompile := compilerspec.NewAniseCompilationspecs()
 	for _, a := range artifacts {
 
 		revdeps := a.CompileSpec.GetPackage().Revdeps(cs.Database)
@@ -127,8 +127,8 @@ func (cs *LuetCompiler) CompileWithReverseDeps(keepPermissions bool, ps *compile
 
 // CompileParallel compiles the supplied compilationspecs in parallel
 // to note, no specific heuristic is implemented, and the specs are run in parallel as they are.
-func (cs *LuetCompiler) CompileParallel(keepPermissions bool, ps *compilerspec.LuetCompilationspecs) ([]*artifact.PackageArtifact, []error) {
-	all := make(chan *compilerspec.LuetCompilationSpec)
+func (cs *AniseCompiler) CompileParallel(keepPermissions bool, ps *compilerspec.AniseCompilationspecs) ([]*artifact.PackageArtifact, []error) {
+	all := make(chan *compilerspec.AniseCompilationSpec)
 	artifacts := []*artifact.PackageArtifact{}
 	mutex := &sync.Mutex{}
 	errors := make(chan error, ps.Len())
@@ -155,7 +155,7 @@ func (cs *LuetCompiler) CompileParallel(keepPermissions bool, ps *compilerspec.L
 	return artifacts, allErrors
 }
 
-func (cs *LuetCompiler) stripFromRootfs(includes []string, rootfs string, include bool) error {
+func (cs *AniseCompiler) stripFromRootfs(includes []string, rootfs string, include bool) error {
 	var includeRegexp []*regexp.Regexp
 	for _, i := range includes {
 		r, e := regexp.Compile(i)
@@ -214,7 +214,7 @@ func (cs *LuetCompiler) stripFromRootfs(includes []string, rootfs string, includ
 	return nil
 }
 
-func (cs *LuetCompiler) unpackFs(concurrency int, keepPermissions bool, p *compilerspec.LuetCompilationSpec, runnerOpts backend.Options) (*artifact.PackageArtifact, error) {
+func (cs *AniseCompiler) unpackFs(concurrency int, keepPermissions bool, p *compilerspec.AniseCompilationSpec, runnerOpts backend.Options) (*artifact.PackageArtifact, error) {
 
 	rootfs, err := ioutil.TempDir(p.GetOutputPath(), "rootfs")
 	if err != nil {
@@ -256,7 +256,7 @@ func (cs *LuetCompiler) unpackFs(concurrency int, keepPermissions bool, p *compi
 	return a, nil
 }
 
-func (cs *LuetCompiler) unpackDelta(concurrency int, keepPermissions bool, p *compilerspec.LuetCompilationSpec, builderOpts, runnerOpts backend.Options) (*artifact.PackageArtifact, error) {
+func (cs *AniseCompiler) unpackDelta(concurrency int, keepPermissions bool, p *compilerspec.AniseCompilationSpec, builderOpts, runnerOpts backend.Options) (*artifact.PackageArtifact, error) {
 
 	rootfs, err := ioutil.TempDir(p.GetOutputPath(), "rootfs")
 	if err != nil {
@@ -292,9 +292,9 @@ func (cs *LuetCompiler) unpackDelta(concurrency int, keepPermissions bool, p *co
 	return artifact, nil
 }
 
-func (cs *LuetCompiler) buildPackageImage(image, buildertaggedImage, packageImage string,
+func (cs *AniseCompiler) buildPackageImage(image, buildertaggedImage, packageImage string,
 	concurrency int, keepPermissions bool,
-	p *compilerspec.LuetCompilationSpec) (backend.Options, backend.Options, error) {
+	p *compilerspec.AniseCompilationSpec) (backend.Options, backend.Options, error) {
 
 	var runnerOpts, builderOpts backend.Options
 
@@ -408,7 +408,7 @@ func (cs *LuetCompiler) buildPackageImage(image, buildertaggedImage, packageImag
 	return builderOpts, runnerOpts, nil
 }
 
-func (cs *LuetCompiler) genArtifact(p *compilerspec.LuetCompilationSpec, builderOpts, runnerOpts backend.Options, concurrency int, keepPermissions bool) (*artifact.PackageArtifact, error) {
+func (cs *AniseCompiler) genArtifact(p *compilerspec.AniseCompilationSpec, builderOpts, runnerOpts backend.Options, concurrency int, keepPermissions bool) (*artifact.PackageArtifact, error) {
 
 	// generate *artifact.PackageArtifact
 	var a *artifact.PackageArtifact
@@ -475,7 +475,7 @@ func (cs *LuetCompiler) genArtifact(p *compilerspec.LuetCompilationSpec, builder
 	return a, nil
 }
 
-func (cs *LuetCompiler) waitForImages(images []string) {
+func (cs *AniseCompiler) waitForImages(images []string) {
 	if cs.Options.PullFirst && cs.Options.Wait {
 		available, _ := oneOfImagesAvailable(images, cs.Backend)
 		if !available {
@@ -508,7 +508,7 @@ func oneOfImagesAvailable(images []string, b CompilerBackend) (bool, string) {
 	return false, ""
 }
 
-func (cs *LuetCompiler) findImageHash(imageHash string, p *compilerspec.LuetCompilationSpec) string {
+func (cs *AniseCompiler) findImageHash(imageHash string, p *compilerspec.AniseCompilationSpec) string {
 	var resolvedImage string
 	Debug("Resolving image hash for", p.Package.HumanReadableString(), "hash", imageHash, "Pull repositories", p.BuildOptions.PullImageRepository)
 	toChecklist := append([]string{fmt.Sprintf("%s:%s", cs.Options.PushImageRepository, imageHash)},
@@ -524,7 +524,7 @@ func (cs *LuetCompiler) findImageHash(imageHash string, p *compilerspec.LuetComp
 	return resolvedImage
 }
 
-func (cs *LuetCompiler) resolveExistingImageHash(imageHash string, p *compilerspec.LuetCompilationSpec) string {
+func (cs *AniseCompiler) resolveExistingImageHash(imageHash string, p *compilerspec.AniseCompilationSpec) string {
 	resolvedImage := cs.findImageHash(imageHash, p)
 
 	if resolvedImage == "" {
@@ -533,7 +533,7 @@ func (cs *LuetCompiler) resolveExistingImageHash(imageHash string, p *compilersp
 	return resolvedImage
 }
 
-func LoadArtifactFromYaml(spec *compilerspec.LuetCompilationSpec) (*artifact.PackageArtifact, error) {
+func LoadArtifactFromYaml(spec *compilerspec.AniseCompilationSpec) (*artifact.PackageArtifact, error) {
 	metaFile := spec.GetPackage().GetMetadataFilePath()
 	dat, err := ioutil.ReadFile(spec.Rel(metaFile))
 	if err != nil {
@@ -548,7 +548,7 @@ func LoadArtifactFromYaml(spec *compilerspec.LuetCompilationSpec) (*artifact.Pac
 	return art, nil
 }
 
-func (cs *LuetCompiler) getImageArtifact(hash string, p *compilerspec.LuetCompilationSpec) (*artifact.PackageArtifact, error) {
+func (cs *AniseCompiler) getImageArtifact(hash string, p *compilerspec.AniseCompilationSpec) (*artifact.PackageArtifact, error) {
 	// we check if there is an available image with the given hash and
 	// we return a full artifact if can be loaded locally.
 	Debug("Get image artifact for", p.Package.HumanReadableString(), "hash", hash, "Pull repositories", p.BuildOptions.PullImageRepository)
@@ -575,10 +575,10 @@ func (cs *LuetCompiler) getImageArtifact(hash string, p *compilerspec.LuetCompil
 // image buildertaggedImage.
 // Images that can be resolved from repositories are prefered over the local ones if PullFirst is set to true
 // avoiding to rebuild images as much as possible
-func (cs *LuetCompiler) compileWithImage(image, builderHash string, packageTagHash string,
+func (cs *AniseCompiler) compileWithImage(image, builderHash string, packageTagHash string,
 	concurrency int,
 	keepPermissions, keepImg bool,
-	p *compilerspec.LuetCompilationSpec, generateArtifact bool) (*artifact.PackageArtifact, error) {
+	p *compilerspec.AniseCompilationSpec, generateArtifact bool) (*artifact.PackageArtifact, error) {
 
 	// If it is a virtual, check if we have to generate an empty artifact or not.
 	if generateArtifact && p.IsVirtual() {
@@ -659,8 +659,8 @@ func (cs *LuetCompiler) compileWithImage(image, builderHash string, packageTagHa
 
 // FromDatabase returns all the available compilation specs from a database. If the minimum flag is returned
 // it will be computed a minimal subset that will guarantees that all packages are built ( if not targeting a single package explictly )
-func (cs *LuetCompiler) FromDatabase(db pkg.PackageDatabase, minimum bool, dst string) ([]*compilerspec.LuetCompilationSpec, error) {
-	compilerSpecs := compilerspec.NewLuetCompilationspecs()
+func (cs *AniseCompiler) FromDatabase(db pkg.PackageDatabase, minimum bool, dst string) ([]*compilerspec.AniseCompilationSpec, error) {
+	compilerSpecs := compilerspec.NewAniseCompilationspecs()
 
 	w := db.World()
 
@@ -683,7 +683,7 @@ func (cs *LuetCompiler) FromDatabase(db pkg.PackageDatabase, minimum bool, dst s
 	}
 }
 
-func (cs *LuetCompiler) ComputeDepTree(p *compilerspec.LuetCompilationSpec) (solver.PackagesAssertions, error) {
+func (cs *AniseCompiler) ComputeDepTree(p *compilerspec.AniseCompilationSpec) (solver.PackagesAssertions, error) {
 	opts := solver.DecodeImplementation(cs.Options.SolverOptions.Implementation)
 
 	s := solver.NewResolver(
@@ -707,11 +707,11 @@ func (cs *LuetCompiler) ComputeDepTree(p *compilerspec.LuetCompilationSpec) (sol
 }
 
 // ComputeMinimumCompilableSet strips specs that are eventually compiled by leafs
-func (cs *LuetCompiler) ComputeMinimumCompilableSet(p ...*compilerspec.LuetCompilationSpec) ([]*compilerspec.LuetCompilationSpec, error) {
+func (cs *AniseCompiler) ComputeMinimumCompilableSet(p ...*compilerspec.AniseCompilationSpec) ([]*compilerspec.AniseCompilationSpec, error) {
 	// Generate a set with all the deps of the provided specs
 	// we will use that set to remove the deps from the list of provided compilation specs
 	allDependencies := solver.PackagesAssertions{} // Get all packages that will be in deps
-	result := []*compilerspec.LuetCompilationSpec{}
+	result := []*compilerspec.AniseCompilationSpec{}
 	for _, spec := range p {
 		sol, err := cs.ComputeDepTree(spec)
 		if err != nil {
@@ -730,7 +730,7 @@ func (cs *LuetCompiler) ComputeMinimumCompilableSet(p ...*compilerspec.LuetCompi
 
 // Compile is a non-parallel version of CompileParallel. It builds the compilation specs and generates
 // an artifact
-func (cs *LuetCompiler) Compile(keepPermissions bool, p *compilerspec.LuetCompilationSpec) (*artifact.PackageArtifact, error) {
+func (cs *AniseCompiler) Compile(keepPermissions bool, p *compilerspec.AniseCompilationSpec) (*artifact.PackageArtifact, error) {
 	return cs.compile(cs.Options.Concurrency, keepPermissions, nil, nil, p)
 }
 
@@ -742,7 +742,7 @@ func genImageList(refs []string, hash string) []string {
 	return res
 }
 
-func (cs *LuetCompiler) inheritSpecBuildOptions(p *compilerspec.LuetCompilationSpec) {
+func (cs *AniseCompiler) inheritSpecBuildOptions(p *compilerspec.AniseCompilationSpec) {
 	Debug(p.GetPackage().HumanReadableString(), "Build options before inherit", p.BuildOptions)
 
 	// Append push repositories from buildpsec buildoptions as pull if found.
@@ -761,7 +761,7 @@ func (cs *LuetCompiler) inheritSpecBuildOptions(p *compilerspec.LuetCompilationS
 	Debug(p.GetPackage().HumanReadableString(), "Build options after inherit", p.BuildOptions)
 }
 
-func (cs *LuetCompiler) getSpecHash(pkgs pkg.DefaultPackages, salt string) (string, error) {
+func (cs *AniseCompiler) getSpecHash(pkgs pkg.DefaultPackages, salt string) (string, error) {
 	ht := NewHashTree(cs.Database)
 	overallFp := ""
 	for _, p := range pkgs {
@@ -781,7 +781,7 @@ func (cs *LuetCompiler) getSpecHash(pkgs pkg.DefaultPackages, salt string) (stri
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-func (cs *LuetCompiler) resolveFinalImages(concurrency int, keepPermissions bool, p *compilerspec.LuetCompilationSpec) error {
+func (cs *AniseCompiler) resolveFinalImages(concurrency int, keepPermissions bool, p *compilerspec.AniseCompilationSpec) error {
 
 	joinTag := ">:loop: final images<"
 	var fromPackages pkg.DefaultPackages
@@ -887,7 +887,7 @@ func (cs *LuetCompiler) resolveFinalImages(concurrency int, keepPermissions bool
 	return nil
 }
 
-func (cs *LuetCompiler) resolveMultiStageImages(concurrency int, keepPermissions bool, p *compilerspec.LuetCompilationSpec) error {
+func (cs *AniseCompiler) resolveMultiStageImages(concurrency int, keepPermissions bool, p *compilerspec.AniseCompilationSpec) error {
 	resolvedCopyFields := []compilerspec.CopyField{}
 	copyTag := ">:droplet: copy<"
 
@@ -930,7 +930,7 @@ func (cs *LuetCompiler) resolveMultiStageImages(concurrency int, keepPermissions
 	return nil
 }
 
-func (cs *LuetCompiler) compile(concurrency int, keepPermissions bool, generateFinalArtifact *bool, generateDependenciesFinalArtifact *bool, p *compilerspec.LuetCompilationSpec) (*artifact.PackageArtifact, error) {
+func (cs *AniseCompiler) compile(concurrency int, keepPermissions bool, generateFinalArtifact *bool, generateDependenciesFinalArtifact *bool, p *compilerspec.AniseCompilationSpec) (*artifact.PackageArtifact, error) {
 	Info(":package: Compiling", p.GetPackage().HumanReadableString(), ".... :coffee:")
 
 	//Before multistage : join - same as multistage, but keep artifacts, join them, create a new one and generate a final image.
@@ -1096,7 +1096,7 @@ func (cs *LuetCompiler) compile(concurrency int, keepPermissions bool, generateF
 
 type templatedata map[string]interface{}
 
-func (cs *LuetCompiler) templatePackage(vals []map[string]interface{}, pack pkg.Package, dst templatedata) ([]byte, error) {
+func (cs *AniseCompiler) templatePackage(vals []map[string]interface{}, pack pkg.Package, dst templatedata) ([]byte, error) {
 	// Grab shared templates first
 	var chartFiles []*chart.File
 	if len(cs.Options.TemplatesFolder) != 0 {
@@ -1184,7 +1184,7 @@ func (cs *LuetCompiler) templatePackage(vals []map[string]interface{}, pack pkg.
 }
 
 // FromPackage returns a compilation spec from a package definition
-func (cs *LuetCompiler) FromPackage(p pkg.Package) (*compilerspec.LuetCompilationSpec, error) {
+func (cs *AniseCompiler) FromPackage(p pkg.Package) (*compilerspec.AniseCompilationSpec, error) {
 
 	pack, err := cs.Database.FindPackageCandidate(p)
 	if err != nil {
@@ -1231,7 +1231,7 @@ func (cs *LuetCompiler) FromPackage(p pkg.Package) (*compilerspec.LuetCompilatio
 		return nil, errors.Wrap(err, "while rendering package template")
 	}
 
-	newSpec, err := compilerspec.NewLuetCompilationSpec(bytes, pack)
+	newSpec, err := compilerspec.NewAniseCompilationSpec(bytes, pack)
 	if err != nil {
 		return nil, err
 	}
@@ -1239,7 +1239,7 @@ func (cs *LuetCompiler) FromPackage(p pkg.Package) (*compilerspec.LuetCompilatio
 
 	cs.inheritSpecBuildOptions(newSpec)
 
-	// Update the package in the compiler database to catch updates from NewLuetCompilationSpec
+	// Update the package in the compiler database to catch updates from NewAniseCompilationSpec
 	if err := cs.Database.UpdatePackage(newSpec.Package); err != nil {
 		return nil, errors.Wrap(err, "failed updating new package entry in compiler database")
 	}
@@ -1248,11 +1248,11 @@ func (cs *LuetCompiler) FromPackage(p pkg.Package) (*compilerspec.LuetCompilatio
 }
 
 // GetBackend returns the current compilation backend
-func (cs *LuetCompiler) GetBackend() CompilerBackend {
+func (cs *AniseCompiler) GetBackend() CompilerBackend {
 	return cs.Backend
 }
 
 // SetBackend sets the compilation backend
-func (cs *LuetCompiler) SetBackend(b CompilerBackend) {
+func (cs *AniseCompiler) SetBackend(b CompilerBackend) {
 	cs.Backend = b
 }

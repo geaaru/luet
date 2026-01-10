@@ -22,7 +22,7 @@ import (
 )
 
 type BuildSolver struct {
-	Config *config.LuetConfig `yaml:",inline" json:",inline"`
+	Config *config.AniseConfig `yaml:",inline" json:",inline"`
 
 	ForestGuard  *tree.ForestGuard    `yaml:"-" json:"-"`
 	RenderEngine *render.RenderEngine `yaml:"-" json:"-"`
@@ -33,7 +33,7 @@ type BuildSolver struct {
 	mutex *sync.Mutex `yaml:"-" json:"-"`
 }
 
-func NewBuildSolver(cfg *config.LuetConfig,
+func NewBuildSolver(cfg *config.AniseConfig,
 	opts *BuildSolverOpts) *BuildSolver {
 	return &BuildSolver{
 		Config:   cfg,

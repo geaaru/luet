@@ -51,10 +51,10 @@ func UntarProtect(src, dst string, sameOwner, overwriteDirPerms bool, protectedF
 		//"^/dev/",
 	}
 	spec.IgnoreFiles = []string{}
-	spec.EnableMutex = LuetCfg.GetTarFlows().Mutex4Dirs
-	spec.MaxOpenFiles = LuetCfg.GetTarFlows().MaxOpenFiles
-	spec.BufferSize = LuetCfg.GetTarFlows().CopyBufferSize
-	spec.Validate = LuetCfg.GetTarFlows().Validate
+	spec.EnableMutex = AniseCfg.GetTarFlows().Mutex4Dirs
+	spec.MaxOpenFiles = AniseCfg.GetTarFlows().MaxOpenFiles
+	spec.BufferSize = AniseCfg.GetTarFlows().CopyBufferSize
+	spec.Validate = AniseCfg.GetTarFlows().Validate
 
 	return UntarProtectSpec(
 		src, dst, protectedFiles, modifier, spec,

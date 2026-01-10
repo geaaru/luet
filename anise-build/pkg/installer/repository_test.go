@@ -26,7 +26,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func dockerStubRepo(tmpdir, tree, image string, push, force bool) (*LuetSystemRepository, error) {
+func dockerStubRepo(tmpdir, tree, image string, push, force bool) (*AniseSystemRepository, error) {
 	return GenerateRepository(
 		WithName("test"),
 		WithDescription("description"),
@@ -57,7 +57,7 @@ var _ = Describe("Repository", func() {
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(3))
 
-			compiler := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase())
+			compiler := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase())
 
 			spec, err := compiler.FromPackage(&pkg.DefaultPackage{Name: "b", Category: "test", Version: "1.0"})
 			Expect(err).ToNot(HaveOccurred())
@@ -124,11 +124,11 @@ var _ = Describe("Repository", func() {
 			Expect(len(generalRecipe2.GetDatabase().GetPackages())).To(Equal(1))
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(3))
 
-			compiler2 := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe2.GetDatabase())
+			compiler2 := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe2.GetDatabase())
 			spec2, err := compiler2.FromPackage(&pkg.DefaultPackage{Name: "alpine", Category: "seed", Version: "1.0"})
 			Expect(err).ToNot(HaveOccurred())
 
-			compiler := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase())
+			compiler := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase())
 
 			spec, err := compiler.FromPackage(&pkg.DefaultPackage{Name: "b", Category: "test", Version: "1.0"})
 			Expect(err).ToNot(HaveOccurred())
@@ -186,7 +186,7 @@ var _ = Describe("Repository", func() {
 
 			// We check now that the artifact not referenced in the tree
 			// (spec2) is not indexed in the repository
-			repository, err := NewLuetSystemRepositoryFromYaml([]byte(`
+			repository, err := NewAniseSystemRepositoryFromYaml([]byte(`
 name: "test"
 type: "disk"
 urls:
@@ -221,11 +221,11 @@ urls:
 			Expect(len(generalRecipe2.GetDatabase().GetPackages())).To(Equal(1))
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(3))
 
-			compiler2 := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe2.GetDatabase())
+			compiler2 := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe2.GetDatabase())
 			spec2, err := compiler2.FromPackage(&pkg.DefaultPackage{Name: "alpine", Category: "seed", Version: "1.0"})
 			Expect(err).ToNot(HaveOccurred())
 
-			compiler := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase())
+			compiler := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase())
 
 			spec, err := compiler.FromPackage(&pkg.DefaultPackage{Name: "b", Category: "test", Version: "1.0"})
 			Expect(err).ToNot(HaveOccurred())
@@ -294,7 +294,7 @@ urls:
 
 			// We check now that the artifact not referenced in the tree
 			// (spec2) is not indexed in the repository
-			repository, err := NewLuetSystemRepositoryFromYaml([]byte(`
+			repository, err := NewAniseSystemRepositoryFromYaml([]byte(`
 name: "test"
 type: "disk"
 urls:
@@ -322,8 +322,8 @@ urls:
 
 			_, err = builder2.GetDatabase().CreatePackage(package2)
 			Expect(err).ToNot(HaveOccurred())
-			repo1 := &LuetSystemRepository{LuetRepository: config.LuetRepository{Name: "test1"}, Tree: builder1}
-			repo2 := &LuetSystemRepository{LuetRepository: config.LuetRepository{Name: "test2"}, Tree: builder2}
+			repo1 := &AniseSystemRepository{AniseRepository: config.AniseRepository{Name: "test1"}, Tree: builder1}
+			repo2 := &AniseSystemRepository{AniseRepository: config.AniseRepository{Name: "test2"}, Tree: builder2}
 			repositories := Repositories{repo1, repo2}
 			matches := repositories.PackageMatches([]pkg.Package{package1})
 			Expect(matches).To(Equal([]PackageMatch{{Repo: repo1, Package: package1}}))
@@ -352,7 +352,7 @@ urls:
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(3))
 
-			localcompiler := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase())
+			localcompiler := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase())
 
 			spec, err := localcompiler.FromPackage(&pkg.DefaultPackage{Name: "b", Category: "test", Version: "1.0"})
 			Expect(err).ToNot(HaveOccurred())
@@ -399,7 +399,7 @@ urls:
 
 			a, err = c.DownloadArtifact(&artifact.PackageArtifact{
 				Path: "test.tar",
-				CompileSpec: &compilerspec.LuetCompilationSpec{
+				CompileSpec: &compilerspec.AniseCompilationSpec{
 					Package: &pkg.DefaultPackage{
 						Name:     "b",
 						Category: "test",
@@ -426,7 +426,7 @@ urls:
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(5))
 
-			localcompiler := compiler.NewLuetCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase())
+			localcompiler := compiler.NewAniseCompiler(backend.NewSimpleDockerBackend(), generalRecipe.GetDatabase())
 
 			spec, err := localcompiler.FromPackage(&pkg.DefaultPackage{Name: "a", Category: "test", Version: "1.99"})
 			Expect(err).ToNot(HaveOccurred())
@@ -470,7 +470,7 @@ urls:
 
 			a, err = c.DownloadArtifact(&artifact.PackageArtifact{
 				Path: "test.tar",
-				CompileSpec: &compilerspec.LuetCompilationSpec{
+				CompileSpec: &compilerspec.AniseCompilationSpec{
 					Package: &pkg.DefaultPackage{
 						Name:     "a",
 						Category: "test",
@@ -491,10 +491,10 @@ urls:
 
 		It("Searches files", func() {
 			repos := Repositories{
-				&LuetSystemRepository{
+				&AniseSystemRepository{
 					Index: compiler.ArtifactIndex{
 						&artifact.PackageArtifact{
-							CompileSpec: &compilerspec.LuetCompilationSpec{
+							CompileSpec: &compilerspec.AniseCompilationSpec{
 								Package: &pkg.DefaultPackage{},
 							},
 							Path:  "bar",
@@ -514,11 +514,11 @@ urls:
 		})
 
 		It("Searches packages", func() {
-			repo := &LuetSystemRepository{
+			repo := &AniseSystemRepository{
 				Index: compiler.ArtifactIndex{
 					&artifact.PackageArtifact{
 						Path: "foo",
-						CompileSpec: &compilerspec.LuetCompilationSpec{
+						CompileSpec: &compilerspec.AniseCompilationSpec{
 							Package: &pkg.DefaultPackage{
 								Name:     "foo",
 								Category: "bar",
@@ -528,7 +528,7 @@ urls:
 					},
 					&artifact.PackageArtifact{
 						Path: "baz",
-						CompileSpec: &compilerspec.LuetCompilationSpec{
+						CompileSpec: &compilerspec.AniseCompilationSpec{
 							Package: &pkg.DefaultPackage{
 								Name:     "foo",
 								Category: "baz",

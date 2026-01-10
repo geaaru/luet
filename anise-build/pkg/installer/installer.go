@@ -28,8 +28,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-type LuetInstallerOptions struct {
-	SolverOptions                                                  config.LuetSolverOptions
+type AniseInstallerOptions struct {
+	SolverOptions                                                  config.AniseSolverOptions
 	Concurrency                                                    int
 	NoDeps                                                         bool
 	OnlyDeps                                                       bool
@@ -45,16 +45,16 @@ type LuetInstallerOptions struct {
 	SyncRepositories                                               bool
 }
 
-type LuetInstaller struct {
+type AniseInstaller struct {
 	PackageRepositories Repositories
 
-	Options LuetInstallerOptions
+	Options AniseInstallerOptions
 }
 
 type ArtifactMatch struct {
 	Package    pkg.Package
 	Artifact   *artifact.PackageArtifact
-	Repository *LuetSystemRepository
+	Repository *AniseSystemRepository
 }
 
 type ArtefactAction struct {
@@ -62,13 +62,13 @@ type ArtefactAction struct {
 	OldPackage *pkg.Package
 }
 
-func NewLuetInstaller(opts LuetInstallerOptions) *LuetInstaller {
-	return &LuetInstaller{Options: opts}
+func NewAniseInstaller(opts AniseInstallerOptions) *AniseInstaller {
+	return &AniseInstaller{Options: opts}
 }
 
 // computeUpgrade returns the packages to be uninstalled and installed in a system to perform an upgrade
 // based on the system repositories
-func (l *LuetInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg.Packages, pkg.Packages, error) {
+func (l *AniseInstaller) computeUpgrade(syncedRepos Repositories, s *System) (pkg.Packages, pkg.Packages, error) {
 	toInstall := pkg.Packages{}
 	var uninstall pkg.Packages
 	var err error
@@ -262,7 +262,7 @@ func matchesToPkgsList(artefacts *map[string]ArtifactMatch) *pkg.Packages {
 	return &ans
 }
 
-func (l *LuetInstaller) AreThereNotCachedRepos() bool {
+func (l *AniseInstaller) AreThereNotCachedRepos() bool {
 	ans := false
 
 	for _, r := range l.PackageRepositories {
@@ -276,7 +276,7 @@ func (l *LuetInstaller) AreThereNotCachedRepos() bool {
 	return ans
 }
 
-func (l *LuetInstaller) GetRepositoriesInstances(inMemory bool) (Repositories, error) {
+func (l *AniseInstaller) GetRepositoriesInstances(inMemory bool) (Repositories, error) {
 	var repos Repositories
 	var err error
 
@@ -293,7 +293,7 @@ func (l *LuetInstaller) GetRepositoriesInstances(inMemory bool) (Repositories, e
 }
 
 // Upgrade upgrades a System based on the Installer options. Returns error in case of failure
-func (l *LuetInstaller) Upgrade(s *System) error {
+func (l *AniseInstaller) Upgrade(s *System) error {
 
 	repos, err := l.GetRepositoriesInstances(true)
 	if err != nil {
@@ -308,7 +308,7 @@ func (l *LuetInstaller) Upgrade(s *System) error {
 	return l.checkAndUpgrade(repos, s)
 }
 
-func (l *LuetInstaller) LoadRepositories(inMemory bool) (Repositories, error) {
+func (l *AniseInstaller) LoadRepositories(inMemory bool) (Repositories, error) {
 	repos := Repositories{}
 	for _, r := range l.PackageRepositories {
 		repo, err := r.Load("", "", "")
@@ -328,7 +328,7 @@ func (l *LuetInstaller) LoadRepositories(inMemory bool) (Repositories, error) {
 	return repos, nil
 }
 
-func (l *LuetInstaller) SyncRepositories(inMemory bool) (Repositories, error) {
+func (l *AniseInstaller) SyncRepositories(inMemory bool) (Repositories, error) {
 	Spinner(32)
 	defer SpinnerStop()
 	syncedRepos := Repositories{}
@@ -350,7 +350,7 @@ func (l *LuetInstaller) SyncRepositories(inMemory bool) (Repositories, error) {
 	return syncedRepos, nil
 }
 
-func (l *LuetInstaller) Swap(toRemove pkg.Packages, toInstall pkg.Packages, s *System) error {
+func (l *AniseInstaller) Swap(toRemove pkg.Packages, toInstall pkg.Packages, s *System) error {
 	repos, err := l.GetRepositoriesInstances(true)
 	if err != nil {
 		return err
@@ -378,7 +378,7 @@ func (l *LuetInstaller) Swap(toRemove pkg.Packages, toInstall pkg.Packages, s *S
 	return l.swap(o, repos, toRemoveFinal, toInstall, s)
 }
 
-func (l *LuetInstaller) computeSwap(o Option, syncedRepos Repositories, toRemove pkg.Packages, toInstall pkg.Packages, s *System) (map[string]ArtifactMatch, pkg.Packages, solver.PackagesAssertions, pkg.PackageDatabase, error) {
+func (l *AniseInstaller) computeSwap(o Option, syncedRepos Repositories, toRemove pkg.Packages, toInstall pkg.Packages, s *System) (map[string]ArtifactMatch, pkg.Packages, solver.PackagesAssertions, pkg.PackageDatabase, error) {
 
 	allRepos := pkg.NewInMemoryDatabase(false)
 	syncedRepos.SyncDatabase(allRepos)
@@ -414,7 +414,7 @@ func (l *LuetInstaller) computeSwap(o Option, syncedRepos Repositories, toRemove
 	return match, packages, assertions, allRepos, err
 }
 
-func (l *LuetInstaller) swap(o Option, syncedRepos Repositories, toRemove pkg.Packages, toInstall pkg.Packages, s *System) error {
+func (l *AniseInstaller) swap(o Option, syncedRepos Repositories, toRemove pkg.Packages, toInstall pkg.Packages, s *System) error {
 
 	match, packages, assertions, allRepos, err := l.computeSwap(o, syncedRepos, toRemove, toInstall, s)
 	if err != nil {
@@ -509,7 +509,7 @@ type installerOp struct {
 	Install   installOperation
 }
 
-func (l *LuetInstaller) runOps(ops []installerOp, s *System) error {
+func (l *AniseInstaller) runOps(ops []installerOp, s *System) error {
 	all := make(chan installerOp)
 
 	wg := new(sync.WaitGroup)
@@ -531,7 +531,7 @@ func (l *LuetInstaller) runOps(ops []installerOp, s *System) error {
 
 // TODO: use installerOpWorker in place of all the other workers.
 // This one is general enough to read a list of operations and execute them.
-func (l *LuetInstaller) installerOpWorker(i int, wg *sync.WaitGroup, c <-chan installerOp, s *System) error {
+func (l *AniseInstaller) installerOpWorker(i int, wg *sync.WaitGroup, c <-chan installerOp, s *System) error {
 	defer wg.Done()
 
 	for p := range c {
@@ -575,7 +575,7 @@ func (l *LuetInstaller) installerOpWorker(i int, wg *sync.WaitGroup, c <-chan in
 }
 
 // checks wheter we can uninstall and install in place and compose installer worker ops
-func (l *LuetInstaller) getOpsWithOptions(
+func (l *AniseInstaller) getOpsWithOptions(
 	toUninstall pkg.Packages, installMatch map[string]ArtifactMatch, installOpt, uninstallOpt Option,
 	syncedRepos Repositories, toInstall pkg.Packages, solution solver.PackagesAssertions,
 	allRepos pkg.PackageDatabase) ([]installerOp, []installerOp) {
@@ -630,7 +630,7 @@ func (l *LuetInstaller) getOpsWithOptions(
 	return uninstallOps, installOps
 }
 
-func (l *LuetInstaller) checkAndUpgrade(r Repositories, s *System) error {
+func (l *AniseInstaller) checkAndUpgrade(r Repositories, s *System) error {
 	Spinner(32)
 	start := time.Now()
 	uninstall, toInstall, err := l.computeUpgrade(r, s)
@@ -678,7 +678,7 @@ func (l *LuetInstaller) checkAndUpgrade(r Repositories, s *System) error {
 	return l.swap(o, r, uninstall, toInstall, s)
 }
 
-func (l *LuetInstaller) Install(cp pkg.Packages, s *System) error {
+func (l *AniseInstaller) Install(cp pkg.Packages, s *System) error {
 	repos, err := l.GetRepositoriesInstances(true)
 	if err != nil {
 		return err
@@ -751,7 +751,7 @@ func (l *LuetInstaller) Install(cp pkg.Packages, s *System) error {
 	return l.install(o, repos, match, packages, assertions, allRepos, s)
 }
 
-func (l *LuetInstaller) download(syncedRepos Repositories, toDownload map[string]ArtifactMatch) error {
+func (l *AniseInstaller) download(syncedRepos Repositories, toDownload map[string]ArtifactMatch) error {
 
 	// Download packages into cache in parallel.
 	all := make(chan ArtifactMatch)
@@ -759,7 +759,7 @@ func (l *LuetInstaller) download(syncedRepos Repositories, toDownload map[string
 	var wg = new(sync.WaitGroup)
 
 	// Download
-	for i := 0; i < config.LuetCfg.GetGeneral().ClientMultiFetch; i++ {
+	for i := 0; i < config.AniseCfg.GetGeneral().ClientMultiFetch; i++ {
 		wg.Add(1)
 		go l.downloadWorker(i, wg, all)
 	}
@@ -775,7 +775,7 @@ func (l *LuetInstaller) download(syncedRepos Repositories, toDownload map[string
 // Reclaim adds packages to the system database
 // if files from artifacts in the repositories are found
 // in the system target
-func (l *LuetInstaller) Reclaim(s *System) error {
+func (l *AniseInstaller) Reclaim(s *System) error {
 	repos, err := l.GetRepositoriesInstances(true)
 	if err != nil {
 		return err
@@ -823,7 +823,7 @@ func (l *LuetInstaller) Reclaim(s *System) error {
 	return nil
 }
 
-func (l *LuetInstaller) computeInstall(o Option, syncedRepos Repositories, cp pkg.Packages, s *System) (map[string]ArtifactMatch, pkg.Packages, solver.PackagesAssertions, pkg.PackageDatabase, error) {
+func (l *AniseInstaller) computeInstall(o Option, syncedRepos Repositories, cp pkg.Packages, s *System) (map[string]ArtifactMatch, pkg.Packages, solver.PackagesAssertions, pkg.PackageDatabase, error) {
 	var p pkg.Packages
 	toInstall := map[string]ArtifactMatch{}
 	allRepos := pkg.NewInMemoryDatabase(false)
@@ -921,7 +921,7 @@ func (l *LuetInstaller) computeInstall(o Option, syncedRepos Repositories, cp pk
 	return toInstall, p, solution, allRepos, nil
 }
 
-func (l *LuetInstaller) getFinalizers(allRepos pkg.PackageDatabase, solution solver.PackagesAssertions, toInstall map[string]ArtifactMatch, nodeps bool) ([]pkg.Package, error) {
+func (l *AniseInstaller) getFinalizers(allRepos pkg.PackageDatabase, solution solver.PackagesAssertions, toInstall map[string]ArtifactMatch, nodeps bool) ([]pkg.Package, error) {
 	var toFinalize []pkg.Package
 
 	if !nodeps {
@@ -974,7 +974,7 @@ func (l *LuetInstaller) getFinalizers(allRepos pkg.PackageDatabase, solution sol
 	return toFinalize, nil
 }
 
-func (l *LuetInstaller) checkFileconflicts(toInstall map[string]ArtifactMatch, checkSystem bool, s *System) error {
+func (l *AniseInstaller) checkFileconflicts(toInstall map[string]ArtifactMatch, checkSystem bool, s *System) error {
 	Info("Checking for file conflicts..")
 	defer s.Clean() // Release memory
 
@@ -1034,7 +1034,7 @@ func (l *LuetInstaller) checkFileconflicts(toInstall map[string]ArtifactMatch, c
 	return nil
 }
 
-func (l *LuetInstaller) install(o Option, syncedRepos Repositories, toInstall map[string]ArtifactMatch, p pkg.Packages, solution solver.PackagesAssertions, allRepos pkg.PackageDatabase, s *System) error {
+func (l *AniseInstaller) install(o Option, syncedRepos Repositories, toInstall map[string]ArtifactMatch, p pkg.Packages, solution solver.PackagesAssertions, allRepos pkg.PackageDatabase, s *System) error {
 
 	// Download packages in parallel first
 	if err := l.download(syncedRepos, toInstall); err != nil {
@@ -1100,7 +1100,7 @@ func (l *LuetInstaller) install(o Option, syncedRepos Repositories, toInstall ma
 	return s.ExecuteFinalizers(toFinalize)
 }
 
-func (l *LuetInstaller) downloadPackage(a ArtifactMatch) (*artifact.PackageArtifact, error) {
+func (l *AniseInstaller) downloadPackage(a ArtifactMatch) (*artifact.PackageArtifact, error) {
 
 	artifact, err := a.Repository.Client().DownloadArtifact(a.Artifact)
 	if err != nil {
@@ -1114,7 +1114,7 @@ func (l *LuetInstaller) downloadPackage(a ArtifactMatch) (*artifact.PackageArtif
 	return artifact, nil
 }
 
-func (l *LuetInstaller) installPackage(m ArtifactMatch, s *System) error {
+func (l *AniseInstaller) installPackage(m ArtifactMatch, s *System) error {
 
 	a, err := l.downloadPackage(m)
 	if err != nil && !l.Options.Force {
@@ -1137,7 +1137,7 @@ func (l *LuetInstaller) installPackage(m ArtifactMatch, s *System) error {
 	return s.Database.SetPackageFiles(&pkg.PackageFile{PackageFingerprint: m.Package.GetFingerPrint(), Files: files})
 }
 
-func (l *LuetInstaller) downloadWorker(i int, wg *sync.WaitGroup, c <-chan ArtifactMatch) error {
+func (l *AniseInstaller) downloadWorker(i int, wg *sync.WaitGroup, c <-chan ArtifactMatch) error {
 	defer wg.Done()
 
 	for p := range c {
@@ -1155,7 +1155,7 @@ func (l *LuetInstaller) downloadWorker(i int, wg *sync.WaitGroup, c <-chan Artif
 	return nil
 }
 
-func (l *LuetInstaller) installerWorker(i int, wg *sync.WaitGroup, c <-chan ArtifactMatch, s *System) error {
+func (l *AniseInstaller) installerWorker(i int, wg *sync.WaitGroup, c <-chan ArtifactMatch, s *System) error {
 	defer wg.Done()
 
 	for p := range c {
@@ -1176,7 +1176,7 @@ func (l *LuetInstaller) installerWorker(i int, wg *sync.WaitGroup, c <-chan Arti
 	return nil
 }
 
-func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
+func (l *AniseInstaller) uninstall(p pkg.Package, s *System) error {
 	var cp *config.ConfigProtect
 	annotationDir := ""
 
@@ -1185,7 +1185,7 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 		return errors.Wrap(err, "Failed getting installed files")
 	}
 
-	if !config.LuetCfg.ConfigProtectSkip {
+	if !config.AniseCfg.ConfigProtectSkip {
 
 		if p.HasAnnotation(string(pkg.ConfigProtectAnnnotation)) {
 			dir, ok := p.GetAnnotations()[string(pkg.ConfigProtectAnnnotation)].(string)
@@ -1209,15 +1209,15 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 	for _, f := range toRemove {
 		target := filepath.Join(s.Target, f)
 
-		if !config.LuetCfg.ConfigProtectSkip && cp.Protected(f) {
+		if !config.AniseCfg.ConfigProtectSkip && cp.Protected(f) {
 			Debug("Preserving protected file:", f)
 			continue
 		}
 
 		Debug("Removing", target)
 		if l.Options.PreserveSystemEssentialData &&
-			strings.HasPrefix(f, config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath()) ||
-			strings.HasPrefix(f, config.LuetCfg.GetSystem().GetSystemRepoDatabaseDirPath()) {
+			strings.HasPrefix(f, config.AniseCfg.GetSystem().GetSystemPkgsCacheDirPath()) ||
+			strings.HasPrefix(f, config.AniseCfg.GetSystem().GetSystemRepoDatabaseDirPath()) {
 			Warning("Preserve ", f,
 				" which is required by luet ( you have to delete it manually if you really need to)")
 			continue
@@ -1260,7 +1260,7 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 	for _, f := range notPresent {
 		target := filepath.Join(s.Target, f)
 
-		if !config.LuetCfg.ConfigProtectSkip && cp.Protected(f) {
+		if !config.AniseCfg.ConfigProtectSkip && cp.Protected(f) {
 			Debug("Preserving protected file:", f)
 			continue
 		}
@@ -1284,14 +1284,14 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 		target := filepath.Join(s.Target, f)
 
 		if l.Options.PreserveSystemEssentialData &&
-			strings.HasPrefix(f, config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath()) ||
-			strings.HasPrefix(f, config.LuetCfg.GetSystem().GetSystemRepoDatabaseDirPath()) {
+			strings.HasPrefix(f, config.AniseCfg.GetSystem().GetSystemPkgsCacheDirPath()) ||
+			strings.HasPrefix(f, config.AniseCfg.GetSystem().GetSystemRepoDatabaseDirPath()) {
 			Warning("Preserve ", f,
 				" which is required by luet ( you have to delete it manually if you really need to)")
 			continue
 		}
 
-		if !config.LuetCfg.ConfigProtectSkip && cp.Protected(f) {
+		if !config.AniseCfg.ConfigProtectSkip && cp.Protected(f) {
 			Debug("Preserving protected file:", f)
 			continue
 		}
@@ -1325,7 +1325,7 @@ func (l *LuetInstaller) uninstall(p pkg.Package, s *System) error {
 	return nil
 }
 
-func (l *LuetInstaller) computeUninstall(o Option, s *System, packs ...pkg.Package) (pkg.Packages, error) {
+func (l *AniseInstaller) computeUninstall(o Option, s *System, packs ...pkg.Package) (pkg.Packages, error) {
 
 	var toUninstall pkg.Packages
 	// compute uninstall from all world - remove packages in parallel - run uninstall finalizer (in order) TODO - mark the uninstallation in db
@@ -1376,7 +1376,7 @@ func (l *LuetInstaller) computeUninstall(o Option, s *System, packs ...pkg.Packa
 	return toUninstall, nil
 }
 
-func (l *LuetInstaller) generateUninstallFn(o Option, s *System, packs ...pkg.Package) (pkg.Packages, func() error, error) {
+func (l *AniseInstaller) generateUninstallFn(o Option, s *System, packs ...pkg.Package) (pkg.Packages, func() error, error) {
 	for _, p := range packs {
 		if packs, _ := s.Database.FindPackages(p); len(packs) == 0 {
 			return nil, nil, errors.New(fmt.Sprintf("Package %s not found in the system", p.HumanReadableString()))
@@ -1401,7 +1401,7 @@ func (l *LuetInstaller) generateUninstallFn(o Option, s *System, packs ...pkg.Pa
 	return toUninstall, uninstall, nil
 }
 
-func (l *LuetInstaller) Uninstall(s *System, packs ...pkg.Package) error {
+func (l *AniseInstaller) Uninstall(s *System, packs ...pkg.Package) error {
 
 	Spinner(32)
 	o := Option{
@@ -1433,4 +1433,4 @@ func (l *LuetInstaller) Uninstall(s *System, packs ...pkg.Package) error {
 	return uninstall()
 }
 
-func (l *LuetInstaller) Repositories(r []*LuetSystemRepository) { l.PackageRepositories = r }
+func (l *AniseInstaller) Repositories(r []*AniseSystemRepository) { l.PackageRepositories = r }

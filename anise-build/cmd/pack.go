@@ -20,20 +20,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newPackCommand(config *cfg.LuetConfig) *cobra.Command {
+func newPackCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var packCmd = &cobra.Command{
 		Use:   "pack <package name>",
 		Short: "pack a custom package",
 		Long: `Pack creates a package from a directory, generating the metadata required from a tree to generate a repository.
 
-	Pack can be used to manually replace what "luet build" does automatically by reading the packages build.yaml files.
+	Pack can be used to manually replace what "anise-build build" does automatically by reading the packages build.yaml files.
 
 		$ mkdir -p output/etc/foo
 		$ echo "my config" > output/etc/foo
-		$ luet pack foo/bar@1.1 --source output
+		$ anise-build pack foo/bar@1.1 --source output
 
-	Afterwards, you can use the content generated and associate it with a tree and a corresponding definition.yaml file with "luet create-repo".
+	Afterwards, you can use the content generated and associate it with a tree and a corresponding definition.yaml file with "anise-build create-repo".
 	`,
 
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -59,7 +59,7 @@ func newPackCommand(config *cfg.LuetConfig) *cobra.Command {
 				Fatal("Invalid package string ", packageName, ": ", err.Error())
 			}
 
-			spec := &compilerspec.LuetCompilationSpec{Package: p}
+			spec := &compilerspec.AniseCompilationSpec{Package: p}
 			a := artifact.NewPackageArtifact(filepath.Join(dst, p.GetFingerPrint()+".package.tar"))
 			a.CompressionType = compression.Implementation(compressionType)
 			err = a.Compress(sourcePath, concurrency)

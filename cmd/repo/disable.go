@@ -17,7 +17,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func NewRepoDisableCommand(config *cfg.LuetConfig) *cobra.Command {
+func NewRepoDisableCommand(config *cfg.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "disable <repo1> ... <repoN>",
 		Short: "Disable one or more repositories.",

@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewTreePkglistCommand(config *cfg.LuetConfig) *cobra.Command {
+func NewTreePkglistCommand(config *cfg.AniseConfig) *cobra.Command {
 	var excludes []string
 	var matches []string
 

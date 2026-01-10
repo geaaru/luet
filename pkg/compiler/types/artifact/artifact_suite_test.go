@@ -17,6 +17,6 @@ import (
 
 func TestArtifact(t *testing.T) {
 	RegisterFailHandler(Fail)
-	LoadConfig(config.LuetCfg)
+	LoadConfig(config.AniseCfg)
 	RunSpecs(t, "Artifact Suite")
 }

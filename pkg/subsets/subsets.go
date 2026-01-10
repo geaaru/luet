@@ -17,7 +17,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func LoadSubsetsConfig(c *LuetConfig) error {
+func LoadSubsetsConfig(c *AniseConfig) error {
 	var regexRepo = regexp.MustCompile(`.yml$|.yaml$`)
 	var err error
 	rootfs := ""
@@ -76,8 +76,8 @@ func LoadSubsetsConfig(c *LuetConfig) error {
 	return nil
 }
 
-func LoadSubsetsDef(data []byte) (*LuetSubsetsDefinition, error) {
-	ans := NewLuetSubsetsDefinition()
+func LoadSubsetsDef(data []byte) (*AniseSubsetsDefinition, error) {
+	ans := NewAniseSubsetsDefinition()
 	err := yaml.Unmarshal(data, &ans)
 	if err != nil {
 		return nil, err
@@ -86,13 +86,13 @@ func LoadSubsetsDef(data []byte) (*LuetSubsetsDefinition, error) {
 	return ans, nil
 }
 
-func LoadSubsetsDefintions(c *LuetConfig) error {
+func LoadSubsetsDefintions(c *AniseConfig) error {
 	var regexRepo = regexp.MustCompile(`.yml$|.yaml$`)
 	var err error
 	rootfs := ""
 
 	if c.SubsetsDefinitions == nil {
-		c.SubsetsDefinitions = NewLuetSubsetsDefinition()
+		c.SubsetsDefinitions = NewAniseSubsetsDefinition()
 	}
 
 	// Respect the rootfs param on read repositories
@@ -151,7 +151,7 @@ func LoadSubsetsDefintions(c *LuetConfig) error {
 	return nil
 }
 
-func mergeSubsetsDefinition(c *LuetConfig, s *LuetSubsetsDefinition) {
+func mergeSubsetsDefinition(c *AniseConfig, s *AniseSubsetsDefinition) {
 	for k, v := range s.Definitions {
 
 		if len(v.Packages) == 0 && len(v.Categories) == 0 {
@@ -170,8 +170,8 @@ func mergeSubsetsDefinition(c *LuetConfig, s *LuetSubsetsDefinition) {
 						c.SubsetsPkgsDefMap[p].Definitions[v.Name] = s.Definitions[k]
 					}
 				} else {
-					c.SubsetsPkgsDefMap[p] = &LuetSubsetsDefinition{
-						Definitions: make(map[string]*LuetSubsetDefinition, 0),
+					c.SubsetsPkgsDefMap[p] = &AniseSubsetsDefinition{
+						Definitions: make(map[string]*AniseSubsetDefinition, 0),
 					}
 					c.SubsetsPkgsDefMap[p].Definitions[v.Name] = s.Definitions[k]
 				}
@@ -190,8 +190,8 @@ func mergeSubsetsDefinition(c *LuetConfig, s *LuetSubsetsDefinition) {
 						c.SubsetsCatDefMap[cn].Definitions[v.Name] = s.Definitions[k]
 					}
 				} else {
-					c.SubsetsCatDefMap[cn] = &LuetSubsetsDefinition{
-						Definitions: make(map[string]*LuetSubsetDefinition, 0),
+					c.SubsetsCatDefMap[cn] = &AniseSubsetsDefinition{
+						Definitions: make(map[string]*AniseSubsetDefinition, 0),
 					}
 					c.SubsetsCatDefMap[cn].Definitions[v.Name] = s.Definitions[k]
 				}

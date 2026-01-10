@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newTreeCommand(config *cfg.LuetConfig) *cobra.Command {
+func newTreeCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var treeGroupCmd = &cobra.Command{
 		Use:   "tree [command] [OPTIONS]",

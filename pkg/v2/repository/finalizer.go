@@ -18,13 +18,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type LuetFinalizer struct {
+type AniseFinalizer struct {
 	Shell     []string `json:"shell,omitempty" yaml:"shell,omitempty"`
 	Install   []string `json:"install,omitempty" yaml:"install,omitempty"`
 	Uninstall []string `json:"uninstall,omitempty" yaml:"uninstall,omitempty"`
 }
 
-func (f *LuetFinalizer) getShell() (string, []string) {
+func (f *AniseFinalizer) getShell() (string, []string) {
 	var cmd string
 	var args []string
 	if len(f.Shell) == 0 {
@@ -41,7 +41,7 @@ func (f *LuetFinalizer) getShell() (string, []string) {
 	return cmd, args
 }
 
-func (f *LuetFinalizer) runCommand(cmd string, args, envs []string, script, targetRootfs string) error {
+func (f *AniseFinalizer) runCommand(cmd string, args, envs []string, script, targetRootfs string) error {
 	toRun := append(args, script)
 	Info(":shell: Executing finalizer on ", targetRootfs, cmd, toRun)
 	if targetRootfs == string(os.PathSeparator) {
@@ -54,7 +54,7 @@ func (f *LuetFinalizer) runCommand(cmd string, args, envs []string, script, targ
 		Info(string(stdoutStderr))
 	} else {
 		b := box.NewBox(cmd, toRun, []string{}, envs, targetRootfs,
-			false, true, true, LuetCfg,
+			false, true, true, AniseCfg,
 		)
 		err := b.Run()
 		if err != nil {
@@ -65,19 +65,19 @@ func (f *LuetFinalizer) runCommand(cmd string, args, envs []string, script, targ
 	return nil
 }
 
-func (f *LuetFinalizer) RunInstall(targetRootfs string) error {
+func (f *AniseFinalizer) RunInstall(targetRootfs string) error {
 	cmd, args := f.getShell()
 
-	envs := LuetCfg.GetFinalizerEnvs()
+	envs := AniseCfg.GetFinalizerEnvs()
 	// Add LUET_VERSION env so finalizer are able to know
 	// what is the luet version and that the script is running
 	// inside the luet command.
-	envs = append(envs, fmt.Sprintf("LUET_VERSION=%s", LuetVersion))
+	envs = append(envs, fmt.Sprintf("LUET_VERSION=%s", AniseVersion))
 
 	// Add environment variable with the list of the subsets enabled
 	envs = append(envs,
 		fmt.Sprintf("ANISE_SUBSETS=%s",
-			strings.Join(LuetCfg.Subsets.Enabled, " ")))
+			strings.Join(AniseCfg.Subsets.Enabled, " ")))
 
 	for _, c := range f.Install {
 		err := f.runCommand(cmd, args, envs, c, targetRootfs)
@@ -88,19 +88,19 @@ func (f *LuetFinalizer) RunInstall(targetRootfs string) error {
 	return nil
 }
 
-func (f *LuetFinalizer) RunUninstall(targetRootfs string) error {
+func (f *AniseFinalizer) RunUninstall(targetRootfs string) error {
 	cmd, args := f.getShell()
 
-	envs := LuetCfg.GetFinalizerEnvs()
+	envs := AniseCfg.GetFinalizerEnvs()
 	// Add LUET_VERSION env so finalizer are able to know
 	// what is the luet version and that the script is running
 	// inside the luet command.
-	envs = append(envs, fmt.Sprintf("LUET_VERSION=%s", LuetVersion))
+	envs = append(envs, fmt.Sprintf("LUET_VERSION=%s", AniseVersion))
 
 	// Add environment variable with the list of the subsets enabled
 	envs = append(envs,
 		fmt.Sprintf("ANISE_SUBSETS=%s",
-			strings.Join(LuetCfg.Subsets.Enabled, " ")))
+			strings.Join(AniseCfg.Subsets.Enabled, " ")))
 
 	for _, c := range f.Uninstall {
 		err := f.runCommand(cmd, args, envs, c, targetRootfs)
@@ -111,8 +111,8 @@ func (f *LuetFinalizer) RunUninstall(targetRootfs string) error {
 	return nil
 }
 
-func NewLuetFinalizerFromYaml(data []byte) (*LuetFinalizer, error) {
-	var p LuetFinalizer
+func NewAniseFinalizerFromYaml(data []byte) (*AniseFinalizer, error) {
+	var p AniseFinalizer
 	err := yaml.Unmarshal(data, &p)
 	if err != nil {
 		return &p, err

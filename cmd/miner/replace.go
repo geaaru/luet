@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewReplacePackage(config *cfg.LuetConfig) *cobra.Command {
+func NewReplacePackage(config *cfg.AniseConfig) *cobra.Command {
 	var forArgs []string
 
 	var ans = &cobra.Command{
@@ -51,7 +51,7 @@ func NewReplacePackage(config *cfg.LuetConfig) *cobra.Command {
 			ignoreMasks, _ := cmd.Flags().GetBool("ignore-masks")
 
 			InfoC(fmt.Sprintf(":rocket:%s %s",
-				Bold(Blue("Luet")), Bold(Blue(util.Version()))))
+				Bold(Blue("Anise")), Bold(Blue(util.Version()))))
 
 			// Parse package to replace
 			for _, pstr := range args {

@@ -28,7 +28,7 @@ import (
 )
 
 type ArtifactsManager struct {
-	Config   *cfg.LuetConfig
+	Config   *cfg.AniseConfig
 	Database pkg.PackageDatabase
 
 	sync.Mutex
@@ -40,7 +40,7 @@ type ArtifactsManager struct {
 	fileIndex map[string]*pkg.DefaultPackage
 }
 
-func NewArtifactsManager(config *cfg.LuetConfig) *ArtifactsManager {
+func NewArtifactsManager(config *cfg.AniseConfig) *ArtifactsManager {
 	return &ArtifactsManager{
 		Config:    config,
 		Database:  nil,
@@ -80,7 +80,7 @@ func (m *ArtifactsManager) DownloadPackage(p *artifact.PackageArtifact, r *repos
 	return nil
 }
 
-func (m *ArtifactsManager) loadFinalizer(f, defFile string, p *pkg.DefaultPackage) (*repos.LuetFinalizer, error) {
+func (m *ArtifactsManager) loadFinalizer(f, defFile string, p *pkg.DefaultPackage) (*repos.AniseFinalizer, error) {
 
 	out, err := helpers.RenderFiles(
 		helpers.ChartFile(f),
@@ -92,7 +92,7 @@ func (m *ArtifactsManager) loadFinalizer(f, defFile string, p *pkg.DefaultPackag
 		return nil, err
 	}
 
-	finalizer, err := repos.NewLuetFinalizerFromYaml([]byte(out))
+	finalizer, err := repos.NewAniseFinalizerFromYaml([]byte(out))
 	if err != nil {
 		Warning("Failed reading finalizer for ",
 			p.HumanReadableString(), err.Error())
@@ -310,7 +310,7 @@ func (m *ArtifactsManager) RemovePackage(s *repos.Stone,
 		if pf != nil {
 
 			// TODO: check if return the object insted of run uninstall
-			finalizer := &repos.LuetFinalizer{
+			finalizer := &repos.AniseFinalizer{
 				Shell:     pf.Shell,
 				Uninstall: pf.Uninstall,
 			}

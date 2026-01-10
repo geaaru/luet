@@ -16,10 +16,10 @@ import (
 )
 
 type LocalClient struct {
-	Repository *config.LuetRepository
+	Repository *config.AniseRepository
 }
 
-func NewLocalClient(r *config.LuetRepository) *LocalClient {
+func NewLocalClient(r *config.AniseRepository) *LocalClient {
 	return &LocalClient{Repository: r}
 }
 
@@ -28,10 +28,10 @@ func (c *LocalClient) DownloadArtifact(a *artifact.PackageArtifact, msg string) 
 
 	rootfs := ""
 	artifactName := path.Base(a.Path)
-	cacheFile := filepath.Join(config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath(), artifactName)
+	cacheFile := filepath.Join(config.AniseCfg.GetSystem().GetSystemPkgsCacheDirPath(), artifactName)
 
-	if !config.LuetCfg.ConfigFromHost {
-		rootfs, err = config.LuetCfg.GetSystem().GetRootFsAbs()
+	if !config.AniseCfg.ConfigFromHost {
+		rootfs, err = config.AniseCfg.GetSystem().GetRootFsAbs()
 		if err != nil {
 			return err
 		}
@@ -72,8 +72,8 @@ func (c *LocalClient) DownloadFile(name string) (string, error) {
 
 	rootfs := ""
 
-	if !config.LuetCfg.ConfigFromHost {
-		rootfs, err = config.LuetCfg.GetSystem().GetRootFsAbs()
+	if !config.AniseCfg.ConfigFromHost {
+		rootfs, err = config.AniseCfg.GetSystem().GetRootFsAbs()
 		if err != nil {
 			return "", err
 		}
@@ -85,7 +85,7 @@ func (c *LocalClient) DownloadFile(name string) (string, error) {
 		uri = filepath.Join(rootfs, uri)
 
 		Debug("Downloading file", name, "from", uri)
-		file, err = config.LuetCfg.GetSystem().TempFile("localclient")
+		file, err = config.AniseCfg.GetSystem().TempFile("localclient")
 		if err != nil {
 			continue
 		}

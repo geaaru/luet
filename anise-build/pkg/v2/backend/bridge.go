@@ -11,19 +11,19 @@ import (
 )
 
 type BackendBridge struct {
-	Config *cfg.LuetConfig
+	Config *cfg.AniseConfig
 
 	Opts *options.Compiler
 }
 
-func NewBackendBridge(c *cfg.LuetConfig, opts *options.Compiler) *BackendBridge {
+func NewBackendBridge(c *cfg.AniseConfig, opts *options.Compiler) *BackendBridge {
 	return &BackendBridge{
 		Config: c,
 		Opts:   opts,
 	}
 }
 
-func (bb *BackendBridge) GetConfig() *cfg.LuetConfig    { return bb.Config }
+func (bb *BackendBridge) GetConfig() *cfg.AniseConfig   { return bb.Config }
 func (bb *BackendBridge) GetOptions() *options.Compiler { return bb.Opts }
 
 func (bb *BackendBridge) BuildArtifact(dst string,

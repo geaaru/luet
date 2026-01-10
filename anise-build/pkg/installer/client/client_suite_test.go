@@ -17,10 +17,10 @@ import (
 
 func TestClient(t *testing.T) {
 	RegisterFailHandler(Fail)
-	LoadConfig(config.LuetCfg)
+	LoadConfig(config.AniseCfg)
 	// Set temporary directory for rootfs
-	config.LuetCfg.GetSystem().Rootfs = "/tmp/luet-root"
+	config.AniseCfg.GetSystem().Rootfs = "/tmp/anise-root"
 	// Force dynamic path for packages cache
-	config.LuetCfg.GetSystem().PkgsCachePath = ""
+	config.AniseCfg.GetSystem().PkgsCachePath = ""
 	RunSpecs(t, "Client Suite")
 }

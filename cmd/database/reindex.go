@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewDatabaseReindexCommand(cfg *config.LuetConfig) *cobra.Command {
+func NewDatabaseReindexCommand(cfg *config.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "reindex",
 		Short: "Reindex local database",

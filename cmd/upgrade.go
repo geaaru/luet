@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
+func newUpgradeCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var upgradeCmd = &cobra.Command{
 		Use:     "upgrade",
@@ -35,7 +35,7 @@ func newUpgradeCommand(config *cfg.LuetConfig) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			InfoC(fmt.Sprintf(":rocket:%s %s",
-				Bold(Blue("Luet")), Bold(Blue(util.Version()))))
+				Bold(Blue("Anise")), Bold(Blue(util.Version()))))
 
 			force := config.Viper.GetBool("force")
 			nodeps := config.Viper.GetBool("nodeps")

@@ -19,7 +19,7 @@ import (
 
 var _ = Describe("ImageHashTree", func() {
 	generalRecipe := tree.NewCompilerRecipe(pkg.NewInMemoryDatabase(false))
-	compiler := NewLuetCompiler(
+	compiler := NewAniseCompiler(
 		sd.NewSimpleDockerBackend(),
 		generalRecipe.GetDatabase(),
 		options.Concurrency(2),
@@ -30,7 +30,7 @@ var _ = Describe("ImageHashTree", func() {
 			generalRecipe = tree.NewCompilerRecipe(pkg.NewInMemoryDatabase(false))
 			err := generalRecipe.Load("../../tests/fixtures/buildable")
 			Expect(err).ToNot(HaveOccurred())
-			compiler = NewLuetCompiler(
+			compiler = NewAniseCompiler(
 				sd.NewSimpleDockerBackend(),
 				generalRecipe.GetDatabase(),
 				options.Concurrency(2),
@@ -72,7 +72,7 @@ var _ = Describe("ImageHashTree", func() {
 
 			err := generalRecipe.Load("../../tests/fixtures/upgrade_old_repo_revision")
 			Expect(err).ToNot(HaveOccurred())
-			compiler = NewLuetCompiler(sd.NewSimpleDockerBackend(), generalRecipe.GetDatabase(), options.Concurrency(2))
+			compiler = NewAniseCompiler(sd.NewSimpleDockerBackend(), generalRecipe.GetDatabase(), options.Concurrency(2))
 			hashtree = NewHashTree(generalRecipe.GetDatabase())
 
 		})
@@ -124,7 +124,7 @@ var _ = Describe("ImageHashTree", func() {
 			//Definition of A here is slightly changed in the steps build.yaml file (1 character only)
 			err := generalRecipe.Load("../../tests/fixtures/upgrade_old_repo_revision_content_changed")
 			Expect(err).ToNot(HaveOccurred())
-			compiler = NewLuetCompiler(sd.NewSimpleDockerBackend(), generalRecipe.GetDatabase(), options.Concurrency(2))
+			compiler = NewAniseCompiler(sd.NewSimpleDockerBackend(), generalRecipe.GetDatabase(), options.Concurrency(2))
 			hashtree = NewHashTree(generalRecipe.GetDatabase())
 
 		})

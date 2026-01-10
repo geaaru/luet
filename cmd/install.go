@@ -21,7 +21,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newInstallCommand(config *cfg.LuetConfig) *cobra.Command {
+func newInstallCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var ans = &cobra.Command{
 		Use:   "install <pkg1> <pkg2> ...",
@@ -55,7 +55,7 @@ To force install a package:
 			var toInstall pkg.DefaultPackages
 
 			InfoC(fmt.Sprintf(":rocket:%s %s",
-				Bold(Blue("Luet")), Bold(Blue(util.Version()))))
+				Bold(Blue("Anise")), Bold(Blue(util.Version()))))
 
 			force := config.Viper.GetBool("force")
 			nodeps := config.Viper.GetBool("nodeps")

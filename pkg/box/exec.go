@@ -36,7 +36,7 @@ type DefaultBox struct {
 
 func NewBox(cmd string, args, hostmounts, env []string,
 	rootfs string, stdin, stdout, stderr bool,
-	cfg *config.LuetConfig) Box {
+	cfg *config.AniseConfig) Box {
 	if cfg.GetBox().Backend == "fchroot" {
 		return NewFchrootBox(cmd, args, hostmounts, env,
 			rootfs, stdin, stdout, stderr, cfg)

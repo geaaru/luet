@@ -22,7 +22,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func newSearchCommand(config *cfg.LuetConfig) *cobra.Command {
+func newSearchCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var labels []string
 	var regLabels []string

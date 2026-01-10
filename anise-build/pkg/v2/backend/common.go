@@ -14,7 +14,7 @@ import (
 
 func runCommand(cmd *exec.Cmd) error {
 	output := ""
-	buffered := !config.LuetCfg.GetGeneral().ShowBuildOutput
+	buffered := !config.AniseCfg.GetGeneral().ShowBuildOutput
 	writer := NewBackendWriter(buffered)
 
 	cmd.Stdout = writer

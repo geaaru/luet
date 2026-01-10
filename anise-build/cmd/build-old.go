@@ -49,7 +49,7 @@ func (r PackageResult) String() string {
 	return fmt.Sprintf("%s/%s-%s required for %s", r.Category, r.Name, r.Version, r.Target)
 }
 
-func newBuildOldCommand(config *cfg.LuetConfig) *cobra.Command {
+func newBuildOldCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var buildCmd = &cobra.Command{
 		Use:   "build-old <package name> <package name> <package name> ...",
@@ -134,7 +134,7 @@ func newBuildOldCommand(config *cfg.LuetConfig) *cobra.Command {
 			pretend, _ := cmd.Flags().GetBool("pretend")
 			fromRepo, _ := cmd.Flags().GetBool("from-repositories")
 
-			compilerSpecs := compilerspec.NewLuetCompilationspecs()
+			compilerSpecs := compilerspec.NewAniseCompilationspecs()
 			var db pkg.PackageDatabase
 
 			compilerBackend, err := compiler.NewBackend(backendType)
@@ -165,7 +165,7 @@ func newBuildOldCommand(config *cfg.LuetConfig) *cobra.Command {
 
 			Debug("Solver", opts.CompactString())
 
-			luetCompiler := compiler.NewLuetCompiler(compilerBackend,
+			luetCompiler := compiler.NewAniseCompiler(compilerBackend,
 				generalRecipe.GetDatabase(),
 				options.NoDeps(nodeps),
 				options.WithBackendType(backendType),
@@ -230,7 +230,7 @@ func newBuildOldCommand(config *cfg.LuetConfig) *cobra.Command {
 				artifact, errs = luetCompiler.CompileWithReverseDeps(privileged, compilerSpecs)
 
 			} else if pretend {
-				toCalculate := []*compilerspec.LuetCompilationSpec{}
+				toCalculate := []*compilerspec.AniseCompilationSpec{}
 				if full {
 					var err error
 					toCalculate, err = luetCompiler.ComputeMinimumCompilableSet(compilerSpecs.All()...)

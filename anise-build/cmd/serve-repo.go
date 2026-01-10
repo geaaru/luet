@@ -15,7 +15,7 @@ import (
 )
 
 type HandlerHttpLogger struct {
-	Config  *cfg.LuetConfig
+	Config  *cfg.AniseConfig
 	Handler http.Handler
 }
 
@@ -24,7 +24,7 @@ func (h *HandlerHttpLogger) ServeHTTP(resp http.ResponseWriter, req *http.Reques
 	h.Handler.ServeHTTP(resp, req)
 }
 
-func newServerRepoCommand(config *cfg.LuetConfig) *cobra.Command {
+func newServerRepoCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var serverepoCmd = &cobra.Command{
 		Use:   "serve-repo",

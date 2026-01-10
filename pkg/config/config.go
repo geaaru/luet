@@ -22,9 +22,9 @@ import (
 )
 
 const (
-	LuetVersion     = "0.41.1"
-	LuetEnvPrefix   = "LUET"
-	LuetForkVersion = "geaaru"
+	AniseVersion     = "0.41.1"
+	AniseEnvPrefix   = "ANISE"
+	AniseForkVersion = ""
 )
 
 var (
@@ -33,9 +33,9 @@ var (
 	BuildGoVersion string
 )
 
-var LuetCfg *LuetConfig = NewLuetConfig(nil)
+var AniseCfg *AniseConfig = NewAniseConfig(nil)
 
-type LuetLoggingConfig struct {
+type AniseLoggingConfig struct {
 	// Path of the logfile
 	Path string `yaml:"path,omitempty" json:"path,omitempty" mapstructure:"path"`
 	// Enable/Disable logging to file
@@ -54,7 +54,7 @@ type LuetLoggingConfig struct {
 	Color bool `yaml:"color,omitempty" json:"color,omitempty" mapstructure:"color"`
 }
 
-type LuetGeneralConfig struct {
+type AniseGeneralConfig struct {
 	SameOwner       bool `yaml:"same_owner,omitempty" json:"same_owner,omitempty" mapstructure:"same_owner"`
 	Concurrency     int  `yaml:"concurrency,omitempty" json:"concurrency,omitempty" mapstructure:"concurrency"`
 	Debug           bool `yaml:"debug,omitempty" json:"debug,omitempty" mapstructure:"debug"`
@@ -70,13 +70,13 @@ type LuetGeneralConfig struct {
 	OverwriteDirPerms bool `yaml:"overwrite_dir_perms,omitempty" json:"overwrite_dir_perms,omitempty" mapstructure:"overwrite_dir_perms,omitempty"`
 }
 
-type LuetBoxConfig struct {
+type AniseBoxConfig struct {
 	// Box Backend (possible values: pivot, fchroot)
 	Backend     string       `yaml:"backend,omitempty" json:"backend,omitempty" mapstructure:"backend,omitempty"`
 	FchrootOpts *FchrootOpts `yaml:"fchroot_opts,omitempty" json:"fchroot_opts,omitempty" mapstructure:"fchroot_opts,omitempty"`
 }
 
-type LuetSolverOptions struct {
+type AniseSolverOptions struct {
 	Type           string  `yaml:"type,omitempty" json:"type,omitempty" mapstructure:"type"`
 	LearnRate      float32 `yaml:"rate,omitempty" json:"rate,omitempty" mapstructure:"rate"`
 	Discount       float32 `yaml:"discount,omitempty" json:"discount,omitempty" mapstructure:"discount"`
@@ -84,13 +84,13 @@ type LuetSolverOptions struct {
 	Implementation string  `yaml:"implementation,omitempty" json:"implementation,omitempty" mapstructure:"implementation"`
 }
 
-func (opts *LuetSolverOptions) CompactString() string {
+func (opts *AniseSolverOptions) CompactString() string {
 	return fmt.Sprintf(
 		"rate: %f, discount: %f, attempts: %d, initialobserved: %d, implementation: %s",
 		opts.LearnRate, opts.Discount, opts.MaxAttempts, 999999, opts.Implementation)
 }
 
-type LuetSystemConfig struct {
+type AniseSystemConfig struct {
 	DatabaseEngine string `yaml:"database_engine" json:"database_engine,omitempty" mapstructure:"database_engine"`
 	DatabasePath   string `yaml:"database_path" json:"database_path" mapstructure:"database_path"`
 	Rootfs         string `yaml:"rootfs" json:"rootfs" mapstructure:"rootfs"`
@@ -98,7 +98,7 @@ type LuetSystemConfig struct {
 	TmpDirBase     string `yaml:"tmpdir_base" json:"tmpdir_base" mapstructure:"tmpdir_base"`
 }
 
-func (s *LuetSystemConfig) SetRootFS(path string) error {
+func (s *AniseSystemConfig) SetRootFS(path string) error {
 	p, err := fileHelper.Rel2Abs(path)
 	if err != nil {
 		return err
@@ -108,7 +108,7 @@ func (s *LuetSystemConfig) SetRootFS(path string) error {
 	return nil
 }
 
-func (sc *LuetSystemConfig) GetRepoDatabaseDirPath(name string) string {
+func (sc *AniseSystemConfig) GetRepoDatabaseDirPath(name string) string {
 	dbpath := filepath.Join(sc.Rootfs, sc.DatabasePath)
 	dbpath = filepath.Join(dbpath, "repos/"+name)
 	err := os.MkdirAll(dbpath, os.ModePerm)
@@ -118,13 +118,13 @@ func (sc *LuetSystemConfig) GetRepoDatabaseDirPath(name string) string {
 	return dbpath
 }
 
-func (c *LuetConfig) GetLockFilePath(lockfile string) string {
+func (c *AniseConfig) GetLockFilePath(lockfile string) string {
 	// NOTE: Also when config_from_host is true I prefer
 	//       using the rootfs directory for locks.
 	return filepath.Join(c.System.Rootfs, "/var/lock/", lockfile)
 }
 
-func (sc *LuetSystemConfig) GetSystemRepoDatabaseDirPath() string {
+func (sc *AniseSystemConfig) GetSystemRepoDatabaseDirPath() string {
 	dbpath := filepath.Join(sc.Rootfs, sc.DatabasePath)
 	err := os.MkdirAll(dbpath, os.ModePerm)
 	if err != nil {
@@ -133,12 +133,12 @@ func (sc *LuetSystemConfig) GetSystemRepoDatabaseDirPath() string {
 	return dbpath
 }
 
-func (sc *LuetSystemConfig) GetSystemReposDirPath() string {
+func (sc *AniseSystemConfig) GetSystemReposDirPath() string {
 	ans := filepath.Join(sc.Rootfs, sc.DatabasePath, "repos")
 	return ans
 }
 
-func (sc *LuetSystemConfig) GetSystemPkgsCacheDirPath() (ans string) {
+func (sc *AniseSystemConfig) GetSystemPkgsCacheDirPath() (ans string) {
 	var cachepath string
 	if sc.PkgsCachePath != "" {
 		cachepath = sc.PkgsCachePath
@@ -156,11 +156,11 @@ func (sc *LuetSystemConfig) GetSystemPkgsCacheDirPath() (ans string) {
 	return
 }
 
-func (sc *LuetSystemConfig) GetRootFsAbs() (string, error) {
+func (sc *AniseSystemConfig) GetRootFsAbs() (string, error) {
 	return filepath.Abs(sc.Rootfs)
 }
 
-type LuetRepository struct {
+type AniseRepository struct {
 	Name           string            `json:"name" yaml:"name" mapstructure:"name"`
 	Description    string            `json:"description,omitempty" yaml:"description,omitempty" mapstructure:"description"`
 	Urls           []string          `json:"urls" yaml:"urls" mapstructure:"urls"`
@@ -184,8 +184,8 @@ type LuetRepository struct {
 	File string `json:"-" yaml:"-" mapstructure:"-"`
 }
 
-func NewLuetRepository(name, t, descr string, urls []string, priority int, enable, cached bool) *LuetRepository {
-	return &LuetRepository{
+func NewAniseRepository(name, t, descr string, urls []string, priority int, enable, cached bool) *AniseRepository {
+	return &AniseRepository{
 		Name:        name,
 		Description: descr,
 		Urls:        urls,
@@ -201,8 +201,8 @@ func NewLuetRepository(name, t, descr string, urls []string, priority int, enabl
 	}
 }
 
-func NewEmptyLuetRepository() *LuetRepository {
-	return &LuetRepository{
+func NewEmptyAniseRepository() *AniseRepository {
+	return &AniseRepository{
 		Name:           "",
 		Description:    "",
 		Urls:           []string{},
@@ -216,8 +216,8 @@ func NewEmptyLuetRepository() *LuetRepository {
 	}
 }
 
-func (r *LuetRepository) Clone() *LuetRepository {
-	ans := NewLuetRepository(r.Name, r.Type, r.Description, r.Urls, r.Priority, r.Enable, r.Cached)
+func (r *AniseRepository) Clone() *AniseRepository {
+	ans := NewAniseRepository(r.Name, r.Type, r.Description, r.Urls, r.Priority, r.Enable, r.Cached)
 	ans.Verify = r.Verify
 	ans.Revision = r.Revision
 	ans.LastUpdate = r.LastUpdate
@@ -226,68 +226,68 @@ func (r *LuetRepository) Clone() *LuetRepository {
 	return ans
 }
 
-func (r *LuetRepository) String() string {
+func (r *AniseRepository) String() string {
 	return fmt.Sprintf("[%s] prio: %d, type: %s, enable: %t, cached: %t",
 		r.Name, r.Priority, r.Type, r.Enable, r.Cached)
 }
 
-func (r *LuetRepository) YAML() ([]byte, error) {
+func (r *AniseRepository) YAML() ([]byte, error) {
 	return yaml.Marshal(r)
 }
 
-type LuetKV struct {
+type AniseKV struct {
 	Key   string `json:"key" yaml:"key" mapstructure:"key"`
 	Value string `json:"value" yaml:"value" mapstructure:"value"`
 }
 
-type LuetConfig struct {
+type AniseConfig struct {
 	Viper *v.Viper `yaml:"-"`
 
-	Logging  LuetLoggingConfig  `yaml:"logging,omitempty" mapstructure:"logging"`
-	General  LuetGeneralConfig  `yaml:"general,omitempty" mapstructure:"general"`
-	System   LuetSystemConfig   `yaml:"system" mapstructure:"system"`
-	Solver   LuetSolverOptions  `yaml:"solver,omitempty" mapstructure:"solver"`
-	TarFlows LuetTarflowsConfig `yaml:"tar_flows,omitempty" mapstructure:"tar_flows,omitempty"`
-	Box      LuetBoxConfig      `yaml:"box,omitempty" mapstructure:"box,omitempty"`
+	Logging  AniseLoggingConfig  `yaml:"logging,omitempty" mapstructure:"logging"`
+	General  AniseGeneralConfig  `yaml:"general,omitempty" mapstructure:"general"`
+	System   AniseSystemConfig   `yaml:"system" mapstructure:"system"`
+	Solver   AniseSolverOptions  `yaml:"solver,omitempty" mapstructure:"solver"`
+	TarFlows AniseTarflowsConfig `yaml:"tar_flows,omitempty" mapstructure:"tar_flows,omitempty"`
+	Box      AniseBoxConfig      `yaml:"box,omitempty" mapstructure:"box,omitempty"`
 
-	RepositoriesConfDir  []string         `yaml:"repos_confdir,omitempty" mapstructure:"repos_confdir"`
-	ConfigProtectConfDir []string         `yaml:"config_protect_confdir,omitempty" mapstructure:"config_protect_confdir"`
-	PackagesMaskDir      []string         `yaml:"packages_maskdir,omitempty" mapstructure:"packages_maskdir,omitempty"`
-	ConfigProtectSkip    bool             `yaml:"config_protect_skip,omitempty" mapstructure:"config_protect_skip"`
-	ConfigFromHost       bool             `yaml:"config_from_host,omitempty" mapstructure:"config_from_host"`
-	CacheRepositories    []LuetRepository `yaml:"repetitors,omitempty" mapstructure:"repetitors"`
-	SystemRepositories   []LuetRepository `yaml:"repositories,omitempty" mapstructure:"repositories"`
+	RepositoriesConfDir  []string          `yaml:"repos_confdir,omitempty" mapstructure:"repos_confdir"`
+	ConfigProtectConfDir []string          `yaml:"config_protect_confdir,omitempty" mapstructure:"config_protect_confdir"`
+	PackagesMaskDir      []string          `yaml:"packages_maskdir,omitempty" mapstructure:"packages_maskdir,omitempty"`
+	ConfigProtectSkip    bool              `yaml:"config_protect_skip,omitempty" mapstructure:"config_protect_skip"`
+	ConfigFromHost       bool              `yaml:"config_from_host,omitempty" mapstructure:"config_from_host"`
+	CacheRepositories    []AniseRepository `yaml:"repetitors,omitempty" mapstructure:"repetitors"`
+	SystemRepositories   []AniseRepository `yaml:"repositories,omitempty" mapstructure:"repositories"`
 
-	FinalizerEnvs []LuetKV `json:"finalizer_envs,omitempty" yaml:"finalizer_envs,omitempty" mapstructure:"finalizer_envs,omitempty"`
+	FinalizerEnvs []AniseKV `json:"finalizer_envs,omitempty" yaml:"finalizer_envs,omitempty" mapstructure:"finalizer_envs,omitempty"`
 
 	ConfigProtectConfFiles []ConfigProtectConfFile `yaml:"-" mapstructure:"-"`
 
 	// Subsets config directories for users override.
-	SubsetsConfDir []string          `yaml:"subsets_confdir,omitempty" mapstructure:"subsets_confdir"`
-	SubsetsDefDir  []string          `yaml:"subsets_defdir,omitempty" mapstructure:"subsets_defdir"`
-	Subsets        LuetSubsetsConfig `yaml:"subsets,omitempty" mapstructure:"subsets"`
+	SubsetsConfDir []string           `yaml:"subsets_confdir,omitempty" mapstructure:"subsets_confdir"`
+	SubsetsDefDir  []string           `yaml:"subsets_defdir,omitempty" mapstructure:"subsets_defdir"`
+	Subsets        AniseSubsetsConfig `yaml:"subsets,omitempty" mapstructure:"subsets"`
 
-	SubsetsDefinitions *LuetSubsetsDefinition            `yaml:"-" mapstructure:"-"`
-	SubsetsPkgsDefMap  map[string]*LuetSubsetsDefinition `yaml:"-" mapstructure:"-"`
-	SubsetsCatDefMap   map[string]*LuetSubsetsDefinition `yaml:"-" mapstructure:"-"`
+	SubsetsDefinitions *AniseSubsetsDefinition            `yaml:"-" mapstructure:"-"`
+	SubsetsPkgsDefMap  map[string]*AniseSubsetsDefinition `yaml:"-" mapstructure:"-"`
+	SubsetsCatDefMap   map[string]*AniseSubsetsDefinition `yaml:"-" mapstructure:"-"`
 }
 
-type LuetTarflowsConfig struct {
+type AniseTarflowsConfig struct {
 	CopyBufferSize int   `yaml:"copy_buffer_size,omitempty" mapstructure:"copy_buffer_size,omitempty"`
 	MaxOpenFiles   int64 `yaml:"max_openfiles,omitempty" mapstructure:"max_openfiles,omitempty"`
 	Mutex4Dirs     bool  `yaml:"mutex4dir,omitempty" mapstructure:"mutex4dir,omitempty"`
 	Validate       bool  `yaml:"validate,omitempty" mapstructure:"validate,omitempty"`
 }
 
-type LuetSubsetsConfig struct {
+type AniseSubsetsConfig struct {
 	Enabled []string `yaml:"enabled,omitempty" mapstructure:"enabled"`
 }
 
-type LuetSubsetsDefinition struct {
-	Definitions map[string]*LuetSubsetDefinition `yaml:"subsets_def,omitempty" mapstructure:"subsets_def,omitempty" json:"subsets_def,omitempty"`
+type AniseSubsetsDefinition struct {
+	Definitions map[string]*AniseSubsetDefinition `yaml:"subsets_def,omitempty" mapstructure:"subsets_def,omitempty" json:"subsets_def,omitempty"`
 }
 
-type LuetSubsetDefinition struct {
+type AniseSubsetDefinition struct {
 	Description string   `yaml:"descr,omitempty" mapstructure:"descr"`
 	Name        string   `yaml:"name,omitempty" mapstructure:"name"`
 	Rules       []string `yaml:"rules,omitempty" mapstructure:"rules"`
@@ -296,18 +296,18 @@ type LuetSubsetDefinition struct {
 	Categories []string `yaml:"categories,omitempty" mapstructure:"categories"`
 }
 
-func NewLuetConfig(viper *v.Viper) *LuetConfig {
+func NewAniseConfig(viper *v.Viper) *AniseConfig {
 	if viper == nil {
 		viper = v.New()
 	}
 
 	GenDefault(viper)
-	return &LuetConfig{
+	return &AniseConfig{
 		Viper:                  viper,
 		ConfigProtectConfFiles: nil,
 		SubsetsDefinitions:     nil,
-		SubsetsCatDefMap:       make(map[string]*LuetSubsetsDefinition, 0),
-		SubsetsPkgsDefMap:      make(map[string]*LuetSubsetsDefinition, 0),
+		SubsetsCatDefMap:       make(map[string]*AniseSubsetsDefinition, 0),
+		SubsetsPkgsDefMap:      make(map[string]*AniseSubsetsDefinition, 0),
 	}
 }
 
@@ -368,21 +368,21 @@ func GenDefault(viper *v.Viper) {
 	viper.SetDefault("tar_flows.validate", false)
 }
 
-func (c *LuetConfig) GetSystemDB() pkg.PackageDatabase {
-	switch LuetCfg.GetSystem().DatabaseEngine {
+func (c *AniseConfig) GetSystemDB() pkg.PackageDatabase {
+	switch AniseCfg.GetSystem().DatabaseEngine {
 	case "boltdb":
 		return pkg.NewBoltDatabase(
-			filepath.Join(LuetCfg.GetSystem().GetSystemRepoDatabaseDirPath(), "luet.db"))
+			filepath.Join(AniseCfg.GetSystem().GetSystemRepoDatabaseDirPath(), "luet.db"))
 	default:
 		return pkg.NewInMemoryDatabase(true)
 	}
 }
 
-func (c *LuetConfig) AddSystemRepository(r *LuetRepository) {
+func (c *AniseConfig) AddSystemRepository(r *AniseRepository) {
 	c.SystemRepositories = append(c.SystemRepositories, *r)
 }
 
-func (c *LuetConfig) GetFinalizerEnvsMap() map[string]string {
+func (c *AniseConfig) GetFinalizerEnvsMap() map[string]string {
 	ans := make(map[string]string, 0)
 
 	for _, kv := range c.FinalizerEnvs {
@@ -391,26 +391,26 @@ func (c *LuetConfig) GetFinalizerEnvsMap() map[string]string {
 	return ans
 }
 
-func (c *LuetConfig) SetFinalizerEnv(k, v string) {
+func (c *AniseConfig) SetFinalizerEnv(k, v string) {
 	keyPresent := false
-	envs := []LuetKV{}
+	envs := []AniseKV{}
 
 	for _, kv := range c.FinalizerEnvs {
 		if kv.Key == k {
 			keyPresent = true
-			envs = append(envs, LuetKV{Key: kv.Key, Value: v})
+			envs = append(envs, AniseKV{Key: kv.Key, Value: v})
 		} else {
 			envs = append(envs, kv)
 		}
 	}
 	if !keyPresent {
-		envs = append(envs, LuetKV{Key: k, Value: v})
+		envs = append(envs, AniseKV{Key: k, Value: v})
 	}
 
 	c.FinalizerEnvs = envs
 }
 
-func (c *LuetConfig) GetFinalizerEnvs() []string {
+func (c *AniseConfig) GetFinalizerEnvs() []string {
 	ans := []string{}
 	for _, kv := range c.FinalizerEnvs {
 		ans = append(ans, fmt.Sprintf("%s=%s", kv.Key, kv.Value))
@@ -418,7 +418,7 @@ func (c *LuetConfig) GetFinalizerEnvs() []string {
 	return ans
 }
 
-func (c *LuetConfig) GetFinalizerEnv(k string) (string, error) {
+func (c *AniseConfig) GetFinalizerEnv(k string) (string, error) {
 	keyNotPresent := true
 	ans := ""
 	for _, kv := range c.FinalizerEnvs {
@@ -434,39 +434,39 @@ func (c *LuetConfig) GetFinalizerEnv(k string) (string, error) {
 	return ans, nil
 }
 
-func (c *LuetConfig) GetLogging() *LuetLoggingConfig {
+func (c *AniseConfig) GetLogging() *AniseLoggingConfig {
 	return &c.Logging
 }
 
-func (c *LuetConfig) GetGeneral() *LuetGeneralConfig {
+func (c *AniseConfig) GetGeneral() *AniseGeneralConfig {
 	return &c.General
 }
 
-func (c *LuetConfig) GetSystem() *LuetSystemConfig {
+func (c *AniseConfig) GetSystem() *AniseSystemConfig {
 	return &c.System
 }
 
-func (c *LuetConfig) GetTarFlows() *LuetTarflowsConfig {
+func (c *AniseConfig) GetTarFlows() *AniseTarflowsConfig {
 	return &c.TarFlows
 }
 
-func (c *LuetConfig) GetSolverOptions() *LuetSolverOptions {
+func (c *AniseConfig) GetSolverOptions() *AniseSolverOptions {
 	return &c.Solver
 }
 
-func (c *LuetConfig) GetBox() *LuetBoxConfig {
+func (c *AniseConfig) GetBox() *AniseBoxConfig {
 	return &c.Box
 }
 
-func (c *LuetConfig) YAML() ([]byte, error) {
+func (c *AniseConfig) YAML() ([]byte, error) {
 	return yaml.Marshal(c)
 }
 
-func (c *LuetConfig) GetConfigProtectConfFiles() []ConfigProtectConfFile {
+func (c *AniseConfig) GetConfigProtectConfFiles() []ConfigProtectConfFile {
 	return c.ConfigProtectConfFiles
 }
 
-func (c *LuetConfig) AddConfigProtectConfFile(file *ConfigProtectConfFile) {
+func (c *AniseConfig) AddConfigProtectConfFile(file *ConfigProtectConfFile) {
 	if c.ConfigProtectConfFiles == nil {
 		c.ConfigProtectConfFiles = []ConfigProtectConfFile{*file}
 	} else {
@@ -474,8 +474,8 @@ func (c *LuetConfig) AddConfigProtectConfFile(file *ConfigProtectConfFile) {
 	}
 }
 
-func (c *LuetConfig) GetSystemRepository(name string) (*LuetRepository, error) {
-	var ans *LuetRepository = nil
+func (c *AniseConfig) GetSystemRepository(name string) (*AniseRepository, error) {
+	var ans *AniseRepository = nil
 
 	for idx, repo := range c.SystemRepositories {
 		if repo.Name == name {
@@ -490,7 +490,7 @@ func (c *LuetConfig) GetSystemRepository(name string) (*LuetRepository, error) {
 	return ans, nil
 }
 
-func (c *LuetGeneralConfig) GetSpinnerMs() time.Duration {
+func (c *AniseGeneralConfig) GetSpinnerMs() time.Duration {
 	duration, err := time.ParseDuration(fmt.Sprintf("%dms", c.SpinnerMs))
 	if err != nil {
 		return 100 * time.Millisecond
@@ -498,11 +498,11 @@ func (c *LuetGeneralConfig) GetSpinnerMs() time.Duration {
 	return duration
 }
 
-func (c *LuetLoggingConfig) SetLogLevel(s string) {
+func (c *AniseLoggingConfig) SetLogLevel(s string) {
 	c.Level = s
 }
 
-func (c *LuetSystemConfig) InitTmpDir() error {
+func (c *AniseSystemConfig) InitTmpDir() error {
 	if !filepath.IsAbs(c.TmpDirBase) {
 		abs, err := fileHelper.Rel2Abs(c.TmpDirBase)
 		if err != nil {
@@ -522,11 +522,11 @@ func (c *LuetSystemConfig) InitTmpDir() error {
 	return nil
 }
 
-func (c *LuetSystemConfig) CleanupTmpDir() error {
+func (c *AniseSystemConfig) CleanupTmpDir() error {
 	return os.RemoveAll(c.TmpDirBase)
 }
 
-func (c *LuetSystemConfig) TempDir(pattern string) (string, error) {
+func (c *AniseSystemConfig) TempDir(pattern string) (string, error) {
 	err := c.InitTmpDir()
 	if err != nil {
 		return "", err
@@ -534,7 +534,7 @@ func (c *LuetSystemConfig) TempDir(pattern string) (string, error) {
 	return ioutil.TempDir(c.TmpDirBase, pattern)
 }
 
-func (c *LuetSystemConfig) TempFile(pattern string) (*os.File, error) {
+func (c *AniseSystemConfig) TempFile(pattern string) (*os.File, error) {
 	err := c.InitTmpDir()
 	if err != nil {
 		return nil, err

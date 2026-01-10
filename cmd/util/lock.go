@@ -27,7 +27,7 @@ func NewLockGuard() *LockGuard {
 	}
 }
 
-func (l *LockGuard) TryLock(cmd string, cfg *config.LuetConfig) (bool, error) {
+func (l *LockGuard) TryLock(cmd string, cfg *config.AniseConfig) (bool, error) {
 	envNoLock := os.Getenv("ANISE_NOLOCK") == "true"
 	if !envNoLock && helpers.ContainsElem(&LockedCommands, cmd) {
 		// Using the rootfs directory for locking.
@@ -79,7 +79,7 @@ func (l *LockGuard) Locked() (ans bool) {
 	return
 }
 
-func (l *LockGuard) Unlock(cfg *config.LuetConfig) error {
+func (l *LockGuard) Unlock(cfg *config.AniseConfig) error {
 	if l.Lockfile != nil {
 		if l.Locked() {
 			// POST: Try to remove the file only when is been locked.

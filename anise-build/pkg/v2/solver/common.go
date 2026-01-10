@@ -40,7 +40,7 @@ func NewBuildSolverOpts() *BuildSolverOpts {
 
 func NewBuildSolverImplementation(
 	stype string,
-	cfg *config.LuetConfig,
+	cfg *config.AniseConfig,
 	opts *BuildSolverOpts) *BuilderSolver {
 	var s BuilderSolver
 

@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewSubsetsListCommand(config *cfg.LuetConfig) *cobra.Command {
+func NewSubsetsListCommand(config *cfg.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "list [OPTIONS]",
 		Short: "List of subsets enabled.",

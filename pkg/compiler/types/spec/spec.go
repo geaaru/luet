@@ -21,10 +21,10 @@ import (
 	dirhash "golang.org/x/mod/sumdb/dirhash"
 )
 
-type LuetCompilationspecs []LuetCompilationSpec
+type AniseCompilationspecs []AniseCompilationSpec
 
-func NewLuetCompilationspecs(s ...*LuetCompilationSpec) *LuetCompilationspecs {
-	all := LuetCompilationspecs{}
+func NewAniseCompilationspecs(s ...*AniseCompilationSpec) *AniseCompilationspecs {
+	all := AniseCompilationspecs{}
 
 	for _, spec := range s {
 		all.Add(spec)
@@ -32,12 +32,12 @@ func NewLuetCompilationspecs(s ...*LuetCompilationSpec) *LuetCompilationspecs {
 	return &all
 }
 
-func (specs LuetCompilationspecs) Len() int {
+func (specs AniseCompilationspecs) Len() int {
 	return len(specs)
 }
 
-func (specs *LuetCompilationspecs) Remove(s *LuetCompilationspecs) *LuetCompilationspecs {
-	newSpecs := LuetCompilationspecs{}
+func (specs *AniseCompilationspecs) Remove(s *AniseCompilationspecs) *AniseCompilationspecs {
+	newSpecs := AniseCompilationspecs{}
 SPECS:
 	for _, spec := range specs.All() {
 		for _, target := range s.All() {
@@ -50,12 +50,12 @@ SPECS:
 	return &newSpecs
 }
 
-func (specs *LuetCompilationspecs) Add(s *LuetCompilationSpec) {
+func (specs *AniseCompilationspecs) Add(s *AniseCompilationSpec) {
 	*specs = append(*specs, *s)
 }
 
-func (specs *LuetCompilationspecs) All() []*LuetCompilationSpec {
-	var cspecs []*LuetCompilationSpec
+func (specs *AniseCompilationspecs) All() []*AniseCompilationSpec {
+	var cspecs []*AniseCompilationSpec
 	for i, _ := range *specs {
 		f := (*specs)[i]
 		cspecs = append(cspecs, &f)
@@ -64,8 +64,8 @@ func (specs *LuetCompilationspecs) All() []*LuetCompilationSpec {
 	return cspecs
 }
 
-func (specs *LuetCompilationspecs) Unique() *LuetCompilationspecs {
-	newSpecs := LuetCompilationspecs{}
+func (specs *AniseCompilationspecs) Unique() *AniseCompilationspecs {
+	newSpecs := AniseCompilationspecs{}
 	seen := map[string]bool{}
 
 	for i, _ := range *specs {
@@ -86,7 +86,7 @@ type CopyField struct {
 	Destination string              `json:"destination" yaml:"destination"`
 }
 
-type LuetCompilationSpec struct {
+type AniseCompilationSpec struct {
 	Steps           []string                  `json:"steps" yaml:"steps"` // Are run inside a container and the result layer diff is saved
 	Env             []string                  `json:"env" yaml:"env"`
 	Prelude         []string                  `json:"prelude" yaml:"prelude"` // Are run inside the image which will be our builder
@@ -127,7 +127,7 @@ type Signature struct {
 	RequiresFinalImages bool
 }
 
-func (cs *LuetCompilationSpec) signature() Signature {
+func (cs *AniseCompilationSpec) signature() Signature {
 	return Signature{
 		Image:               cs.Image,
 		Steps:               cs.Steps,
@@ -145,8 +145,8 @@ func (cs *LuetCompilationSpec) signature() Signature {
 	}
 }
 
-func NewLuetCompilationSpec(b []byte, p pkg.Package) (*LuetCompilationSpec, error) {
-	var spec LuetCompilationSpec
+func NewAniseCompilationSpec(b []byte, p pkg.Package) (*AniseCompilationSpec, error) {
+	var spec AniseCompilationSpec
 	var packageDefinition pkg.DefaultPackage
 	err := yaml.Unmarshal(b, &spec)
 	if err != nil {
@@ -174,15 +174,15 @@ func NewLuetCompilationSpec(b []byte, p pkg.Package) (*LuetCompilationSpec, erro
 	}
 	return &spec, nil
 }
-func (cs *LuetCompilationSpec) GetSourceAssertion() solver.PackagesAssertions {
+func (cs *AniseCompilationSpec) GetSourceAssertion() solver.PackagesAssertions {
 	return cs.SourceAssertion
 }
 
-func (cs *LuetCompilationSpec) SetBuildOptions(b options.Compiler) {
+func (cs *AniseCompilationSpec) SetBuildOptions(b options.Compiler) {
 	cs.BuildOptions = &b
 }
 
-func (cs *LuetCompilationSpec) IsValid() (bool, error) {
+func (cs *AniseCompilationSpec) IsValid() (bool, error) {
 
 	if !cs.IsVirtual() {
 		if cs.Image == "" {
@@ -196,84 +196,84 @@ func (cs *LuetCompilationSpec) IsValid() (bool, error) {
 	return true, nil
 }
 
-func (cs *LuetCompilationSpec) SetSourceAssertion(as solver.PackagesAssertions) {
+func (cs *AniseCompilationSpec) SetSourceAssertion(as solver.PackagesAssertions) {
 	cs.SourceAssertion = as
 }
-func (cs *LuetCompilationSpec) GetPackage() pkg.Package {
+func (cs *AniseCompilationSpec) GetPackage() pkg.Package {
 	return cs.Package
 }
 
-func (cs *LuetCompilationSpec) GetPackageDir() string {
+func (cs *AniseCompilationSpec) GetPackageDir() string {
 	return cs.PackageDir
 }
 
-func (cs *LuetCompilationSpec) SetPackageDir(s string) {
+func (cs *AniseCompilationSpec) SetPackageDir(s string) {
 	cs.PackageDir = s
 }
 
-func (cs *LuetCompilationSpec) BuildSteps() []string {
+func (cs *AniseCompilationSpec) BuildSteps() []string {
 	return cs.Steps
 }
 
-func (cs *LuetCompilationSpec) ImageUnpack() bool {
+func (cs *AniseCompilationSpec) ImageUnpack() bool {
 	return cs.Unpack
 }
 
-func (cs *LuetCompilationSpec) GetPreBuildSteps() []string {
+func (cs *AniseCompilationSpec) GetPreBuildSteps() []string {
 	return cs.Prelude
 }
 
-func (cs *LuetCompilationSpec) GetIncludes() []string {
+func (cs *AniseCompilationSpec) GetIncludes() []string {
 	return cs.Includes
 }
 
-func (cs *LuetCompilationSpec) GetExcludes() []string {
+func (cs *AniseCompilationSpec) GetExcludes() []string {
 	return cs.Excludes
 }
 
-func (cs *LuetCompilationSpec) GetRetrieve() []string {
+func (cs *AniseCompilationSpec) GetRetrieve() []string {
 	return cs.Retrieve
 }
 
 // IsVirtual returns true if the spec is virtual.
 // A spec is virtual if the package is empty, and it has no image source to unpack from.
-func (cs *LuetCompilationSpec) IsVirtual() bool {
+func (cs *AniseCompilationSpec) IsVirtual() bool {
 	return cs.EmptyPackage() && !cs.HasImageSource()
 }
 
-func (cs *LuetCompilationSpec) GetSeedImage() string {
+func (cs *AniseCompilationSpec) GetSeedImage() string {
 	return cs.Seed
 }
 
-func (cs *LuetCompilationSpec) GetImage() string {
+func (cs *AniseCompilationSpec) GetImage() string {
 	return cs.Image
 }
 
-func (cs *LuetCompilationSpec) GetOutputPath() string {
+func (cs *AniseCompilationSpec) GetOutputPath() string {
 	return cs.OutputPath
 }
 
-func (p *LuetCompilationSpec) Rel(s string) string {
+func (p *AniseCompilationSpec) Rel(s string) string {
 	return filepath.Join(p.GetOutputPath(), s)
 }
 
-func (cs *LuetCompilationSpec) SetImage(s string) {
+func (cs *AniseCompilationSpec) SetImage(s string) {
 	cs.Image = s
 }
 
-func (cs *LuetCompilationSpec) SetOutputPath(s string) {
+func (cs *AniseCompilationSpec) SetOutputPath(s string) {
 	cs.OutputPath = s
 }
 
-func (cs *LuetCompilationSpec) SetSeedImage(s string) {
+func (cs *AniseCompilationSpec) SetSeedImage(s string) {
 	cs.Seed = s
 }
 
-func (cs *LuetCompilationSpec) EmptyPackage() bool {
+func (cs *AniseCompilationSpec) EmptyPackage() bool {
 	return len(cs.BuildSteps()) == 0 && !cs.UnpackedPackage()
 }
 
-func (cs *LuetCompilationSpec) UnpackedPackage() bool {
+func (cs *AniseCompilationSpec) UnpackedPackage() bool {
 	// If package_dir was specified in the spec, we want to treat the content of the directory
 	// as the root of our archive.  ImageUnpack is implied to be true. override it
 	unpack := cs.ImageUnpack()
@@ -286,11 +286,11 @@ func (cs *LuetCompilationSpec) UnpackedPackage() bool {
 // HasImageSource returns true when the compilation spec has an image source.
 // a compilation spec has an image source when it depends on other packages or have a source image
 // explictly supplied
-func (cs *LuetCompilationSpec) HasImageSource() bool {
+func (cs *AniseCompilationSpec) HasImageSource() bool {
 	return (cs.Package != nil && len(cs.GetPackage().GetRequires()) != 0) || cs.GetImage() != "" || (cs.RequiresFinalImages && len(cs.Package.GetRequires()) != 0)
 }
 
-func (cs *LuetCompilationSpec) Hash() (string, error) {
+func (cs *AniseCompilationSpec) Hash() (string, error) {
 	// build a signature, we want to be part of the hash only the fields that are relevant for build purposes
 	signature := cs.signature()
 	h, err := hashstructure.Hash(signature, hashstructure.FormatV2, nil)
@@ -304,7 +304,7 @@ func (cs *LuetCompilationSpec) Hash() (string, error) {
 	return fmt.Sprint(h, sum), err
 }
 
-func (cs *LuetCompilationSpec) CopyRetrieves(dest string) error {
+func (cs *AniseCompilationSpec) CopyRetrieves(dest string) error {
 	var err error
 	if len(cs.Retrieve) > 0 {
 		for _, s := range cs.Retrieve {
@@ -322,7 +322,7 @@ func (cs *LuetCompilationSpec) CopyRetrieves(dest string) error {
 	return err
 }
 
-func (cs *LuetCompilationSpec) genDockerfile(image string, steps []string) string {
+func (cs *AniseCompilationSpec) genDockerfile(image string, steps []string) string {
 	spec := `
 FROM ` + image + `
 COPY . /luetbuild
@@ -364,17 +364,17 @@ RUN ` + s
 }
 
 // RenderBuildImage renders the dockerfile of the image used as a pre-build step
-func (cs *LuetCompilationSpec) RenderBuildImage() (string, error) {
+func (cs *AniseCompilationSpec) RenderBuildImage() (string, error) {
 	return cs.genDockerfile(cs.GetSeedImage(), cs.GetPreBuildSteps()), nil
 
 }
 
 // RenderStepImage renders the dockerfile used for the image used for building the package
-func (cs *LuetCompilationSpec) RenderStepImage(image string) (string, error) {
+func (cs *AniseCompilationSpec) RenderStepImage(image string) (string, error) {
 	return cs.genDockerfile(image, cs.BuildSteps()), nil
 }
 
-func (cs *LuetCompilationSpec) WriteBuildImageDefinition(path string) error {
+func (cs *AniseCompilationSpec) WriteBuildImageDefinition(path string) error {
 	data, err := cs.RenderBuildImage()
 	if err != nil {
 		return err
@@ -382,7 +382,7 @@ func (cs *LuetCompilationSpec) WriteBuildImageDefinition(path string) error {
 	return ioutil.WriteFile(path, []byte(data), 0644)
 }
 
-func (cs *LuetCompilationSpec) WriteStepImageDefinition(fromimage, path string) error {
+func (cs *AniseCompilationSpec) WriteStepImageDefinition(fromimage, path string) error {
 	data, err := cs.RenderStepImage(fromimage)
 	if err != nil {
 		return err

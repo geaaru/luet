@@ -28,7 +28,7 @@ import (
 var cfgFile string
 var Verbose bool
 
-func LoadConfig(c *config.LuetConfig) error {
+func LoadConfig(c *config.AniseConfig) error {
 	// If a config file is found, read it in.
 	err := c.Viper.ReadInConfig()
 	if err != nil {
@@ -84,7 +84,7 @@ func LoadConfig(c *config.LuetConfig) error {
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	var cfg *config.LuetConfig = config.LuetCfg
+	var cfg *config.AniseConfig = config.AniseCfg
 
 	initConfig(cfg)
 
@@ -94,7 +94,7 @@ func Execute() {
 	var RootCmd = &cobra.Command{
 		Use:   "anise",
 		Short: "Container based package manager",
-		Long: `Luet is a single-binary package manager based on containers to build packages.
+		Long: `Anise is a single-binary package manager based on containers to build packages.
 		
 	To install a package:
 
@@ -189,7 +189,7 @@ func Execute() {
 	}
 }
 
-func initCommand(rootCmd *cobra.Command, cfg *config.LuetConfig) {
+func initCommand(rootCmd *cobra.Command, cfg *config.AniseConfig) {
 	pflags := rootCmd.PersistentFlags()
 	pflags.StringVar(&cfgFile, "config", "", "config file (default is $HOME/.anise.yaml)")
 	pflags.BoolP("debug", "d", false, "verbose output")
@@ -254,8 +254,8 @@ func initCommand(rootCmd *cobra.Command, cfg *config.LuetConfig) {
 }
 
 // initConfig reads in config file and ENV variables if set.
-func initConfig(cfg *config.LuetConfig) {
-	// Luet support these priorities on read configuration file:
+func initConfig(cfg *config.AniseConfig) {
+	// Anise support these priorities on read configuration file:
 	// - command line option (if available)
 	// - $PWD/.anise.yaml
 	// - $HOME/.anise.yaml
@@ -263,7 +263,7 @@ func initConfig(cfg *config.LuetConfig) {
 	//
 	// Note: currently a single viper instance support only one config name.
 
-	cfg.Viper.SetEnvPrefix(config.LuetEnvPrefix)
+	cfg.Viper.SetEnvPrefix(config.AniseEnvPrefix)
 
 	cfg.Viper.BindEnv("config")
 	cfg.Viper.SetDefault("config", "")

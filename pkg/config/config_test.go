@@ -24,7 +24,7 @@ var _ = Describe("Config", func() {
 		It("Create Temporary directory", func() {
 			// PRE: tmpdir_base contains default value.
 
-			tmpDir, err := config.LuetCfg.GetSystem().TempDir("test1")
+			tmpDir, err := config.AniseCfg.GetSystem().TempDir("test1")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(strings.HasPrefix(tmpDir, filepath.Join(os.TempDir(), "tmpluet"))).To(BeTrue())
 			Expect(fileHelper.Exists(tmpDir)).To(BeTrue())
@@ -35,7 +35,7 @@ var _ = Describe("Config", func() {
 		It("Create Temporary file", func() {
 			// PRE: tmpdir_base contains default value.
 
-			tmpFile, err := config.LuetCfg.GetSystem().TempFile("testfile1")
+			tmpFile, err := config.AniseCfg.GetSystem().TempFile("testfile1")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(strings.HasPrefix(tmpFile.Name(), filepath.Join(os.TempDir(), "tmpluet"))).To(BeTrue())
 			Expect(fileHelper.Exists(tmpFile.Name())).To(BeTrue())
@@ -44,7 +44,7 @@ var _ = Describe("Config", func() {
 		})
 
 		It("Config1", func() {
-			cfg := config.LuetCfg
+			cfg := config.AniseCfg
 
 			cfg.GetLogging().Color = false
 			Expect(cfg.GetLogging().Color).To(BeFalse())

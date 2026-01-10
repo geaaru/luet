@@ -17,12 +17,12 @@ import (
 
 func (a *PackageArtifact) GetTarFormersSpec(enableSubsets bool) *tarf_specs.SpecFile {
 	spec := tarf_specs.NewSpecFile()
-	spec.SameOwner = LuetCfg.GetGeneral().SameOwner
-	spec.EnableMutex = LuetCfg.GetTarFlows().Mutex4Dirs
-	spec.MaxOpenFiles = LuetCfg.GetTarFlows().MaxOpenFiles
-	spec.BufferSize = LuetCfg.GetTarFlows().CopyBufferSize
-	spec.Validate = LuetCfg.GetTarFlows().Validate
-	spec.OverwritePerms = LuetCfg.GetGeneral().OverwriteDirPerms
+	spec.SameOwner = AniseCfg.GetGeneral().SameOwner
+	spec.EnableMutex = AniseCfg.GetTarFlows().Mutex4Dirs
+	spec.MaxOpenFiles = AniseCfg.GetTarFlows().MaxOpenFiles
+	spec.BufferSize = AniseCfg.GetTarFlows().CopyBufferSize
+	spec.Validate = AniseCfg.GetTarFlows().Validate
+	spec.OverwritePerms = AniseCfg.GetGeneral().OverwriteDirPerms
 	spec.IgnoreRegexes = []string{
 		// prevent 'operation not permitted'
 		//"^/dev",
@@ -33,7 +33,7 @@ func (a *PackageArtifact) GetTarFormersSpec(enableSubsets bool) *tarf_specs.Spec
 		def := a.GetSubsets()
 
 		for k, v := range def.Definitions {
-			if !helpers.ContainsElem(&LuetCfg.Subsets.Enabled, k) {
+			if !helpers.ContainsElem(&AniseCfg.Subsets.Enabled, k) {
 				// POST: the selected subset is not enabled.
 				//       I add the rules as IgnoreRegexes.
 
@@ -51,17 +51,17 @@ func (a *PackageArtifact) GetTarFormersSpec(enableSubsets bool) *tarf_specs.Spec
 	return spec
 }
 
-func (a *PackageArtifact) GetSubsets() *LuetSubsetsDefinition {
-	ans := &LuetSubsetsDefinition{
-		Definitions: make(map[string]*LuetSubsetDefinition, 0),
+func (a *PackageArtifact) GetSubsets() *AniseSubsetsDefinition {
+	ans := &AniseSubsetsDefinition{
+		Definitions: make(map[string]*AniseSubsetDefinition, 0),
 	}
 
 	if a.Runtime != nil {
 		// Get global/user category subsets defined
-		catSubsets := LuetCfg.SubsetsCatDefMap[a.Runtime.GetCategory()]
+		catSubsets := AniseCfg.SubsetsCatDefMap[a.Runtime.GetCategory()]
 
 		// Get global/user package subsets defined
-		pkgSubsets := LuetCfg.SubsetsPkgsDefMap[a.Runtime.PackageName()]
+		pkgSubsets := AniseCfg.SubsetsPkgsDefMap[a.Runtime.PackageName()]
 
 		// Check if there is subsets definition on annotations
 		if a.Runtime.HasAnnotation(string(pkg.SubsetsAnnotation)) {
@@ -91,10 +91,10 @@ func (a *PackageArtifact) GetSubsets() *LuetSubsetsDefinition {
 	return ans
 }
 
-func (a *PackageArtifact) unmarshalSubsets() *LuetSubsetsDefinition {
+func (a *PackageArtifact) unmarshalSubsets() *AniseSubsetsDefinition {
 
-	ans := &LuetSubsetsDefinition{
-		Definitions: make(map[string]*LuetSubsetDefinition, 0),
+	ans := &AniseSubsetsDefinition{
+		Definitions: make(map[string]*AniseSubsetDefinition, 0),
 	}
 
 	subsets := a.Runtime.GetAnnotationByKey(
@@ -140,7 +140,7 @@ func (a *PackageArtifact) unmarshalSubsets() *LuetSubsetsDefinition {
 				rules = append(rules, r.(string))
 			}
 
-			ans.Definitions[kk] = &LuetSubsetDefinition{
+			ans.Definitions[kk] = &AniseSubsetDefinition{
 				Name:  kk,
 				Rules: rules,
 			}

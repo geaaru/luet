@@ -19,7 +19,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func NewQueryOrphansCommand(config *cfg.LuetConfig) *cobra.Command {
+func NewQueryOrphansCommand(config *cfg.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "orphans [OPTIONS]",
 		Short: "Show orphans packages.",
@@ -49,7 +49,7 @@ This operation could require a bit of time.
 				enableSpinner = true
 
 				InfoC(fmt.Sprintf(":rocket:%s %s",
-					Bold(Blue("Luet")), Bold(Blue(util.Version()))))
+					Bold(Blue("Anise")), Bold(Blue(util.Version()))))
 
 				InfoC(":brain:Searching for orphans packages...")
 				Spinner(3)

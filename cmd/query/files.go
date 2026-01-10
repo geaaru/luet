@@ -19,7 +19,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func NewQueryFilesCommand(config *cfg.LuetConfig) *cobra.Command {
+func NewQueryFilesCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var ans = &cobra.Command{
 		Use:     "files <pkg1> ... <pkgN> [OPTIONS]",

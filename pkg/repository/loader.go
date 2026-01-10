@@ -18,7 +18,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func LoadRepositories(c *LuetConfig) error {
+func LoadRepositories(c *AniseConfig) error {
 	var regexRepo = regexp.MustCompile(`.yml$|.yaml$`)
 	var err error
 	rootfs := ""
@@ -94,8 +94,8 @@ func LoadRepositories(c *LuetConfig) error {
 	return nil
 }
 
-func LoadRepository(data []byte) (*LuetRepository, error) {
-	ans := NewEmptyLuetRepository()
+func LoadRepository(data []byte) (*AniseRepository, error) {
+	ans := NewEmptyAniseRepository()
 	err := yaml.Unmarshal(data, &ans)
 	if err != nil {
 		return nil, err

@@ -17,7 +17,7 @@ import (
 )
 
 type WagonsRails struct {
-	Config *cfg.LuetConfig
+	Config *cfg.AniseConfig
 }
 
 type SyncOpts struct {
@@ -27,17 +27,17 @@ type SyncOpts struct {
 
 type ChannelRepoOpRes struct {
 	Error error
-	Repo  *config.LuetRepository
+	Repo  *config.AniseRepository
 }
 
-func NewWagonsRails(c *cfg.LuetConfig) *WagonsRails {
+func NewWagonsRails(c *cfg.AniseConfig) *WagonsRails {
 	return &WagonsRails{
 		Config: c,
 	}
 }
 
 func (w *WagonsRails) processRepository(
-	repo *cfg.LuetRepository,
+	repo *cfg.AniseRepository,
 	channel chan ChannelRepoOpRes,
 	force bool, sem *semaphore.Weighted,
 	waitGroup *sync.WaitGroup, ctx *context.Context) {

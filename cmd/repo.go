@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newRepoCommand(config *cfg.LuetConfig) *cobra.Command {
+func newRepoCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var ans = &cobra.Command{
 		Use:   "repo [command] [OPTIONS]",

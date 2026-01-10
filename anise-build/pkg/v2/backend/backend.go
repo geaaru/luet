@@ -28,7 +28,7 @@ type BackendCompiler interface {
 		builddir string, opts *options.Compiler) error
 }
 
-func NewBackend(s string, c *cfg.LuetConfig) (BackendCompiler, error) {
+func NewBackend(s string, c *cfg.AniseConfig) (BackendCompiler, error) {
 	var compilerBackend BackendCompiler
 
 	switch s {

@@ -57,7 +57,7 @@ type UpgradeResponse struct {
 }
 
 func (opts Options) ResolverIsSet() bool {
-	switch config.LuetCfg.GetSolverOptions().Implementation {
+	switch config.AniseCfg.GetSolverOptions().Implementation {
 	case QLearningResolverType:
 		return true
 	default:
@@ -66,13 +66,13 @@ func (opts Options) ResolverIsSet() bool {
 }
 
 func (opts Options) Resolver() PackageResolver {
-	switch config.LuetCfg.GetSolverOptions().Implementation {
+	switch config.AniseCfg.GetSolverOptions().Implementation {
 	case QLearningResolverType:
-		if config.LuetCfg.GetSolverOptions().LearnRate != 0.0 {
+		if config.AniseCfg.GetSolverOptions().LearnRate != 0.0 {
 			return NewQLearningResolver(
-				config.LuetCfg.GetSolverOptions().LearnRate,
-				config.LuetCfg.GetSolverOptions().Discount,
-				config.LuetCfg.GetSolverOptions().MaxAttempts,
+				config.AniseCfg.GetSolverOptions().LearnRate,
+				config.AniseCfg.GetSolverOptions().Discount,
+				config.AniseCfg.GetSolverOptions().MaxAttempts,
 				99999,
 			)
 		}
@@ -99,7 +99,7 @@ func DecodeImplementation(i string) (ans Options) {
 		ans.Type = SingleCoreSimple
 	}
 
-	ans.Concurrency = config.LuetCfg.GetGeneral().Concurrency
+	ans.Concurrency = config.AniseCfg.GetGeneral().Concurrency
 	return
 }
 

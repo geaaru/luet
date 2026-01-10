@@ -20,7 +20,7 @@ type PackageMaskFile struct {
 }
 
 type PackagesMaskManager struct {
-	Config *cfg.LuetConfig
+	Config *cfg.AniseConfig
 
 	Files []*PackageMaskFile
 }

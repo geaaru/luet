@@ -26,12 +26,12 @@ type Searcher interface {
 }
 
 type SearcherSimple struct {
-	Config      *config.LuetConfig
+	Config      *config.AniseConfig
 	MaskManager *mask.PackagesMaskManager
 	Database    pkg.PackageDatabase
 }
 
-func NewSearcherSimple(cfg *config.LuetConfig) *SearcherSimple {
+func NewSearcherSimple(cfg *config.AniseConfig) *SearcherSimple {
 	return &SearcherSimple{
 		Config:   cfg,
 		Database: nil,
@@ -55,7 +55,7 @@ func (s *SearcherSimple) SetMaskManager(m *mask.PackagesMaskManager) {
 }
 
 func (s *SearcherSimple) searchOnRepoRoutine(
-	repo *config.LuetRepository,
+	repo *config.AniseRepository,
 	searchOpts *StonesSearchOpts,
 	channel chan ChannelSearchRes,
 	artifactsRes bool) {

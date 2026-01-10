@@ -64,7 +64,7 @@ func NewTreeImageCommand() *cobra.Command {
 
 			out, _ := cmd.Flags().GetString("output")
 			if out != "terminal" {
-				LuetCfg.GetLogging().SetLogLevel("error")
+				AniseCfg.GetLogging().SetLogLevel("error")
 			}
 
 			reciper := tree.NewCompilerRecipe(pkg.NewInMemoryDatabase(false))
@@ -77,8 +77,8 @@ func NewTreeImageCommand() *cobra.Command {
 			}
 			compilerBackend := backend.NewSimpleDockerBackend()
 
-			opts := *LuetCfg.GetSolverOptions()
-			luetCompiler := compiler.NewLuetCompiler(
+			opts := *AniseCfg.GetSolverOptions()
+			luetCompiler := compiler.NewAniseCompiler(
 				compilerBackend,
 				reciper.GetDatabase(),
 				options.WithBuildValues(values),
@@ -90,7 +90,7 @@ func NewTreeImageCommand() *cobra.Command {
 
 			a := args[0]
 
-			pack, err := helpers.ParsePackageStr(LuetCfg, a)
+			pack, err := helpers.ParsePackageStr(AniseCfg, a)
 			if err != nil {
 				Fatal("Invalid package string ", a, ": ", err.Error())
 			}

@@ -49,7 +49,7 @@ type WagonRepository struct {
 	Stones   *WagonStones
 }
 
-func NewWagonRepository(l *config.LuetRepository) *WagonRepository {
+func NewWagonRepository(l *config.AniseRepository) *WagonRepository {
 	return &WagonRepository{
 		Identity: NewWagonIdentify(l),
 		Stones:   NewWagonStones(),
@@ -57,7 +57,7 @@ func NewWagonRepository(l *config.LuetRepository) *WagonRepository {
 }
 
 func (w *WagonRepository) SearchStones(opts *StonesSearchOpts, m *mask.PackagesMaskManager) (*[]*Stone, error) {
-	repobasedir := config.LuetCfg.GetSystem().GetRepoDatabaseDirPath(w.Identity.Name)
+	repobasedir := config.AniseCfg.GetSystem().GetRepoDatabaseDirPath(w.Identity.Name)
 	return w.Stones.Search(opts, w.Identity.Name, repobasedir, m)
 }
 
@@ -75,7 +75,7 @@ func (w *WagonRepository) SearchStonesFromCatalog(opts *StonesSearchOpts) (*[]*S
 }
 
 func (w *WagonRepository) SearchArtifacts(opts *StonesSearchOpts, m *mask.PackagesMaskManager) (*[]*artifact.PackageArtifact, error) {
-	repobasedir := config.LuetCfg.GetSystem().GetRepoDatabaseDirPath(w.Identity.Name)
+	repobasedir := config.AniseCfg.GetSystem().GetRepoDatabaseDirPath(w.Identity.Name)
 	return w.Stones.SearchArtifacts(opts, w.Identity.Name, repobasedir, m)
 }
 
@@ -115,16 +115,16 @@ func (w *WagonRepository) ReadWagonIdentify(wdir string) error {
 }
 
 func (w *WagonRepository) GetRevision() int {
-	return w.Identity.LuetRepository.Revision
+	return w.Identity.AniseRepository.Revision
 }
 func (w *WagonRepository) GetLastUpdate() string {
-	return w.Identity.LuetRepository.LastUpdate
+	return w.Identity.AniseRepository.LastUpdate
 }
 func (w *WagonRepository) SetLastUpdate(u string) {
-	w.Identity.LuetRepository.LastUpdate = u
+	w.Identity.AniseRepository.LastUpdate = u
 }
 func (w *WagonRepository) IncrementRevision() {
-	w.Identity.LuetRepository.Revision++
+	w.Identity.AniseRepository.Revision++
 }
 
 func (w *WagonRepository) ClearCatalog() {
@@ -165,8 +165,8 @@ func (w *WagonRepository) Sync(force bool) error {
 		return errors.Wrap(err, "While downloading "+REPOSITORY_SPECFILE)
 	}
 
-	repobasedir := config.LuetCfg.GetSystem().GetRepoDatabaseDirPath(w.Identity.Name)
-	newIdentity := NewWagonIdentify(w.Identity.LuetRepository.Clone())
+	repobasedir := config.AniseCfg.GetSystem().GetRepoDatabaseDirPath(w.Identity.Name)
+	newIdentity := NewWagonIdentify(w.Identity.AniseRepository.Clone())
 	err = newIdentity.Load(file)
 	if err != nil {
 		return err
@@ -193,8 +193,8 @@ func (w *WagonRepository) Sync(force bool) error {
 		metafs = w.Identity.GetMetaPath()
 	}
 
-	newIdentity.LuetRepository.MetaPath = metafs
-	newIdentity.LuetRepository.TreePath = treefs
+	newIdentity.AniseRepository.MetaPath = metafs
+	newIdentity.AniseRepository.TreePath = treefs
 
 	repoV2 := newIdentity.HasDocument(REPOFILE_TREEV2_KEY)
 	// treeFile and metaFile must be present, they aren't optional
@@ -325,13 +325,13 @@ func (w *WagonRepository) ExplodeMetadata() error {
 				fmt.Sprintf("Unexpected status on parse stone at pos %d", idx))
 		}
 
-		metaFile := filepath.Join(w.Identity.LuetRepository.TreePath,
+		metaFile := filepath.Join(w.Identity.AniseRepository.TreePath,
 			pkg.Category,
 			pkg.Name,
 			pkg.Version,
 			"metadata.yaml",
 		)
-		metaJsonFile := filepath.Join(w.Identity.LuetRepository.TreePath,
+		metaJsonFile := filepath.Join(w.Identity.AniseRepository.TreePath,
 			pkg.Category,
 			pkg.Name,
 			pkg.Version,
@@ -400,7 +400,7 @@ func (w *WagonRepository) ExplodeMetadata() error {
 	catalog = nil
 
 	// Create the provides.yaml file under treefs/
-	providesFile := filepath.Join(w.Identity.LuetRepository.TreePath,
+	providesFile := filepath.Join(w.Identity.AniseRepository.TreePath,
 		"provides.yaml",
 	)
 	err = provides.WriteProvidesYAML(providesFile)
@@ -420,7 +420,7 @@ func (w *WagonRepository) GetTreePath(repobasedir string) string {
 	if w.Identity.GetTreePath() == "" {
 
 		// NOTE: repobasedir must be the value of
-		//       LuetCfg.GetSystem().GetSystemReposDirPath
+		//       AniseCfg.GetSystem().GetSystemReposDirPath
 		repobase := filepath.Join(repobasedir, w.Identity.GetName())
 		return filepath.Join(repobase, "treefs")
 	}
@@ -430,7 +430,7 @@ func (w *WagonRepository) GetTreePath(repobasedir string) string {
 func (w *WagonRepository) GetMetaPath(repobasedir string) string {
 	if w.Identity.GetTreePath() == "" {
 		// NOTE: repobasedir must be the value of
-		//       LuetCfg.GetSystem().GetSystemReposDirPath
+		//       AniseCfg.GetSystem().GetSystemReposDirPath
 		repobase := filepath.Join(repobasedir, w.Identity.GetName())
 		return filepath.Join(repobase, "metafs")
 	}
@@ -440,11 +440,11 @@ func (w *WagonRepository) GetMetaPath(repobasedir string) string {
 func (w *WagonRepository) Client() Client {
 	switch w.Identity.GetType() {
 	case DiskRepositoryType:
-		return client.NewLocalClient(w.Identity.LuetRepository)
+		return client.NewLocalClient(w.Identity.AniseRepository)
 	case HttpRepositoryType:
-		return client.NewHttpClient(w.Identity.LuetRepository)
+		return client.NewHttpClient(w.Identity.AniseRepository)
 	case DockerRepositoryType:
-		return client.NewDockerClient(w.Identity.LuetRepository)
+		return client.NewDockerClient(w.Identity.AniseRepository)
 	}
 	return nil
 }

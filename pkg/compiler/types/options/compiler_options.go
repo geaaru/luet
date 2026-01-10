@@ -22,7 +22,7 @@ type Compiler struct {
 	Wait            bool
 	OnlyDeps        bool
 	NoDeps          bool
-	SolverOptions   config.LuetSolverOptions
+	SolverOptions   config.AniseSolverOptions
 	BuildValuesFile []string
 	BuildValues     []map[string]interface{}
 
@@ -47,7 +47,7 @@ func NewDefaultCompiler() *Compiler {
 		Concurrency:         runtime.NumCPU(),
 		OnlyDeps:            false,
 		NoDeps:              false,
-		SolverOptions:       config.LuetSolverOptions{Type: ""},
+		SolverOptions:       config.AniseSolverOptions{Type: ""},
 	}
 }
 
@@ -190,7 +190,7 @@ func WithCompressionType(t compression.Implementation) func(cfg *Compiler) error
 	}
 }
 
-func WithSolverOptions(c config.LuetSolverOptions) func(cfg *Compiler) error {
+func WithSolverOptions(c config.AniseSolverOptions) func(cfg *Compiler) error {
 	return func(cfg *Compiler) error {
 		cfg.SolverOptions = c
 		return nil

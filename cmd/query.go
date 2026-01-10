@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newQueryCommand(config *cfg.LuetConfig) *cobra.Command {
+func newQueryCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var ans = &cobra.Command{
 		Use:     "query [command] [OPTIONS]",

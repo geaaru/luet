@@ -17,30 +17,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newCreateRepoCommand(config *cfg.LuetConfig) *cobra.Command {
+func newCreateRepoCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var createrepoCmd = &cobra.Command{
 		Use:   "create-repo",
-		Short: "Create a luet repository from a build",
+		Short: "Create a anise-build repository from a build",
 		Long: `Builds tree metadata from a set of packages and a tree definition:
 
-		$ luet create-repo
+		$ anise-build create-repo
 
 	Provide specific paths for packages, tree, and metadata output which is generated:
 
-		$ luet create-repo --packages my/packages/path --tree my/tree/path --output my/packages/path ...
+		$ anise-build create-repo --packages my/packages/path --tree my/tree/path --output my/packages/path ...
 
 	Provide name and description of the repository:
 
-		$ luet create-repo --name "foo" --description "bar" ...
+		$ anise-build create-repo --name "foo" --description "bar" ...
 
 	Change compression method:
 		
-		$ luet create-repo --tree-compression gzip --meta-compression gzip
+		$ anise-build create-repo --tree-compression gzip --meta-compression gzip
 
-	Create a repository from the metadata description defined in the luet.yaml config file:
+	Create a repository from the metadata description defined in the anise-build.yaml config file:
 
-		$ luet create-repo --repo repository1
+		$ anise-build create-repo --repo repository1
 	`,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			config.Viper.BindPFlag("packages", cmd.Flags().Lookup("packages"))
@@ -64,7 +64,7 @@ func newCreateRepoCommand(config *cfg.LuetConfig) *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			var err error
-			var repo *cfg.LuetRepository
+			var repo *cfg.AniseRepository
 
 			treePaths := config.Viper.GetStringSlice("tree")
 			dst := config.Viper.GetString("output")
@@ -108,7 +108,7 @@ func newCreateRepoCommand(config *cfg.LuetConfig) *cobra.Command {
 					treePaths = []string{repo.TreePath}
 				}
 			} else {
-				repo = cfg.NewLuetRepository(name, t, descr, urls, 9999, true, true)
+				repo = cfg.NewAniseRepository(name, t, descr, urls, 9999, true, true)
 			}
 
 			factory := repository.NewWagonFactory(config, repo)
@@ -125,8 +125,8 @@ func newCreateRepoCommand(config *cfg.LuetConfig) *cobra.Command {
 	flags.String("packages", filepath.Join(path, "build"), "Packages folder (output from build)")
 	flags.StringSliceP("tree", "t", []string{path}, "Path of the source trees to use.")
 	flags.String("output", filepath.Join(path, "build"), "Destination for generated archives. With 'docker' repository type, it should be an image reference (e.g 'foo/bar')")
-	flags.String("name", "luet", "Repository name")
-	flags.String("descr", "luet", "Repository description")
+	flags.String("name", "anise-build", "Repository name")
+	flags.String("descr", "anise-build", "Repository description")
 	flags.StringSlice("urls", []string{}, "Repository URLs")
 	flags.String("type", "disk", "Repository type (disk, http, docker)")
 	flags.Bool("reset-revision", false, "Reset repository revision.")

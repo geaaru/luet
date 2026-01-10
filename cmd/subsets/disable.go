@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewSubsetsDisableCommand(config *cfg.LuetConfig) *cobra.Command {
+func NewSubsetsDisableCommand(config *cfg.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "disable [OPTIONS] <subset1> ... <subsetN>",
 		Short: "Disable one or more subsets.",

@@ -16,15 +16,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newConfigCommand(cfg *config.LuetConfig) *cobra.Command {
+func newConfigCommand(cfg *config.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:     "config",
 		Short:   "Print config",
-		Long:    `Show luet configuration`,
+		Long:    `Show anise-build configuration`,
 		Aliases: []string{"c"},
 		Run: func(cmd *cobra.Command, args []string) {
-			//util.SetSolverConfig()
-
 			// Load config protect configs
 			installer.LoadConfigProtectConfs(cfg)
 			// Load subsets defintions

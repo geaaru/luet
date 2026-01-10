@@ -27,11 +27,11 @@ const (
 )
 
 type DockerClient struct {
-	Repository *config.LuetRepository
+	Repository *config.AniseRepository
 	auth       *types.AuthConfig
 }
 
-func NewDockerClient(r *config.LuetRepository) *DockerClient {
+func NewDockerClient(r *config.AniseRepository) *DockerClient {
 	auth := &types.AuthConfig{}
 
 	dat, _ := json.Marshal(r.Authentication)
@@ -50,10 +50,10 @@ func (c *DockerClient) DownloadArtifact(a *artifact.PackageArtifact, msg string)
 
 	var resultingArtifact *artifact.PackageArtifact
 	artifactName := path.Base(a.Path)
-	cacheFile := filepath.Join(config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath(), artifactName)
+	cacheFile := filepath.Join(config.AniseCfg.GetSystem().GetSystemPkgsCacheDirPath(), artifactName)
 	Debug("Cache file", cacheFile)
 	if err := fileHelper.EnsureDir(cacheFile); err != nil {
-		return errors.Wrapf(err, "could not create cache folder %s for %s", config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath(), cacheFile)
+		return errors.Wrapf(err, "could not create cache folder %s for %s", config.AniseCfg.GetSystem().GetSystemPkgsCacheDirPath(), cacheFile)
 	}
 	ok := false
 
@@ -72,7 +72,7 @@ func (c *DockerClient) DownloadArtifact(a *artifact.PackageArtifact, msg string)
 		resultingArtifact.Checksums = artifact.Checksums{}
 	} else {
 
-		temp, err = config.LuetCfg.GetSystem().TempDir("tree")
+		temp, err = config.AniseCfg.GetSystem().TempDir("tree")
 		if err != nil {
 			return err
 		}
@@ -83,7 +83,7 @@ func (c *DockerClient) DownloadArtifact(a *artifact.PackageArtifact, msg string)
 			imageName := fmt.Sprintf("%s:%s", uri, a.CompileSpec.GetPackage().ImageID())
 			Info("Downloading image", imageName)
 
-			contentstore, err := config.LuetCfg.GetSystem().TempDir("contentstore")
+			contentstore, err := config.AniseCfg.GetSystem().TempDir("contentstore")
 			if err != nil {
 				Warning("Cannot create contentstore", err.Error())
 				continue
@@ -133,18 +133,18 @@ func (c *DockerClient) DownloadFile(name string) (string, error) {
 	// Files should be in URI/repository:<file>
 	ok := false
 
-	temp, err = config.LuetCfg.GetSystem().TempDir("tree")
+	temp, err = config.AniseCfg.GetSystem().TempDir("tree")
 	if err != nil {
 		return "", err
 	}
 
 	for _, uri := range c.Repository.Urls {
-		file, err = config.LuetCfg.GetSystem().TempFile("DockerClient")
+		file, err = config.AniseCfg.GetSystem().TempFile("DockerClient")
 		if err != nil {
 			continue
 		}
 
-		contentstore, err = config.LuetCfg.GetSystem().TempDir("contentstore")
+		contentstore, err = config.AniseCfg.GetSystem().TempDir("contentstore")
 		if err != nil {
 			Warning("Cannot create contentstore", err.Error())
 			continue

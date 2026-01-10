@@ -17,7 +17,7 @@ var boxGroupCmd = &cobra.Command{
 	Short: "Manage anise boxes",
 }
 
-func newBoxCommand(cfg *config.LuetConfig) *cobra.Command {
+func newBoxCommand(cfg *config.AniseConfig) *cobra.Command {
 
 	var ans = &cobra.Command{
 		Use:   "box [command] [OPTIONS]",

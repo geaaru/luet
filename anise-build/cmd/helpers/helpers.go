@@ -16,11 +16,11 @@ import (
 )
 
 func BindValuesFlags(cmd *cobra.Command) {
-	LuetCfg.Viper.BindPFlag("values", cmd.Flags().Lookup("values"))
+	AniseCfg.Viper.BindPFlag("values", cmd.Flags().Lookup("values"))
 }
 
 func ValuesFlags() []string {
-	return LuetCfg.Viper.GetStringSlice("values")
+	return AniseCfg.Viper.GetStringSlice("values")
 }
 
 // TemplateFolders returns the default folders which holds shared template between packages in a given tree path
@@ -31,7 +31,7 @@ func TemplateFolders(fromRepo bool, treePaths []string) []string {
 			templateFolders = append(templateFolders, filepath.Join(t, "templates"))
 		}
 	} else {
-		for _, s := range installer.SystemRepositories(LuetCfg) {
+		for _, s := range installer.SystemRepositories(AniseCfg) {
 			templateFolders = append(templateFolders, filepath.Join(s.TreePath, "templates"))
 		}
 	}
@@ -54,33 +54,33 @@ func CreateRegexArray(rgx []string) ([]*regexp.Regexp, error) {
 }
 
 func BindSolverFlags(cmd *cobra.Command) {
-	LuetCfg.Viper.BindPFlag("solver.type", cmd.Flags().Lookup("solver-type"))
-	LuetCfg.Viper.BindPFlag("solver.discount", cmd.Flags().Lookup("solver-discount"))
-	LuetCfg.Viper.BindPFlag("solver.rate", cmd.Flags().Lookup("solver-rate"))
-	LuetCfg.Viper.BindPFlag("solver.max_attempts", cmd.Flags().Lookup("solver-attempts"))
-	LuetCfg.Viper.BindPFlag("solver.implementation", cmd.Flags().Lookup("solver-implementation"))
+	AniseCfg.Viper.BindPFlag("solver.type", cmd.Flags().Lookup("solver-type"))
+	AniseCfg.Viper.BindPFlag("solver.discount", cmd.Flags().Lookup("solver-discount"))
+	AniseCfg.Viper.BindPFlag("solver.rate", cmd.Flags().Lookup("solver-rate"))
+	AniseCfg.Viper.BindPFlag("solver.max_attempts", cmd.Flags().Lookup("solver-attempts"))
+	AniseCfg.Viper.BindPFlag("solver.implementation", cmd.Flags().Lookup("solver-implementation"))
 }
 
-func SetSolverConfig() (c *config.LuetSolverOptions) {
-	stype := LuetCfg.Viper.GetString("solver.type")
-	discount := LuetCfg.Viper.GetFloat64("solver.discount")
-	rate := LuetCfg.Viper.GetFloat64("solver.rate")
-	attempts := LuetCfg.Viper.GetInt("solver.max_attempts")
-	implementation := LuetCfg.Viper.GetString("solver.implementation")
+func SetSolverConfig() (c *config.AniseSolverOptions) {
+	stype := AniseCfg.Viper.GetString("solver.type")
+	discount := AniseCfg.Viper.GetFloat64("solver.discount")
+	rate := AniseCfg.Viper.GetFloat64("solver.rate")
+	attempts := AniseCfg.Viper.GetInt("solver.max_attempts")
+	implementation := AniseCfg.Viper.GetString("solver.implementation")
 
-	LuetCfg.GetSolverOptions().Type = stype
-	LuetCfg.GetSolverOptions().LearnRate = float32(rate)
-	LuetCfg.GetSolverOptions().Discount = float32(discount)
-	LuetCfg.GetSolverOptions().MaxAttempts = attempts
-	LuetCfg.GetSolverOptions().Implementation = implementation
+	AniseCfg.GetSolverOptions().Type = stype
+	AniseCfg.GetSolverOptions().LearnRate = float32(rate)
+	AniseCfg.GetSolverOptions().Discount = float32(discount)
+	AniseCfg.GetSolverOptions().MaxAttempts = attempts
+	AniseCfg.GetSolverOptions().Implementation = implementation
 
 	if implementation == "" {
 		// Using solver.type until i will drop solver.implementation option.
-		LuetCfg.GetSolverOptions().Implementation = stype
+		AniseCfg.GetSolverOptions().Implementation = stype
 		implementation = stype
 	}
 
-	return &config.LuetSolverOptions{
+	return &config.AniseSolverOptions{
 		Type:           stype,
 		LearnRate:      float32(rate),
 		Discount:       float32(discount),

@@ -20,7 +20,7 @@ import (
 	_gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 )
 
-func resolveCategory(config *cfg.LuetConfig, name string) (string, error) {
+func resolveCategory(config *cfg.AniseConfig, name string) (string, error) {
 	ans := ""
 
 	searchOpts := &wagon.StonesSearchOpts{
@@ -71,7 +71,7 @@ func resolveCategory(config *cfg.LuetConfig, name string) (string, error) {
 	return ans, nil
 }
 
-func ParsePackageStr(config *cfg.LuetConfig, p string) (*pkg.DefaultPackage, error) {
+func ParsePackageStr(config *cfg.AniseConfig, p string) (*pkg.DefaultPackage, error) {
 	ver := ">=0"
 	cat := ""
 	name := ""

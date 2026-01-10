@@ -16,7 +16,7 @@ import (
 
 var _ = Describe("Repository", func() {
 	Context("Load Repository1", func() {
-		cfg := NewLuetConfig(viper.New())
+		cfg := NewAniseConfig(viper.New())
 		cfg.RepositoriesConfDir = []string{
 			"../../tests/fixtures/repos.conf.d",
 		}

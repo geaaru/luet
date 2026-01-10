@@ -20,20 +20,20 @@ import (
 )
 
 type BuildManager struct {
-	Config *cfg.LuetConfig
+	Config *cfg.AniseConfig
 
 	Solver BuilderSolver
 }
 
-func NewBuildManager(c *cfg.LuetConfig) *BuildManager {
+func NewBuildManager(c *cfg.AniseConfig) *BuildManager {
 	return &BuildManager{
 		Config: c,
 		Solver: nil,
 	}
 }
 
-func (bm *BuildManager) GetConfig() *cfg.LuetConfig { return bm.Config }
-func (bm *BuildManager) GetSolver() BuilderSolver   { return bm.Solver }
+func (bm *BuildManager) GetConfig() *cfg.AniseConfig { return bm.Config }
+func (bm *BuildManager) GetSolver() BuilderSolver    { return bm.Solver }
 
 func (bm *BuildManager) PrepareSolver(stype string,
 	opts *BuildSolverOpts,

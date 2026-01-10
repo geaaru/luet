@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newCleanupCommand(config *cfg.LuetConfig) *cobra.Command {
+func newCleanupCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var ans = &cobra.Command{
 		Use:   "cleanup",

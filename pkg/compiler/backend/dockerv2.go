@@ -72,9 +72,9 @@ func (d *Dockerv2) createTarFormers() *tarf.TarFormers {
 	defer mutex.Unlock()
 
 	// Create config
-	cfg := tarf_specs.NewConfig(config.LuetCfg.Viper)
-	cfg.GetGeneral().Debug = config.LuetCfg.GetGeneral().Debug
-	cfg.GetLogging().Level = config.LuetCfg.GetLogging().Level
+	cfg := tarf_specs.NewConfig(config.AniseCfg.Viper)
+	cfg.GetGeneral().Debug = config.AniseCfg.GetGeneral().Debug
+	cfg.GetLogging().Level = config.AniseCfg.GetLogging().Level
 
 	ans := tarf.NewTarFormers(cfg)
 
@@ -126,10 +126,10 @@ func (d *Dockerv2) ExportImage(opts Options) error {
 	spec.MapEntities = false
 	spec.SameChtimes = false
 	// In general this must be always set a true.
-	spec.SameOwner = config.LuetCfg.GetGeneral().SameOwner
+	spec.SameOwner = config.AniseCfg.GetGeneral().SameOwner
 	spec.BrokenLinksFatal = true
 
-	buffered := !config.LuetCfg.GetGeneral().ShowBuildOutput
+	buffered := !config.AniseCfg.GetGeneral().ShowBuildOutput
 	writer := NewBackendWriter(buffered)
 
 	outReader, err := exportCmd.StdoutPipe()

@@ -33,7 +33,7 @@ var _ = Describe("Docker backend", func() {
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(1))
 
-			cc := NewLuetCompiler(nil, generalRecipe.GetDatabase())
+			cc := NewAniseCompiler(nil, generalRecipe.GetDatabase())
 			lspec, err := cc.FromPackage(&pkg.DefaultPackage{Name: "enman", Category: "app-admin", Version: "1.4.0"})
 			Expect(err).ToNot(HaveOccurred())
 
@@ -71,9 +71,9 @@ ENV PACKAGE_CATEGORY=app-admin`))
 			Expect(b.ExportImage(opts)).ToNot(HaveOccurred())
 			Expect(fileHelper.Exists(filepath.Join(tmpdir2, "output1.tar"))).To(BeTrue())
 
-			err = lspec.WriteStepImageDefinition(lspec.Image, filepath.Join(tmpdir, "LuetDockerfile"))
+			err = lspec.WriteStepImageDefinition(lspec.Image, filepath.Join(tmpdir, "AniseDockerfile"))
 			Expect(err).ToNot(HaveOccurred())
-			dockerfile, err = fileHelper.Read(filepath.Join(tmpdir, "LuetDockerfile"))
+			dockerfile, err = fileHelper.Read(filepath.Join(tmpdir, "AniseDockerfile"))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(dockerfile).To(Equal(`
 FROM luet/base
@@ -87,7 +87,7 @@ RUN echo bar > /test2`))
 			opts2 := backend.Options{
 				ImageName:      "test",
 				SourcePath:     tmpdir,
-				DockerFileName: "LuetDockerfile",
+				DockerFileName: "AniseDockerfile",
 				Destination:    filepath.Join(tmpdir, "output2.tar"),
 			}
 
@@ -96,7 +96,7 @@ RUN echo bar > /test2`))
 			Expect(fileHelper.Exists(filepath.Join(tmpdir, "output2.tar"))).To(BeTrue())
 
 			artifacts := []artifact.ArtifactNode{{
-				Name: "/luetbuild/LuetDockerfile",
+				Name: "/luetbuild/AniseDockerfile",
 				Size: 175,
 			}}
 			if os.Getenv("DOCKER_BUILDKIT") == "1" {
@@ -117,7 +117,7 @@ RUN echo bar > /test2`))
 			opts2 = backend.Options{
 				ImageName:      "test",
 				SourcePath:     tmpdir,
-				DockerFileName: "LuetDockerfile",
+				DockerFileName: "AniseDockerfile",
 				Destination:    filepath.Join(tmpdir, "output3.tar"),
 			}
 

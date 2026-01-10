@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewRemovePackage(config *cfg.LuetConfig) *cobra.Command {
+func NewRemovePackage(config *cfg.AniseConfig) *cobra.Command {
 
 	var ans = &cobra.Command{
 		Use:     "remove-package <pkg1> <pkg2> ... <pkgN>",

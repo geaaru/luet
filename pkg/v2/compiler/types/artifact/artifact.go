@@ -183,7 +183,7 @@ func (a *PackageArtifact) GetPackageTreePath(treefs string) string {
 
 func (a *PackageArtifact) ResolveCachePath() {
 	artifactName := path.Base(a.Path)
-	cacheFile := filepath.Join(LuetCfg.GetSystem().GetSystemPkgsCacheDirPath(), artifactName)
+	cacheFile := filepath.Join(AniseCfg.GetSystem().GetSystemPkgsCacheDirPath(), artifactName)
 	a.CachePath = cacheFile
 }
 
@@ -333,7 +333,7 @@ func CreateArtifactForFile(s string, opts ...func(*PackageArtifact)) (*PackageAr
 		return nil, errors.Wrap(err, "artifact path doesn't exist")
 	}
 	fileName := path.Base(s)
-	archive, err := LuetCfg.GetSystem().TempDir("archive")
+	archive, err := AniseCfg.GetSystem().TempDir("archive")
 	if err != nil {
 		return nil, errors.Wrap(err, "error met while creating tempdir for "+s)
 	}
@@ -343,7 +343,7 @@ func CreateArtifactForFile(s string, opts ...func(*PackageArtifact)) (*PackageAr
 		return nil, errors.Wrapf(err, "error while copying %s to %s", s, dst)
 	}
 
-	artifact, err := LuetCfg.GetSystem().TempDir("artifact")
+	artifact, err := AniseCfg.GetSystem().TempDir("artifact")
 	if err != nil {
 		return nil, errors.Wrap(err, "error met while creating tempdir for "+s)
 	}
@@ -363,7 +363,7 @@ type ImageBuilder interface {
 // GenerateFinalImage takes an artifact and builds a Docker image with its content
 func (a *PackageArtifact) GenerateFinalImage(imageName string, b ImageBuilder, keepPerms bool) (backend.Options, error) {
 	builderOpts := backend.Options{}
-	archive, err := LuetCfg.GetSystem().TempDir("archive")
+	archive, err := AniseCfg.GetSystem().TempDir("archive")
 	if err != nil {
 		return builderOpts, errors.Wrap(err, "error met while creating tempdir for "+a.Path)
 	}
@@ -621,7 +621,7 @@ func (a *PackageArtifact) GetProtectFiles() []string {
 	ans := []string{}
 	annotationDir := ""
 
-	if !LuetCfg.ConfigProtectSkip {
+	if !AniseCfg.ConfigProtectSkip {
 
 		// a.CompileSpec could be nil when artifact.Unpack is used for tree tarball
 		if a.CompileSpec != nil &&
@@ -691,8 +691,8 @@ func (a *PackageArtifact) Unpack(dst string, enableSubsets bool) error {
 	// Defaults to tar only (covers when "none" is supplied)
 	default:
 		return helpers.UntarProtect(a.CachePath, dst,
-			LuetCfg.GetGeneral().SameOwner,
-			LuetCfg.GetGeneral().OverwriteDirPerms,
+			AniseCfg.GetGeneral().SameOwner,
+			AniseCfg.GetGeneral().OverwriteDirPerms,
 			protectedFiles, tarModifierWrapperFunc)
 	}
 }
@@ -700,7 +700,7 @@ func (a *PackageArtifact) Unpack(dst string, enableSubsets bool) error {
 // FileList generates the list of file of a package from the local archive
 func (a *PackageArtifact) FileList() ([]string, error) {
 	var tr *tar.Reader
-	archiveDir, err := LuetCfg.GetSystem().TempDir(
+	archiveDir, err := AniseCfg.GetSystem().TempDir(
 		fmt.Sprintf("%s", filepath.Base(a.Path)))
 	if err != nil {
 		return []string{}, err
@@ -840,19 +840,19 @@ type ArtifactLayer struct {
 // ExtractArtifactFromDelta extracts deltas from ArtifactLayer from an image in tar format
 func ExtractArtifactFromDelta(src, dst string, layers []ArtifactLayer, concurrency int, keepPerms bool, includes []string, excludes []string, t compression.Implementation) (*PackageArtifact, error) {
 
-	archive, err := LuetCfg.GetSystem().TempDir("archive")
+	archive, err := AniseCfg.GetSystem().TempDir("archive")
 	if err != nil {
 		return nil, errors.Wrap(err, "Error met while creating tempdir for archive")
 	}
 	defer os.RemoveAll(archive) // clean up
 
 	if strings.HasSuffix(src, ".tar") {
-		rootfs, err := LuetCfg.GetSystem().TempDir("rootfs")
+		rootfs, err := AniseCfg.GetSystem().TempDir("rootfs")
 		if err != nil {
 			return nil, errors.Wrap(err, "Error met while creating tempdir for rootfs")
 		}
 		defer os.RemoveAll(rootfs) // clean up
-		err = helpers.Untar(src, rootfs, keepPerms, LuetCfg.GetGeneral().OverwriteDirPerms)
+		err = helpers.Untar(src, rootfs, keepPerms, AniseCfg.GetGeneral().OverwriteDirPerms)
 		if err != nil {
 			return nil, errors.Wrap(err, "Error met while unpacking rootfs")
 		}

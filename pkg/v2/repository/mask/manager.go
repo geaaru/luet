@@ -18,7 +18,7 @@ import (
 	gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 )
 
-func NewPackagesMaskManager(c *config.LuetConfig) *PackagesMaskManager {
+func NewPackagesMaskManager(c *config.AniseConfig) *PackagesMaskManager {
 	return &PackagesMaskManager{
 		Config: c,
 		Files:  []*PackageMaskFile{},

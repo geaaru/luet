@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewInstallPackage(config *cfg.LuetConfig) *cobra.Command {
+func NewInstallPackage(config *cfg.AniseConfig) *cobra.Command {
 
 	var ans = &cobra.Command{
 		Use:     "install-package <repository-name> <pkg1> <pkg2> ... <pkgN>",

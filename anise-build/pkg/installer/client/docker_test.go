@@ -47,7 +47,7 @@ var _ = Describe("Docker client", func() {
 		It("Downloads artifacts", func() {
 			f, err := c.DownloadArtifact(&artifact.PackageArtifact{
 				Path: "test.tar",
-				CompileSpec: &compilerspec.LuetCompilationSpec{
+				CompileSpec: &compilerspec.AniseCompilationSpec{
 					Package: &pkg.DefaultPackage{
 						Name:     "c",
 						Category: "test",

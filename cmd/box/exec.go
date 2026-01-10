@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewBoxExecCommand(cfg *config.LuetConfig) *cobra.Command {
+func NewBoxExecCommand(cfg *config.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "exec [OPTIONS]",
 		Short: "Execute a binary in a box",

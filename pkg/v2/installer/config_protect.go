@@ -16,7 +16,7 @@ import (
 	. "github.com/macaroni-os/anise/pkg/logger"
 )
 
-func LoadConfigProtectConfs(c *LuetConfig) error {
+func LoadConfigProtectConfs(c *AniseConfig) error {
 	var regexConfs = regexp.MustCompile(`.yml$`)
 	var err error
 

@@ -80,7 +80,7 @@ func semverCheck(vv string, selector string) (bool, error) {
 	return c.Check(v), nil
 }
 
-// WrappedVersioner uses different means to return unique result that is understendable by Luet
+// WrappedVersioner uses different means to return unique result that is understendable by Anise
 // It tries different approaches to sort, validate, and sanitize to a common versioning format
 // that is understendable by the whole code
 type WrappedVersioner struct{}

@@ -625,7 +625,7 @@ func (s *WagonStones) SearchArtifacts(
 		waitGroup: &sync.WaitGroup{},
 		Ctx:       &ctx,
 		semaphore: semaphore.NewWeighted(
-			int64(config.LuetCfg.GetGeneral().Concurrency),
+			int64(config.AniseCfg.GetGeneral().Concurrency),
 		),
 
 		regs:    []*regexp.Regexp{},
@@ -1058,7 +1058,7 @@ func (s *WagonStones) SearchFromCatalog(opts *StonesSearchOpts, repoName string)
 				files := []string{}
 				for _, f := range stone.Files {
 					files = append(files,
-						filepath.Join(config.LuetCfg.GetSystem().Rootfs, f))
+						filepath.Join(config.AniseCfg.GetSystem().Rootfs, f))
 				}
 				stone.Files = files
 			}
@@ -1090,7 +1090,7 @@ func (s *WagonStones) Search(
 				files := []string{}
 				for _, f := range stone.Files {
 					files = append(files,
-						filepath.Join(config.LuetCfg.GetSystem().Rootfs, f))
+						filepath.Join(config.AniseCfg.GetSystem().Rootfs, f))
 				}
 				stone.Files = files
 			}

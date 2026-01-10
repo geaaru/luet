@@ -15,7 +15,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func NewDatabaseGetCommand(cfg *config.LuetConfig) *cobra.Command {
+func NewDatabaseGetCommand(cfg *config.AniseConfig) *cobra.Command {
 	var c = &cobra.Command{
 		Use:   "get <package>",
 		Short: "Get a package in the system DB as yaml",

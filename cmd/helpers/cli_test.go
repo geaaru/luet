@@ -19,9 +19,9 @@ var _ = Describe("CLI Helpers", func() {
 	dbpath, _ := filepath.Abs("../../tests/repo-trees")
 	// At the moment the wagon use global variable
 	// to retrieve database Path.
-	config := cfg.LuetCfg
+	config := cfg.AniseCfg
 	config.GetSystem().DatabasePath = dbpath
-	repo := cfg.NewLuetRepository("mottainai-stable", "http",
+	repo := cfg.NewAniseRepository("mottainai-stable", "http",
 		"Mottainai Stable Repo",
 		[]string{"http://mydomain.it"},
 		10, true, true)

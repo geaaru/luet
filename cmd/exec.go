@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newExecCommand(cfg *config.LuetConfig) *cobra.Command {
+func newExecCommand(cfg *config.AniseConfig) *cobra.Command {
 	var execCmd = &cobra.Command{
 		Use:   "exec --rootfs /path [command]",
 		Short: "Execute a command in the rootfs context",

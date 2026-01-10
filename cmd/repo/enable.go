@@ -17,7 +17,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func NewRepoEnableCommand(config *cfg.LuetConfig) *cobra.Command {
+func NewRepoEnableCommand(config *cfg.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "enable <repo1> ... <repoN>",
 		Short: "Enable one or more repositories.",

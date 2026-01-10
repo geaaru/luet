@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newUninstallCommand(config *cfg.LuetConfig) *cobra.Command {
+func newUninstallCommand(config *cfg.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "uninstall <pkg> <pkg2> ...",
 		Short: "Uninstall a package or a list of packages",
@@ -49,7 +49,7 @@ of the finalizers.
 		Run: func(cmd *cobra.Command, args []string) {
 
 			InfoC(fmt.Sprintf(":rocket:%s %s",
-				Bold(Blue("Luet")), Bold(Blue(util.Version()))))
+				Bold(Blue("Anise")), Bold(Blue(util.Version()))))
 
 			toRemove := []*pkg.DefaultPackage{}
 			for _, a := range args {

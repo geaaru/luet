@@ -55,7 +55,7 @@ func (c *ConfigProtect) GetAnnotationDir() string {
 }
 
 func (c *ConfigProtect) Map(files []string) {
-	if LuetCfg.ConfigProtectSkip {
+	if AniseCfg.ConfigProtectSkip {
 		return
 	}
 
@@ -65,8 +65,8 @@ func (c *ConfigProtect) Map(files []string) {
 			file = "/" + file
 		}
 
-		if len(LuetCfg.GetConfigProtectConfFiles()) > 0 {
-			for _, conf := range LuetCfg.GetConfigProtectConfFiles() {
+		if len(AniseCfg.GetConfigProtectConfFiles()) > 0 {
+			for _, conf := range AniseCfg.GetConfigProtectConfFiles() {
 				for _, dir := range conf.Directories {
 					// Note file is without / at begin (on unpack)
 					if strings.HasPrefix(file, filepath.Clean(dir)) {

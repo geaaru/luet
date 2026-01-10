@@ -52,10 +52,10 @@ func (c *DockerClient) DownloadArtifact(a *artifact.PackageArtifact) (*artifact.
 
 	var resultingArtifact *artifact.PackageArtifact
 	artifactName := path.Base(a.Path)
-	cacheFile := filepath.Join(config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath(), artifactName)
+	cacheFile := filepath.Join(config.AniseCfg.GetSystem().GetSystemPkgsCacheDirPath(), artifactName)
 	Debug("Cache file", cacheFile)
 	if err := fileHelper.EnsureDir(cacheFile); err != nil {
-		return nil, errors.Wrapf(err, "could not create cache folder %s for %s", config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath(), cacheFile)
+		return nil, errors.Wrapf(err, "could not create cache folder %s for %s", config.AniseCfg.GetSystem().GetSystemPkgsCacheDirPath(), cacheFile)
 	}
 	ok := false
 
@@ -74,7 +74,7 @@ func (c *DockerClient) DownloadArtifact(a *artifact.PackageArtifact) (*artifact.
 		resultingArtifact.Checksums = artifact.Checksums{}
 	} else {
 
-		temp, err = config.LuetCfg.GetSystem().TempDir("tree")
+		temp, err = config.AniseCfg.GetSystem().TempDir("tree")
 		if err != nil {
 			return nil, err
 		}
@@ -85,7 +85,7 @@ func (c *DockerClient) DownloadArtifact(a *artifact.PackageArtifact) (*artifact.
 			imageName := fmt.Sprintf("%s:%s", uri, a.CompileSpec.GetPackage().ImageID())
 			Info("Downloading image", imageName)
 
-			contentstore, err := config.LuetCfg.GetSystem().TempDir("contentstore")
+			contentstore, err := config.AniseCfg.GetSystem().TempDir("contentstore")
 			if err != nil {
 				Warning("Cannot create contentstore", err.Error())
 				continue
@@ -133,18 +133,18 @@ func (c *DockerClient) DownloadFile(name string) (string, error) {
 	// Files should be in URI/repository:<file>
 	ok := false
 
-	temp, err = config.LuetCfg.GetSystem().TempDir("tree")
+	temp, err = config.AniseCfg.GetSystem().TempDir("tree")
 	if err != nil {
 		return "", err
 	}
 
 	for _, uri := range c.RepoData.Urls {
-		file, err = config.LuetCfg.GetSystem().TempFile("DockerClient")
+		file, err = config.AniseCfg.GetSystem().TempFile("DockerClient")
 		if err != nil {
 			continue
 		}
 
-		contentstore, err = config.LuetCfg.GetSystem().TempDir("contentstore")
+		contentstore, err = config.AniseCfg.GetSystem().TempDir("contentstore")
 		if err != nil {
 			Warning("Cannot create contentstore", err.Error())
 			continue

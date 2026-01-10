@@ -125,9 +125,9 @@ func (d *dockerRepositoryGenerator) pushFileFromArtifact(a *artifact.PackageArti
 	return nil
 }
 
-func (d *dockerRepositoryGenerator) pushRepoMetadata(repospec string, r *LuetSystemRepository) error {
+func (d *dockerRepositoryGenerator) pushRepoMetadata(repospec string, r *AniseSystemRepository) error {
 	// create temp dir for metafile
-	metaDir, err := config.LuetCfg.GetSystem().TempDir("metadata")
+	metaDir, err := config.AniseCfg.GetSystem().TempDir("metadata")
 	if err != nil {
 		return errors.Wrap(err, "Error met while creating tempdir for metadata")
 	}
@@ -164,7 +164,7 @@ func (d *dockerRepositoryGenerator) pushImageFromArtifact(a *artifact.PackageArt
 }
 
 // Generate creates a Docker luet repository
-func (d *dockerRepositoryGenerator) Generate(r *LuetSystemRepository, imagePrefix string, resetRevision bool) error {
+func (d *dockerRepositoryGenerator) Generate(r *AniseSystemRepository, imagePrefix string, resetRevision bool) error {
 	// - Iterate over meta, build final images, push them if necessary
 	//   - while pushing, check if image already exists, and if exist push them only if --force is supplied
 	// - Generate final images for metadata and push
@@ -173,7 +173,7 @@ func (d *dockerRepositoryGenerator) Generate(r *LuetSystemRepository, imagePrefi
 
 	r.LastUpdate = strconv.FormatInt(time.Now().Unix(), 10)
 
-	repoTemp, err := config.LuetCfg.GetSystem().TempDir("repo")
+	repoTemp, err := config.AniseCfg.GetSystem().TempDir("repo")
 	if err != nil {
 		return errors.Wrap(err, "error met while creating tempdir for repository")
 	}
@@ -224,7 +224,7 @@ func (d *dockerRepositoryGenerator) Generate(r *LuetSystemRepository, imagePrefi
 	}
 
 	// create temp dir for metafile
-	metaDir, err := config.LuetCfg.GetSystem().TempDir("metadata")
+	metaDir, err := config.AniseCfg.GetSystem().TempDir("metadata")
 	if err != nil {
 		return errors.Wrap(err, "error met while creating tempdir for metadata")
 	}

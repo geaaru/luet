@@ -18,12 +18,12 @@ import (
 
 type FchrootBox struct {
 	*DefaultBox
-	Config *config.LuetConfig
+	Config *config.AniseConfig
 }
 
 func NewFchrootBox(cmd string, args, hostmounts, env []string,
 	rootfs string, stdin, stdout, stderr bool,
-	cfg *config.LuetConfig) Box {
+	cfg *config.AniseConfig) Box {
 	return &FchrootBox{
 		DefaultBox: &DefaultBox{
 			Stdin:      stdin,

@@ -36,7 +36,7 @@ func NewHttpClient(r RepoData) *HttpClient {
 }
 
 func NewGrabClient() *grab.Client {
-	httpTimeout := config.LuetCfg.GetGeneral().ClientTimeout
+	httpTimeout := config.AniseCfg.GetGeneral().ClientTimeout
 	timeout := os.Getenv("HTTP_TIMEOUT")
 	if timeout != "" {
 		timeoutI, err := strconv.Atoi(timeout)
@@ -97,7 +97,7 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) (*artifact.Pa
 	var temp string
 
 	artifactName := path.Base(a.Path)
-	cacheFile := filepath.Join(config.LuetCfg.GetSystem().GetSystemPkgsCacheDirPath(), artifactName)
+	cacheFile := filepath.Join(config.AniseCfg.GetSystem().GetSystemPkgsCacheDirPath(), artifactName)
 	ok := false
 
 	// Check if file is already in cache
@@ -105,7 +105,7 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) (*artifact.Pa
 		Debug("Use artifact", artifactName, "from cache.")
 	} else {
 
-		temp, err = config.LuetCfg.GetSystem().TempDir("tree")
+		temp, err = config.AniseCfg.GetSystem().TempDir("tree")
 		if err != nil {
 			return nil, err
 		}
@@ -135,7 +135,7 @@ func (c *HttpClient) DownloadArtifact(a *artifact.PackageArtifact) (*artifact.Pa
 					fmt.Sprintf("[cyan] %s - [reset]",
 						filepath.Base(resp.Request.HTTPRequest.URL.RequestURI()))),
 				progressbar.OptionSetRenderBlankState(true),
-				progressbar.OptionEnableColorCodes(config.LuetCfg.GetLogging().Color),
+				progressbar.OptionEnableColorCodes(config.AniseCfg.GetLogging().Color),
 				progressbar.OptionClearOnFinish(),
 				progressbar.OptionShowBytes(true),
 				progressbar.OptionShowCount(),
@@ -208,7 +208,7 @@ func (c *HttpClient) DownloadFile(name string) (string, error) {
 
 	ok := false
 
-	temp, err = config.LuetCfg.GetSystem().TempDir("tree")
+	temp, err = config.AniseCfg.GetSystem().TempDir("tree")
 	if err != nil {
 		return "", err
 	}
@@ -217,7 +217,7 @@ func (c *HttpClient) DownloadFile(name string) (string, error) {
 
 	for _, uri := range c.RepoData.Urls {
 
-		file, err = config.LuetCfg.GetSystem().TempFile("HttpClient")
+		file, err = config.AniseCfg.GetSystem().TempFile("HttpClient")
 		if err != nil {
 			continue
 		}

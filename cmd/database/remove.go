@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewDatabaseRemoveCommand(cfg *config.LuetConfig) *cobra.Command {
+func NewDatabaseRemoveCommand(cfg *config.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "remove [package1] [package2] ...",
 		Short: "Remove a package from the system DB (forcefully - you normally don't want to do that)",

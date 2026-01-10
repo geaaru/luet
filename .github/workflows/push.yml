@@ -11,7 +11,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.22.x
+          go-version: 1.24.x
 
       - name: Checkout code
         uses: actions/checkout@v3
@@ -23,9 +23,6 @@ jobs:
 
       - name: setup-docker
         uses: docker-practice/actions-setup-docker@master
-
-#      - name: Login to quay
-#        run: echo ${{ secrets.DOCKER_TESTING_PASSWORD }} | sudo -E docker login -u ${{ secrets.DOCKER_TESTING_USERNAME }} --password-stdin quay.io
 
       - name: Install deps
         run: |
@@ -41,12 +38,6 @@ jobs:
             sudo -E env "PATH=$PATH" \
                     env "ANISE_BACKEND=dockerv3" \
                     make test-integration
-
-      #- name: Tests with Dockerv2 backend
-      #  run: |
-      #      sudo -E env "PATH=$PATH" \
-      #              env "ANISE_BACKEND=dockerv2" \
-      #              make test-integration
 
       - name: Tests
         run: |
@@ -90,10 +81,6 @@ jobs:
 
       - name: setup-docker
         uses: docker-practice/actions-setup-docker@master
-
-      #- name: Login to quay
-      #  run: echo ${{ secrets.DOCKER_TESTING_PASSWORD }} | sudo -E docker login -u ${{ secrets.DOCKER_TESTING_USERNAME }} --password-stdin quay.io
-
 
       - name: Build test
         run: sudo -E env "PATH=$PATH" make multiarch-build-small

@@ -45,7 +45,7 @@ func (s *System) ExecuteFinalizers(packs []pkg.Package) error {
 			if _, exists := executedFinalizer[p.GetFingerPrint()]; !exists {
 				executedFinalizer[p.GetFingerPrint()] = true
 				Info("Executing finalizer for " + p.HumanReadableString())
-				finalizer, err := NewLuetFinalizerFromYaml([]byte(out))
+				finalizer, err := NewAniseFinalizerFromYaml([]byte(out))
 				if err != nil {
 					Warning("Failed reading finalizer for ", p.HumanReadableString(), err.Error())
 					errs = multierror.Append(errs, err)

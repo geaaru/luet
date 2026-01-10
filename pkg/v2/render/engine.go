@@ -23,7 +23,7 @@ import (
 // Based on the code available on github.com/Mottainai/lxd-compose project
 
 type RenderEngine struct {
-	Config            *config.LuetConfig
+	Config            *config.AniseConfig
 	Templates         []*chart.File
 	MetadataNamespace string
 
@@ -31,7 +31,7 @@ type RenderEngine struct {
 	DefValues map[string]interface{}
 }
 
-func NewRenderEngine(cfg *config.LuetConfig) *RenderEngine {
+func NewRenderEngine(cfg *config.AniseConfig) *RenderEngine {
 	return &RenderEngine{
 		Config:            cfg,
 		Templates:         []*chart.File{},

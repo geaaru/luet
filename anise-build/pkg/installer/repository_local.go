@@ -73,8 +73,8 @@ func buildPackageIndex(path string, db pkg.PackageDatabase) ([]*artifact.Package
 	return art, nil
 }
 
-// Generate creates a Local luet repository
-func (*localRepositoryGenerator) Generate(r *LuetSystemRepository, dst string, resetRevision bool) error {
+// Generate creates a Local anise repository
+func (*localRepositoryGenerator) Generate(r *AniseSystemRepository, dst string, resetRevision bool) error {
 	err := os.MkdirAll(dst, os.ModePerm)
 	if err != nil {
 		return err

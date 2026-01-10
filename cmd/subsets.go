@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newSubsetsCommand(config *cfg.LuetConfig) *cobra.Command {
+func newSubsetsCommand(config *cfg.AniseConfig) *cobra.Command {
 
 	var ans = &cobra.Command{
 		Use:   "subsets [command] [OPTIONS]",

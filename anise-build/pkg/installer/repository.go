@@ -49,30 +49,30 @@ const (
 	DockerRepositoryType = "docker"
 )
 
-type LuetRepositoryFile struct {
+type AniseRepositoryFile struct {
 	FileName        string                     `json:"filename" yaml:"filename"`
 	CompressionType compression.Implementation `json:"compressiontype,omitempty" yaml:"compressiontype,omitempty"`
 	Checksums       artifact.Checksums         `json:"checksums,omitempty" yaml:"checksums,omitempty"`
 }
 
-type LuetSystemRepository struct {
-	config.LuetRepository `yaml:",inline"`
+type AniseSystemRepository struct {
+	config.AniseRepository `yaml:",inline"`
 
-	Index           compiler.ArtifactIndex        `json:"index" yaml:"index"`
-	BuildTree, Tree tree.Builder                  `json:"-" yaml:"-"`
-	RepositoryFiles map[string]LuetRepositoryFile `json:"repo_files" yaml:"repo_files"`
-	Backend         compiler.CompilerBackend      `json:"-" yaml:"-"`
-	PushImages      bool                          `json:"-" yaml:"-"`
-	ForcePush       bool                          `json:"-" yaml:"-"`
+	Index           compiler.ArtifactIndex         `json:"index" yaml:"index"`
+	BuildTree, Tree tree.Builder                   `json:"-" yaml:"-"`
+	RepositoryFiles map[string]AniseRepositoryFile `json:"repo_files" yaml:"repo_files"`
+	Backend         compiler.CompilerBackend       `json:"-" yaml:"-"`
+	PushImages      bool                           `json:"-" yaml:"-"`
+	ForcePush       bool                           `json:"-" yaml:"-"`
 
 	imagePrefix string `json:"-" yaml:"-"`
 }
 
-type LuetSystemRepositoryMetadata struct {
+type AniseSystemRepositoryMetadata struct {
 	Index []*artifact.PackageArtifact `json:"index,omitempty" yaml:"index,omitempty"`
 }
 
-type LuetSearchModeType int
+type AniseSearchModeType int
 
 const (
 	SLabel      = iota
@@ -81,12 +81,12 @@ const (
 	FileSearch  = iota
 )
 
-type LuetSearchOpts struct {
-	Mode LuetSearchModeType
+type AniseSearchOpts struct {
+	Mode AniseSearchModeType
 }
 
-func NewLuetSystemRepositoryMetadata(file string, removeFile bool) (*LuetSystemRepositoryMetadata, error) {
-	ans := &LuetSystemRepositoryMetadata{}
+func NewAniseSystemRepositoryMetadata(file string, removeFile bool) (*AniseSystemRepositoryMetadata, error) {
+	ans := &AniseSystemRepositoryMetadata{}
 	err := ans.ReadFile(file, removeFile)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func NewLuetSystemRepositoryMetadata(file string, removeFile bool) (*LuetSystemR
 }
 
 // SystemRepositories returns the repositories from the local configuration file
-func SystemRepositories(c *config.LuetConfig) Repositories {
+func SystemRepositories(c *config.AniseConfig) Repositories {
 	repos := Repositories{}
 	for _, repo := range c.SystemRepositories {
 		if !repo.Enable {
@@ -108,11 +108,11 @@ func SystemRepositories(c *config.LuetConfig) Repositories {
 }
 
 // LoadBuildTree loads to the tree the compilation specs from the system repositories
-func LoadBuildTree(t tree.Builder, db pkg.PackageDatabase, c *config.LuetConfig) error {
+func LoadBuildTree(t tree.Builder, db pkg.PackageDatabase, c *config.AniseConfig) error {
 	var reserr error
 	repos := SystemRepositories(c)
 	for _, r := range repos {
-		repodir, err := config.LuetCfg.GetSystem().TempDir(r.Name)
+		repodir, err := config.AniseCfg.GetSystem().TempDir(r.Name)
 		if err != nil {
 			reserr = multierr.Append(reserr, err)
 		}
@@ -136,7 +136,7 @@ func LoadBuildTree(t tree.Builder, db pkg.PackageDatabase, c *config.LuetConfig)
 	return reserr
 }
 
-func (m *LuetSystemRepositoryMetadata) WriteFile(path string) error {
+func (m *AniseSystemRepositoryMetadata) WriteFile(path string) error {
 	data, err := yaml.Marshal(m)
 	if err != nil {
 		return err
@@ -150,7 +150,7 @@ func (m *LuetSystemRepositoryMetadata) WriteFile(path string) error {
 	return nil
 }
 
-func (m *LuetSystemRepositoryMetadata) ReadFile(file string, removeFile bool) error {
+func (m *AniseSystemRepositoryMetadata) ReadFile(file string, removeFile bool) error {
 	if file == "" {
 		return errors.New("Invalid path for repository metadata")
 	}
@@ -171,29 +171,29 @@ func (m *LuetSystemRepositoryMetadata) ReadFile(file string, removeFile bool) er
 	return nil
 }
 
-func (m *LuetSystemRepositoryMetadata) ToArtifactIndex() (ans compiler.ArtifactIndex) {
+func (m *AniseSystemRepositoryMetadata) ToArtifactIndex() (ans compiler.ArtifactIndex) {
 	for _, a := range m.Index {
 		ans = append(ans, a)
 	}
 	return
 }
 
-func NewDefaultTreeRepositoryFile() LuetRepositoryFile {
-	return LuetRepositoryFile{
+func NewDefaultTreeRepositoryFile() AniseRepositoryFile {
+	return AniseRepositoryFile{
 		FileName:        TREE_TARBALL,
 		CompressionType: compression.GZip,
 	}
 }
 
-func NewDefaultCompilerTreeRepositoryFile() LuetRepositoryFile {
-	return LuetRepositoryFile{
+func NewDefaultCompilerTreeRepositoryFile() AniseRepositoryFile {
+	return AniseRepositoryFile{
 		FileName:        COMPILERTREE_TARBALL,
 		CompressionType: compression.GZip,
 	}
 }
 
-func NewDefaultMetaRepositoryFile() LuetRepositoryFile {
-	return LuetRepositoryFile{
+func NewDefaultMetaRepositoryFile() AniseRepositoryFile {
+	return AniseRepositoryFile{
 		FileName:        REPOSITORY_METAFILE + ".tar",
 		CompressionType: compression.None,
 	}
@@ -202,49 +202,49 @@ func NewDefaultMetaRepositoryFile() LuetRepositoryFile {
 // SetFileName sets the name of the repository file.
 // Each repository can ship arbitrary file that will be downloaded by the client
 // in case of need, this set the filename that the client will pull
-func (f *LuetRepositoryFile) SetFileName(n string) {
+func (f *AniseRepositoryFile) SetFileName(n string) {
 	f.FileName = n
 }
 
 // GetFileName returns the name of the repository file.
 // Each repository can ship arbitrary file that will be downloaded by the client
 // in case of need, this gets the filename that the client will pull
-func (f *LuetRepositoryFile) GetFileName() string {
+func (f *AniseRepositoryFile) GetFileName() string {
 	return f.FileName
 }
 
 // SetCompressionType sets the compression type of the repository file.
 // Each repository can ship arbitrary file that will be downloaded by the client
 // in case of need, this sets the compression type that the client will use to uncompress the artifact
-func (f *LuetRepositoryFile) SetCompressionType(c compression.Implementation) {
+func (f *AniseRepositoryFile) SetCompressionType(c compression.Implementation) {
 	f.CompressionType = c
 }
 
 // GetCompressionType gets the compression type of the repository file.
 // Each repository can ship arbitrary file that will be downloaded by the client
 // in case of need, this gets the compression type that the client will use to uncompress the artifact
-func (f *LuetRepositoryFile) GetCompressionType() compression.Implementation {
+func (f *AniseRepositoryFile) GetCompressionType() compression.Implementation {
 	return f.CompressionType
 }
 
 // SetChecksums sets the checksum of the repository file.
 // Each repository can ship arbitrary file that will be downloaded by the client
 // in case of need, this sets the checksums that the client will use to verify the artifact
-func (f *LuetRepositoryFile) SetChecksums(c artifact.Checksums) {
+func (f *AniseRepositoryFile) SetChecksums(c artifact.Checksums) {
 	f.Checksums = c
 }
 
 // GetChecksums gets the checksum of the repository file.
 // Each repository can ship arbitrary file that will be downloaded by the client
 // in case of need, this gets the checksums that the client will use to verify the artifact
-func (f *LuetRepositoryFile) GetChecksums() artifact.Checksums {
+func (f *AniseRepositoryFile) GetChecksums() artifact.Checksums {
 	return f.Checksums
 }
 
 // GenerateRepository generates a new repository from the given argument.
 // If the repository is of the docker type, it will also push the package images.
 // In case the repository is local, it will build the package Index
-func GenerateRepository(p ...RepositoryOption) (*LuetSystemRepository, error) {
+func GenerateRepository(p ...RepositoryOption) (*AniseSystemRepository, error) {
 	c := RepositoryConfig{}
 	c.Apply(p...)
 
@@ -330,11 +330,11 @@ func GenerateRepository(p ...RepositoryOption) (*LuetSystemRepository, error) {
 		filepath.Walk(c.Src, ff)
 	}
 
-	repo := &LuetSystemRepository{
-		LuetRepository:  *config.NewLuetRepository(c.Name, c.Type, c.Description, c.Urls, c.Priority, true, false),
+	repo := &AniseSystemRepository{
+		AniseRepository: *config.NewAniseRepository(c.Name, c.Type, c.Description, c.Urls, c.Priority, true, false),
 		Tree:            tree.NewInstallerRecipe(runtimeTree),
 		BuildTree:       btr,
-		RepositoryFiles: map[string]LuetRepositoryFile{},
+		RepositoryFiles: map[string]AniseRepositoryFile{},
 		PushImages:      c.PushImages,
 		ForcePush:       c.Force,
 		Backend:         c.CompilerBackend,
@@ -348,14 +348,14 @@ func GenerateRepository(p ...RepositoryOption) (*LuetSystemRepository, error) {
 	return repo, nil
 }
 
-func NewSystemRepository(repo config.LuetRepository) *LuetSystemRepository {
-	return &LuetSystemRepository{
-		LuetRepository:  repo,
-		RepositoryFiles: map[string]LuetRepositoryFile{},
+func NewSystemRepository(repo config.AniseRepository) *AniseSystemRepository {
+	return &AniseSystemRepository{
+		AniseRepository: repo,
+		RepositoryFiles: map[string]AniseRepositoryFile{},
 	}
 }
 
-func (r *LuetSystemRepository) String() string {
+func (r *AniseSystemRepository) String() string {
 	ans := ""
 	d, err := yaml.Marshal(r)
 	if err == nil {
@@ -364,8 +364,8 @@ func (r *LuetSystemRepository) String() string {
 	return ans
 }
 
-func NewLuetSystemRepositoryFromYaml(data []byte, db pkg.PackageDatabase) (*LuetSystemRepository, error) {
-	var p *LuetSystemRepository
+func NewAniseSystemRepositoryFromYaml(data []byte, db pkg.PackageDatabase) (*AniseSystemRepository, error) {
+	var p *AniseSystemRepository
 	err := yaml.Unmarshal(data, &p)
 	if err != nil {
 		return nil, err
@@ -376,11 +376,11 @@ func NewLuetSystemRepositoryFromYaml(data []byte, db pkg.PackageDatabase) (*Luet
 	return p, err
 }
 
-func (r *LuetSystemRepository) SetPriority(n int) {
-	r.LuetRepository.Priority = n
+func (r *AniseSystemRepository) SetPriority(n int) {
+	r.AniseRepository.Priority = n
 }
 
-func (r *LuetSystemRepository) initialize(src string) error {
+func (r *AniseSystemRepository) initialize(src string) error {
 	generator, err := r.getGenerator()
 	if err != nil {
 		return errors.Wrap(err, "while constructing repository generator")
@@ -395,7 +395,7 @@ func (r *LuetSystemRepository) initialize(src string) error {
 }
 
 // FileSearch search a pattern among the artifacts in a repository
-func (r *LuetSystemRepository) FileSearch(pattern string) (pkg.Packages, error) {
+func (r *AniseSystemRepository) FileSearch(pattern string) (pkg.Packages, error) {
 	var matches pkg.Packages
 	reg, err := regexp.Compile(pattern)
 	if err != nil {
@@ -413,98 +413,98 @@ ARTIFACT:
 	return matches, nil
 }
 
-func (r *LuetSystemRepository) GetName() string {
-	return r.LuetRepository.Name
+func (r *AniseSystemRepository) GetName() string {
+	return r.AniseRepository.Name
 }
-func (r *LuetSystemRepository) GetDescription() string {
-	return r.LuetRepository.Description
-}
-
-func (r *LuetSystemRepository) GetAuthentication() map[string]string {
-	return r.LuetRepository.Authentication
+func (r *AniseSystemRepository) GetDescription() string {
+	return r.AniseRepository.Description
 }
 
-func (r *LuetSystemRepository) GetType() string {
-	return r.LuetRepository.Type
+func (r *AniseSystemRepository) GetAuthentication() map[string]string {
+	return r.AniseRepository.Authentication
 }
 
-func (r *LuetSystemRepository) SetType(p string) {
-	r.LuetRepository.Type = p
+func (r *AniseSystemRepository) GetType() string {
+	return r.AniseRepository.Type
 }
 
-func (r *LuetSystemRepository) GetVerify() bool {
-	return r.LuetRepository.Verify
+func (r *AniseSystemRepository) SetType(p string) {
+	r.AniseRepository.Type = p
 }
 
-func (r *LuetSystemRepository) SetVerify(p bool) {
-	r.LuetRepository.Verify = p
+func (r *AniseSystemRepository) GetVerify() bool {
+	return r.AniseRepository.Verify
 }
 
-func (r *LuetSystemRepository) GetBackend() compiler.CompilerBackend {
+func (r *AniseSystemRepository) SetVerify(p bool) {
+	r.AniseRepository.Verify = p
+}
+
+func (r *AniseSystemRepository) GetBackend() compiler.CompilerBackend {
 	return r.Backend
 }
-func (r *LuetSystemRepository) SetBackend(b compiler.CompilerBackend) {
+func (r *AniseSystemRepository) SetBackend(b compiler.CompilerBackend) {
 	r.Backend = b
 }
 
-func (r *LuetSystemRepository) SetName(p string) {
-	r.LuetRepository.Name = p
+func (r *AniseSystemRepository) SetName(p string) {
+	r.AniseRepository.Name = p
 }
 
-func (r *LuetSystemRepository) AddUrl(p string) {
-	r.LuetRepository.Urls = append(r.LuetRepository.Urls, p)
+func (r *AniseSystemRepository) AddUrl(p string) {
+	r.AniseRepository.Urls = append(r.AniseRepository.Urls, p)
 }
-func (r *LuetSystemRepository) GetUrls() []string {
-	return r.LuetRepository.Urls
+func (r *AniseSystemRepository) GetUrls() []string {
+	return r.AniseRepository.Urls
 }
-func (r *LuetSystemRepository) SetUrls(urls []string) {
-	r.LuetRepository.Urls = urls
+func (r *AniseSystemRepository) SetUrls(urls []string) {
+	r.AniseRepository.Urls = urls
 }
-func (r *LuetSystemRepository) GetPriority() int {
-	return r.LuetRepository.Priority
+func (r *AniseSystemRepository) GetPriority() int {
+	return r.AniseRepository.Priority
 }
-func (r *LuetSystemRepository) GetTreePath() string {
+func (r *AniseSystemRepository) GetTreePath() string {
 	return r.TreePath
 }
-func (r *LuetSystemRepository) SetTreePath(p string) {
+func (r *AniseSystemRepository) SetTreePath(p string) {
 	r.TreePath = p
 }
-func (r *LuetSystemRepository) GetMetaPath() string {
+func (r *AniseSystemRepository) GetMetaPath() string {
 	return r.MetaPath
 }
-func (r *LuetSystemRepository) SetMetaPath(p string) {
+func (r *AniseSystemRepository) SetMetaPath(p string) {
 	r.MetaPath = p
 }
-func (r *LuetSystemRepository) SetTree(b tree.Builder) {
+func (r *AniseSystemRepository) SetTree(b tree.Builder) {
 	r.Tree = b
 }
-func (r *LuetSystemRepository) GetIndex() compiler.ArtifactIndex {
+func (r *AniseSystemRepository) GetIndex() compiler.ArtifactIndex {
 	return r.Index
 }
-func (r *LuetSystemRepository) SetIndex(i compiler.ArtifactIndex) {
+func (r *AniseSystemRepository) SetIndex(i compiler.ArtifactIndex) {
 	r.Index = i
 }
-func (r *LuetSystemRepository) GetTree() tree.Builder {
+func (r *AniseSystemRepository) GetTree() tree.Builder {
 	return r.Tree
 }
-func (r *LuetSystemRepository) GetRevision() int {
-	return r.LuetRepository.Revision
+func (r *AniseSystemRepository) GetRevision() int {
+	return r.AniseRepository.Revision
 }
-func (r *LuetSystemRepository) GetLastUpdate() string {
-	return r.LuetRepository.LastUpdate
+func (r *AniseSystemRepository) GetLastUpdate() string {
+	return r.AniseRepository.LastUpdate
 }
-func (r *LuetSystemRepository) SetLastUpdate(u string) {
-	r.LuetRepository.LastUpdate = u
+func (r *AniseSystemRepository) SetLastUpdate(u string) {
+	r.AniseRepository.LastUpdate = u
 }
-func (r *LuetSystemRepository) IncrementRevision() {
-	r.LuetRepository.Revision++
+func (r *AniseSystemRepository) IncrementRevision() {
+	r.AniseRepository.Revision++
 }
-func (r *LuetSystemRepository) SetAuthentication(auth map[string]string) {
-	r.LuetRepository.Authentication = auth
+func (r *AniseSystemRepository) SetAuthentication(auth map[string]string) {
+	r.AniseRepository.Authentication = auth
 }
 
 // BumpRevision bumps the internal repository revision by reading the current one from repospec
-func (r *LuetSystemRepository) BumpRevision(repospec string, resetRevision bool) error {
+func (r *AniseSystemRepository) BumpRevision(repospec string, resetRevision bool) error {
 	if resetRevision {
 		r.Revision = 0
 	} else {
@@ -523,12 +523,12 @@ func (r *LuetSystemRepository) BumpRevision(repospec string, resetRevision bool)
 
 // AddMetadata adds the repository serialized content into the metadata key of the repository
 // It writes the serialized content to repospec, and writes the repository.meta.yaml file into dst
-func (r *LuetSystemRepository) AddMetadata(repospec, dst string) (*artifact.PackageArtifact, error) {
+func (r *AniseSystemRepository) AddMetadata(repospec, dst string) (*artifact.PackageArtifact, error) {
 	// Create Metadata struct and serialized repository
 	meta, serialized := r.Serialize()
 
 	// Create metadata file and repository file
-	metaTmpDir, err := config.LuetCfg.GetSystem().TempDir("metadata")
+	metaTmpDir, err := config.AniseCfg.GetSystem().TempDir("metadata")
 	defer os.RemoveAll(metaTmpDir) // clean up
 	if err != nil {
 		return nil, errors.Wrap(err, "Error met while creating tempdir for metadata")
@@ -560,9 +560,9 @@ func (r *LuetSystemRepository) AddMetadata(repospec, dst string) (*artifact.Pack
 // AddTree adds a tree.Builder with the given key to the repository.
 // It will generate an artifact which will be then embedded in the repository manifest
 // It returns the generated artifacts and an error
-func (r *LuetSystemRepository) AddTree(t tree.Builder, dst, key string, f LuetRepositoryFile) (*artifact.PackageArtifact, error) {
+func (r *AniseSystemRepository) AddTree(t tree.Builder, dst, key string, f AniseRepositoryFile) (*artifact.PackageArtifact, error) {
 	// Create tree and repository file
-	archive, err := config.LuetCfg.GetSystem().TempDir("archive")
+	archive, err := config.AniseCfg.GetSystem().TempDir("archive")
 	if err != nil {
 		return nil, errors.Wrap(err, "Error met while creating tempdir for archive")
 	}
@@ -582,7 +582,7 @@ func (r *LuetSystemRepository) AddTree(t tree.Builder, dst, key string, f LuetRe
 // AddRepositoryFile adds a path to a key in the repository manifest.
 // The path will be compressed, and a default File has to be passed in case there is no entry into
 // the repository manifest
-func (r *LuetSystemRepository) AddRepositoryFile(src, fileKey, repositoryRoot string, defaults LuetRepositoryFile) (*artifact.PackageArtifact, error) {
+func (r *AniseSystemRepository) AddRepositoryFile(src, fileKey, repositoryRoot string, defaults AniseRepositoryFile) (*artifact.PackageArtifact, error) {
 	treeFile, err := r.GetRepositoryFile(fileKey)
 	if err != nil {
 		treeFile = defaults
@@ -609,25 +609,25 @@ func (r *LuetSystemRepository) AddRepositoryFile(src, fileKey, repositoryRoot st
 	return a, nil
 }
 
-func (r *LuetSystemRepository) GetRepositoryFile(name string) (LuetRepositoryFile, error) {
+func (r *AniseSystemRepository) GetRepositoryFile(name string) (AniseRepositoryFile, error) {
 	ans, ok := r.RepositoryFiles[name]
 	if ok {
 		return ans, nil
 	}
 	return ans, errors.New("Repository file " + name + " not found!")
 }
-func (r *LuetSystemRepository) SetRepositoryFile(name string, f LuetRepositoryFile) {
+func (r *AniseSystemRepository) SetRepositoryFile(name string, f AniseRepositoryFile) {
 	r.RepositoryFiles[name] = f
 }
 
-func (r *LuetSystemRepository) ReadSpecFile(file string) (*LuetSystemRepository, error) {
+func (r *AniseSystemRepository) ReadSpecFile(file string) (*AniseSystemRepository, error) {
 	dat, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, errors.Wrap(err, "Error reading file "+file)
 	}
 
-	var repo *LuetSystemRepository
-	repo, err = NewLuetSystemRepositoryFromYaml(dat, pkg.NewInMemoryDatabase(false))
+	var repo *AniseSystemRepository
+	repo, err = NewAniseSystemRepositoryFromYaml(dat, pkg.NewInMemoryDatabase(false))
 	if err != nil {
 		return nil, errors.Wrap(err, "Error reading repository from file "+file)
 	}
@@ -646,11 +646,11 @@ func (r *LuetSystemRepository) ReadSpecFile(file string) (*LuetSystemRepository,
 }
 
 type RepositoryGenerator interface {
-	Generate(*LuetSystemRepository, string, bool) error
+	Generate(*AniseSystemRepository, string, bool) error
 	Initialize(string, pkg.PackageDatabase) ([]*artifact.PackageArtifact, error)
 }
 
-func (r *LuetSystemRepository) getGenerator() (RepositoryGenerator, error) {
+func (r *AniseSystemRepository) getGenerator() (RepositoryGenerator, error) {
 	var rg RepositoryGenerator
 	switch r.GetType() {
 	case DiskRepositoryType, HttpRepositoryType:
@@ -669,7 +669,7 @@ func (r *LuetSystemRepository) getGenerator() (RepositoryGenerator, error) {
 }
 
 // Write writes the repository metadata to the supplied destination
-func (r *LuetSystemRepository) Write(dst string, resetRevision, force bool) error {
+func (r *AniseSystemRepository) Write(dst string, resetRevision, force bool) error {
 	rg, err := r.getGenerator()
 	if err != nil {
 		return err
@@ -678,7 +678,7 @@ func (r *LuetSystemRepository) Write(dst string, resetRevision, force bool) erro
 	return rg.Generate(r, dst, resetRevision)
 }
 
-func (r *LuetSystemRepository) Client() Client {
+func (r *AniseSystemRepository) Client() Client {
 	switch r.GetType() {
 	case DiskRepositoryType:
 		return client.NewLocalClient(client.RepoData{Urls: r.GetUrls()})
@@ -700,7 +700,7 @@ func (r *LuetSystemRepository) Client() Client {
 	return nil
 }
 
-func (r *LuetSystemRepository) SearchArtefact(p pkg.Package) (*artifact.PackageArtifact, error) {
+func (r *AniseSystemRepository) SearchArtefact(p pkg.Package) (*artifact.PackageArtifact, error) {
 	for _, a := range r.GetIndex() {
 		if a.CompileSpec.GetPackage().Matches(p) {
 			return a, nil
@@ -710,7 +710,7 @@ func (r *LuetSystemRepository) SearchArtefact(p pkg.Package) (*artifact.PackageA
 	return nil, errors.New("Not found")
 }
 
-func (r *LuetSystemRepository) getRepoFile(c Client, key string) (*artifact.PackageArtifact, error) {
+func (r *AniseSystemRepository) getRepoFile(c Client, key string) (*artifact.PackageArtifact, error) {
 
 	treeFile, err := r.GetRepositoryFile(key)
 	if err != nil {
@@ -737,7 +737,7 @@ func (r *LuetSystemRepository) getRepoFile(c Client, key string) (*artifact.Pack
 
 }
 
-func (r *LuetSystemRepository) SyncBuildMetadata(path string) error {
+func (r *AniseSystemRepository) SyncBuildMetadata(path string) error {
 
 	repo, err := r.Sync(false)
 	if err != nil {
@@ -774,11 +774,11 @@ func (r *LuetSystemRepository) SyncBuildMetadata(path string) error {
 	return nil
 }
 
-func (r *LuetSystemRepository) Load(alternativeRepoSpecfile, alternativeTreeFs, alternativeMetafs string) (*LuetSystemRepository, error) {
+func (r *AniseSystemRepository) Load(alternativeRepoSpecfile, alternativeTreeFs, alternativeMetafs string) (*AniseSystemRepository, error) {
 	var treefs, metafs string
 	aurora := GetAurora()
 
-	repobasedir := config.LuetCfg.GetSystem().GetRepoDatabaseDirPath(r.GetName())
+	repobasedir := config.AniseCfg.GetSystem().GetRepoDatabaseDirPath(r.GetName())
 
 	repospecfile := filepath.Join(repobasedir, REPOSITORY_SPECFILE)
 	if alternativeRepoSpecfile != "" {
@@ -820,7 +820,7 @@ func (r *LuetSystemRepository) Load(alternativeRepoSpecfile, alternativeTreeFs, 
 		return nil, err
 	}
 
-	meta, err := NewLuetSystemRepositoryMetadata(metafile, false)
+	meta, err := NewAniseSystemRepositoryMetadata(metafile, false)
 	if err != nil {
 		return nil, errors.Wrap(err, "While processing "+REPOSITORY_METAFILE)
 	}
@@ -854,7 +854,7 @@ func (r *LuetSystemRepository) Load(alternativeRepoSpecfile, alternativeTreeFs, 
 	return repoMeta, nil
 }
 
-func (r *LuetSystemRepository) Sync(force bool) (*LuetSystemRepository, error) {
+func (r *AniseSystemRepository) Sync(force bool) (*AniseSystemRepository, error) {
 	var repoUpdated bool = false
 	var treefs, metafs string
 	aurora := GetAurora()
@@ -871,7 +871,7 @@ func (r *LuetSystemRepository) Sync(force bool) (*LuetSystemRepository, error) {
 		return nil, errors.Wrap(err, "While downloading "+REPOSITORY_SPECFILE)
 	}
 
-	repobasedir := config.LuetCfg.GetSystem().GetRepoDatabaseDirPath(r.GetName())
+	repobasedir := config.AniseCfg.GetSystem().GetRepoDatabaseDirPath(r.GetName())
 	downloadedRepoMeta, err := r.ReadSpecFile(file)
 	if err != nil {
 		return nil, err
@@ -902,11 +902,11 @@ func (r *LuetSystemRepository) Sync(force bool) (*LuetSystemRepository, error) {
 		}
 
 	} else {
-		treefs, err = config.LuetCfg.GetSystem().TempDir("treefs")
+		treefs, err = config.AniseCfg.GetSystem().TempDir("treefs")
 		if err != nil {
 			return nil, errors.Wrap(err, "Error met while creating tempdir for rootfs")
 		}
-		metafs, err = config.LuetCfg.GetSystem().TempDir("metafs")
+		metafs, err = config.AniseCfg.GetSystem().TempDir("metafs")
 		if err != nil {
 			return nil, errors.Wrap(err, "Error met whilte creating tempdir for metafs")
 		}
@@ -985,7 +985,7 @@ func (r *LuetSystemRepository) Sync(force bool) (*LuetSystemRepository, error) {
 	}
 }
 
-func (r *LuetSystemRepository) fill(r2 *LuetSystemRepository) {
+func (r *AniseSystemRepository) fill(r2 *AniseSystemRepository) {
 	r2.SetUrls(r.GetUrls())
 	r2.SetAuthentication(r.GetAuthentication())
 	r2.SetType(r.GetType())
@@ -994,14 +994,14 @@ func (r *LuetSystemRepository) fill(r2 *LuetSystemRepository) {
 	r2.SetVerify(r.GetVerify())
 }
 
-func (r *LuetSystemRepository) Serialize() (*LuetSystemRepositoryMetadata, LuetSystemRepository) {
+func (r *AniseSystemRepository) Serialize() (*AniseSystemRepositoryMetadata, AniseSystemRepository) {
 
 	serialized := *r
 	serialized.Authentication = nil
 
 	serialized.Index = compiler.ArtifactIndex{}
 
-	meta := &LuetSystemRepositoryMetadata{
+	meta := &AniseSystemRepositoryMetadata{
 		Index: []*artifact.PackageArtifact{},
 	}
 	for _, a := range r.Index {
@@ -1055,7 +1055,7 @@ func (r Repositories) SyncDatabase(d pkg.PackageDatabase) {
 }
 
 type PackageMatch struct {
-	Repo     *LuetSystemRepository
+	Repo     *AniseSystemRepository
 	Artifact *artifact.PackageArtifact
 	Package  pkg.Package
 }
@@ -1110,7 +1110,7 @@ PACKAGE:
 
 }
 
-func (re Repositories) SearchPackages(p string, t LuetSearchModeType) []PackageMatch {
+func (re Repositories) SearchPackages(p string, t AniseSearchModeType) []PackageMatch {
 	sort.Sort(re)
 	var matches []PackageMatch
 	var err error

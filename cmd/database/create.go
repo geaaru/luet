@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewDatabaseCreateCommand(cfg *config.LuetConfig) *cobra.Command {
+func NewDatabaseCreateCommand(cfg *config.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:   "create <artifact_metadata1.yaml> <artifact_metadata1.yaml>",
 		Short: "Insert a package in the system DB",

@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newMinerCommand(config *cfg.LuetConfig) *cobra.Command {
+func newMinerCommand(config *cfg.AniseConfig) *cobra.Command {
 	var ans = &cobra.Command{
 		Use:    "miner [command] [OPTIONS]",
 		Hidden: true,

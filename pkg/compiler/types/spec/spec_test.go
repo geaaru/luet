@@ -22,43 +22,43 @@ import (
 )
 
 var _ = Describe("Spec", func() {
-	Context("Luet specs", func() {
+	Context("Anise specs", func() {
 		It("Allows normal operations", func() {
-			testSpec := &compilerspec.LuetCompilationSpec{Package: &pkg.DefaultPackage{Name: "foo", Category: "a", Version: "0"}}
-			testSpec2 := &compilerspec.LuetCompilationSpec{Package: &pkg.DefaultPackage{Name: "bar", Category: "a", Version: "0"}}
-			testSpec3 := &compilerspec.LuetCompilationSpec{Package: &pkg.DefaultPackage{Name: "baz", Category: "a", Version: "0"}}
-			testSpec4 := &compilerspec.LuetCompilationSpec{Package: &pkg.DefaultPackage{Name: "foo", Category: "a", Version: "0"}}
+			testSpec := &compilerspec.AniseCompilationSpec{Package: &pkg.DefaultPackage{Name: "foo", Category: "a", Version: "0"}}
+			testSpec2 := &compilerspec.AniseCompilationSpec{Package: &pkg.DefaultPackage{Name: "bar", Category: "a", Version: "0"}}
+			testSpec3 := &compilerspec.AniseCompilationSpec{Package: &pkg.DefaultPackage{Name: "baz", Category: "a", Version: "0"}}
+			testSpec4 := &compilerspec.AniseCompilationSpec{Package: &pkg.DefaultPackage{Name: "foo", Category: "a", Version: "0"}}
 
-			specs := compilerspec.NewLuetCompilationspecs(testSpec, testSpec2)
+			specs := compilerspec.NewAniseCompilationspecs(testSpec, testSpec2)
 			Expect(specs.Len()).To(Equal(2))
-			Expect(specs.All()).To(Equal([]*compilerspec.LuetCompilationSpec{testSpec, testSpec2}))
+			Expect(specs.All()).To(Equal([]*compilerspec.AniseCompilationSpec{testSpec, testSpec2}))
 			specs.Add(testSpec3)
-			Expect(specs.All()).To(Equal([]*compilerspec.LuetCompilationSpec{testSpec, testSpec2, testSpec3}))
+			Expect(specs.All()).To(Equal([]*compilerspec.AniseCompilationSpec{testSpec, testSpec2, testSpec3}))
 			specs.Add(testSpec4)
-			Expect(specs.All()).To(Equal([]*compilerspec.LuetCompilationSpec{testSpec, testSpec2, testSpec3, testSpec4}))
+			Expect(specs.All()).To(Equal([]*compilerspec.AniseCompilationSpec{testSpec, testSpec2, testSpec3, testSpec4}))
 			newSpec := specs.Unique()
-			Expect(newSpec.All()).To(Equal([]*compilerspec.LuetCompilationSpec{testSpec, testSpec2, testSpec3}))
+			Expect(newSpec.All()).To(Equal([]*compilerspec.AniseCompilationSpec{testSpec, testSpec2, testSpec3}))
 
-			newSpec2 := specs.Remove(compilerspec.NewLuetCompilationspecs(testSpec, testSpec2))
-			Expect(newSpec2.All()).To(Equal([]*compilerspec.LuetCompilationSpec{testSpec3}))
+			newSpec2 := specs.Remove(compilerspec.NewAniseCompilationspecs(testSpec, testSpec2))
+			Expect(newSpec2.All()).To(Equal([]*compilerspec.AniseCompilationSpec{testSpec3}))
 
 		})
 		Context("virtuals", func() {
 			When("is empty", func() {
 				It("is virtual", func() {
-					spec := &compilerspec.LuetCompilationSpec{}
+					spec := &compilerspec.AniseCompilationSpec{}
 					Expect(spec.IsVirtual()).To(BeTrue())
 				})
 			})
 			When("has defined steps", func() {
 				It("is not a virtual", func() {
-					spec := &compilerspec.LuetCompilationSpec{Steps: []string{"foo"}}
+					spec := &compilerspec.AniseCompilationSpec{Steps: []string{"foo"}}
 					Expect(spec.IsVirtual()).To(BeFalse())
 				})
 			})
 			When("has defined image", func() {
 				It("is not a virtual", func() {
-					spec := &compilerspec.LuetCompilationSpec{Image: "foo"}
+					spec := &compilerspec.AniseCompilationSpec{Image: "foo"}
 					Expect(spec.IsVirtual()).To(BeFalse())
 				})
 			})
@@ -67,7 +67,7 @@ var _ = Describe("Spec", func() {
 
 	Context("Image hashing", func() {
 		It("is stable", func() {
-			spec1 := &compilerspec.LuetCompilationSpec{
+			spec1 := &compilerspec.AniseCompilationSpec{
 				Image:        "foo",
 				BuildOptions: &options.Compiler{BuildValues: []map[string]interface{}{{"foo": "bar", "baz": true}}},
 
@@ -80,7 +80,7 @@ var _ = Describe("Spec", func() {
 					},
 				},
 			}
-			spec2 := &compilerspec.LuetCompilationSpec{
+			spec2 := &compilerspec.AniseCompilationSpec{
 				Image:        "foo",
 				BuildOptions: &options.Compiler{BuildValues: []map[string]interface{}{{"foo": "bar", "baz": true}}},
 				Package: &pkg.DefaultPackage{
@@ -92,7 +92,7 @@ var _ = Describe("Spec", func() {
 					},
 				},
 			}
-			spec3 := &compilerspec.LuetCompilationSpec{
+			spec3 := &compilerspec.AniseCompilationSpec{
 				Image: "foo",
 				Steps: []string{"foo"},
 				Package: &pkg.DefaultPackage{
@@ -130,7 +130,7 @@ var _ = Describe("Spec", func() {
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(1))
 
-			compiler := NewLuetCompiler(nil, generalRecipe.GetDatabase())
+			compiler := NewAniseCompiler(nil, generalRecipe.GetDatabase())
 			lspec, err := compiler.FromPackage(&pkg.DefaultPackage{Name: "enman", Category: "app-admin", Version: "1.4.0"})
 			Expect(err).ToNot(HaveOccurred())
 
@@ -182,7 +182,7 @@ RUN echo bar > /test2`))
 
 		Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(1))
 
-		compiler := NewLuetCompiler(nil, generalRecipe.GetDatabase())
+		compiler := NewAniseCompiler(nil, generalRecipe.GetDatabase())
 		lspec, err := compiler.FromPackage(&pkg.DefaultPackage{Name: "a", Category: "test", Version: "1.0"})
 		Expect(err).ToNot(HaveOccurred())
 

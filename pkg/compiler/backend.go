@@ -88,7 +88,7 @@ func GenerateChanges(b CompilerBackend, fromImage, toImage backend.Options) ([]a
 
 	res := artifact.ArtifactLayer{FromImage: fromImage.ImageName, ToImage: toImage.ImageName}
 
-	tmpdiffs, err := config.LuetCfg.GetSystem().TempDir("extraction")
+	tmpdiffs, err := config.AniseCfg.GetSystem().TempDir("extraction")
 	if err != nil {
 		return []artifact.ArtifactLayer{}, errors.Wrap(err, "Error met while creating tempdir for rootfs")
 	}
@@ -193,7 +193,7 @@ func GenerateChanges(b CompilerBackend, fromImage, toImage backend.Options) ([]a
 
 	diffs := []artifact.ArtifactLayer{res}
 
-	if config.LuetCfg.GetGeneral().Debug {
+	if config.AniseCfg.GetGeneral().Debug {
 		summary := ComputeArtifactLayerSummary(diffs)
 		for _, l := range summary.Layers {
 			Debug(fmt.Sprintf("Diff %s -> %s: add %d (%d bytes), del %d (%d bytes), change %d (%d bytes)",

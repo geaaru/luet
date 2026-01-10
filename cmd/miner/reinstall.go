@@ -28,7 +28,7 @@ type StonePolished struct {
 	Artifact *artifact.PackageArtifact
 }
 
-func NewReinstallPackage(config *cfg.LuetConfig) *cobra.Command {
+func NewReinstallPackage(config *cfg.AniseConfig) *cobra.Command {
 
 	var ans = &cobra.Command{
 		Use:     "reinstall-package <pkg1> <pkg2> ... <pkgN>",

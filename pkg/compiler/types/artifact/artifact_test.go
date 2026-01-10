@@ -37,7 +37,7 @@ var _ = Describe("Artifact", func() {
 
 			Expect(len(generalRecipe.GetDatabase().GetPackages())).To(Equal(1))
 
-			cc := NewLuetCompiler(nil, generalRecipe.GetDatabase())
+			cc := NewAniseCompiler(nil, generalRecipe.GetDatabase())
 			lspec, err := cc.FromPackage(&pkg.DefaultPackage{Name: "enman", Category: "app-admin", Version: "1.4.0"})
 			Expect(err).ToNot(HaveOccurred())
 
@@ -83,9 +83,9 @@ ENV PACKAGE_CATEGORY=app-admin`))
 			Expect(fileHelper.Exists(filepath.Join(tmpdir2, "output1.tar"))).To(BeTrue())
 			Expect(b.BuildImage(opts)).ToNot(HaveOccurred())
 
-			err = lspec.WriteStepImageDefinition(lspec.Image, filepath.Join(tmpdir, "LuetDockerfile"))
+			err = lspec.WriteStepImageDefinition(lspec.Image, filepath.Join(tmpdir, "AniseDockerfile"))
 			Expect(err).ToNot(HaveOccurred())
-			dockerfile, err = fileHelper.Read(filepath.Join(tmpdir, "LuetDockerfile"))
+			dockerfile, err = fileHelper.Read(filepath.Join(tmpdir, "AniseDockerfile"))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(dockerfile).To(Equal(`
 FROM luet/base
@@ -99,7 +99,7 @@ RUN echo bar > /test2`))
 			opts2 := backend.Options{
 				ImageName:      "test",
 				SourcePath:     tmpdir,
-				DockerFileName: "LuetDockerfile",
+				DockerFileName: "AniseDockerfile",
 				Destination:    filepath.Join(tmpdir, "output2.tar"),
 			}
 			Expect(b.BuildImage(opts2)).ToNot(HaveOccurred())
@@ -109,7 +109,7 @@ RUN echo bar > /test2`))
 			Expect(err).ToNot(HaveOccurred())
 
 			artifacts := []ArtifactNode{{
-				Name: "/luetbuild/LuetDockerfile",
+				Name: "/luetbuild/AniseDockerfile",
 				Size: 175,
 			}}
 			if os.Getenv("DOCKER_BUILDKIT") == "1" {
@@ -175,7 +175,7 @@ RUN echo bar > /test2`))
 			Expect(err).ToNot(HaveOccurred())
 
 			a := NewPackageArtifact(filepath.Join(tmpWork, "fake.tar"))
-			a.CompileSpec = &compilerspec.LuetCompilationSpec{Package: &pkg.DefaultPackage{Name: "foo", Version: "1.0"}}
+			a.CompileSpec = &compilerspec.AniseCompilationSpec{Package: &pkg.DefaultPackage{Name: "foo", Version: "1.0"}}
 
 			err = a.Compress(tmpdir, 1)
 			Expect(err).ToNot(HaveOccurred())
@@ -217,7 +217,7 @@ RUN echo bar > /test2`))
 			defer os.RemoveAll(tmpWork) // clean up
 
 			a := NewPackageArtifact(filepath.Join(tmpWork, "fake.tar"))
-			a.CompileSpec = &compilerspec.LuetCompilationSpec{Package: &pkg.DefaultPackage{Name: "foo", Version: "1.0"}}
+			a.CompileSpec = &compilerspec.AniseCompilationSpec{Package: &pkg.DefaultPackage{Name: "foo", Version: "1.0"}}
 
 			err = a.Compress(tmpdir, 1)
 			Expect(err).ToNot(HaveOccurred())

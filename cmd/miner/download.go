@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewDownload(config *cfg.LuetConfig) *cobra.Command {
+func NewDownload(config *cfg.AniseConfig) *cobra.Command {
 
 	var ans = &cobra.Command{
 		Use:     "download <repository-name> <pkg1> <pkg2> ... <pkgN>",

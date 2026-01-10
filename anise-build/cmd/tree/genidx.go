@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewTreeGenIdx(config *cfg.LuetConfig) *cobra.Command {
+func NewTreeGenIdx(config *cfg.AniseConfig) *cobra.Command {
 
 	var ans = &cobra.Command{
 		Use:   "genidx [OPTIONS]",

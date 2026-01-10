@@ -32,14 +32,14 @@ var spinnerLock = sync.Mutex{}
 func NewSpinner() {
 	if s == nil {
 		s = spinner.New(
-			spinner.CharSets[LuetCfg.GetGeneral().SpinnerCharset],
-			LuetCfg.GetGeneral().GetSpinnerMs())
+			spinner.CharSets[AniseCfg.GetGeneral().SpinnerCharset],
+			AniseCfg.GetGeneral().GetSpinnerMs())
 	}
 }
 
 func InitAurora() {
 	if aurora == nil {
-		aurora = NewAurora(LuetCfg.GetLogging().Color)
+		aurora = NewAurora(AniseCfg.GetLogging().Color)
 	}
 }
 
@@ -68,10 +68,10 @@ func ZapLogger() error {
 	if z == nil {
 		// TODO: test permission for open logfile.
 		cfg := zap.NewProductionConfig()
-		cfg.OutputPaths = []string{LuetCfg.GetLogging().Path}
-		cfg.Level = level2AtomicLevel(LuetCfg.GetLogging().Level)
+		cfg.OutputPaths = []string{AniseCfg.GetLogging().Path}
+		cfg.Level = level2AtomicLevel(AniseCfg.GetLogging().Level)
 		cfg.ErrorOutputPaths = []string{}
-		if LuetCfg.GetLogging().JsonFormat {
+		if AniseCfg.GetLogging().JsonFormat {
 			cfg.Encoding = "json"
 		} else {
 			cfg.Encoding = "console"
@@ -95,10 +95,10 @@ func Spinner(i int) {
 	spinnerLock.Lock()
 	defer spinnerLock.Unlock()
 	var confLevel int
-	if LuetCfg.GetGeneral().Debug {
+	if AniseCfg.GetGeneral().Debug {
 		confLevel = 3
 	} else {
-		confLevel = level2Number(LuetCfg.GetLogging().Level)
+		confLevel = level2Number(AniseCfg.GetLogging().Level)
 	}
 	if 2 > confLevel {
 		return
@@ -116,7 +116,7 @@ func SpinnerText(suffix, prefix string) {
 	if s != nil {
 		s.Lock()
 		defer s.Unlock()
-		if LuetCfg.GetGeneral().Debug {
+		if AniseCfg.GetGeneral().Debug {
 			fmt.Println(fmt.Sprintf("%s %s",
 				Bold(Cyan(prefix)).String(),
 				Bold(Magenta(suffix)).BgBlack().String(),
@@ -132,10 +132,10 @@ func SpinnerStop() {
 	spinnerLock.Lock()
 	defer spinnerLock.Unlock()
 	var confLevel int
-	if LuetCfg.GetGeneral().Debug {
+	if AniseCfg.GetGeneral().Debug {
 		confLevel = 3
 	} else {
-		confLevel = level2Number(LuetCfg.GetLogging().Level)
+		confLevel = level2Number(AniseCfg.GetLogging().Level)
 	}
 	if 2 > confLevel {
 		return
@@ -185,7 +185,7 @@ func level2AtomicLevel(level string) zap.AtomicLevel {
 }
 
 func Emojize(msg string) string {
-	if LuetCfg.GetLogging().EnableEmoji {
+	if AniseCfg.GetLogging().EnableEmoji {
 		return emoji.Sprint(msg)
 	}
 	return msg
@@ -204,10 +204,10 @@ func Msg(level string, withoutColor, ln bool, msg ...interface{}) {
 		}
 	*/
 
-	if LuetCfg.GetGeneral().Debug {
+	if AniseCfg.GetGeneral().Debug {
 		confLevel = 3
 	} else {
-		confLevel = level2Number(LuetCfg.GetLogging().Level)
+		confLevel = level2Number(AniseCfg.GetLogging().Level)
 	}
 	msgLevel = level2Number(level)
 	if msgLevel > confLevel {
@@ -224,7 +224,7 @@ func Msg(level string, withoutColor, ln bool, msg ...interface{}) {
 
 	var levelMsg string
 
-	if withoutColor || !LuetCfg.GetLogging().Color {
+	if withoutColor || !AniseCfg.GetLogging().Color {
 		levelMsg = message
 	} else {
 		switch level {
@@ -239,7 +239,7 @@ func Msg(level string, withoutColor, ln bool, msg ...interface{}) {
 		}
 	}
 
-	if LuetCfg.GetLogging().EnableEmoji {
+	if AniseCfg.GetLogging().EnableEmoji {
 		levelMsg = emoji.Sprint(levelMsg)
 	} else {
 		re := regexp.MustCompile(`[:][\w]+[:]`)
@@ -265,7 +265,7 @@ func Msg(level string, withoutColor, ln bool, msg ...interface{}) {
 
 func Warning(mess ...interface{}) {
 	Msg("warning", false, true, mess...)
-	if LuetCfg.GetGeneral().FatalWarns {
+	if AniseCfg.GetGeneral().FatalWarns {
 		os.Exit(2)
 	}
 }

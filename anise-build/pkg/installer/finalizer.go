@@ -18,13 +18,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-type LuetFinalizer struct {
+type AniseFinalizer struct {
 	Shell     []string `json:"shell"`
 	Install   []string `json:"install"`
 	Uninstall []string `json:"uninstall"` // TODO: Where to store?
 }
 
-func (f *LuetFinalizer) RunInstall(s *System) error {
+func (f *AniseFinalizer) RunInstall(s *System) error {
 	var cmd string
 	var args []string
 	if len(f.Shell) == 0 {
@@ -38,11 +38,11 @@ func (f *LuetFinalizer) RunInstall(s *System) error {
 		}
 	}
 
-	envs := LuetCfg.GetFinalizerEnvs()
+	envs := AniseCfg.GetFinalizerEnvs()
 	// Add LUET_VERSION env so finalizer are able to know
 	// what is the luet version and that the script is running
 	// inside the luet command.
-	envs = append(envs, fmt.Sprintf("LUET_VERSION=%s", LuetVersion))
+	envs = append(envs, fmt.Sprintf("LUET_VERSION=%s", AniseVersion))
 
 	for _, c := range f.Install {
 		toRun := append(args, c)
@@ -57,7 +57,7 @@ func (f *LuetFinalizer) RunInstall(s *System) error {
 			Info(string(stdoutStderr))
 		} else {
 			b := box.NewBox(cmd, toRun, []string{}, envs, s.Target,
-				false, true, true, LuetCfg)
+				false, true, true, AniseCfg)
 			err := b.Run()
 			if err != nil {
 				return errors.Wrap(err, "Failed running command: ")
@@ -68,7 +68,7 @@ func (f *LuetFinalizer) RunInstall(s *System) error {
 }
 
 // TODO: We don't store uninstall finalizers ?!
-func (f *LuetFinalizer) RunUnInstall() error {
+func (f *AniseFinalizer) RunUnInstall() error {
 	for _, c := range f.Uninstall {
 		Debug("finalizer:", "sh", "-c", c)
 		cmd := exec.Command("sh", "-c", c)
@@ -81,8 +81,8 @@ func (f *LuetFinalizer) RunUnInstall() error {
 	return nil
 }
 
-func NewLuetFinalizerFromYaml(data []byte) (*LuetFinalizer, error) {
-	var p LuetFinalizer
+func NewAniseFinalizerFromYaml(data []byte) (*AniseFinalizer, error) {
+	var p AniseFinalizer
 	err := yaml.Unmarshal(data, &p)
 	if err != nil {
 		return &p, err

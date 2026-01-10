@@ -23,7 +23,7 @@ type RepositoryConfig struct {
 	CompilerBackend         compiler.CompilerBackend
 	ImagePrefix             string
 
-	config                                          *config.LuetConfig
+	config                                          *config.AniseConfig
 	PushImages, Force, FromRepository, FromMetadata bool
 }
 
@@ -41,7 +41,7 @@ func (cfg *RepositoryConfig) Apply(opts ...RepositoryOption) error {
 	return nil
 }
 
-func WithConfig(c *config.LuetConfig) func(cfg *RepositoryConfig) error {
+func WithConfig(c *config.AniseConfig) func(cfg *RepositoryConfig) error {
 	return func(cfg *RepositoryConfig) error {
 		cfg.config = c
 		return nil

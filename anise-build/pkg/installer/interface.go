@@ -14,4 +14,4 @@ type Client interface {
 	DownloadFile(string) (string, error)
 }
 
-type Repositories []*LuetSystemRepository
+type Repositories []*AniseSystemRepository
