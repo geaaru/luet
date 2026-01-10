@@ -102,6 +102,8 @@ func (s *BuildSolver) ResolvePackage(p *pkg.DefaultPackage) (*artifact.Artifacts
 			}
 			vMap[tv.Version] = true
 
+			Debug(fmt.Sprintf(":construction: Creating package task for %s-%s",
+				p.PackageName(), tv.Version))
 			ptask := NewPackageTask(ti, tv, p)
 			pack, err := s.ResolvePackageTask(ptask)
 			if err != nil {

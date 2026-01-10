@@ -15,6 +15,8 @@ import (
 	_gentoo "github.com/geaaru/pkgs-checker/pkg/gentoo"
 )
 
+// The ForestGuard object is used to
+// analize and iterate over TreeIdx objects.
 type ForestGuard struct {
 	Config *cfg.LuetConfig
 	Trees  []*TreeIdx
