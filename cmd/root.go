@@ -129,7 +129,8 @@ func Execute() {
 				}
 				homeDir := helpers.GetHomeDir()
 
-				if fileHelper.Exists(filepath.Join(pwdDir, ".anise.yaml")) || (homeDir != "" && fileHelper.Exists(filepath.Join(homeDir, ".anise.yaml"))) {
+				if fileHelper.Exists(filepath.Join(pwdDir, ".anise.yaml")) ||
+					(homeDir != "" && fileHelper.Exists(filepath.Join(homeDir, ".anise.yaml"))) {
 					cfg.Viper.AddConfigPath(".")
 					if homeDir != "" {
 						cfg.Viper.AddConfigPath(homeDir)
@@ -145,6 +146,16 @@ func Execute() {
 			if err != nil {
 				Fatal("failed to load configuration:", err.Error())
 			}
+
+			if cmd.Name() != "migrate-luet" &&
+				(fileHelper.Exists("/etc/luet") || fileHelper.Exists("/var/cache/luet")) {
+				Warning(
+					"Legacy directory /etc/luet or /var/cache/luet present.\n",
+					"Check that all files under /etc/luet/ are migrated to /etc/anise!\n",
+					"Use `anise migrate-luet` for migrate /var/cache/luet directory.",
+				)
+			}
+
 			// Initialize tmpdir prefix. TODO: Move this with LoadConfig
 			// directly on sub command to ensure the creation only when it's
 			// needed.
@@ -238,6 +249,7 @@ func initCommand(rootCmd *cobra.Command, cfg *config.AniseConfig) {
 	rootCmd.AddCommand(
 		newBoxCommand(cfg),
 		newConfigCommand(cfg),
+		newMigrateLuetCommand(cfg),
 		newDatabaseCommand(cfg),
 		newExecCommand(cfg),
 		newRepoCommand(cfg),
