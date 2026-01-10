@@ -16,8 +16,6 @@ for Linux From Scratch installations and it can build and track updates for thos
 
 It is written entirely in Golang and where used as package manager, it can run in from scratch environment, with zero dependencies.
 
-## Differences between upstream release
-
 It has the primary scope to be used in [Macaroni OS](https://www.macaronios.org) and having a good integration with Macaroni OS Mark.
 
 Some notes about `anise` project:
