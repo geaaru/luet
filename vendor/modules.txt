@@ -101,8 +101,8 @@ github.com/containerd/stargz-snapshotter/estargz
 github.com/containerd/stargz-snapshotter/estargz/errorutil
 # github.com/coreos/go-systemd/v22 v22.5.0
 ## explicit; go 1.12
-# github.com/cpuguy83/go-md2man/v2 v2.0.4
-## explicit; go 1.11
+# github.com/cpuguy83/go-md2man/v2 v2.0.6
+## explicit; go 1.12
 github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/crillab/gophersat v1.3.2-0.20210701121804-72b19f5b6b38
 ## explicit
@@ -629,13 +629,13 @@ github.com/spf13/afero/mem
 # github.com/spf13/cast v1.7.0
 ## explicit; go 1.19
 github.com/spf13/cast
-# github.com/spf13/cobra v1.8.1
+# github.com/spf13/cobra v1.10.2
 ## explicit; go 1.15
 github.com/spf13/cobra
 # github.com/spf13/jwalterweatherman v1.1.0
 ## explicit
 github.com/spf13/jwalterweatherman
-# github.com/spf13/pflag v1.0.5
+# github.com/spf13/pflag v1.0.10
 ## explicit; go 1.12
 github.com/spf13/pflag
 # github.com/spf13/viper v1.19.0
