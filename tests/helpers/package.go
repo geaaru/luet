@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	pkg "github.com/geaaru/luet/pkg/package"
+	pkg "github.com/macaroni-os/anise/pkg/package"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +
