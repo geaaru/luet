@@ -5,19 +5,19 @@ source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
     export tmpdir="$(mktemp -d)"
-    docker images --filter='reference=luet/cache' --format='{{.Repository}}:{{.Tag}}' | xargs -r docker rmi
+    docker images --filter='reference=anise/cache' --format='{{.Repository}}:{{.Tag}}' | xargs -r docker rmi
 }
 
 oneTimeTearDown() {
     rm -rf "$tmpdir"
-    docker images --filter='reference=luet/cache' --format='{{.Repository}}:{{.Tag}}' | xargs -r docker rmi
+    docker images --filter='reference=anise/cache' --format='{{.Repository}}:{{.Tag}}' | xargs -r docker rmi
 }
 
 testConfig() {
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -33,7 +33,7 @@ repositories:
      urls:
        - "${TEST_DOCKER_IMAGE}"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
@@ -48,8 +48,8 @@ EOF
     mkdir $tmpdir/empty
 
     # Without --rebuild, the package gets ignored
-    build_output=$($LUET_BUILD build --pull --tree "$tmpdir/empty" \
-    --config $tmpdir/luet.yaml --values $tmpdir/default.yaml --concurrency 1 \
+    build_output=$($ANISE_BUILD build --pull --tree "$tmpdir/empty" \
+    --config $tmpdir/anise.yaml --values $tmpdir/default.yaml --concurrency 1 \
     --from-repositories --destination $tmpdir/testbuild --compression zstd test/c@1.0 test/z test/interpolated)
     buildst=$?
     echo "$build_output"
@@ -59,14 +59,14 @@ EOF
     assertTrue 'create package Z' "[ -e '$tmpdir/testbuild/z-test-1.0+2.package.tar.zst' ]"
     assertTrue 'create package interpolated' "[ -e '$tmpdir/testbuild/interpolated-test-1.0+2.package.tar.zst' ]"
     assertNotContains 'Does NOT use the upstream cache without specifying it' "$build_output" "Images available remotely for test/interpolated-1.0+2 generating artifact from remote images: quay.io/mocaccinoos/integration-test-cache:bec91b2b88dfeb68c9cad762a99a35233f7a38722573c4982d9b2168aac5992e"
-    assertContains 'Does generate a new hash as values changed build.yaml for test/interpolated-1.0+2 package image' "$build_output" "Building image luet/cache:e0a392a824a56f720af104df1e9c79cb4cb2af58a8bab728979891554476c6ff done"
+    assertContains 'Does generate a new hash as values changed build.yaml for test/interpolated-1.0+2 package image' "$build_output" "Building image anise/cache:e0a392a824a56f720af104df1e9c79cb4cb2af58a8bab728979891554476c6ff done"
 }
 
 testRepo() {
     # Disable tests which require a DOCKER registry
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
-    $LUET_BUILD create-repo \
+    $ANISE_BUILD create-repo \
     --output "${TEST_DOCKER_IMAGE}-2" \
     --packages $tmpdir/testbuild \
     --name "test" \
@@ -74,7 +74,7 @@ testRepo() {
     --urls $tmpdir/testrootfs \
     --tree-compression zstd \
     --tree-filename foo.tar \
-    --tree "$tmpdir/empty" --config $tmpdir/luet.yaml --from-repositories \
+    --tree "$tmpdir/empty" --config $tmpdir/anise.yaml --from-repositories \
     --meta-filename repository.meta.tar \
     --meta-compression zstd \
     --type docker --push-images --force-push --debug
@@ -86,7 +86,7 @@ testRepo() {
 testConfigClient() {
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
-    cat <<EOF > $tmpdir/luet-client.yaml
+    cat <<EOF > $tmpdir/anise-client.yaml
 general:
   debug: true
 system:
@@ -102,7 +102,7 @@ repositories:
      urls:
        - "${TEST_DOCKER_IMAGE}-2"
 EOF
-    $LUET config --config $tmpdir/luet-client.yaml
+    $ANISE config --config $tmpdir/anise-client.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
@@ -111,7 +111,7 @@ testInstall() {
     # Disable tests which require a DOCKER registry
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
-    $LUET install -y --config $tmpdir/luet-client.yaml test/c@1.0 test/z test/interpolated
+    $ANISE install -y --config $tmpdir/anise-client.yaml test/c@1.0 test/z test/interpolated
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"
@@ -124,7 +124,7 @@ testReInstall() {
     # Disable tests which require a DOCKER registry
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
-    output=$($LUET install -y --config $tmpdir/luet-client.yaml  test/c@1.0)
+    output=$($ANISE install -y --config $tmpdir/anise-client.yaml  test/c@1.0)
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertContains 'contains warning' "$output" 'No packages to install'
@@ -134,7 +134,7 @@ testUnInstall() {
     # Disable tests which require a DOCKER registry
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
-    $LUET uninstall -y --config $tmpdir/luet-client.yaml test/c@1.0
+    $ANISE uninstall -y --config $tmpdir/anise-client.yaml test/c@1.0
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
@@ -145,7 +145,7 @@ testInstallAgain() {
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
-    output=$($LUET install -y --config $tmpdir/luet-client.yaml test/c@1.0)
+    output=$($ANISE install -y --config $tmpdir/anise-client.yaml test/c@1.0)
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertNotContains 'contains warning' "$output" 'No packages to install'
@@ -156,7 +156,7 @@ testInstallAgain() {
 testCleanup() {
     [ -z "${TEST_DOCKER_IMAGE:-}" ] && startSkipping
 
-    $LUET cleanup --config $tmpdir/luet-client.yaml
+    $ANISE cleanup --config $tmpdir/anise-client.yaml
     installst=$?
     assertEquals 'cleanup test successfully' "$installst" "0"
 }

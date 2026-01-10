@@ -14,19 +14,19 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/upgrade_old_repo" \
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/upgrade_old_repo" \
     -t "$ROOT_DIR/tests/fixtures/upgrade_new_downgrade"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo" --destination $tmpdir/testbuild --compression gzip --full
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo" --destination $tmpdir/testbuild --compression gzip --full
   buildst=$?
   assertTrue 'create package B 1.0' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
   assertEquals 'builds successfully' "$buildst" "0"
 
   mkdir $tmpdir/testbuild_new
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_new_downgrade" \
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_new_downgrade" \
     --destination $tmpdir/testbuild_new \
     --compression gzip --full
   buildst=$?
@@ -36,7 +36,7 @@ testBuild() {
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_old_repo" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -49,7 +49,7 @@ testRepo() {
   assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
 
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild_new/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_new_downgrade" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_new_downgrade" \
   --output $tmpdir/testbuild_new \
   --packages $tmpdir/testbuild_new \
   --name "test" \
@@ -64,7 +64,7 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: ${DEBUG_ENABLE}
 system:
@@ -80,18 +80,18 @@ repositories:
      urls:
        - "../testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testUpgrade() {
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/b@1.0
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml test/b@1.0
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed B' "[ -e '$tmpdir/testrootfs/test5' ]"
 
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: ${DEBUG_ENABLE}
 system:
@@ -108,25 +108,25 @@ repositories:
        - "../testbuild_new"
 EOF
 
-    $LUET cleanup --config $tmpdir/luet.yaml
-    $LUET repo update --config $tmpdir/luet.yaml
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE cleanup --config $tmpdir/anise.yaml
+    $ANISE repo update --config $tmpdir/anise.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 
-    $LUET upgrade -y --config $tmpdir/luet.yaml
+    $ANISE upgrade -y --config $tmpdir/anise.yaml
     installst=$?
     assertEquals 'upgrade test successfully' "$installst" "0"
     assertTrue 'package uninstalled B' "[ ! -e '$tmpdir/testrootfs/test5' ]"
     assertTrue 'package installed B' "[ -e '$tmpdir/testrootfs/newc' ]"
 
-    content=$($LUET upgrade -y --config $tmpdir/luet.yaml)
+    content=$($ANISE upgrade -y --config $tmpdir/anise.yaml)
     installst=$?
     assertNotContains 'didn not upgrade' "$content" "Uninstalling"
 }
 
 testDowngrade() {
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: ${DEBUG_ENABLE}
 system:
@@ -143,10 +143,10 @@ repositories:
        - "../testbuild"
 EOF
 
-    $LUET cleanup --config $tmpdir/luet.yaml --purge-repos
-    $LUET repo update --config $tmpdir/luet.yaml
+    $ANISE cleanup --config $tmpdir/anise.yaml --purge-repos
+    $ANISE repo update --config $tmpdir/anise.yaml
 
-    $LUET upgrade -y --config $tmpdir/luet.yaml --deep
+    $ANISE upgrade -y --config $tmpdir/anise.yaml --deep
     installst=$?
     assertEquals 'downgarde test successfully' "$installst" "0"
     assertTrue 'package installed B' "[ -e '$tmpdir/testrootfs/test5' ]"

@@ -1,13 +1,13 @@
 #!/bin/bash
 set -e
-export LUET_NO_SPINNER=true
-export LUET_YES=true
+export ANISE_NO_SPINNER=true
+export ANISE_YES=true
 export ROOT_DIR="$(git rev-parse --show-toplevel)"
 
-if [ -z "${SKIP_LUET_BUILD}" ] ; then
+if [ -z "${SKIP_ANISE_BUILD}" ] ; then
 pushd $ROOT_DIR
-    CGO_ENABLED=0 go build -o "$ROOT_DIR/tests/integration/bin/luet"
-	  CGO_ENABLED=0 go build -o "$ROOT_DIR/tests/integration/bin/luet-build" ./luet-build
+    CGO_ENABLED=0 go build -o "$ROOT_DIR/tests/integration/bin/anise"
+	  CGO_ENABLED=0 go build -o "$ROOT_DIR/tests/integration/bin/anise-build" ./anise-build
 popd
 fi
 

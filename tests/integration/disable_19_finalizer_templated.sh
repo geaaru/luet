@@ -12,12 +12,12 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/templatedfinalizers"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/templatedfinalizers"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/templatedfinalizers" --destination $tmpdir/testbuild --compression gzip --all > /dev/null
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/templatedfinalizers" --destination $tmpdir/testbuild --compression gzip --all > /dev/null
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-seed-1.0.package.tar.gz' ]"
@@ -25,7 +25,7 @@ testBuild() {
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/templatedfinalizers" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/templatedfinalizers" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -40,7 +40,7 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -56,14 +56,14 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml seed/alpine
-    #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml seed/alpine
+    #$ANISE install -y --config $tmpdir/anise.yaml test/c-1.0 > /dev/null
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"
@@ -73,7 +73,7 @@ testInstall() {
 
 
 testCleanup() {
-    $LUET cleanup --config $tmpdir/luet.yaml
+    $ANISE cleanup --config $tmpdir/anise.yaml
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 }

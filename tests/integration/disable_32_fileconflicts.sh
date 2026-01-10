@@ -12,12 +12,12 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/fileconflicts"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/fileconflicts"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/fileconflicts" --destination $tmpdir/testbuild --compression gzip --all
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/fileconflicts" --destination $tmpdir/testbuild --compression gzip --all
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create packages' "[ -e '$tmpdir/testbuild/conflict-test1-1.0.package.tar.gz' ]"
@@ -26,7 +26,7 @@ testBuild() {
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/fileconflicts" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/fileconflicts" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -41,7 +41,7 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -57,30 +57,30 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test1/conflict test2/conflict
-    #$LUET install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml test1/conflict test2/conflict
+    #$ANISE install -y --config $tmpdir/anise.yaml test/c@1.0 > /dev/null
     installst=$?
     assertEquals 'install test failed' "$installst" "1"
     #assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"
 }
 
 testReInstall() {
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test1/conflict
-    #$LUET install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml test1/conflict
+    #$ANISE install -y --config $tmpdir/anise.yaml test/c@1.0 > /dev/null
     installst=$?
     assertEquals 'install test succeeded' "$installst" "0"
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test2/conflict
-    #$LUET install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml test2/conflict
+    #$ANISE install -y --config $tmpdir/anise.yaml test/c@1.0 > /dev/null
     installst=$?
     assertEquals 'install test succeeded' "$installst" "1"
-    $LUET install --sync-repos -y --force --config $tmpdir/luet.yaml test2/conflict
-    #$LUET install -y --config $tmpdir/luet.yaml test/c@1.0 > /dev/null
+    $ANISE install --sync-repos -y --force --config $tmpdir/anise.yaml test2/conflict
+    #$ANISE install -y --config $tmpdir/anise.yaml test/c@1.0 > /dev/null
     installst=$?
     assertEquals 'install test succeeded' "$installst" "0"
 }

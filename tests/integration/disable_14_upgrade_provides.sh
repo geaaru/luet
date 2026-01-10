@@ -14,13 +14,13 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/upgrade_provides" \
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/upgrade_provides" \
     -t "$ROOT_DIR/tests/fixtures/upgrade_provides_new"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_provides" --destination $tmpdir/testbuild --compression gzip --full > ${OUTPUT}
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_provides" --destination $tmpdir/testbuild --compression gzip --full > ${OUTPUT}
   buildst=$?
   assertTrue 'create package C 1.0' "[ -e '$tmpdir/testbuild/c-test-1.0.package.tar.gz' ]"
   assertTrue 'create package A 1.1' "[ -e '$tmpdir/testbuild/a-test-1.1.package.tar.gz' ]"
@@ -29,7 +29,7 @@ testBuild() {
   assertEquals 'builds successfully' "$buildst" "0"
 
   mkdir $tmpdir/testbuild_provides
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_provides_new" --destination $tmpdir/testbuild_provides --compression gzip --full > ${OUTPUT}
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_provides_new" --destination $tmpdir/testbuild_provides --compression gzip --full > ${OUTPUT}
   buildst=$?
   assertTrue 'create package D 2.0' "[ -e '$tmpdir/testbuild_provides/d-test-2.0.package.tar.gz' ]"
   assertEquals 'builds successfully' "$buildst" "0"
@@ -37,7 +37,7 @@ testBuild() {
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_provides" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_provides" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -50,7 +50,7 @@ testRepo() {
   assertTrue 'create repository' "[ -e '$tmpdir/testbuild/repository.yaml' ]"
 
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild_provides/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_provides_new" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_provides_new" \
   --output $tmpdir/testbuild_provides \
   --packages $tmpdir/testbuild_provides \
   --name "test" \
@@ -65,7 +65,7 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: ${DEBUG_ENABLE}
 system:
@@ -81,18 +81,18 @@ repositories:
      urls:
        - "../testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testUpgrade() {
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/a@1.1 test/e@1.0
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml test/a@1.1 test/e@1.0
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed B' "[ -e '$tmpdir/testrootfs/test5' ]"
 
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: ${DEBUG_ENABLE}
 system:
@@ -109,13 +109,13 @@ repositories:
        - "../testbuild_provides"
 EOF
 
-    $LUET cleanup --config $tmpdir/luet.yaml
-    $LUET repo update --config $tmpdir/luet.yaml
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE cleanup --config $tmpdir/anise.yaml
+    $ANISE repo update --config $tmpdir/anise.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 
-    $LUET upgrade -y --config $tmpdir/luet.yaml
+    $ANISE upgrade -y --config $tmpdir/anise.yaml
     installst=$?
     assertEquals 'upgrade test successfully' "$installst" "0"
     assertTrue 'package uninstalled B' "[ ! -e '$tmpdir/testrootfs/test5' ]"

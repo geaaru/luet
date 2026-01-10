@@ -14,13 +14,13 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/retrieve-integration"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/retrieve-integration"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  [ "$LUET_BACKEND" == "img" ] && startSkipping
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/retrieve-integration" --destination $tmpdir/testbuild --compression gzip test/b > ${OUTPUT}
+  [ "$ANISE_BACKEND" == "img" ] && startSkipping
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/retrieve-integration" --destination $tmpdir/testbuild --compression gzip test/b > ${OUTPUT}
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create package dep B' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
@@ -28,9 +28,9 @@ testBuild() {
 }
 
 testRepo() {
-  [ "$LUET_BACKEND" == "img" ] && startSkipping
+  [ "$ANISE_BACKEND" == "img" ] && startSkipping
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/retrieve-integration" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/retrieve-integration" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -45,7 +45,7 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -61,7 +61,7 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
@@ -69,9 +69,9 @@ EOF
 
 
 testInstall() {
-    [ "$LUET_BACKEND" == "img" ] && startSkipping
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/b
-    #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
+    [ "$ANISE_BACKEND" == "img" ] && startSkipping
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml test/b
+    #$ANISE install -y --config $tmpdir/anise.yaml test/c-1.0 > /dev/null
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package B installed' "[ -e '$tmpdir/testrootfs/b' ]"
@@ -82,8 +82,8 @@ testInstall() {
 
 
 testUnInstall() {
-    [ "$LUET_BACKEND" == "img" ] && startSkipping
-    $LUET uninstall -y --config $tmpdir/luet.yaml test/a
+    [ "$ANISE_BACKEND" == "img" ] && startSkipping
+    $ANISE uninstall -y --config $tmpdir/anise.yaml test/a
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/b' ]"
@@ -92,8 +92,8 @@ testUnInstall() {
 
 
 testCleanup() {
-    [ "$LUET_BACKEND" == "img" ] && startSkipping
-    $LUET cleanup --config $tmpdir/luet.yaml
+    [ "$ANISE_BACKEND" == "img" ] && startSkipping
+    $ANISE cleanup --config $tmpdir/anise.yaml
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ ! -e '$tmpdir/testrootfs/packages/b-test-1.0.package.tar.gz' ]"

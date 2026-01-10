@@ -12,12 +12,12 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/shared_templates"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/shared_templates"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/shared_templates" --destination $tmpdir/testbuild --compression gzip --all
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/shared_templates" --destination $tmpdir/testbuild --compression gzip --all
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create packages' "[ -e '$tmpdir/testbuild/foo-test-1.0.package.tar.gz' ]"
@@ -26,7 +26,7 @@ testBuild() {
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/shared_templates" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/shared_templates" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -41,7 +41,7 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -57,13 +57,13 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/foo test/bar
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml test/foo test/bar
     installst=$?
     assertEquals 'install test failed' "$installst" "0"
     assertTrue 'package bar installed' "[ -e '$tmpdir/testrootfs/bar' ]"

@@ -12,12 +12,12 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/qlearning"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/qlearning"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build --all --concurrency 1 --tree "$ROOT_DIR/tests/fixtures/qlearning" --destination $tmpdir/testbuild --compression gzip > ${OUTPUT}
+  $ANISE_BUILD build --all --concurrency 1 --tree "$ROOT_DIR/tests/fixtures/qlearning" --destination $tmpdir/testbuild --compression gzip > ${OUTPUT}
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create package dep B' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
@@ -26,7 +26,7 @@ testBuild() {
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/qlearning" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/qlearning" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -41,7 +41,7 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -57,14 +57,14 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/c
-    #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml test/c
+    #$ANISE install -y --config $tmpdir/anise.yaml test/c-1.0 > /dev/null
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package C installed' "[ -e '$tmpdir/testrootfs/c' ]"
@@ -72,7 +72,7 @@ testInstall() {
 
 testFullInstall() {
     # Without --force the solver exists with error without install packages
-    output=$($LUET install --sync-repos -y --config $tmpdir/luet.yaml test/d test/f test/e test/a --force)
+    output=$($ANISE install --sync-repos -y --config $tmpdir/anise.yaml test/d test/f test/e test/a --force)
     installst=$?
     assertEquals 'cannot install' "$installst" "0"
     assertTrue 'package D installed' "[ -e '$tmpdir/testrootfs/d' ]"
@@ -82,7 +82,7 @@ testFullInstall() {
 }
 
 testInstallAgain() {
-    output=$($LUET install --sync-repos -y --config $tmpdir/luet.yaml test/d test/f test/e test/a --force)
+    output=$($ANISE install --sync-repos -y --config $tmpdir/anise.yaml test/d test/f test/e test/a --force)
     installst=$?
     echo "$output"
     assertEquals 'install test successfully' "0" "$installst"
@@ -94,7 +94,7 @@ testInstallAgain() {
 }
 
 testCleanup() {
-    $LUET cleanup --config $tmpdir/luet.yaml
+    $ANISE cleanup --config $tmpdir/anise.yaml
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ ! -e '$tmpdir/testrootfs/packages/c-test-1.0.package.tar.gz' ]"

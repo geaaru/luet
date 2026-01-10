@@ -12,40 +12,40 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/upgrade_integration"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/upgrade_integration"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/b@1.0 > ${OUTPUT}
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/b@1.0 > ${OUTPUT}
   buildst=$?
   assertTrue 'create package B 1.0' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
   assertEquals 'builds successfully' "$buildst" "0"
 
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/b@1.1 > ${OUTPUT}
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/b@1.1 > ${OUTPUT}
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create package B 1.1' "[ -e '$tmpdir/testbuild/b-test-1.1.package.tar.gz' ]"
 
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/a@1.0 > ${OUTPUT}
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/a@1.0 > ${OUTPUT}
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create package A 1.0' "[ -e '$tmpdir/testbuild/a-test-1.0.package.tar.gz' ]"
 
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/a@1.1 > ${OUTPUT}
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/a@1.1 > ${OUTPUT}
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
 
   assertTrue 'create package A 1.1' "[ -e '$tmpdir/testbuild/a-test-1.1.package.tar.gz' ]"
 
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/a@1.2 > ${OUTPUT}
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/a@1.2 > ${OUTPUT}
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
 
   assertTrue 'create package A 1.2' "[ -e '$tmpdir/testbuild/a-test-1.2.package.tar.gz' ]"
 
 
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/c@1.0 > ${OUTPUT}
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" --destination $tmpdir/testbuild --compression gzip test/c@1.0 > ${OUTPUT}
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create package C 1.0' "[ -e '$tmpdir/testbuild/c-test-1.0.package.tar.gz' ]"
@@ -54,7 +54,7 @@ testBuild() {
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/upgrade_integration" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -69,7 +69,7 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -85,13 +85,13 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/b@1.0 test/a@1.0 test/c@1.0
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml test/b@1.0 test/a@1.0 test/c@1.0
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed B' "[ -e '$tmpdir/testrootfs/test5' ]"
@@ -100,7 +100,7 @@ testInstall() {
 }
 
 testSearch() {
-    installed=$($LUET --config $tmpdir/luet.yaml search --installed .)
+    installed=$($ANISE --config $tmpdir/anise.yaml search --installed .)
     searchst=$?
     assertEquals 'search exists successfully' "$searchst" "0"
 

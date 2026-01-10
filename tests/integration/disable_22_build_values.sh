@@ -16,12 +16,12 @@ testBuild() {
 bb: "ttt"
 EOF
 
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/build_values"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/build_values"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/build_values" --values $tmpdir/default.yaml --destination $tmpdir/testbuild --compression gzip --all > ${OUTPUT}
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/build_values" --values $tmpdir/default.yaml --destination $tmpdir/testbuild --compression gzip --all > ${OUTPUT}
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create package B' "[ -e '$tmpdir/testbuild/b-distro-0.3.package.tar.gz' ]"
@@ -32,7 +32,7 @@ EOF
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/build_values" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/build_values" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -47,7 +47,7 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -63,13 +63,13 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml distro/a
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml distro/a
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -80,18 +80,18 @@ testInstall() {
     # Finalizers can interpolate only on package field. No extra fields are allowed at this time.
     assertTrue 'finalizer executed on A' "[ -e '$tmpdir/testrootfs/finalize-a' ]"
 
-    installed=$($LUET --config $tmpdir/luet.yaml search --installed .)
+    installed=$($ANISE --config $tmpdir/anise.yaml search --installed .)
     searchst=$?
     assertEquals 'search exists successfully' "$searchst" "0"
 
     assertContains 'contains distro/a-0.1' "$installed" 'distro/a-0.1'
 
-    $LUET uninstall -y --config $tmpdir/luet.yaml distro/a
+    $ANISE uninstall -y --config $tmpdir/anise.yaml distro/a
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
     # We do the same check for the others
-    $LUET install -y --sync-repos --config $tmpdir/luet.yaml distro/b
+    $ANISE install -y --sync-repos --config $tmpdir/anise.yaml distro/b
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -100,17 +100,17 @@ testInstall() {
     assertTrue 'extra field on B' "[ -e '$tmpdir/testrootfs/build-extra-f' ]"
     assertTrue 'finalizer executed on B' "[ -e '$tmpdir/testrootfs/finalize-b' ]"
 
-    installed=$($LUET --config $tmpdir/luet.yaml search --installed .)
+    installed=$($ANISE --config $tmpdir/anise.yaml search --installed .)
     searchst=$?
     assertEquals 'search exists successfully' "$searchst" "0"
 
     assertContains 'contains distro/b-0.3' "$installed" 'distro/b-0.3'
 
-    $LUET uninstall -y --config $tmpdir/luet.yaml distro/b
+    $ANISE uninstall -y --config $tmpdir/anise.yaml distro/b
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
-    $LUET install -y --sync-repos --config $tmpdir/luet.yaml distro/c
+    $ANISE install -y --sync-repos --config $tmpdir/anise.yaml distro/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -119,17 +119,17 @@ testInstall() {
     assertTrue 'package installed C interpolated with values' "[ -e '$tmpdir/testrootfs/c-ttt' ]"
     assertTrue 'finalizer executed on C' "[ -e '$tmpdir/testrootfs/finalize-c' ]"
 
-    installed=$($LUET --config $tmpdir/luet.yaml search --installed .)
+    installed=$($ANISE --config $tmpdir/anise.yaml search --installed .)
     searchst=$?
     assertEquals 'search exists successfully' "$searchst" "0"
 
     assertContains 'contains distro/c-0.3' "$installed" 'distro/c-0.3'
 
-    $LUET uninstall -y --config $tmpdir/luet.yaml distro/c
+    $ANISE uninstall -y --config $tmpdir/anise.yaml distro/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/foo
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml test/foo
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 

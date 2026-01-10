@@ -14,12 +14,12 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/config_protect"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/config_protect"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testrootfs/testbuild -p
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/config_protect" \
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/config_protect" \
     --destination $tmpdir/testrootfs/testbuild --compression gzip test/a
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
@@ -28,7 +28,7 @@ testBuild() {
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/config_protect" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/config_protect" \
   --output $tmpdir/testrootfs/testbuild \
   --packages $tmpdir/testrootfs/testbuild \
   --name "test" \
@@ -42,20 +42,20 @@ testRepo() {
 }
 
 testConfig() {
-  mkdir $tmpdir/testrootfs/etc/luet/config.protect.d -p
+  mkdir $tmpdir/testrootfs/etc/anise/config.protect.d -p
 
-  cat <<EOF > $tmpdir/testrootfs/etc/luet/config.protect.d/conf1.yml
+  cat <<EOF > $tmpdir/testrootfs/etc/anise/config.protect.d/conf1.yml
 name: "protect1"
 dirs:
 - /etc/
 EOF
 
-  cat <<EOF > $tmpdir/luet.yaml
+  cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
   rootfs: $tmpdir/testrootfs
-  database_path: "/var/cache/luet"
+  database_path: "/var/cache/anise"
   database_engine: "boltdb"
 config_from_host: false
 repositories:
@@ -66,7 +66,7 @@ repositories:
      urls:
        - "/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
@@ -79,7 +79,7 @@ testInstall() {
     mkdir $tmpdir/testrootfs/etc/a -p
     echo "fakeconf" > $tmpdir/testrootfs/etc/a/conf
 
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/a
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml test/a
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 
@@ -91,7 +91,7 @@ testInstall() {
 
 
 testUnInstall() {
-    $LUET uninstall -y --config $tmpdir/luet.yaml test/a
+    $ANISE uninstall -y --config $tmpdir/anise.yaml test/a
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
@@ -102,7 +102,7 @@ testUnInstall() {
 
 
 testCleanup() {
-    $LUET cleanup --config $tmpdir/luet.yaml --purge-repos
+    $ANISE cleanup --config $tmpdir/anise.yaml --purge-repos
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ ! -e '$tmpdir/testrootfs/packages/a-test-1.0.package.tar.gz' ]"

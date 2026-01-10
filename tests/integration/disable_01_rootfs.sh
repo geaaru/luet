@@ -6,7 +6,7 @@ source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
   export tmpdir="$(mktemp -d)"
-  cat <<EOF > $tmpdir/luet-build.yaml
+  cat <<EOF > $tmpdir/anise-build.yaml
 general:
   debug: true
 logging:
@@ -18,11 +18,11 @@ system:
   database_engine: "memory"
 config_from_host: true
 repos_confdir:
-  - "$tmpdir/etc/luet/repos.conf.d"
+  - "$tmpdir/etc/anise/repos.conf.d"
 config_protect_confdir:
-  - "$tmpdir/etc/luet/config.protect.d"
+  - "$tmpdir/etc/anise/config.protect.d"
 subsets_defdir:
-  - "$tmpdir/etc/luet/subsets.conf.d"
+  - "$tmpdir/etc/anise/subsets.conf.d"
 EOF
 }
 
@@ -32,12 +32,12 @@ oneTimeTearDown() {
 
 testBuild() {
 
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/buildableseed"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/buildableseed"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build --config $tmpdir/luet-build.yaml \
+  $ANISE_BUILD build --config $tmpdir/anise-build.yaml \
     --tree "$ROOT_DIR/tests/fixtures/buildableseed" \
     --destination $tmpdir/testbuild \
     --compression gzip test/c > ${OUTPUT}
@@ -49,7 +49,7 @@ testBuild() {
 
 testRepo() {
     assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-    $LUET_BUILD create-repo --config $tmpdir/luet-build.yaml \
+    $ANISE_BUILD create-repo --config $tmpdir/anise-build.yaml \
       --tree "$ROOT_DIR/tests/fixtures/buildableseed" \
       --output $tmpdir/testbuild \
       --packages $tmpdir/testbuild \
@@ -65,7 +65,7 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -73,7 +73,7 @@ system:
   database_engine: "memory"
 config_from_host: true
 repos_confdir:
-  - "$tmpdir/etc/luet/repos.conf.d"
+  - "$tmpdir/etc/anise/repos.conf.d"
 repositories:
    - name: "main"
      type: "disk"
@@ -82,47 +82,47 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    $LUET install -y --sync-repos --config $tmpdir/luet.yaml test/c
+    $ANISE install -y --sync-repos --config $tmpdir/anise.yaml test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/c' ]"
 }
 
 testCleanup() {
-    $LUET cleanup --config $tmpdir/luet.yaml
+    $ANISE cleanup --config $tmpdir/anise.yaml
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package cleaned' "[ ! -e '$tmpdir/testrootfs/packages/c-test-1.0.package.tar.gz' ]"
 }
 
 testInstall2() {
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml --system-target $tmpdir/foo test/c
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml --system-target $tmpdir/foo test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
-    assertTrue 'db not created' "[ ! -e '$tmpdir/foo/var/cache/luet/luet.db' ]"
+    assertTrue 'db not created' "[ ! -e '$tmpdir/foo/var/cache/anise/anise.db' ]"
     assertTrue 'package installed' "[ -e '$tmpdir/foo/c' ]"
 }
 
 testCleanup2() {
-    $LUET cleanup --config $tmpdir/luet.yaml --system-target $tmpdir/foo
+    $ANISE cleanup --config $tmpdir/anise.yaml --system-target $tmpdir/foo
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package cleaned' "[ ! -e '$tmpdir/foo/packages/c-test-1.0.package.tar.gz' ]"
 }
 
 testInstall3() {
-        cat <<EOF > $tmpdir/luet2.yaml
+        cat <<EOF > $tmpdir/anise2.yaml
 general:
   debug: true
 config_from_host: true
 repos_confdir:
-  - "$tmpdir/etc/luet/repos.conf.d"
+  - "$tmpdir/etc/anise/repos.conf.d"
 repositories:
    - name: "main"
      type: "disk"
@@ -131,29 +131,29 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET install --sync-repos -y --config $tmpdir/luet2.yaml --system-target $tmpdir/baz test/c
+    $ANISE install --sync-repos -y --config $tmpdir/anise2.yaml --system-target $tmpdir/baz test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/baz/c' ]"
 }
 
 testCleanup3() {
-    $LUET cleanup --config $tmpdir/luet2.yaml --system-target $tmpdir/baz
+    $ANISE cleanup --config $tmpdir/anise2.yaml --system-target $tmpdir/baz
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package cleaned' "[ ! -e '$tmpdir/baz/packages/c-test-1.0.package.tar.gz' ]"
 }
 
 testInstall4() {
-    $LUET install --sync-repos -y --config $tmpdir/luet2.yaml --system-target $tmpdir/bad --system-engine boltdb test/c
+    $ANISE install --sync-repos -y --config $tmpdir/anise2.yaml --system-target $tmpdir/bad --system-engine boltdb test/c
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/bad/c' ]"
-    assertTrue 'db created' "[ -d '$tmpdir/bad/var/cache/luet' ]"
+    assertTrue 'db created' "[ -d '$tmpdir/bad/var/cache/anise' ]"
 }
 
 testCleanup4() {
-    $LUET cleanup --config $tmpdir/luet2.yaml --system-target $tmpdir/bad --system-engine boltdb
+    $ANISE cleanup --config $tmpdir/anise2.yaml --system-target $tmpdir/bad --system-engine boltdb
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package cleaned' "[ ! -e '$tmpdir/bad/packages/c-test-1.0.package.tar.gz' ]"

@@ -5,18 +5,18 @@ source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
     export tmpdir="$(mktemp -d)"
-    docker images --filter='reference=luet/cache' --format='{{.Repository}}:{{.Tag}}' | xargs -r docker rmi
+    docker images --filter='reference=anise/cache' --format='{{.Repository}}:{{.Tag}}' | xargs -r docker rmi
 }
 
 oneTimeTearDown() {
     rm -rf "$tmpdir"
-    docker images --filter='reference=luet/cache' --format='{{.Repository}}:{{.Tag}}' | xargs -r docker rmi
+    docker images --filter='reference=anise/cache' --format='{{.Repository}}:{{.Tag}}' | xargs -r docker rmi
 }
 
 testBuild() {
-    [ "$LUET_BACKEND" == "img" ] && startSkipping
+    [ "$ANISE_BACKEND" == "img" ] && startSkipping
     mkdir $tmpdir/testbuild
-    $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/join_complex" \
+    $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/join_complex" \
                --destination $tmpdir/testbuild --concurrency 1 \
                --compression gzip \
                test/z test/x

@@ -12,12 +12,12 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/simple_dep"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/simple_dep"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild1
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/simple_dep" --destination $tmpdir/testbuild1 test/c
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/simple_dep" --destination $tmpdir/testbuild1 test/c
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create package A 1.2' "[ -e '$tmpdir/testbuild1/a-test-1.2.package.tar' ]"
@@ -26,7 +26,7 @@ testBuild() {
 
 testBuildOnlyTarget() {
   mkdir $tmpdir/testbuild2
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/simple_dep" --destination $tmpdir/testbuild2 --only-target-package test/c
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/simple_dep" --destination $tmpdir/testbuild2 --only-target-package test/c
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create package A 1.2' "[ ! -e '$tmpdir/testbuild2/a-test-1.2.package.tar' ]"

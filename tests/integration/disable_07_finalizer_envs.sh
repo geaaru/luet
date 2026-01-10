@@ -17,7 +17,7 @@ testBuild() {
   # repositories availables on host.
 
     mkdir $tmpdir/repos
-    cat <<EOF > $tmpdir/luet-build.yaml
+    cat <<EOF > $tmpdir/anise-build.yaml
 general:
   debug: true
   database_path: "/"
@@ -29,12 +29,12 @@ repos_confdir:
   - "$tmpdir/repos"
 EOF
 
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/finalizers_envs/"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/finalizers_envs/"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  ${LUET_BUILD} build --config $tmpdir/luet-build.yaml --tree "$ROOT_DIR/tests/fixtures/finalizers_envs" --destination $tmpdir/testbuild --compression gzip --all > ${OUTPUT}
+  ${ANISE_BUILD} build --config $tmpdir/anise-build.yaml --tree "$ROOT_DIR/tests/fixtures/finalizers_envs" --destination $tmpdir/testbuild --compression gzip --all > ${OUTPUT}
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-finalizer-envs-seed-1.0.package.tar.gz' ]"
@@ -42,7 +42,7 @@ EOF
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  ${LUET_BUILD} create-repo --tree "$ROOT_DIR/tests/fixtures/finalizers_envs" \
+  ${ANISE_BUILD} create-repo --tree "$ROOT_DIR/tests/fixtures/finalizers_envs" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -57,7 +57,7 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -80,13 +80,13 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    ${LUET} config --config $tmpdir/luet.yaml
+    ${ANISE} config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-  $LUET install --sync-repos -y --finalizer-env "CLI_ENV=1" --config $tmpdir/luet.yaml seed/alpine-finalizer-envs@1.0
+  $ANISE install --sync-repos -y --finalizer-env "CLI_ENV=1" --config $tmpdir/anise.yaml seed/alpine-finalizer-envs@1.0
   installst=$?
   assertEquals 'install test successfully' "$installst" "0"
   assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"
@@ -97,7 +97,7 @@ testInstall() {
 
 
 testCleanup() {
-  ${LUET} cleanup --config $tmpdir/luet.yaml
+  ${ANISE} cleanup --config $tmpdir/anise.yaml
   installst=$?
   assertEquals 'install test successfully' "$installst" "0"
 }

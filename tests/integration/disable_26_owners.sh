@@ -12,14 +12,14 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  [ "$LUET_BACKEND" == "img" ] && startSkipping
+  [ "$ANISE_BACKEND" == "img" ] && startSkipping
 
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/owners"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/owners"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/owners" --destination $tmpdir/testbuild --compression gzip test/unpack test/delta
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/owners" --destination $tmpdir/testbuild --compression gzip test/unpack test/delta
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create package unpack' "[ -e '$tmpdir/testbuild/unpack-test-1.0.package.tar.gz' ]"
@@ -27,9 +27,9 @@ testBuild() {
 }
 
 testRepo() {
-  [ "$LUET_BACKEND" == "img" ] && startSkipping
+  [ "$ANISE_BACKEND" == "img" ] && startSkipping
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/owners" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/owners" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -43,9 +43,9 @@ testRepo() {
 }
 
 testConfig() {
-    [ "$LUET_BACKEND" == "img" ] && startSkipping
+    [ "$ANISE_BACKEND" == "img" ] && startSkipping
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -61,14 +61,14 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    [ "$LUET_BACKEND" == "img" ] && startSkipping
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/unpack test/delta
+    [ "$ANISE_BACKEND" == "img" ] && startSkipping
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml test/unpack test/delta
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     fileUID=$(stat -c "%u" $tmpdir/testrootfs/foo)
@@ -87,8 +87,8 @@ testInstall() {
 }
 
 testCleanup() {
-    [ "$LUET_BACKEND" == "img" ] && startSkipping
-    $LUET cleanup --config $tmpdir/luet.yaml
+    [ "$ANISE_BACKEND" == "img" ] && startSkipping
+    $ANISE cleanup --config $tmpdir/anise.yaml
     installst=$?
     assertEquals 'cleanup test successfully' "$installst" "0"
 }

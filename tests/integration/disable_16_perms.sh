@@ -12,23 +12,23 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  [ "$LUET_BACKEND" == "img" ] && startSkipping
+  [ "$ANISE_BACKEND" == "img" ] && startSkipping
 
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/perms"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/perms"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build -d --tree "$ROOT_DIR/tests/fixtures/perms" --same-owner=true --destination $tmpdir/testbuild --compression gzip --full
+  $ANISE_BUILD build -d --tree "$ROOT_DIR/tests/fixtures/perms" --same-owner=true --destination $tmpdir/testbuild --compression gzip --full
   buildst=$?
   assertTrue 'create package perms 0.1' "[ -e '$tmpdir/testbuild/perms-test-0.1.package.tar.gz' ]"
   assertEquals 'builds successfully' "$buildst" "0"
 }
 
 testRepo() {
-  [ "$LUET_BACKEND" == "img" ] && startSkipping
+  [ "$ANISE_BACKEND" == "img" ] && startSkipping
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/perms" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/perms" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -42,9 +42,9 @@ testRepo() {
 }
 
 testConfig() {
-    [ "$LUET_BACKEND" == "img" ] && startSkipping
+    [ "$ANISE_BACKEND" == "img" ] && startSkipping
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -60,14 +60,14 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    [ "$LUET_BACKEND" == "img" ] && startSkipping
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/perms@0.1 test/perms2@0.1
+    [ "$ANISE_BACKEND" == "img" ] && startSkipping
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml test/perms@0.1 test/perms2@0.1
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
    

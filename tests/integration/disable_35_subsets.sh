@@ -5,7 +5,7 @@ source ${testsourcedir}/_common.sh
 
 oneTimeSetUp() {
 export tmpdir="$(mktemp -d)"
-  cat <<EOF > $tmpdir/luet-build.yaml
+  cat <<EOF > $tmpdir/anise-build.yaml
 general:
   debug: true
 logging:
@@ -17,7 +17,7 @@ system:
   database_engine: "memory"
 config_from_host: true
 repos_confdir:
-  - "$tmpdir/etc/luet/repos.conf.d"
+  - "$tmpdir/etc/anise/repos.conf.d"
 EOF
 
 }
@@ -27,13 +27,13 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/subsets"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/subsets"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build \
-    --config $tmpdir/luet-build.yaml \
+  $ANISE_BUILD build \
+    --config $tmpdir/anise-build.yaml \
     --tree "$ROOT_DIR/tests/fixtures/subsets" \
     --destination $tmpdir/testbuild --compression zstd subset/a
   buildst=$?
@@ -43,8 +43,8 @@ testBuild() {
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo \
-    --config $tmpdir/luet-build.yaml \
+  $ANISE_BUILD create-repo \
+    --config $tmpdir/anise-build.yaml \
     --tree "$ROOT_DIR/tests/fixtures/subsets" \
     --output $tmpdir/testbuild \
     --packages $tmpdir/testbuild \
@@ -68,7 +68,7 @@ dirs:
 - /etc/
 EOF
 
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -79,7 +79,7 @@ config_protect_confdir:
     - $tmpdir/config.protect.d
 config_from_host: true
 repos_confdir:
-  - "$tmpdir/etc/luet/repos.conf.d"
+  - "$tmpdir/etc/anise/repos.conf.d"
 repositories:
    - name: "main"
      type: "disk"
@@ -88,13 +88,13 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-  $LUET install --sync-repos -y --config $tmpdir/luet.yaml subset/a
+  $ANISE install --sync-repos -y --config $tmpdir/anise.yaml subset/a
   installst=$?
   assertEquals 'install test successfully' "$installst" "0"
 
@@ -108,7 +108,7 @@ testInstall() {
 
 
 testUnInstall() {
-  $LUET uninstall -y --config $tmpdir/luet.yaml subset/a
+  $ANISE uninstall -y --config $tmpdir/anise.yaml subset/a
   installst=$?
   assertEquals 'uninstall test successfully' "$installst" "0"
   assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"
@@ -116,7 +116,7 @@ testUnInstall() {
 }
 
 testInstall2() {
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -127,7 +127,7 @@ config_protect_confdir:
     - $tmpdir/config.protect.d
 config_from_host: true
 repos_confdir:
-  - "$tmpdir/etc/luet/repos.conf.d"
+  - "$tmpdir/etc/anise/repos.conf.d"
 subsets:
   enabled:
     - devel
@@ -139,9 +139,9 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-  $LUET config --config $tmpdir/luet.yaml
+  $ANISE config --config $tmpdir/anise.yaml
 
-  LUET_LOGGING__PARANOID="true" luet install --sync-repos -y --config $tmpdir/luet.yaml subset/a
+  ANISE_LOGGING__PARANOID="true" anise install --sync-repos -y --config $tmpdir/anise.yaml subset/a
   installst=$?
   assertEquals 'install test successfully' "$installst" "0"
 
@@ -153,7 +153,7 @@ EOF
 }
 
 testCleanup() {
-  $LUET cleanup --config $tmpdir/luet.yaml
+  $ANISE cleanup --config $tmpdir/anise.yaml
   installst=$?
   assertEquals 'install test successfully' "$installst" "0"
   assertTrue 'package installed' "[ ! -e '$tmpdir/testrootfs/packages/a-subset-1.0.package.tar.gz' ]"

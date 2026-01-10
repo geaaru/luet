@@ -12,12 +12,12 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/symlinks"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/symlinks"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/symlinks" --destination $tmpdir/testbuild --compression gzip --full
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/symlinks" --destination $tmpdir/testbuild --compression gzip --full
   buildst=$?
   assertTrue 'create package pkgAsym 0.1' "[ -e '$tmpdir/testbuild/pkgAsym-test-0.1.package.tar.gz' ]"
   assertEquals 'builds successfully' "$buildst" "0"
@@ -25,7 +25,7 @@ testBuild() {
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/symlinks" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/symlinks" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -40,7 +40,7 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -56,13 +56,13 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    $LUET install --sync-repos -y --config $tmpdir/luet.yaml test/pkgAsym test/pkgBsym
+    $ANISE install --sync-repos -y --config $tmpdir/anise.yaml test/pkgAsym test/pkgBsym
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     ls -liah $tmpdir/testrootfs/

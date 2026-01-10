@@ -14,14 +14,14 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/finalizers_uninstall"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/finalizers_uninstall"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  export LUET_TAR_FLOWS__MAX_OPENFILES=10
-  export LUET_TAR_FLOWS__COPY_BUFFER_SIZE=64
-  $LUET_BUILD build --concurrency 1 --tree "$ROOT_DIR/tests/fixtures/finalizers_uninstall" --destination $tmpdir/testbuild --compression gzip --all > ${OUTPUT}
+  export ANISE_TAR_FLOWS__MAX_OPENFILES=10
+  export ANISE_TAR_FLOWS__COPY_BUFFER_SIZE=64
+  $ANISE_BUILD build --concurrency 1 --tree "$ROOT_DIR/tests/fixtures/finalizers_uninstall" --destination $tmpdir/testbuild --compression gzip --all > ${OUTPUT}
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-seed-1.0.package.tar.gz' ]"
@@ -30,7 +30,7 @@ testBuild() {
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/finalizers_uninstall" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/finalizers_uninstall" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -45,20 +45,20 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
   rootfs: $tmpdir/testrootfs
-  database_path: "/var/cache/luet"
+  database_path: "/var/cache/anise"
   database_engine: "boltdb"
 config_from_host: true
 repos_confdir:
-  - "$tmpdir/etc/luet/repos.conf.d"
+  - "$tmpdir/etc/anise/repos.conf.d"
 config_protect_confdir:
-  - "$tmpdir/etc/luet/config.protect.d"
+  - "$tmpdir/etc/anise/config.protect.d"
 subsets_defdir:
-  - "$tmpdir/etc/luet/subsets.conf.d"
+  - "$tmpdir/etc/anise/subsets.conf.d"
 repositories:
    - name: "main"
      type: "disk"
@@ -67,17 +67,17 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET --version
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE --version
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testInstall() {
-    $LUET repo update --config $tmpdir/luet.yaml
-    $LUET miner d --config $tmpdir/luet.yaml main seed/alpine-1.0 app/pkg1
-    $LUET miner i --config $tmpdir/luet.yaml main seed/alpine-1.0 app/pkg1
-    #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
+    $ANISE repo update --config $tmpdir/anise.yaml
+    $ANISE miner d --config $tmpdir/anise.yaml main seed/alpine-1.0 app/pkg1
+    $ANISE miner i --config $tmpdir/anise.yaml main seed/alpine-1.0 app/pkg1
+    #$ANISE install -y --config $tmpdir/anise.yaml test/c-1.0 > /dev/null
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
     assertTrue 'package installed' "[ -e '$tmpdir/testrootfs/bin/busybox' ]"
@@ -86,14 +86,14 @@ testInstall() {
 
 
 testUninstall() {
-    $LUET uninstall app/pkg1 --config $tmpdir/luet.yaml --skip-finalizers
+    $ANISE uninstall app/pkg1 --config $tmpdir/anise.yaml --skip-finalizers
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'finalizer uninstall not runs' "[ -e '$tmpdir/testrootfs/tmp/foo' ]"
 }
 
 testCleanup() {
-    $LUET cleanup --config $tmpdir/luet.yaml
+    $ANISE cleanup --config $tmpdir/anise.yaml
     installst=$?
     assertEquals 'install test successfully' "$installst" "0"
 }

@@ -12,12 +12,12 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/buildableseed"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/buildableseed"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/buildableseed" --destination $tmpdir/testbuild --compression gzip test/c > ${OUTPUT}
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/buildableseed" --destination $tmpdir/testbuild --compression gzip test/c > ${OUTPUT}
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create package dep B' "[ -e '$tmpdir/testbuild/b-test-1.0.package.tar.gz' ]"
@@ -26,7 +26,7 @@ testBuild() {
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/buildableseed" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/buildableseed" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -41,7 +41,7 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -57,36 +57,36 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
 
 testDatabase() {
-    $LUET database create --config $tmpdir/luet.yaml $tmpdir/testbuild/c-test-1.0.metadata.yaml
-    #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
+    $ANISE database create --config $tmpdir/anise.yaml $tmpdir/testbuild/c-test-1.0.metadata.yaml
+    #$ANISE install -y --config $tmpdir/anise.yaml test/c-1.0 > /dev/null
     createst=$?
     assertEquals 'created package successfully' "$createst" "0"
     assertTrue 'package not installed' "[ ! -e '$tmpdir/testrootfs/c' ]"
 
-    installed=$($LUET --config $tmpdir/luet.yaml search --installed .)
+    installed=$($ANISE --config $tmpdir/anise.yaml search --installed .)
     searchst=$?
     assertEquals 'search exists successfully' "$searchst" "0"
     assertContains 'contains test/c-1.0' "$installed" 'test/c-1.0'
     touch $tmpdir/testrootfs/c
     
-    $LUET database remove --config $tmpdir/luet.yaml test/c@1.0
+    $ANISE database remove --config $tmpdir/anise.yaml test/c@1.0
     removetest=$?
     assertEquals 'package removed successfully' "$removetest" "0"
     assertTrue 'file not touched' "[ -e '$tmpdir/testrootfs/c' ]"
 
-    $LUET database create --config $tmpdir/luet.yaml $tmpdir/testbuild/c-test-1.0.metadata.yaml
-    #$LUET install -y --config $tmpdir/luet.yaml test/c-1.0 > /dev/null
+    $ANISE database create --config $tmpdir/anise.yaml $tmpdir/testbuild/c-test-1.0.metadata.yaml
+    #$ANISE install -y --config $tmpdir/anise.yaml test/c-1.0 > /dev/null
     createst=$?
     assertEquals 'created package successfully' "$createst" "0"
     assertTrue 'file still present' "[ -e '$tmpdir/testrootfs/c' ]"
     
-    $LUET uninstall -y --config $tmpdir/luet.yaml test/c
+    $ANISE uninstall -y --config $tmpdir/anise.yaml test/c
     installst=$?
     assertEquals 'uninstall test successfully' "$installst" "0"
     assertTrue 'package uninstalled' "[ ! -e '$tmpdir/testrootfs/c' ]"

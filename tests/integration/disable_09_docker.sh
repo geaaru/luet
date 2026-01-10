@@ -12,12 +12,12 @@ oneTimeTearDown() {
 }
 
 testBuild() {
-  $LUET_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/docker"
+  $ANISE_BUILD tree genidx --only-upper-level -t "$ROOT_DIR/tests/fixtures/docker"
   genidx=$?
   assertEquals 'genidx successfully' "$genidx" "0"
 
   mkdir $tmpdir/testbuild
-  $LUET_BUILD build --tree "$ROOT_DIR/tests/fixtures/docker" --destination $tmpdir/testbuild --compression gzip --all > ${OUTPUT}
+  $ANISE_BUILD build --tree "$ROOT_DIR/tests/fixtures/docker" --destination $tmpdir/testbuild --compression gzip --all > ${OUTPUT}
   buildst=$?
   assertEquals 'builds successfully' "$buildst" "0"
   assertTrue 'create package' "[ -e '$tmpdir/testbuild/alpine-seed-1.0.package.tar.gz' ]"
@@ -25,7 +25,7 @@ testBuild() {
 
 testRepo() {
   assertTrue 'no repository' "[ ! -e '$tmpdir/testbuild/repository.yaml' ]"
-  $LUET_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/docker" \
+  $ANISE_BUILD create-repo --tree "$ROOT_DIR/tests/fixtures/docker" \
   --output $tmpdir/testbuild \
   --packages $tmpdir/testbuild \
   --name "test" \
@@ -40,7 +40,7 @@ testRepo() {
 
 testConfig() {
     mkdir $tmpdir/testrootfs
-    cat <<EOF > $tmpdir/luet.yaml
+    cat <<EOF > $tmpdir/anise.yaml
 general:
   debug: true
 system:
@@ -56,7 +56,7 @@ repositories:
      urls:
        - "$tmpdir/testbuild"
 EOF
-    $LUET config --config $tmpdir/luet.yaml
+    $ANISE config --config $tmpdir/anise.yaml
     res=$?
     assertEquals 'config test successfully' "$res" "0"
 }
@@ -64,17 +64,17 @@ EOF
 # We test the Docker image generated with the current code that doesn't break
 # from scratch installations of packages.
 testInstall() {
-    docker build --rm --no-cache -t luet:test .
-    docker rm luet-runtime-test || true
-    docker run --name luet-runtime-test \
+    docker build --rm --no-cache -t anise:test .
+    docker rm anise-runtime-test || true
+    docker run --name anise-runtime-test \
        -v /tmp:/tmp \
-       -v $tmpdir/luet.yaml:/etc/luet/luet.yaml:ro \
-       luet:test install --sync-repos -y seed/alpine
+       -v $tmpdir/anise.yaml:/etc/anise/anise.yaml:ro \
+       anise:test install --sync-repos -y seed/alpine
     installst=$?
     assertEquals 'install test successfully' "0" "$installst"
 
-    docker commit luet-runtime-test luet-runtime-test-image
-    test=$(docker run --rm --entrypoint /bin/sh luet-runtime-test-image -c 'echo "ftw"')
+    docker commit anise-runtime-test anise-runtime-test-image
+    test=$(docker run --rm --entrypoint /bin/sh anise-runtime-test-image -c 'echo "ftw"')
     assertContains 'generated image runs successfully' "$test" "ftw"
 }
 
