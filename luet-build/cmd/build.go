@@ -81,7 +81,7 @@ func newBuildCommand(config *cfg.LuetConfig) *cobra.Command {
 			var err error
 
 			treePaths := config.Viper.GetStringSlice("tree")
-			templatesDirs, _ := cmd.Flags().GetStringArray("templates-dir")
+			templatesDirs := config.Viper.GetStringSlice("templates-dir")
 			values := bhelpers.ValuesFlags()
 
 			stype, _ := cmd.Flags().GetString("solver-type")
@@ -210,9 +210,9 @@ func newBuildCommand(config *cfg.LuetConfig) *cobra.Command {
 
 	flags := buildCmd.Flags()
 
-	flags.StringArrayP("tree", "t", []string{path},
+	flags.StringSliceP("tree", "t", []string{path},
 		"Path of the tree to use.")
-	flags.StringArray("templates-dir", []string{filepath.Join(path, "templates")},
+	flags.StringSlice("templates-dir", []string{filepath.Join(path, "templates")},
 		"Path of the render templates to use.")
 
 	flags.String("solver-type", "", "Solver strategy")
