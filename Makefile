@@ -19,7 +19,7 @@ fmt:
 
 .PHONY: test
 test:
-	GO111MODULE=on go get github.com/onsi/ginkgo/v2/ginkgo
+	GO111MODULE=off go get github.com/onsi/ginkgo/v2/ginkgo
 	GO111MODULE=off go get github.com/onsi/gomega/...
 	ginkgo -race -r -flake-attempts 3 ./...
 
@@ -94,6 +94,11 @@ test-docker:
 	docker run -v $(ROOT_DIR):/go/src/github.com/macaroni-os/anise \
 				--workdir /go/src/github.com/macaroni-os/anise -ti golang:latest \
 				bash -c "make test"
+
+.PHONY: goreleaser-snapshot
+goreleaser-snapshot:
+	rm -rf dist/ || true
+	goreleaser release --skip=validate,publish --snapshot --verbose
 
 multiarch-build:
 	GOVERSION=$(GOLANG_VERSION) goreleaser build --snapshot --skip=validate --clean
