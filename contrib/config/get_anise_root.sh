@@ -30,7 +30,9 @@ if [ "${ANISE_CONFIG_PROTECT}" = "1" ] ; then
 fi
 curl -L https://raw.githubusercontent.com/geaaru/repo-index/master/packages/geaaru-repo-index.yml --output /etc/anise/repos.conf.d/geaaru-repo-index.yml
 
-cat > /etc/anise/anise.yaml <<EOF
+if [ ! -e /etc/anise/anise.yaml ] ; then
+
+  cat > /etc/anise/anise.yaml <<EOF
 general:
   debug: false
 system:
@@ -39,6 +41,18 @@ system:
   database_engine: "${ANISE_DATABASE_ENGINE}"
   tmpdir_base: "/var/tmp/anise"
 EOF
+
+fi
+
+# Until next release of anise
+if [ ! -e /etc/luet ] ; then
+  cd /etc
+  ln -s anise luet
+  cd -
+  cd /etc/anise
+  ln -s anise.yaml luet.yaml
+  cd -
+fi
 
 if [ "${ANISE_ARCH}" = "x86_64" ] ; then
   anise repo update
