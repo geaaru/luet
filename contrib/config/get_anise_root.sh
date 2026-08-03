@@ -17,7 +17,8 @@ ANISE_DATABASE_ENGINE=${ANISE_DATABASE_ENGINE:-boltdb}
 ANISE_CONFIG_PROTECT=${ANISE_CONFIG_PROTECT:-1}
 ANISE_ARCH=${ANISE_ARCH:-x86_64}
 
-curl -L https://github.com/${GITHUB_USER}/anise/releases/download/${ANISE_VERSION}/anise-${ANISE_VERSION}-Linux-${ANISE_ARCH} --output /usr/bin/anise
+curl -L https://github.com/${GITHUB_USER}/anise/releases/download/${ANISE_VERSION}/luet-${ANISE_VERSION}-Linux-${ANISE_ARCH} --output /usr/bin/anise
+#curl -L https://github.com/${GITHUB_USER}/anise/releases/download/${ANISE_VERSION}/anise-${ANISE_VERSION}-Linux-${ANISE_ARCH} --output /usr/bin/anise
 chmod +x /usr/bin/anise
 
 mkdir -p /etc/anise/repos.conf.d || true
