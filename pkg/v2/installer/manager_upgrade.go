@@ -303,76 +303,78 @@ func (m *ArtifactsManager) Upgrade(opts *InstallOpts, targetRootfs string) error
 		}
 	}
 
-	// Download all packages to install/updates
 	fail := false
-	InfoC(fmt.Sprintf(":truck:Downloading %d packages...",
-		len(pkgs2Install.Artifacts)+len(pkgs2Update.Artifacts)))
+	if !opts.ShowInstallOrder {
+		// Download all packages to install/updates
+		InfoC(fmt.Sprintf(":truck:Downloading %d packages...",
+			len(pkgs2Install.Artifacts)+len(pkgs2Update.Artifacts)))
 
-	pkgs2Download := append(pkgs2Install.Artifacts, pkgs2Update.Artifacts...)
-	ndownloads := len(pkgs2Download)
-	for idx, art := range pkgs2Download {
-		repoName := art.GetRepository()
+		pkgs2Download := append(pkgs2Install.Artifacts, pkgs2Update.Artifacts...)
+		ndownloads := len(pkgs2Download)
+		for idx, art := range pkgs2Download {
+			repoName := art.GetRepository()
 
-		if repoName == "" {
-			return fmt.Errorf(
-				"Unexpected repository string for package %s",
-				art.GetPackage().PackageName())
-		}
-
-		var wr *wagon.WagonRepository
-		// Create WagonRepository if not present
-		if _, ok := mapRepos[repoName]; !ok {
-
-			repobasedir := m.Config.GetSystem().GetRepoDatabaseDirPath(repoName)
-			repo, err := m.Config.GetSystemRepository(repoName)
-			if err != nil {
-				Error(
-					fmt.Sprintf("Repository not found for artefact %s",
-						art.GetPackage().HumanReadableString()))
-				fail = true
-				continue
+			if repoName == "" {
+				return fmt.Errorf(
+					"Unexpected repository string for package %s",
+					art.GetPackage().PackageName())
 			}
 
-			wr = wagon.NewWagonRepository(repo)
-			err = wr.ReadWagonIdentify(repobasedir)
-			if err != nil {
-				fail = true
-				Error("Error on read repository identity file: " + err.Error())
-				continue
+			var wr *wagon.WagonRepository
+			// Create WagonRepository if not present
+			if _, ok := mapRepos[repoName]; !ok {
+
+				repobasedir := m.Config.GetSystem().GetRepoDatabaseDirPath(repoName)
+				repo, err := m.Config.GetSystemRepository(repoName)
+				if err != nil {
+					Error(
+						fmt.Sprintf("Repository not found for artefact %s",
+							art.GetPackage().HumanReadableString()))
+					fail = true
+					continue
+				}
+
+				wr = wagon.NewWagonRepository(repo)
+				err = wr.ReadWagonIdentify(repobasedir)
+				if err != nil {
+					fail = true
+					Error("Error on read repository identity file: " + err.Error())
+					continue
+				}
+
+				mapRepos[repoName] = wr
+			} else {
+				wr = mapRepos[repoName]
 			}
 
-			mapRepos[repoName] = wr
-		} else {
-			wr = mapRepos[repoName]
+			msg := fmt.Sprintf(
+				"[%3d of %3d] %-65s - %-15s",
+				aurora.Bold(aurora.BrightMagenta(idx+1)),
+				aurora.Bold(aurora.BrightMagenta(ndownloads)),
+				fmt.Sprintf("%s::%s", art.GetPackage().PackageName(),
+					art.GetPackage().Repository,
+				),
+				art.GetPackage().GetVersion())
+
+			err = m.DownloadPackage(art, wr, msg)
+			if err != nil {
+				fail = true
+				fmt.Println(fmt.Sprintf(
+					"Error on download artifact %s: %s",
+					art.GetPackage().HumanReadableString(),
+					err.Error()))
+				Error(fmt.Sprintf(":package:%s # download failed :fire:",
+					msg))
+			} else {
+				Info(fmt.Sprintf(":package:%s # downloaded :check_mark:",
+					msg))
+			}
 		}
+		pkgs2Download = nil
 
-		msg := fmt.Sprintf(
-			"[%3d of %3d] %-65s - %-15s",
-			aurora.Bold(aurora.BrightMagenta(idx+1)),
-			aurora.Bold(aurora.BrightMagenta(ndownloads)),
-			fmt.Sprintf("%s::%s", art.GetPackage().PackageName(),
-				art.GetPackage().Repository,
-			),
-			art.GetPackage().GetVersion())
-
-		err = m.DownloadPackage(art, wr, msg)
-		if err != nil {
-			fail = true
-			fmt.Println(fmt.Sprintf(
-				"Error on download artifact %s: %s",
-				art.GetPackage().HumanReadableString(),
-				err.Error()))
-			Error(fmt.Sprintf(":package:%s # download failed :fire:",
-				msg))
-		} else {
-			Info(fmt.Sprintf(":package:%s # downloaded :check_mark:",
-				msg))
+		if fail {
+			return errors.New("Error on download phase.")
 		}
-	}
-	pkgs2Download = nil
-
-	if fail {
-		return errors.New("Error on download phase.")
 	}
 
 	if opts.DownloadOnly {
