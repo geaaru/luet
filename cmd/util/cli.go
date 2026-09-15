@@ -16,13 +16,17 @@ import (
 )
 
 func Version() string {
+	version := config.AniseVersion
+	if config.AniseForkVersion != "" {
+		version += "-" + config.AniseForkVersion
+	}
 	if config.BuildGoVersion != "" {
-		return fmt.Sprintf("%s-%s-g%s %s - %s",
-			config.AniseVersion, config.AniseForkVersion, config.BuildCommit,
+		return fmt.Sprintf("%s-g%s %s - %s",
+			config.AniseVersion, config.BuildCommit,
 			config.BuildTime, config.BuildGoVersion)
 	} else {
-		return fmt.Sprintf("%s-%s-g%s %s", config.AniseVersion,
-			config.AniseForkVersion, config.BuildCommit, config.BuildTime)
+		return fmt.Sprintf("%s-g%s %s", config.AniseVersion,
+			config.BuildCommit, config.BuildTime)
 	}
 }
 
