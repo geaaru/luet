@@ -741,6 +741,11 @@ func (s *Solver) resolvePackage(pkgstr string, stack []string) error {
 		// existing tree.
 		if !s.Opts.IgnoreConflicts && s.artefactIsInConflict(art) {
 			bannedVersion[art.GetPackage().GetVersion()] = true
+			Debug(fmt.Sprintf(
+				"For %s banning version %s for conflicts with existing tree.",
+				art.GetPackage().HumanReadableString(),
+				art.GetPackage().GetVersion(),
+			))
 			continue
 		}
 
@@ -831,11 +836,14 @@ func (s *Solver) processArtefactDeps(art *artifact.PackageArtifact, stack []stri
 			if err != nil {
 				return false, err
 			} else if !admit {
-				return false, nil
+				// Check if the package is in the queue of the packages to upgrade.
+				if _, present := s.availableArtsMap.Artifacts[p.PackageName()]; !present {
+					return false, nil
+				}
+			} else {
+				// Nothing to do. The dependency is already on system and is valid.
+				continue
 			}
-
-			// Nothing to do. The dependency is already on system and is valid.
-			continue
 		}
 
 		// Check if the dependency is provided.
@@ -1018,7 +1026,59 @@ func (s *Solver) artefactIsInConflict(art *artifact.PackageArtifact) bool {
 						"[%s] conflict with %s but is provided. Ignoring it.",
 						p.HumanReadableString(), val[0].HumanReadableString()))
 				} else {
-					return true
+
+					ps := c.Clone().(*pkg.DefaultPackage)
+					ps.Version = ">=0"
+
+					// Check if the conflicts is related to a package
+					// candidates for the upgrade and/or with a valid dependency
+					// in the tree that will be updated
+					// Search all availables artefacts from enabled repositories.
+					searchOpts := &wagon.StonesSearchOpts{
+						Packages:         []*pkg.DefaultPackage{ps},
+						Categories:       []string{},
+						Labels:           []string{},
+						LabelsMatches:    []string{},
+						Matches:          []string{},
+						FilesOwner:       []string{},
+						Annotations:      []string{},
+						Hidden:           false,
+						AndCondition:     false,
+						WithFiles:        true,
+						WithRootfsPrefix: false,
+						Full:             true,
+						OnlyPackages:     true,
+						IgnoreMasks:      s.Opts.IgnoreMasks,
+					}
+					reposArtifacts, err := s.Searcher.SearchArtifacts(searchOpts)
+					if err != nil {
+						// TODO: propagate error
+						return true
+					}
+
+					block := true
+					for _, depArt := range *reposArtifacts {
+						dpkg := depArt.GetPackage()
+						if valid, _ := p.Admit(dpkg); valid {
+							Debug(fmt.Sprintf(
+								"[%s] conflict with %s but there is version %s as candidate for upgrade. Ignoring it.",
+								p.HumanReadableString(), val[0].HumanReadableString(),
+								dpkg.HumanReadableString(),
+							))
+							block = false
+							break
+						} else {
+							Debug(fmt.Sprintf(
+								"[%s] conflict with %s. Skip version %s.",
+								p.HumanReadableString(), val[0].HumanReadableString(),
+								dpkg.HumanReadableString(),
+							))
+						}
+					}
+
+					if block {
+						return true
+					}
 				}
 			}
 		}
